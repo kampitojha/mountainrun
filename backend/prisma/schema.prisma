@@ -58,6 +58,7 @@ enum MedalStatus {
 
 model User {
   id            String         @id @default(cuid())
+  clerkId       String?        @unique
   name          String
   email         String         @unique
   phone         String?

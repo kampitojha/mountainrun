@@ -1,7 +1,9 @@
 "use client";
 
+import { useAuth, useUser } from "@clerk/nextjs";
 import { useMemo, useState } from "react";
 import { Field, inputClass, primaryLinkClass } from "../components/app-shell";
+import { type FieldErrors, validateRegistrationForm } from "../../lib/validation";
 
 type CheckoutResponse = {
   razorpay_order_id: string;
@@ -51,25 +53,62 @@ function getFriendlyErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong";
 }
 
+function FieldError({ message }: { message?: string }) {
+  if (!message) {
+    return null;
+  }
+
+  return <p className="mt-1 text-xs font-medium text-red-600">{message}</p>;
+}
+
 export function PaymentRegistrationForm() {
+  const { getToken, isSignedIn } = useAuth();
+  const { user } = useUser();
   const [status, setStatus] = useState<"idle" | "creating" | "paying" | "paid" | "error">("idle");
   const [message, setMessage] = useState("Fill details and continue to Razorpay Checkout.");
   const [selectedEvent, setSelectedEvent] = useState(events[0].value);
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   const selectedAmount = useMemo(
     () => events.find((event) => event.value === selectedEvent)?.amount ?? "Rs. 499",
     [selectedEvent],
   );
 
+  const defaultName = user?.fullName ?? user?.firstName ?? "";
+  const defaultEmail = user?.primaryEmailAddress?.emailAddress ?? "";
+  const defaultPhone = user?.primaryPhoneNumber?.phoneNumber ?? "";
+
   async function handleSubmit(formData: FormData) {
+    const fieldErrors = validateRegistrationForm(formData);
+    setErrors(fieldErrors);
+
+    if (Object.keys(fieldErrors).length > 0) {
+      setStatus("error");
+      setMessage("Please fix the highlighted fields and try again.");
+      return;
+    }
+
+    if (!isSignedIn) {
+      setStatus("error");
+      setMessage("Please sign in with Clerk before registering for an event.");
+      return;
+    }
+
     setStatus("creating");
     setMessage("Creating registration and secure Razorpay order...");
 
     try {
+      const token = await getToken();
+      const authHeaders: HeadersInit = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+
       const registrationResponse = await fetch(`${API_URL}/api/registrations`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders,
         body: JSON.stringify({
+          clerkId: user?.id,
           name: formData.get("name"),
           email: formData.get("email"),
           phone: formData.get("phone"),
@@ -94,7 +133,7 @@ export function PaymentRegistrationForm() {
 
       const orderResponse = await fetch(`${API_URL}/api/payments/create-order`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders,
         body: JSON.stringify({ registrationId }),
       });
 
@@ -136,16 +175,24 @@ export function PaymentRegistrationForm() {
         handler: async (response: CheckoutResponse) => {
           const verifyResponse = await fetch(`${API_URL}/api/payments/verify`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: authHeaders,
             body: JSON.stringify(response),
           });
 
           if (!verifyResponse.ok) {
-            throw new Error("Payment captured but verification failed");
+            const error = await verifyResponse.json().catch(() => null);
+            throw new Error(error?.error?.message ?? "Payment captured but verification failed");
           }
 
+          const verifyJson = await verifyResponse.json().catch(() => null);
+          const emailSent = verifyJson?.data?.emailSent === true;
+
           setStatus("paid");
-          setMessage("Payment verified. Registration confirmed.");
+          setMessage(
+            emailSent
+              ? "Payment verified. Confirmation email sent to your inbox."
+              : "Payment verified. Registration confirmed. (Email could not be sent — check RESEND_API_KEY.)",
+          );
         },
         modal: {
           ondismiss: () => {
@@ -163,26 +210,54 @@ export function PaymentRegistrationForm() {
   }
 
   return (
-    <form action={handleSubmit} className="mt-8 rounded-lg border hairline bg-[var(--panel)] p-5 soft-shadow">
+    <form action={handleSubmit} className="mt-8 rounded-lg border hairline bg-[var(--panel)] p-5 soft-shadow" noValidate>
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="Full name">
-          <input className={inputClass} name="name" placeholder="Your name" required />
+          <input
+            aria-invalid={Boolean(errors.name)}
+            className={inputClass}
+            defaultValue={defaultName}
+            name="name"
+            placeholder="Your name"
+            required
+          />
+          <FieldError message={errors.name} />
         </Field>
         <Field label="Email">
-          <input className={inputClass} name="email" placeholder="you@example.com" type="email" required />
+          <input
+            aria-invalid={Boolean(errors.email)}
+            className={inputClass}
+            defaultValue={defaultEmail}
+            name="email"
+            placeholder="you@example.com"
+            required
+            type="email"
+          />
+          <FieldError message={errors.email} />
         </Field>
         <Field label="Phone">
-          <input className={inputClass} name="phone" placeholder="+91 98765 43210" required />
+          <input
+            aria-invalid={Boolean(errors.phone)}
+            className={inputClass}
+            defaultValue={defaultPhone}
+            name="phone"
+            placeholder="+91 98765 43210"
+            required
+          />
+          <FieldError message={errors.phone} />
         </Field>
         <Field label="Distance">
-          <select className={inputClass} name="distance" required>
-            <option>5K</option>
-            <option>10K</option>
-            <option>21K</option>
+          <select aria-invalid={Boolean(errors.distance)} className={inputClass} name="distance" required>
+            <option value="">Select distance</option>
+            <option value="5K">5K</option>
+            <option value="10K">10K</option>
+            <option value="21K">21K</option>
           </select>
+          <FieldError message={errors.distance} />
         </Field>
         <Field label="Event">
           <select
+            aria-invalid={Boolean(errors.eventSlug)}
             className={inputClass}
             name="eventSlug"
             onChange={(event) => setSelectedEvent(event.target.value)}
@@ -193,19 +268,50 @@ export function PaymentRegistrationForm() {
               <option key={event.value} value={event.value}>{event.label}</option>
             ))}
           </select>
+          <FieldError message={errors.eventSlug} />
         </Field>
         <Field label="City">
-          <input className={inputClass} name="city" placeholder="Mumbai" required />
+          <input
+            aria-invalid={Boolean(errors.city)}
+            className={inputClass}
+            name="city"
+            placeholder="Mumbai"
+            required
+          />
+          <FieldError message={errors.city} />
         </Field>
         <Field label="State">
-          <input className={inputClass} name="state" placeholder="Maharashtra" required />
+          <input
+            aria-invalid={Boolean(errors.state)}
+            className={inputClass}
+            name="state"
+            placeholder="Maharashtra"
+            required
+          />
+          <FieldError message={errors.state} />
         </Field>
         <Field label="Pincode">
-          <input className={inputClass} name="pincode" placeholder="400050" required />
+          <input
+            aria-invalid={Boolean(errors.pincode)}
+            className={inputClass}
+            inputMode="numeric"
+            maxLength={6}
+            name="pincode"
+            placeholder="400050"
+            required
+          />
+          <FieldError message={errors.pincode} />
         </Field>
         <div className="md:col-span-2">
           <Field label="Shipping address">
-            <input className={inputClass} name="address" placeholder="House, street, area" required />
+            <input
+              aria-invalid={Boolean(errors.address)}
+              className={inputClass}
+              name="address"
+              placeholder="House, street, area"
+              required
+            />
+            <FieldError message={errors.address} />
           </Field>
         </div>
       </div>
@@ -213,13 +319,23 @@ export function PaymentRegistrationForm() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold">Pay securely with Razorpay</p>
-            <p className="mt-1 text-sm text-[var(--muted)]">{message}</p>
+            <p className={`mt-1 text-sm ${status === "error" ? "text-red-600" : "text-[var(--muted)]"}`}>{message}</p>
           </div>
           <p className="text-2xl font-semibold tracking-tight">{selectedAmount}</p>
         </div>
       </div>
-      <button className={`${primaryLinkClass} mt-5 w-full disabled:cursor-not-allowed disabled:opacity-60`} disabled={status === "creating" || status === "paying"} type="submit">
-        {status === "creating" ? "Creating order..." : status === "paying" ? "Payment in progress..." : status === "paid" ? "Paid" : "Continue to UPI payment"}
+      <button
+        className={`${primaryLinkClass} mt-5 w-full disabled:cursor-not-allowed disabled:opacity-60`}
+        disabled={status === "creating" || status === "paying" || status === "paid"}
+        type="submit"
+      >
+        {status === "creating"
+          ? "Creating order..."
+          : status === "paying"
+            ? "Payment in progress..."
+            : status === "paid"
+              ? "Paid"
+              : "Continue to UPI payment"}
       </button>
     </form>
   );

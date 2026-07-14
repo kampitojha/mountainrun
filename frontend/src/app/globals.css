@@ -69,6 +69,13 @@ html {
   box-shadow: 0 0 0 4px rgba(183, 110, 42, 0.18);
 }
 
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: color-mix(in srgb, var(--danger) 70%, var(--line));
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.12);
+}
+
 .meter {
   background: linear-gradient(90deg, var(--accent), var(--sun), var(--teal));
 }

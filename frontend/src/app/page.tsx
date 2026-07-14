@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppHeader } from "./components/app-header";
+import { DemoProofForm } from "./components/demo-proof-form";
 
 type IconName =
   | "run"
@@ -269,34 +270,7 @@ export default function Home() {
           </div>
         </div>
 
-        <form action="/leaderboard" className="rounded-lg border hairline bg-[var(--panel)] p-5 soft-shadow">
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="text-sm font-medium">Full name<input className="focus-ring mt-2 h-11 w-full rounded-lg border hairline bg-white px-3 text-sm" defaultValue="Riya Mehta" /></label>
-            <label className="text-sm font-medium">Distance<select className="focus-ring mt-2 h-11 w-full rounded-lg border hairline bg-white px-3 text-sm" defaultValue="10K"><option>5K</option><option>10K</option><option>21K</option></select></label>
-            <label className="text-sm font-medium md:col-span-2">Shipping address<input className="focus-ring mt-2 h-11 w-full rounded-lg border hairline bg-white px-3 text-sm" defaultValue="Bandra West, Mumbai, Maharashtra" /></label>
-          </div>
-          <label className="mt-4 block cursor-pointer rounded-lg border border-dashed border-[var(--accent)] bg-[var(--accent-soft)]/45 p-6 text-center transition hover:bg-[var(--accent-soft)]">
-            <Icon name="upload" className="mx-auto h-7 w-7 text-[var(--accent-dark)]" />
-            <p className="mt-3 text-sm font-semibold">Upload GPS activity proof</p>
-            <p className="mt-1 text-xs text-[var(--muted)]">PNG, JPG, or PDF from your running app</p>
-            <input className="sr-only" name="proof" type="file" accept="image/png,image/jpeg,application/pdf" />
-          </label>
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            {[
-              ["Payment", "Paid", "success"],
-              ["Proof", "In review", "accent"],
-              ["Certificate", "Queued", "muted"],
-            ].map(([label, value, tone]) => (
-              <div key={label} className="rounded-lg border hairline bg-white p-4">
-                <p className="text-xs text-[var(--muted)]">{label}</p>
-                <p className={`mt-2 text-sm font-semibold ${tone === "success" ? "text-[var(--success)]" : tone === "accent" ? "text-[var(--accent-dark)]" : "text-[var(--muted)]"}`}>{value}</p>
-              </div>
-            ))}
-          </div>
-          <button className="focus-ring mt-5 inline-flex h-11 w-full items-center justify-center rounded-lg bg-[var(--foreground)] px-4 text-sm font-semibold text-white transition hover:bg-[var(--accent-dark)]" type="submit">
-            Submit proof demo
-          </button>
-        </form>
+        <DemoProofForm />
       </section>
 
       <section id="leaderboard" className="border-y hairline bg-[var(--panel)]">

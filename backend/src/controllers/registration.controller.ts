@@ -1,6 +1,7 @@
-import type { Request, Response } from "express";
+import type { Response } from "express";
 import { defaultEvents } from "../data/default-events.js";
 import { prisma } from "../lib/prisma.js";
+import type { AuthenticatedRequest } from "../middleware/clerk-auth.js";
 import { createBibNumber } from "../services/bib.service.js";
 import {
   createCertificateNumber,
@@ -15,7 +16,7 @@ import {
   submitProofSchema,
 } from "../validators/registration.validator.js";
 
-export async function createRegistration(request: Request, response: Response) {
+export async function createRegistration(request: AuthenticatedRequest, response: Response) {
   const payload = validateBody(createRegistrationSchema, request);
   let event = payload.eventId
     ? await prisma.event.findUnique({ where: { id: payload.eventId } })
@@ -40,20 +41,57 @@ export async function createRegistration(request: Request, response: Response) {
     throw new ApiError(422, "Selected distance is not available for this event");
   }
 
-  const user = payload.userId
-    ? await prisma.user.findUnique({ where: { id: payload.userId } })
-    : await prisma.user.upsert({
-        where: { email: payload.email },
-        create: {
+  const clerkId = payload.clerkId ?? request.auth?.userId;
+  const email = payload.email?.toLowerCase();
+
+  let user = null;
+
+  if (clerkId) {
+    user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { clerkId },
+          ...(email ? [{ email }] : []),
+        ],
+      },
+    });
+
+    if (user) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          clerkId: user.clerkId ?? clerkId,
           name: payload.name ?? payload.shippingName,
-          email: payload.email as string,
           phone: payload.phone ?? payload.shippingPhone,
+          ...(email ? { email } : {}),
         },
-        update: {
+      });
+    } else if (email) {
+      user = await prisma.user.create({
+        data: {
+          clerkId,
           name: payload.name ?? payload.shippingName,
+          email,
           phone: payload.phone ?? payload.shippingPhone,
         },
       });
+    }
+  } else if (payload.userId) {
+    user = await prisma.user.findUnique({ where: { id: payload.userId } });
+  } else if (email) {
+    user = await prisma.user.upsert({
+      where: { email },
+      create: {
+        name: payload.name ?? payload.shippingName,
+        email,
+        phone: payload.phone ?? payload.shippingPhone,
+      },
+      update: {
+        name: payload.name ?? payload.shippingName,
+        phone: payload.phone ?? payload.shippingPhone,
+      },
+    });
+  }
 
   if (!user) {
     throw new ApiError(404, "User not found");
@@ -70,6 +108,15 @@ export async function createRegistration(request: Request, response: Response) {
   });
 
   if (existingRegistration) {
+    if (existingRegistration.status === "PENDING_PAYMENT") {
+      const registration = await prisma.registration.findUnique({
+        where: { id: existingRegistration.id },
+        include: { event: true, user: true, payment: true },
+      });
+      response.status(200).json({ data: registration });
+      return;
+    }
+
     throw new ApiError(409, "You are already registered for this distance in this event.");
   }
 
@@ -96,7 +143,7 @@ export async function createRegistration(request: Request, response: Response) {
   response.status(201).json({ data: registration });
 }
 
-export async function submitProof(request: Request, response: Response) {
+export async function submitProof(request: AuthenticatedRequest, response: Response) {
   const payload = validateBody(submitProofSchema, request);
   const registrationId = routeParam(request, "id");
 
@@ -127,7 +174,7 @@ export async function submitProof(request: Request, response: Response) {
   response.json({ data: registration });
 }
 
-export async function reviewProof(request: Request, response: Response) {
+export async function reviewProof(request: AuthenticatedRequest, response: Response) {
   const payload = validateBody(reviewProofSchema, request);
   const registrationId = routeParam(request, "id");
   const status = payload.approved ? "APPROVED" : "REJECTED";
@@ -172,7 +219,7 @@ export async function reviewProof(request: Request, response: Response) {
   response.json({ data: registration });
 }
 
-export async function getLeaderboard(request: Request, response: Response) {
+export async function getLeaderboard(request: AuthenticatedRequest, response: Response) {
   const eventId = routeParam(request, "eventId");
   const registrations = await prisma.registration.findMany({
     where: {

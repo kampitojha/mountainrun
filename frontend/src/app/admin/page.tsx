@@ -1,4 +1,5 @@
-import { Field, PageShell, inputClass, primaryLinkClass } from "../components/app-shell";
+import { PageShell, primaryLinkClass } from "../components/app-shell";
+import { AdminEventForm } from "./admin-event-form";
 
 export default function AdminPage() {
   return (
@@ -12,21 +13,7 @@ export default function AdminPage() {
           <a className={primaryLinkClass} href="#new-event">Create event</a>
         </div>
         <div className="mt-8 grid gap-4 lg:grid-cols-[320px_1fr]">
-          <form action="/events" className="rounded-lg border hairline bg-[var(--panel)] p-5" id="new-event">
-            <h2 className="text-lg font-semibold">New event</h2>
-            <div className="mt-5 grid gap-4">
-              <Field label="Event title">
-                <input className={inputClass} name="title" placeholder="City Night 10K" required />
-              </Field>
-              <Field label="Distance options">
-                <input className={inputClass} name="distances" placeholder="5K, 10K, 21K" required />
-              </Field>
-              <Field label="Price">
-                <input className={inputClass} name="price" placeholder="499" required />
-              </Field>
-            </div>
-            <button className={`${primaryLinkClass} mt-5 w-full`} type="submit">Save event demo</button>
-          </form>
+          <AdminEventForm />
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {[
               ["Revenue", "Rs. 8.4L"],

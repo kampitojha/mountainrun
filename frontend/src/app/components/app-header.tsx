@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
@@ -62,18 +63,39 @@ export function AppHeader() {
           </nav>
 
           <div className="hidden shrink-0 items-center gap-2 sm:flex">
-            <Link
-              className="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--muted)] transition hover:bg-white hover:text-[var(--foreground)]"
-              href="/sign-in"
-            >
-              Sign in
-            </Link>
-            <Link
-              className="rounded-lg bg-[var(--foreground)] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[var(--accent-dark)]"
-              href="/register"
-            >
-              Register
-            </Link>
+            <Show when="signed-out">
+              <SignInButton mode="modal">
+                <button
+                  className="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--muted)] transition hover:bg-white hover:text-[var(--foreground)]"
+                  type="button"
+                >
+                  Sign in
+                </button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button
+                  className="rounded-lg bg-[var(--foreground)] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[var(--accent-dark)]"
+                  type="button"
+                >
+                  Sign up
+                </button>
+              </SignUpButton>
+            </Show>
+            <Show when="signed-in">
+              <Link
+                className="rounded-lg bg-[var(--foreground)] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[var(--accent-dark)]"
+                href="/register"
+              >
+                Register
+              </Link>
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: "h-9 w-9",
+                  },
+                }}
+              />
+            </Show>
           </div>
 
           <button
@@ -108,20 +130,38 @@ export function AppHeader() {
               </Link>
             ))}
             <div className="mt-2 grid grid-cols-2 gap-2 border-t hairline pt-2">
-              <Link
-                className="rounded-lg border hairline bg-white px-3 py-3 text-center text-sm font-semibold text-[var(--foreground)]"
-                href="/sign-in"
-                onClick={() => setOpen(false)}
-              >
-                Sign in
-              </Link>
-              <Link
-                className="rounded-lg bg-[var(--foreground)] px-3 py-3 text-center text-sm font-semibold text-white"
-                href="/register"
-                onClick={() => setOpen(false)}
-              >
-                Register
-              </Link>
+              <Show when="signed-out">
+                <SignInButton mode="modal">
+                  <button
+                    className="rounded-lg border hairline bg-white px-3 py-3 text-center text-sm font-semibold text-[var(--foreground)]"
+                    onClick={() => setOpen(false)}
+                    type="button"
+                  >
+                    Sign in
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button
+                    className="rounded-lg bg-[var(--foreground)] px-3 py-3 text-center text-sm font-semibold text-white"
+                    onClick={() => setOpen(false)}
+                    type="button"
+                  >
+                    Sign up
+                  </button>
+                </SignUpButton>
+              </Show>
+              <Show when="signed-in">
+                <Link
+                  className="col-span-2 rounded-lg bg-[var(--foreground)] px-3 py-3 text-center text-sm font-semibold text-white"
+                  href="/register"
+                  onClick={() => setOpen(false)}
+                >
+                  Register for event
+                </Link>
+                <div className="col-span-2 flex items-center justify-center py-2">
+                  <UserButton />
+                </div>
+              </Show>
             </div>
           </nav>
         </div>

@@ -1,41 +1,57 @@
 import { z } from "zod";
 
-export const createRegistrationSchema = z.object({
-  userId: z.string().min(1).optional(),
-  name: z.string().min(2).optional(),
-  email: z.string().email().optional(),
-  phone: z.string().min(8).optional(),
-  eventId: z.string().min(1).optional(),
-  eventSlug: z.string().min(1).optional(),
-  distance: z.string().min(1),
-  shippingName: z.string().min(2),
-  shippingPhone: z.string().min(8),
-  shippingLine1: z.string().min(5),
-  shippingLine2: z.string().optional(),
-  shippingCity: z.string().min(2),
-  shippingState: z.string().min(2),
-  shippingPincode: z.string().min(5),
-}).superRefine((value, context) => {
-  if (!value.userId && (!value.name || !value.email)) {
-    context.addIssue({
-      code: "custom",
-      message: "Either userId or runner name and email are required",
-      path: ["email"],
-    });
-  }
+const phoneSchema = z
+  .string()
+  .trim()
+  .transform((value) => value.replace(/\s+/g, ""))
+  .refine((value) => /^(\+91[\s-]?)?[6-9]\d{9}$/.test(value), {
+    message: "Enter a valid 10-digit Indian mobile number",
+  });
 
-  if (!value.eventId && !value.eventSlug) {
-    context.addIssue({
-      code: "custom",
-      message: "Either eventId or eventSlug is required",
-      path: ["eventSlug"],
-    });
-  }
-});
+const pincodeSchema = z
+  .string()
+  .trim()
+  .regex(/^[1-9][0-9]{5}$/, "Enter a valid 6-digit pincode");
+
+export const createRegistrationSchema = z
+  .object({
+    userId: z.string().min(1).optional(),
+    clerkId: z.string().min(1).optional(),
+    name: z.string().trim().min(2, "Name must be at least 2 characters").optional(),
+    email: z.string().trim().email("Enter a valid email").optional(),
+    phone: phoneSchema.optional(),
+    eventId: z.string().min(1).optional(),
+    eventSlug: z.string().min(1).optional(),
+    distance: z.string().min(1, "Distance is required"),
+    shippingName: z.string().trim().min(2, "Shipping name is required"),
+    shippingPhone: phoneSchema,
+    shippingLine1: z.string().trim().min(5, "Address must be at least 5 characters"),
+    shippingLine2: z.string().trim().optional(),
+    shippingCity: z.string().trim().min(2, "City is required"),
+    shippingState: z.string().trim().min(2, "State is required"),
+    shippingPincode: pincodeSchema,
+  })
+  .superRefine((value, context) => {
+    if (!value.userId && !value.clerkId && (!value.name || !value.email)) {
+      context.addIssue({
+        code: "custom",
+        message: "Either clerkId/userId or runner name and email are required",
+        path: ["email"],
+      });
+    }
+
+    if (!value.eventId && !value.eventSlug) {
+      context.addIssue({
+        code: "custom",
+        message: "Either eventId or eventSlug is required",
+        path: ["eventSlug"],
+      });
+    }
+  });
 
 export const submitProofSchema = z.object({
-  activityImageUrl: z.string().url(),
-  sourceApp: z.string().min(2),
+  activityImageUrl: z.string().url("Activity image URL is invalid"),
+  sourceApp: z.string().min(2, "Source app is required"),
   finishTimeSeconds: z.number().int().positive().optional(),
 });
 

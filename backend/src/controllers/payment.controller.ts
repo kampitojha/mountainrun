@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { env } from "../config/env.js";
 import { prisma } from "../lib/prisma.js";
+import { sendRegistrationConfirmationEmail } from "../services/email.service.js";
 import {
   createRazorpayOrder,
   verifyCheckoutSignature,
@@ -90,10 +91,46 @@ export async function verifyPayment(request: Request, response: Response) {
         update: { status: "CONFIRMED" },
       },
     },
-    include: { registration: true },
+    include: {
+      registration: {
+        include: {
+          user: true,
+          event: true,
+        },
+      },
+    },
   });
 
-  response.json({ data: payment });
+  const emailResult = await sendRegistrationConfirmationEmail({
+    to: payment.registration.user.email,
+    runnerName: payment.registration.user.name,
+    eventTitle: payment.registration.event.title,
+    distance: payment.registration.distance,
+    bibNumber: payment.registration.bibNumber,
+    amountInPaise: payment.amountInPaise,
+  });
+
+  await prisma.notification.create({
+    data: {
+      userId: payment.registration.userId,
+      channel: "email",
+      title: emailResult.sent
+        ? "Registration confirmation email sent"
+        : "Registration confirmation email failed",
+      body: emailResult.sent
+        ? `Confirmation sent to ${payment.registration.user.email}`
+        : emailResult.error ?? "Email was not sent",
+    },
+  });
+
+  response.json({
+    data: {
+      ...payment,
+      emailSent: emailResult.sent,
+      emailId: emailResult.id,
+      emailError: emailResult.error,
+    },
+  });
 }
 
 export async function handleRazorpayWebhook(request: Request, response: Response) {
@@ -116,7 +153,7 @@ export async function handleRazorpayWebhook(request: Request, response: Response
   const paymentId = event.payload?.payment?.entity?.id;
 
   if (orderId && (event.event === "payment.captured" || event.event === "order.paid")) {
-    await prisma.payment.update({
+    const payment = await prisma.payment.update({
       where: { razorpayOrderId: orderId },
       data: {
         status: "PAID",
@@ -126,6 +163,23 @@ export async function handleRazorpayWebhook(request: Request, response: Response
           update: { status: "CONFIRMED" },
         },
       },
+      include: {
+        registration: {
+          include: {
+            user: true,
+            event: true,
+          },
+        },
+      },
+    });
+
+    await sendRegistrationConfirmationEmail({
+      to: payment.registration.user.email,
+      runnerName: payment.registration.user.name,
+      eventTitle: payment.registration.event.title,
+      distance: payment.registration.distance,
+      bibNumber: payment.registration.bibNumber,
+      amountInPaise: payment.amountInPaise,
     });
   }
 
