@@ -59,6 +59,20 @@ export async function createRegistration(request: Request, response: Response) {
     throw new ApiError(404, "User not found");
   }
 
+  const existingRegistration = await prisma.registration.findUnique({
+    where: {
+      userId_eventId_distance: {
+        userId: user.id,
+        eventId: event.id,
+        distance: payload.distance,
+      },
+    },
+  });
+
+  if (existingRegistration) {
+    throw new ApiError(409, "You are already registered for this distance in this event.");
+  }
+
   const registration = await prisma.registration.create({
     data: {
       userId: user.id,
