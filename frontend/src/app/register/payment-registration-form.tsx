@@ -21,7 +21,7 @@ declare global {
   }
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:49154";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:4000";
 
 const events = [
   { label: "Monsoon Mountain Miles", value: "monsoon-mountain-miles", amount: "Rs. 499" },
@@ -41,6 +41,14 @@ async function loadRazorpayScript() {
     script.onerror = () => resolve(false);
     document.body.appendChild(script);
   });
+}
+
+function getFriendlyErrorMessage(error: unknown) {
+  if (error instanceof TypeError && error.message === "Failed to fetch") {
+    return `Could not connect to the API at ${API_URL}. Please start the backend with "npm run api:dev".`;
+  }
+
+  return error instanceof Error ? error.message : "Something went wrong";
 }
 
 export function PaymentRegistrationForm() {
@@ -150,7 +158,7 @@ export function PaymentRegistrationForm() {
       checkout.open();
     } catch (error) {
       setStatus("error");
-      setMessage(error instanceof Error ? error.message : "Something went wrong");
+      setMessage(getFriendlyErrorMessage(error));
     }
   }
 
