@@ -17,10 +17,31 @@ const allowedOrigins = new Set([
   "http://127.0.0.1:3000",
 ]);
 
+function isAllowedOrigin(origin: string | undefined) {
+  if (!origin) {
+    return true;
+  }
+
+  if (allowedOrigins.has(origin)) {
+    return true;
+  }
+
+  if (env.nodeEnv !== "production") {
+    try {
+      const url = new URL(origin);
+      return url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname);
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
+}
+
 app.use(helmet());
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.has(origin)) {
+    if (isAllowedOrigin(origin)) {
       callback(null, true);
       return;
     }
