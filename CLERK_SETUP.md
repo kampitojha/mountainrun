@@ -70,3 +70,44 @@ NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL="/register"
 ```
 
 Backend needs the same `CLERK_SECRET_KEY` for API token verification.
+
+## Vercel deployment (required env)
+
+Vercel **does not** use your local `.env` files. Without keys the site returns **500**:
+
+```text
+@clerk/nextjs: Missing publishableKey
+```
+
+### 1. Project settings
+
+- **Root Directory:** leave blank (repo root) *or* set to `frontend`
+- Framework: Next.js
+
+### 2. Add Environment Variables
+
+Vercel → Project → **Settings** → **Environment Variables** → add for **Production**, **Preview**, and **Development**:
+
+| Name | Value |
+|------|--------|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `pk_test_...` (Clerk Dashboard → API Keys) |
+| `CLERK_SECRET_KEY` | `sk_test_...` |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | `/sign-in` |
+| `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | `/sign-up` |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL` | `/register` |
+| `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL` | `/register` |
+| `NEXT_PUBLIC_API_URL` | your backend API URL (e.g. Render/Railway) |
+
+### 3. Clerk Dashboard URLs
+
+Clerk → **Configure** → **Domains / Paths** (or **Allowed origins**):
+
+- Add: `https://your-app.vercel.app`
+- Sign-in path: `/sign-in`
+- Sign-up path: `/sign-up`
+
+### 4. Redeploy
+
+After saving env vars: **Deployments** → ⋮ → **Redeploy** (or push a new commit).
+
+Keys are in local `frontend/.env` — copy the same values into Vercel (never commit them).
