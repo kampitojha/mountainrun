@@ -29,6 +29,11 @@ export const viewport: Viewport = {
   themeColor: "#fafaf9",
 };
 
+const publishableKey =
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+  process.env.CLERK_PUBLISHABLE_KEY ||
+  "";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -41,6 +46,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)]">
         <ClerkProvider
+          publishableKey={publishableKey || undefined}
           appearance={{
             variables: {
               colorPrimary: "#0a0a0a",
