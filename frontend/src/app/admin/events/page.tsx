@@ -9,6 +9,7 @@ import {
   formatInrFromPaise,
   toDatetimeLocalValue,
 } from "../../../lib/admin-api";
+import { AdminEmpty, AdminPageHeader } from "../ui";
 
 type EventRow = {
   id: string;
@@ -188,34 +189,32 @@ export default function AdminEventsPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="eyebrow">Catalog</p>
-          <h1 className="heading mt-2">Events</h1>
-          <p className="lede mt-2">Schedule, price, open/close, free entry, capacity.</p>
-        </div>
-        {editingId ? (
-          <button
-            className="btn btn-secondary h-9"
-            onClick={() => {
-              setEditingId(null);
-              setForm(emptyForm);
-            }}
-            type="button"
-          >
-            Cancel edit
-          </button>
-        ) : null}
-      </div>
+      <AdminPageHeader
+        kicker="Operations"
+        title="Events"
+        description="Schedule, price, open/close, free entry, and capacity."
+        actions={
+          editingId ? (
+            <button
+              className="btn btn-secondary"
+              onClick={() => {
+                setEditingId(null);
+                setForm(emptyForm);
+              }}
+              type="button"
+            >
+              Cancel edit
+            </button>
+          ) : null
+        }
+      />
 
-      {error ? <p className="mt-4 text-sm text-[var(--danger)]">{error}</p> : null}
-      {message ? <p className="mt-4 text-sm text-[var(--muted)]">{message}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)", marginBottom: "0.75rem" }}>{error}</p> : null}
+      {message ? <p className="admin-muted" style={{ marginBottom: "0.75rem" }}>{message}</p> : null}
 
-      <div className="mt-8 grid gap-6 xl:grid-cols-[380px_1fr]">
-        <form className="card h-fit space-y-3 p-5" onSubmit={onSubmit}>
-          <h2 className="text-base font-semibold tracking-tight">
-            {editingId ? "Edit event" : "New event"}
-          </h2>
+      <div className="grid gap-4 xl:grid-cols-[360px_1fr]">
+        <form className="admin-panel admin-panel-pad h-fit space-y-3" onSubmit={onSubmit}>
+          <h2 className="admin-panel-title">{editingId ? "Edit event" : "New event"}</h2>
           <label className="block text-sm">
             <span className="field-label">Title</span>
             <input
@@ -365,7 +364,7 @@ export default function AdminEventsPage() {
 
         <div className="space-y-3">
           {items.map((event) => (
-            <article className="card p-5" key={event.id}>
+            <article className="admin-panel admin-panel-pad" key={event.id}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -424,7 +423,9 @@ export default function AdminEventsPage() {
             </article>
           ))}
           {items.length === 0 ? (
-            <p className="text-sm text-[var(--muted)]">No events yet. Create one on the left.</p>
+            <div className="admin-panel admin-panel-pad">
+              <AdminEmpty>No events yet. Create one on the left.</AdminEmpty>
+            </div>
           ) : null}
         </div>
       </div>

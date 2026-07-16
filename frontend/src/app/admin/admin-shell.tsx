@@ -5,18 +5,44 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { adminFetch } from "../../lib/admin-api";
+import "./admin.css";
 
-const nav = [
-  ["Overview", "/admin"],
-  ["Events", "/admin/events"],
-  ["Registrations", "/admin/registrations"],
-  ["Payments", "/admin/payments"],
-  ["Users", "/admin/users"],
-  ["Proofs", "/admin/proofs"],
-  ["Medals", "/admin/medals"],
-  ["Certificates", "/admin/certificates"],
-  ["Coupons", "/admin/coupons"],
-] as const;
+type NavItem = { label: string; href: string; icon: string };
+type NavGroup = { label: string; items: NavItem[] };
+
+const navGroups: NavGroup[] = [
+  {
+    label: "Workspace",
+    items: [{ label: "Overview", href: "/admin", icon: "grid" }],
+  },
+  {
+    label: "Operations",
+    items: [
+      { label: "Events", href: "/admin/events", icon: "flag" },
+      { label: "Registrations", href: "/admin/registrations", icon: "list" },
+      { label: "Proofs", href: "/admin/proofs", icon: "check" },
+    ],
+  },
+  {
+    label: "Finance",
+    items: [{ label: "Payments", href: "/admin/payments", icon: "card" }],
+  },
+  {
+    label: "People",
+    items: [{ label: "Users", href: "/admin/users", icon: "users" }],
+  },
+  {
+    label: "Fulfillment",
+    items: [
+      { label: "Medals", href: "/admin/medals", icon: "medal" },
+      { label: "Certificates", href: "/admin/certificates", icon: "doc" },
+    ],
+  },
+  {
+    label: "Growth",
+    items: [{ label: "Coupons", href: "/admin/coupons", icon: "tag" }],
+  },
+];
 
 type AdminMe = {
   role?: string;
@@ -24,6 +50,82 @@ type AdminMe = {
   email?: string;
   mode?: string;
 };
+
+function NavIcon({ name }: { name: string }) {
+  const common = {
+    className: "admin-nav-icon",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.7,
+    viewBox: "0 0 24 24",
+  } as const;
+
+  switch (name) {
+    case "grid":
+      return (
+        <svg {...common}>
+          <path d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z" />
+        </svg>
+      );
+    case "flag":
+      return (
+        <svg {...common}>
+          <path d="M5 21V4h9l-1.2 3.5L16 11H5" />
+        </svg>
+      );
+    case "list":
+      return (
+        <svg {...common}>
+          <path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" />
+        </svg>
+      );
+    case "check":
+      return (
+        <svg {...common}>
+          <path d="m5 12 4.5 4.5L19 7" />
+        </svg>
+      );
+    case "card":
+      return (
+        <svg {...common}>
+          <rect height="14" rx="2" width="18" x="3" y="5" />
+          <path d="M3 10h18" />
+        </svg>
+      );
+    case "users":
+      return (
+        <svg {...common}>
+          <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
+          <circle cx="9.5" cy="7" r="3.5" />
+          <path d="M20 21v-2a3.5 3.5 0 0 0-2.5-3.35" />
+          <path d="M16 3.6a3.5 3.5 0 0 1 0 6.8" />
+        </svg>
+      );
+    case "medal":
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="14" r="5" />
+          <path d="M9 9 8 3h8l-1 6" />
+        </svg>
+      );
+    case "doc":
+      return (
+        <svg {...common}>
+          <path d="M7 3h7l4 4v14H7V3Z" />
+          <path d="M14 3v4h4M10 12h5M10 16h5" />
+        </svg>
+      );
+    case "tag":
+      return (
+        <svg {...common}>
+          <path d="M20 12 12 4H5v7l8 8 7-7Z" />
+          <circle cx="8.5" cy="8.5" r="1" />
+        </svg>
+      );
+    default:
+      return <span className="admin-nav-icon" />;
+  }
+}
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn, getToken } = useAuth();
@@ -38,16 +140,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      // Wait briefly for Clerk session token after redirect from sign-in
       let token: string | null = null;
       for (let attempt = 0; attempt < 6; attempt += 1) {
         token = await getToken().catch(() => null);
-        if (token || !isSignedIn) {
-          break;
-        }
+        if (token || !isSignedIn) break;
         await new Promise((resolve) => setTimeout(resolve, 250));
       }
-
       const json = await adminFetch<{ data: AdminMe }>("/api/admin/me", token);
       setMe(json.data);
     } catch (err) {
@@ -59,26 +157,26 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }, [getToken, isSignedIn]);
 
   useEffect(() => {
-    if (!isLoaded) {
-      return;
-    }
-
+    if (!isLoaded) return;
     if (!isSignedIn) {
       setLoading(false);
       setMe(null);
       setError(null);
       return;
     }
-
     void loadMe();
   }, [isLoaded, isSignedIn, loadMe]);
 
+  const isActive = (href: string) =>
+    href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+
   if (!isLoaded || (isSignedIn && loading)) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--background)] px-4 text-center text-sm text-[var(--muted)]">
-        <div>
-          <p className="font-medium text-[var(--foreground)]">Loading admin…</p>
-          <p className="mt-2 text-xs text-[var(--muted-soft)]">Checking your session and permissions.</p>
+      <div className="admin-app admin-gate">
+        <div className="admin-gate-card">
+          <p className="admin-kicker">Admin</p>
+          <h1>Loading console</h1>
+          <p>Checking session and permissions…</p>
         </div>
       </div>
     );
@@ -86,18 +184,16 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   if (!isSignedIn) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--background)] px-4">
-        <div className="card max-w-md p-8 text-center">
-          <p className="eyebrow">Admin</p>
-          <h1 className="mt-3 text-xl font-semibold tracking-tight">Sign in required</h1>
-          <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-            Sign in with your admin account to open the console. You will return here after login.
-          </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-2">
+      <div className="admin-app admin-gate">
+        <div className="admin-gate-card">
+          <p className="admin-kicker">Admin</p>
+          <h1>Sign in required</h1>
+          <p>Use an admin account. You will return to this console after login.</p>
+          <div className="admin-actions" style={{ justifyContent: "center", marginTop: "1.25rem" }}>
             <Link className="btn btn-primary" href="/sign-in?redirect_url=/admin">
               Sign in
             </Link>
-            <Link className="btn btn-ghost" href="/">
+            <Link className="btn btn-secondary" href="/">
               Back home
             </Link>
           </div>
@@ -108,36 +204,31 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   if (error || !me) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--background)] px-4">
-        <div className="card max-w-lg p-8 text-center">
-          <p className="eyebrow">Admin</p>
-          <h1 className="mt-3 text-xl font-semibold tracking-tight">Access restricted</h1>
-          <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-            {error ?? "Your account is signed in but is not an admin yet."}
-          </p>
-          <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] p-4 text-left text-xs leading-5 text-[var(--muted)]">
-            <p className="font-medium text-[var(--foreground)]">How to get access</p>
-            <ol className="mt-2 list-decimal space-y-1 pl-4">
+      <div className="admin-app admin-gate">
+        <div className="admin-gate-card">
+          <p className="admin-kicker">Admin</p>
+          <h1>Access restricted</h1>
+          <p>{error ?? "Signed in, but this account is not an admin."}</p>
+          <div className="admin-help">
+            <strong style={{ color: "var(--admin-ink)" }}>Grant access</strong>
+            <ol>
               <li>
-                Backend <code className="rounded bg-white px-1">ADMIN_EMAILS</code> me apna email
-                add karo (comma-separated).
+                Set <code>ADMIN_EMAILS</code> on the API
               </li>
               <li>
-                Ya Clerk Dashboard → User → publicMetadata:{" "}
-                <code className="rounded bg-white px-1">{`{ "role": "admin" }`}</code>
+                Or Clerk metadata <code>{`{ "role": "admin" }`}</code>
               </li>
-              <li>Ya DB me User.role = ADMIN / SUPER_ADMIN set karo.</li>
+              <li>
+                Or DB <code>User.role = ADMIN</code>
+              </li>
             </ol>
             {user?.primaryEmailAddress?.emailAddress ? (
-              <p className="mt-3">
-                Signed in as{" "}
-                <span className="font-medium text-[var(--foreground)]">
-                  {user.primaryEmailAddress.emailAddress}
-                </span>
+              <p style={{ marginTop: "0.65rem" }}>
+                Signed in as <strong>{user.primaryEmailAddress.emailAddress}</strong>
               </p>
             ) : null}
           </div>
-          <div className="mt-6 flex flex-wrap justify-center gap-2">
+          <div className="admin-actions" style={{ justifyContent: "center", marginTop: "1.25rem" }}>
             <button className="btn btn-secondary" onClick={() => void loadMe()} type="button">
               Retry
             </button>
@@ -150,69 +241,79 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const isActive = (href: string) =>
-    href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+  const displayName = me.name || user?.fullName || me.email || "Admin";
+  const initial = displayName.slice(0, 1).toUpperCase();
 
-  const sidebar = (
-    <nav className="flex flex-col gap-1 p-3">
-      <div className="mb-4 px-2">
-        <Link className="text-sm font-semibold tracking-tight" href="/admin">
-          Mountain Run Admin
-        </Link>
-        <p className="mt-1 truncate text-xs text-[var(--muted)]">
-          {me.name || user?.fullName || me.email || "Admin"}
-        </p>
-        <p className="text-[0.65rem] uppercase tracking-[0.12em] text-[var(--muted-soft)]">
-          {me.role ?? "ADMIN"}
-          {me.mode === "dev-bypass" ? " · dev" : ""}
-        </p>
+  const navBody = (
+    <>
+      <div className="admin-sidebar-brand">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img alt="" height={28} src="/logo-mark.svg" width={28} />
+        <div className="admin-sidebar-brand-text">
+          <strong>Mountain Run</strong>
+          <span>Operations</span>
+        </div>
       </div>
-      {nav.map(([label, href]) => (
-        <Link
-          className={`rounded-lg px-3 py-2.5 text-sm transition ${
-            isActive(href)
-              ? "bg-[var(--foreground)] text-white"
-              : "text-[var(--muted)] hover:bg-[var(--panel-soft)] hover:text-[var(--foreground)]"
-          }`}
-          href={href}
-          key={href}
-          onClick={() => setMobileOpen(false)}
-        >
-          {label}
-        </Link>
-      ))}
-      <div className="mt-4 border-t border-[var(--line)] pt-3">
-        <Link
-          className="block rounded-lg px-3 py-2.5 text-sm text-[var(--muted)] hover:bg-[var(--panel-soft)] hover:text-[var(--foreground)]"
-          href="/"
-        >
-          View site
-        </Link>
+
+      <nav className="admin-nav" aria-label="Admin">
+        {navGroups.map((group) => (
+          <div className="admin-nav-group" key={group.label}>
+            <div className="admin-nav-group-label">{group.label}</div>
+            {group.items.map((item) => (
+              <Link
+                className={`admin-nav-link ${isActive(item.href) ? "is-active" : ""}`}
+                href={item.href}
+                key={item.href}
+                onClick={() => setMobileOpen(false)}
+              >
+                <NavIcon name={item.icon} />
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        ))}
+      </nav>
+
+      <div className="admin-sidebar-foot">
+        <div className="admin-user-chip">
+          <div className="avatar">{initial}</div>
+          <div className="meta">
+            <strong>{displayName}</strong>
+            <span>
+              {me.role ?? "ADMIN"}
+              {me.mode === "dev-bypass" ? " · dev" : ""}
+            </span>
+          </div>
+        </div>
+        <div className="admin-sidebar-links">
+          <Link href="/">View site</Link>
+          <Link href="/dashboard">My dashboard</Link>
+        </div>
       </div>
-    </nav>
+    </>
   );
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-      <div className="border-b border-[var(--line)] bg-white md:hidden">
-        <div className="flex h-14 items-center justify-between px-4">
-          <span className="text-sm font-semibold">Admin</span>
-          <button
-            className="btn btn-secondary h-9 px-3"
-            onClick={() => setMobileOpen((v) => !v)}
-            type="button"
-          >
-            {mobileOpen ? "Close" : "Menu"}
-          </button>
+    <div className="admin-app">
+      <div className="admin-mobile-bar">
+        <div>
+          <strong style={{ fontSize: "0.875rem" }}>Admin</strong>
         </div>
-        {mobileOpen ? <div className="border-t border-[var(--line)]">{sidebar}</div> : null}
+        <button
+          className="btn btn-secondary"
+          onClick={() => setMobileOpen((value) => !value)}
+          type="button"
+        >
+          {mobileOpen ? "Close" : "Menu"}
+        </button>
       </div>
+      {mobileOpen ? <div className="admin-mobile-drawer">{navBody}</div> : null}
 
-      <div className="mx-auto flex max-w-[1400px]">
-        <aside className="sticky top-0 hidden h-screen w-60 shrink-0 overflow-y-auto border-r border-[var(--line)] bg-white md:block">
-          {sidebar}
-        </aside>
-        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">{children}</main>
+      <div className="admin-shell">
+        <aside className="admin-sidebar">{navBody}</aside>
+        <main className="admin-main">
+          <div className="admin-page">{children}</div>
+        </main>
       </div>
     </div>
   );

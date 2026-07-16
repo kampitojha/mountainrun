@@ -3,6 +3,7 @@
 import { useAuth } from "@clerk/nextjs";
 import { useCallback, useEffect, useState } from "react";
 import { adminFetch, formatDateTime } from "../../../lib/admin-api";
+import { AdminEmpty, AdminPageHeader } from "../ui";
 
 type ProofRow = {
   id: string;
@@ -66,20 +67,27 @@ export default function AdminProofsPage() {
 
   return (
     <div>
-      <div>
-        <p className="eyebrow">Verification</p>
-        <h1 className="heading mt-2">Proof queue</h1>
-        <p className="lede mt-2">{total} submission{total === 1 ? "" : "s"} waiting for review.</p>
-      </div>
+      <AdminPageHeader
+        kicker="Operations"
+        title="Proof queue"
+        description={`${total} submission${total === 1 ? "" : "s"} waiting for review.`}
+        actions={
+          <button className="btn btn-secondary" onClick={() => void load()} type="button">
+            Refresh
+          </button>
+        }
+      />
 
-      {error ? <p className="mt-4 text-sm text-[var(--danger)]">{error}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)", marginBottom: "0.75rem" }}>{error}</p> : null}
 
-      <div className="mt-8 space-y-4">
+      <div className="space-y-3">
         {items.length === 0 ? (
-          <div className="card p-8 text-sm text-[var(--muted)]">Queue is empty.</div>
+          <div className="admin-panel admin-panel-pad">
+            <AdminEmpty>Queue is empty.</AdminEmpty>
+          </div>
         ) : (
           items.map((row) => (
-            <article className="card grid gap-4 p-5 lg:grid-cols-[1fr_220px]" key={row.id}>
+            <article className="admin-panel admin-panel-pad grid gap-4 lg:grid-cols-[1fr_220px]" key={row.id}>
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-base font-semibold tracking-tight">{row.user.name}</h2>

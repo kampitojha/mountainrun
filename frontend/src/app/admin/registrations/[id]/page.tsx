@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { adminFetch, formatDateTime, formatInrFromPaise } from "../../../../lib/admin-api";
+import { AdminBackLink, AdminPageHeader, AdminPanel } from "../../ui";
 
 type RegistrationDetail = {
   id: string;
@@ -115,159 +116,154 @@ export default function AdminRegistrationDetailPage() {
 
   return (
     <div>
-      <Link className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]" href="/admin/registrations">
-        ← Registrations
-      </Link>
-      <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="eyebrow">Registration</p>
-          <h1 className="heading mt-2">{data.bibNumber}</h1>
-          <p className="lede mt-2">
-            {data.user.name} · {data.event.title} · {data.distance}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {data.status === "PENDING_PAYMENT" ? (
-            <button className="btn btn-primary h-9" onClick={() => void markPaid()} type="button">
-              Mark paid
-            </button>
-          ) : null}
-          <Link className="btn btn-secondary h-9" href={`/admin/users/${data.user.id}`}>
-            View user
-          </Link>
-        </div>
+      <div style={{ marginBottom: "0.75rem" }}>
+        <AdminBackLink href="/admin/registrations" label="Registrations" />
       </div>
-
-      {message ? <p className="mt-4 text-sm text-[var(--muted)]">{message}</p> : null}
-
-      <div className="mt-8 grid gap-4 lg:grid-cols-2">
-        <section className="card space-y-3 p-5">
-          <h2 className="text-base font-semibold">Runner & shipping</h2>
-          <p className="text-sm text-[var(--muted)]">
-            {data.user.email}
-            {data.user.phone ? ` · ${data.user.phone}` : ""}
-          </p>
-          <p className="text-sm">
-            {data.shippingName}
-            <br />
-            {data.shippingLine1}
-            {data.shippingLine2 ? (
-              <>
-                <br />
-                {data.shippingLine2}
-              </>
+      <AdminPageHeader
+        kicker="Registration"
+        title={data.bibNumber}
+        description={`${data.user.name} · ${data.event.title} · ${data.distance}`}
+        actions={
+          <>
+            {data.status === "PENDING_PAYMENT" ? (
+              <button className="btn btn-primary" onClick={() => void markPaid()} type="button">
+                Mark paid
+              </button>
             ) : null}
-            <br />
-            {data.shippingCity}, {data.shippingState} {data.shippingPincode}
-            <br />
-            {data.shippingPhone}
-          </p>
-          <p className="text-xs text-[var(--muted-soft)]">
-            Registered {formatDateTime(data.registeredAt)}
-          </p>
-        </section>
+            <Link className="btn btn-secondary" href={`/admin/users/${data.user.id}`}>
+              View user
+            </Link>
+          </>
+        }
+      />
 
-        <section className="card space-y-3 p-5">
-          <h2 className="text-base font-semibold">Payment</h2>
+      {message ? <p className="admin-muted" style={{ marginBottom: "0.75rem" }}>{message}</p> : null}
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        <AdminPanel title="Runner & shipping">
+          <div className="space-y-2 text-sm admin-muted">
+            <p>
+              {data.user.email}
+              {data.user.phone ? ` · ${data.user.phone}` : ""}
+            </p>
+            <p style={{ color: "var(--admin-ink)" }}>
+              {data.shippingName}
+              <br />
+              {data.shippingLine1}
+              {data.shippingLine2 ? (
+                <>
+                  <br />
+                  {data.shippingLine2}
+                </>
+              ) : null}
+              <br />
+              {data.shippingCity}, {data.shippingState} {data.shippingPincode}
+              <br />
+              {data.shippingPhone}
+            </p>
+            <p className="text-xs">Registered {formatDateTime(data.registeredAt)}</p>
+          </div>
+        </AdminPanel>
+
+        <AdminPanel title="Payment">
           {data.payment ? (
-            <>
-              <p className="text-sm">
+            <div className="space-y-2 text-sm admin-muted">
+              <p style={{ color: "var(--admin-ink)" }}>
                 {data.payment.status} · {formatInrFromPaise(data.payment.amountInPaise)}
               </p>
-              <p className="font-mono text-xs text-[var(--muted)]">
-                order: {data.payment.razorpayOrderId}
-              </p>
+              <p className="font-mono text-xs">order: {data.payment.razorpayOrderId}</p>
               {data.payment.razorpayPaymentId ? (
-                <p className="font-mono text-xs text-[var(--muted)]">
-                  payment: {data.payment.razorpayPaymentId}
-                </p>
+                <p className="font-mono text-xs">payment: {data.payment.razorpayPaymentId}</p>
               ) : null}
-              <p className="text-xs text-[var(--muted-soft)]">
-                Paid at {formatDateTime(data.payment.paidAt)}
-              </p>
-            </>
+              <p className="text-xs">Paid at {formatDateTime(data.payment.paidAt)}</p>
+            </div>
           ) : (
-            <p className="text-sm text-[var(--muted)]">No payment record.</p>
+            <p className="text-sm admin-muted">No payment record.</p>
           )}
-        </section>
+        </AdminPanel>
 
-        <section className="card space-y-3 p-5">
-          <h2 className="text-base font-semibold">Proof</h2>
-          <p className="text-sm">
-            Status: <span className="badge">{data.proofStatus}</span>
-          </p>
-          {data.finishTimeSeconds != null ? (
-            <p className="text-sm text-[var(--muted)]">Finish seconds: {data.finishTimeSeconds}</p>
-          ) : null}
-          {data.proofUpload ? (
-            <>
-              <p className="text-sm text-[var(--muted)]">Source: {data.proofUpload.sourceApp}</p>
-              <a
-                className="text-sm font-medium underline-offset-2 hover:underline"
-                href={data.proofUpload.activityImageUrl}
-                rel="noreferrer"
-                target="_blank"
-              >
-                Open activity image
-              </a>
-              {data.proofUpload.reviewerNote ? (
-                <p className="text-sm text-[var(--muted)]">Note: {data.proofUpload.reviewerNote}</p>
-              ) : null}
-            </>
-          ) : (
-            <p className="text-sm text-[var(--muted)]">No proof uploaded.</p>
-          )}
-          {data.proofStatus === "SUBMITTED" ? (
-            <Link className="btn btn-secondary h-9" href="/admin/proofs">
-              Open proof queue
-            </Link>
-          ) : null}
-        </section>
+        <AdminPanel title="Proof">
+          <div className="space-y-2 text-sm">
+            <p>
+              Status: <span className="badge">{data.proofStatus}</span>
+            </p>
+            {data.finishTimeSeconds != null ? (
+              <p className="admin-muted">Finish seconds: {data.finishTimeSeconds}</p>
+            ) : null}
+            {data.proofUpload ? (
+              <>
+                <p className="admin-muted">Source: {data.proofUpload.sourceApp}</p>
+                <a
+                  className="admin-link"
+                  href={data.proofUpload.activityImageUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Open activity image
+                </a>
+                {data.proofUpload.reviewerNote ? (
+                  <p className="admin-muted">Note: {data.proofUpload.reviewerNote}</p>
+                ) : null}
+              </>
+            ) : (
+              <p className="admin-muted">No proof uploaded.</p>
+            )}
+            {data.proofStatus === "SUBMITTED" ? (
+              <div style={{ marginTop: "0.75rem" }}>
+                <Link className="btn btn-secondary" href="/admin/proofs">
+                  Open proof queue
+                </Link>
+              </div>
+            ) : null}
+          </div>
+        </AdminPanel>
 
-        <section className="card space-y-3 p-5">
-          <h2 className="text-base font-semibold">Fulfillment</h2>
-          <p className="text-sm">
-            Certificate:{" "}
-            {data.certificate
-              ? `${data.certificate.certificateNumber} (${data.certificate.status})`
-              : "—"}
-          </p>
-          <p className="text-sm">
-            Medal:{" "}
-            {data.medalDelivery
-              ? `${data.medalDelivery.status}${
-                  data.medalDelivery.trackingNumber
-                    ? ` · ${data.medalDelivery.trackingNumber}`
-                    : ""
-                }`
-              : "—"}
-          </p>
-        </section>
+        <AdminPanel title="Fulfillment">
+          <div className="space-y-2 text-sm admin-muted">
+            <p>
+              Certificate:{" "}
+              {data.certificate
+                ? `${data.certificate.certificateNumber} (${data.certificate.status})`
+                : "—"}
+            </p>
+            <p>
+              Medal:{" "}
+              {data.medalDelivery
+                ? `${data.medalDelivery.status}${
+                    data.medalDelivery.trackingNumber
+                      ? ` · ${data.medalDelivery.trackingNumber}`
+                      : ""
+                  }`
+                : "—"}
+            </p>
+          </div>
+        </AdminPanel>
 
-        <section className="card space-y-3 p-5 lg:col-span-2">
-          <h2 className="text-base font-semibold">Admin controls</h2>
-          <label className="block max-w-xs text-sm">
-            <span className="field-label">Status</span>
-            <select className="input" onChange={(e) => setStatus(e.target.value)} value={status}>
-              {["PENDING_PAYMENT", "CONFIRMED", "CANCELLED", "COMPLETED"].map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm">
-            <span className="field-label">Internal note</span>
-            <textarea
-              className="input min-h-24 py-2"
-              onChange={(e) => setNote(e.target.value)}
-              value={note}
-            />
-          </label>
-          <button className="btn btn-primary" onClick={() => void save()} type="button">
-            Save changes
-          </button>
-        </section>
+        <AdminPanel className="lg:col-span-2" title="Admin controls">
+          <div className="space-y-3">
+            <label className="block max-w-xs text-sm">
+              <span className="field-label">Status</span>
+              <select className="input" onChange={(e) => setStatus(e.target.value)} value={status}>
+                {["PENDING_PAYMENT", "CONFIRMED", "CANCELLED", "COMPLETED"].map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm">
+              <span className="field-label">Internal note</span>
+              <textarea
+                className="input min-h-24 py-2"
+                onChange={(e) => setNote(e.target.value)}
+                value={note}
+              />
+            </label>
+            <button className="btn btn-primary" onClick={() => void save()} type="button">
+              Save changes
+            </button>
+          </div>
+        </AdminPanel>
       </div>
     </div>
   );

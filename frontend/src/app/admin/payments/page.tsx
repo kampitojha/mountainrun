@@ -3,6 +3,7 @@
 import { useAuth } from "@clerk/nextjs";
 import { useCallback, useEffect, useState } from "react";
 import { adminFetch, formatDateTime, formatInrFromPaise } from "../../../lib/admin-api";
+import { AdminPageHeader } from "../ui";
 
 type PaymentRow = {
   id: string;
@@ -64,15 +65,13 @@ export default function AdminPaymentsPage() {
 
   return (
     <div>
-      <div>
-        <p className="eyebrow">Finance</p>
-        <h1 className="heading mt-2">Payments</h1>
-        <p className="lede mt-2">
-          Paid: {meta.paidCount} · Revenue: {formatInrFromPaise(meta.paidRevenueInPaise)}
-        </p>
-      </div>
+      <AdminPageHeader
+        kicker="Finance"
+        title="Payments"
+        description={`Paid ${meta.paidCount} · Revenue ${formatInrFromPaise(meta.paidRevenueInPaise)}`}
+      />
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_12rem_auto]">
+      <div className="admin-toolbar">
         <input
           className="input"
           onChange={(e) => setQ(e.target.value)}
@@ -87,14 +86,14 @@ export default function AdminPaymentsPage() {
             </option>
           ))}
         </select>
-        <button className="btn btn-primary h-11" onClick={() => void load()} type="button">
+        <button className="btn btn-primary" onClick={() => void load()} type="button">
           Refresh
         </button>
       </div>
 
-      {error ? <p className="mt-4 text-sm text-[var(--danger)]">{error}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)", marginBottom: "0.75rem" }}>{error}</p> : null}
 
-      <div className="table-wrap table-scroll mt-6">
+      <div className="table-wrap table-scroll">
         <table className="table-clean min-w-[860px]">
           <thead>
             <tr>

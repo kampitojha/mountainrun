@@ -3,6 +3,7 @@
 import { useAuth } from "@clerk/nextjs";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { adminFetch, formatDateTime, formatInrFromPaise } from "../../../lib/admin-api";
+import { AdminEmpty, AdminPageHeader, AdminPanel } from "../ui";
 
 type Coupon = {
   id: string;
@@ -88,16 +89,16 @@ export default function AdminCouponsPage() {
 
   return (
     <div>
-      <div>
-        <p className="eyebrow">Growth</p>
-        <h1 className="heading mt-2">Coupons</h1>
-        <p className="lede mt-2">Create discount codes. Checkout wiring can use these later.</p>
-      </div>
+      <AdminPageHeader
+        kicker="Growth"
+        title="Coupons"
+        description="Create and manage discount codes for checkout."
+      />
 
-      {error ? <p className="mt-4 text-sm text-[var(--danger)]">{error}</p> : null}
-      {message ? <p className="mt-4 text-sm text-[var(--muted)]">{message}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)", marginBottom: "0.75rem" }}>{error}</p> : null}
+      {message ? <p className="admin-muted" style={{ marginBottom: "0.75rem" }}>{message}</p> : null}
 
-      <form className="card mt-8 grid max-w-xl gap-3 p-5 sm:grid-cols-2" onSubmit={onCreate}>
+      <form className="admin-panel admin-panel-pad grid max-w-xl gap-3 sm:grid-cols-2" onSubmit={onCreate}>
         <label className="block text-sm sm:col-span-2">
           <span className="field-label">Code</span>
           <input
@@ -133,9 +134,9 @@ export default function AdminCouponsPage() {
         </button>
       </form>
 
-      <div className="mt-8 space-y-3">
+      <div className="mt-4 space-y-3">
         {items.map((coupon) => (
-          <article className="card flex flex-wrap items-center justify-between gap-3 p-4" key={coupon.id}>
+          <article className="admin-panel admin-panel-pad flex flex-wrap items-center justify-between gap-3" key={coupon.id}>
             <div>
               <p className="font-mono text-sm font-semibold">{coupon.code}</p>
               <p className="mt-1 text-sm text-[var(--muted)]">
@@ -164,7 +165,9 @@ export default function AdminCouponsPage() {
           </article>
         ))}
         {items.length === 0 ? (
-          <p className="text-sm text-[var(--muted)]">No coupons yet.</p>
+          <div className="admin-panel admin-panel-pad">
+            <AdminEmpty>No coupons yet.</AdminEmpty>
+          </div>
         ) : null}
       </div>
     </div>

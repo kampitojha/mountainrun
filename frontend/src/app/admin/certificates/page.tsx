@@ -3,6 +3,7 @@
 import { useAuth } from "@clerk/nextjs";
 import { useCallback, useEffect, useState } from "react";
 import { adminFetch } from "../../../lib/admin-api";
+import { AdminPageHeader } from "../ui";
 
 type CertRow = {
   id: string;
@@ -57,14 +58,14 @@ export default function AdminCertificatesPage() {
 
   return (
     <div>
-      <div>
-        <p className="eyebrow">Fulfillment</p>
-        <h1 className="heading mt-2">Certificates</h1>
-        <p className="lede mt-2">Queue, generate, and mark sent.</p>
-      </div>
+      <AdminPageHeader
+        kicker="Fulfillment"
+        title="Certificates"
+        description="Queue, generate, and mark sent."
+      />
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        <select className="input max-w-xs" onChange={(e) => setStatus(e.target.value)} value={status}>
+      <div className="admin-toolbar" style={{ gridTemplateColumns: "minmax(0, 16rem) auto" }}>
+        <select className="input" onChange={(e) => setStatus(e.target.value)} value={status}>
           <option value="">All</option>
           {["QUEUED", "GENERATED", "SENT"].map((s) => (
             <option key={s} value={s}>
@@ -72,14 +73,14 @@ export default function AdminCertificatesPage() {
             </option>
           ))}
         </select>
-        <button className="btn btn-primary h-11" onClick={() => void load()} type="button">
+        <button className="btn btn-primary" onClick={() => void load()} type="button">
           Refresh
         </button>
       </div>
 
-      {error ? <p className="mt-4 text-sm text-[var(--danger)]">{error}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)", marginBottom: "0.75rem" }}>{error}</p> : null}
 
-      <div className="table-wrap table-scroll mt-6">
+      <div className="table-wrap table-scroll">
         <table className="table-clean min-w-[720px]">
           <thead>
             <tr>

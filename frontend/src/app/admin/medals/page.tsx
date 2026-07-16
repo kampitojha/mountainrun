@@ -3,6 +3,7 @@
 import { useAuth } from "@clerk/nextjs";
 import { useCallback, useEffect, useState } from "react";
 import { adminFetch } from "../../../lib/admin-api";
+import { AdminEmpty, AdminPageHeader } from "../ui";
 
 type MedalRow = {
   id: string;
@@ -61,14 +62,14 @@ export default function AdminMedalsPage() {
 
   return (
     <div>
-      <div>
-        <p className="eyebrow">Fulfillment</p>
-        <h1 className="heading mt-2">Medals</h1>
-        <p className="lede mt-2">Dispatch tracking for finisher medals.</p>
-      </div>
+      <AdminPageHeader
+        kicker="Fulfillment"
+        title="Medals"
+        description="Dispatch tracking for finisher medals."
+      />
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        <select className="input max-w-xs" onChange={(e) => setStatus(e.target.value)} value={status}>
+      <div className="admin-toolbar" style={{ gridTemplateColumns: "minmax(0, 16rem) auto" }}>
+        <select className="input" onChange={(e) => setStatus(e.target.value)} value={status}>
           <option value="">All statuses</option>
           {["PENDING", "DISPATCHED", "DELIVERED", "RETURNED", "NOT_ELIGIBLE"].map((s) => (
             <option key={s} value={s}>
@@ -76,16 +77,16 @@ export default function AdminMedalsPage() {
             </option>
           ))}
         </select>
-        <button className="btn btn-primary h-11" onClick={() => void load()} type="button">
+        <button className="btn btn-primary" onClick={() => void load()} type="button">
           Refresh
         </button>
       </div>
 
-      {error ? <p className="mt-4 text-sm text-[var(--danger)]">{error}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)", marginBottom: "0.75rem" }}>{error}</p> : null}
 
-      <div className="mt-6 space-y-3">
+      <div className="space-y-3">
         {items.map((row) => (
-          <article className="card p-5" key={row.id}>
+          <article className="admin-panel admin-panel-pad" key={row.id}>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold">
@@ -133,7 +134,9 @@ export default function AdminMedalsPage() {
           </article>
         ))}
         {items.length === 0 ? (
-          <p className="text-sm text-[var(--muted)]">No medal rows yet.</p>
+          <div className="admin-panel admin-panel-pad">
+            <AdminEmpty>No medal rows yet.</AdminEmpty>
+          </div>
         ) : null}
       </div>
     </div>

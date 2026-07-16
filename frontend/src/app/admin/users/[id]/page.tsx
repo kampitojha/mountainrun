@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { adminFetch, formatDateTime, formatInrFromPaise } from "../../../../lib/admin-api";
+import { AdminBackLink, AdminEmpty, AdminPageHeader, AdminPanel } from "../../ui";
 
 type UserDetail = {
   id: string;
@@ -69,65 +70,62 @@ export default function AdminUserDetailPage() {
 
   return (
     <div>
-      <Link className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]" href="/admin/users">
-        ← Users
-      </Link>
-      <h1 className="heading mt-4">{data.name}</h1>
-      <p className="lede mt-2">
-        {data.email}
-        {data.phone ? ` · ${data.phone}` : ""}
-      </p>
-      <p className="mt-2 text-xs text-[var(--muted-soft)]">
-        Joined {formatDateTime(data.createdAt)}
-        {data.clerkId ? ` · clerk ${data.clerkId}` : ""}
-      </p>
+      <div style={{ marginBottom: "0.75rem" }}>
+        <AdminBackLink href="/admin/users" label="Users" />
+      </div>
+      <AdminPageHeader
+        kicker="People"
+        title={data.name}
+        description={`${data.email}${data.phone ? ` · ${data.phone}` : ""} · joined ${formatDateTime(data.createdAt)}`}
+      />
 
-      {message ? <p className="mt-4 text-sm text-[var(--muted)]">{message}</p> : null}
+      {message ? <p className="admin-muted" style={{ marginBottom: "0.75rem" }}>{message}</p> : null}
 
-      <section className="card mt-8 max-w-md space-y-3 p-5">
-        <h2 className="text-base font-semibold">Role</h2>
-        <select className="input" onChange={(e) => setRole(e.target.value)} value={role}>
-          {["RUNNER", "ADMIN", "SUPER_ADMIN"].map((r) => (
-            <option key={r} value={r}>
-              {r}
-            </option>
-          ))}
-        </select>
-        <button className="btn btn-primary" onClick={() => void saveRole()} type="button">
-          Save role
-        </button>
-      </section>
+      <div className="grid gap-3 lg:grid-cols-[280px_1fr]">
+        <AdminPanel title="Role">
+          <div className="space-y-3">
+            <select className="input" onChange={(e) => setRole(e.target.value)} value={role}>
+              {["RUNNER", "ADMIN", "SUPER_ADMIN"].map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+            <button className="btn btn-primary" onClick={() => void saveRole()} type="button">
+              Save role
+            </button>
+            {data.clerkId ? (
+              <p className="text-xs admin-muted font-mono">clerk {data.clerkId}</p>
+            ) : null}
+          </div>
+        </AdminPanel>
 
-      <section className="mt-8">
-        <h2 className="text-base font-semibold tracking-tight">Registrations</h2>
-        <div className="mt-4 space-y-2">
+        <AdminPanel title="Registrations" subtitle={`${data.registrations.length} total`}>
           {data.registrations.length === 0 ? (
-            <p className="text-sm text-[var(--muted)]">No registrations.</p>
+            <AdminEmpty>No registrations.</AdminEmpty>
           ) : (
-            data.registrations.map((reg) => (
-              <Link
-                className="card flex flex-wrap items-center justify-between gap-3 p-4 transition hover:bg-[var(--panel-soft)]"
-                href={`/admin/registrations/${reg.id}`}
-                key={reg.id}
-              >
-                <div>
-                  <p className="text-sm font-medium">
-                    {reg.event.title} · {reg.distance}
-                  </p>
-                  <p className="text-xs text-[var(--muted)]">
-                    {reg.bibNumber} · {reg.status} · proof {reg.proofStatus}
-                  </p>
-                </div>
-                <div className="text-right text-sm">
-                  {reg.payment
-                    ? `${reg.payment.status} · ${formatInrFromPaise(reg.payment.amountInPaise)}`
-                    : "No payment"}
-                </div>
-              </Link>
-            ))
+            <div className="admin-list">
+              {data.registrations.map((reg) => (
+                <Link className="admin-list-item" href={`/admin/registrations/${reg.id}`} key={reg.id}>
+                  <div>
+                    <div className="title">
+                      {reg.event.title} · {reg.distance}
+                    </div>
+                    <div className="sub">
+                      {reg.bibNumber} · {reg.status} · proof {reg.proofStatus}
+                    </div>
+                  </div>
+                  <div className="right sub">
+                    {reg.payment
+                      ? `${reg.payment.status} · ${formatInrFromPaise(reg.payment.amountInPaise)}`
+                      : "No payment"}
+                  </div>
+                </Link>
+              ))}
+            </div>
           )}
-        </div>
-      </section>
+        </AdminPanel>
+      </div>
     </div>
   );
 }

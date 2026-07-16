@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { authHeaders, getApiUrl } from "../../../lib/api";
 import { adminFetch, formatDateTime, formatInrFromPaise } from "../../../lib/admin-api";
+import { AdminPageHeader } from "../ui";
 
 type Row = {
   id: string;
@@ -68,18 +69,18 @@ export default function AdminRegistrationsPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="eyebrow">Ops</p>
-          <h1 className="heading mt-2">Registrations</h1>
-          <p className="lede mt-2">{total} total · search, filter, open detail.</p>
-        </div>
-        <button className="btn btn-secondary h-9" onClick={() => void exportCsv()} type="button">
-          Export CSV
-        </button>
-      </div>
+      <AdminPageHeader
+        kicker="Operations"
+        title="Registrations"
+        description={`${total} total · search, filter, open a runner dossier.`}
+        actions={
+          <button className="btn btn-secondary" onClick={() => void exportCsv()} type="button">
+            Export CSV
+          </button>
+        }
+      />
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_12rem_auto]">
+      <div className="admin-toolbar">
         <input
           className="input"
           onChange={(e) => setQ(e.target.value)}
@@ -94,14 +95,14 @@ export default function AdminRegistrationsPage() {
             </option>
           ))}
         </select>
-        <button className="btn btn-primary h-11" onClick={() => void load()} type="button">
+        <button className="btn btn-primary" onClick={() => void load()} type="button">
           Refresh
         </button>
       </div>
 
-      {error ? <p className="mt-4 text-sm text-[var(--danger)]">{error}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)", marginBottom: "0.75rem" }}>{error}</p> : null}
 
-      <div className="table-wrap table-scroll mt-6">
+      <div className="table-wrap table-scroll">
         <table className="table-clean min-w-[800px]">
           <thead>
             <tr>
