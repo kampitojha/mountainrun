@@ -109,128 +109,6 @@ function formatTime(seconds: number | null | undefined) {
   return `${mm}:${ss}`;
 }
 
-function medalMeta(rank: number) {
-  if (rank === 1) {
-    return {
-      label: "1st",
-      emoji: "🥇",
-      ring: "border-[#e8c96a] bg-gradient-to-b from-[#fff9e8] to-white",
-      accent: "text-[#9a7400]",
-      bar: "bg-[#e8c96a]",
-      podiumH: "h-20 sm:h-32 md:h-36",
-    };
-  }
-  if (rank === 2) {
-    return {
-      label: "2nd",
-      emoji: "🥈",
-      ring: "border-[#c5c9d0] bg-gradient-to-b from-[#f4f5f7] to-white",
-      accent: "text-[#5c6570]",
-      bar: "bg-[#c5c9d0]",
-      podiumH: "h-14 sm:h-24 md:h-28",
-    };
-  }
-  if (rank === 3) {
-    return {
-      label: "3rd",
-      emoji: "🥉",
-      ring: "border-[#d4a574] bg-gradient-to-b from-[#faf0e6] to-white",
-      accent: "text-[#8a5a2b]",
-      bar: "bg-[#d4a574]",
-      podiumH: "h-12 sm:h-20 md:h-24",
-    };
-  }
-  return null;
-}
-
-function Podium({
-  entries,
-  currentClerkId,
-}: {
-  entries: LeaderboardEntry[];
-  currentClerkId?: string | null;
-}) {
-  // Display order: 2nd, 1st, 3rd
-  const ordered = [entries[1], entries[0], entries[2]];
-  const filled = ordered.filter(Boolean).length;
-
-  if (entries.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="mt-10">
-      <p className="eyebrow text-center">Podium</p>
-      <h2 className="mt-2 text-center text-xl font-semibold tracking-tight sm:text-2xl">
-        Top finishers
-      </h2>
-
-      <div className="mt-6 flex items-end justify-center gap-1.5 px-0.5 sm:mt-8 sm:gap-4">
-        {ordered.map((entry, visualIndex) => {
-          if (!entry) {
-            return <div className="w-[30%] max-w-[9rem]" key={`empty-${visualIndex}`} />;
-          }
-
-          const meta = medalMeta(entry.rank);
-          if (!meta) {
-            return null;
-          }
-
-          const isYou =
-            Boolean(currentClerkId) &&
-            Boolean(entry.clerkId) &&
-            entry.clerkId === currentClerkId;
-
-          return (
-            <div
-              className={`flex w-[32%] max-w-[10.5rem] flex-col items-center sm:w-36 ${
-                entry.rank === 1 ? "z-10" : ""
-              }`}
-              key={entry.bibNumber + entry.rank}
-            >
-              <div
-                className={`w-full rounded-xl border-2 p-2 text-center shadow-[var(--shadow)] sm:rounded-2xl sm:p-4 ${meta.ring} ${
-                  isYou ? "ring-2 ring-[var(--foreground)] ring-offset-1 sm:ring-offset-2" : ""
-                }`}
-              >
-                <div className="text-xl sm:text-3xl" aria-hidden>
-                  {meta.emoji}
-                </div>
-                <p className={`mt-0.5 text-[0.65rem] font-semibold uppercase tracking-wide sm:mt-1 sm:text-xs ${meta.accent}`}>
-                  {meta.label}
-                </p>
-                <p className="mt-1.5 truncate text-xs font-semibold tracking-tight sm:mt-2 sm:text-base">
-                  {entry.runnerName}
-                </p>
-                {isYou ? (
-                  <p className="mt-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-[var(--foreground)]">
-                    You
-                  </p>
-                ) : null}
-                <p className="mt-1 font-mono text-[0.65rem] text-[var(--muted)] sm:text-sm">
-                  {formatTime(entry.finishTimeSeconds)}
-                </p>
-                <p className="mt-0.5 text-[0.6rem] text-[var(--muted-soft)] sm:text-[0.65rem]">
-                  {entry.distance}
-                </p>
-              </div>
-              <div
-                className={`mt-2 w-full rounded-t-lg ${meta.bar} ${meta.podiumH} opacity-90`}
-                aria-hidden
-              />
-            </div>
-          );
-        })}
-      </div>
-
-      {filled < 3 ? (
-        <p className="mt-4 text-center text-xs text-[var(--muted)]">
-          More finishers will fill the podium as proofs are approved.
-        </p>
-      ) : null}
-    </div>
-  );
-}
 
 function YourRankCard({
   entry,
@@ -241,8 +119,6 @@ function YourRankCard({
   eventTitle: string;
   total: number;
 }) {
-  const meta = medalMeta(entry.rank);
-
   return (
     <div className="card mt-10 overflow-hidden border-[var(--foreground)] bg-[var(--foreground)] p-0 text-white">
       <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
@@ -251,17 +127,11 @@ function YourRankCard({
             Your position
           </p>
           <p className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-            {meta ? (
-              <span className="mr-2" aria-hidden>
-                {meta.emoji}
-              </span>
-            ) : null}
             Rank #{entry.rank}
             <span className="ml-2 text-base font-medium text-white/60">of {total}</span>
           </p>
           <p className="mt-2 text-sm text-white/70">
-            {entry.runnerName} · {entry.distance} · {formatTime(entry.finishTimeSeconds)} ·{" "}
-            {eventTitle}
+            {entry.runnerName} · {entry.distance} · {formatTime(entry.finishTimeSeconds)} · {eventTitle}
           </p>
         </div>
         <div className="shrink-0 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
@@ -418,9 +288,6 @@ export function LeaderboardClient() {
     return entries.find((e) => e.clerkId === currentClerkId) ?? null;
   }, [currentClerkId, entries]);
 
-  const rest = entries.filter((e) => e.rank > 3);
-  const topThree = entries.filter((e) => e.rank <= 3);
-
   return (
     <div>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -428,8 +295,7 @@ export function LeaderboardClient() {
           <p className="eyebrow">Rankings</p>
           <h1 className="display mt-3">Leaderboard</h1>
           <p className="lede mt-3">
-            Approved GPS proofs only. Top 3 get the podium — and if you&apos;re logged in,
-            we highlight <span className="font-medium text-[var(--foreground)]">You</span>.
+            Approved GPS proofs only. If you&apos;re logged in, we highlight <span className="font-medium text-[var(--foreground)]">You</span>.
           </p>
         </div>
       </div>
@@ -521,8 +387,6 @@ export function LeaderboardClient() {
             </div>
           ) : null}
 
-          <Podium currentClerkId={currentClerkId} entries={topThree.length ? topThree : entries.slice(0, 3)} />
-
           <div className="table-wrap table-scroll mt-8 sm:mt-12">
             <table className="table-clean min-w-[640px] sm:min-w-[720px]">
               <thead>
@@ -538,7 +402,6 @@ export function LeaderboardClient() {
                     Boolean(currentClerkId) &&
                     Boolean(row.clerkId) &&
                     row.clerkId === currentClerkId;
-                  const meta = medalMeta(row.rank);
 
                   return (
                     <tr
@@ -551,14 +414,7 @@ export function LeaderboardClient() {
                       key={`${row.rank}-${row.bibNumber}`}
                     >
                       <td className="font-mono text-xs tracking-wide">
-                        {meta ? (
-                          <span className="inline-flex items-center gap-1.5 font-semibold">
-                            <span aria-hidden>{meta.emoji}</span>
-                            {String(row.rank).padStart(2, "0")}
-                          </span>
-                        ) : (
-                          String(row.rank).padStart(2, "0")
-                        )}
+                        {String(row.rank).padStart(2, "0")}
                       </td>
                       <td className="strong">
                         <span className="inline-flex flex-wrap items-center gap-2">
@@ -585,9 +441,9 @@ export function LeaderboardClient() {
             </table>
           </div>
 
-          {rest.length === 0 && entries.length <= 3 ? (
+          {entries.length <= 3 ? (
             <p className="mt-4 text-center text-sm text-[var(--muted)]">
-              Only top finishers so far — more ranks appear as proofs are verified.
+              Only verified finishers so far — more ranks appear as proofs are verified.
             </p>
           ) : null}
         </>

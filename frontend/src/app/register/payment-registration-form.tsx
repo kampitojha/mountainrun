@@ -2,7 +2,7 @@
 
 import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { Field, inputClass } from "../components/app-shell";
 import { authHeaders, getApiUrl, readApiError } from "../../lib/api";
 import { type FieldErrors, validateRegistrationForm } from "../../lib/validation";
@@ -109,7 +109,11 @@ export function PaymentRegistrationForm() {
     );
   }
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const fieldErrors = validateRegistrationForm(formData);
     setErrors(fieldErrors);
 
@@ -191,9 +195,9 @@ export function PaymentRegistrationForm() {
         description: `Registration ${order.bibNumber}`,
         order_id: order.orderId,
         prefill: {
-          name: formData.get("name"),
-          email: formData.get("email"),
-          contact: formData.get("phone"),
+          name: asString(formData.get("name")),
+          email: asString(formData.get("email")),
+          contact: asString(formData.get("phone")),
         },
         method: {
           upi: true,
@@ -241,7 +245,7 @@ export function PaymentRegistrationForm() {
   }
 
   return (
-    <form action={handleSubmit} className="card mt-6 p-4 sm:mt-10 sm:p-8" noValidate>
+    <form onSubmit={handleSubmit} className="card mt-6 p-4 sm:mt-10 sm:p-8" noValidate>
       <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
         <Field label="Full name">
           <input
