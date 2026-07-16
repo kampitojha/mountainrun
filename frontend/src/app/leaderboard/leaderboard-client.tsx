@@ -112,31 +112,37 @@ function formatTime(seconds: number | null | undefined) {
 
 function YourRankCard({
   entry,
-  eventTitle,
   total,
 }: {
   entry: LeaderboardEntry;
-  eventTitle: string;
   total: number;
 }) {
   return (
-    <div className="card mt-10 overflow-hidden border-[var(--foreground)] bg-[var(--foreground)] p-0 text-white">
-      <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.14em] text-white/55">
-            Your position
-          </p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-            Rank #{entry.rank}
-            <span className="ml-2 text-base font-medium text-white/60">of {total}</span>
-          </p>
-          <p className="mt-2 text-sm text-white/70">
-            {entry.runnerName} · {entry.distance} · {formatTime(entry.finishTimeSeconds)} · {eventTitle}
-          </p>
-        </div>
-        <div className="shrink-0 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
-          That&apos;s you
-        </div>
+    <div className="mt-6 rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] px-4 py-3 sm:mt-8">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="rounded-md bg-[var(--foreground)] px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider text-white">
+          You
+        </span>
+        <p className="text-sm font-semibold tracking-tight">
+          Rank #{entry.rank}
+          <span className="font-medium text-[var(--muted)]"> / {total}</span>
+        </p>
+        <span className="hidden h-3 w-px bg-[var(--line)] sm:block" aria-hidden />
+        <p className="text-sm text-[var(--muted)]">
+          <span className="font-medium text-[var(--foreground)]">{entry.distance}</span>
+          {" · "}
+          <span className="font-mono text-xs tracking-wide text-[var(--foreground)]">
+            {formatTime(entry.finishTimeSeconds)}
+          </span>
+          {" · "}
+          Bib {entry.bibNumber}
+        </p>
+        <a
+          className="ml-auto text-xs font-medium text-[var(--muted)] underline-offset-2 hover:text-[var(--foreground)] hover:underline"
+          href="#your-rank"
+        >
+          Jump to row
+        </a>
       </div>
     </div>
   );
@@ -153,7 +159,6 @@ export function LeaderboardClient() {
   const [selectedSlug, setSelectedSlug] = useState(publicEvents[0]?.slug ?? "");
   const [distance, setDistance] = useState<string>("all");
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-  const [eventTitle, setEventTitle] = useState(publicEvents[0]?.name ?? "Leaderboard");
   const [loading, setLoading] = useState(true);
   const [usingDemo, setUsingDemo] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -219,14 +224,6 @@ export function LeaderboardClient() {
 
       const json = await response.json();
       const rows = (json.data ?? []) as LeaderboardEntry[];
-      const title = json.meta?.eventTitle as string | undefined;
-
-      if (title) {
-        setEventTitle(title);
-      } else {
-        const match = events.find((e) => e.slug === selectedSlug);
-        setEventTitle(match?.name ?? "Leaderboard");
-      }
 
       if (rows.length === 0) {
         // Demo board so UI still feels complete; inject "you" if signed in
@@ -263,7 +260,7 @@ export function LeaderboardClient() {
     } finally {
       setLoading(false);
     }
-  }, [currentClerkId, distance, events, isSignedIn, selectedSlug, user]);
+  }, [currentClerkId, distance, isSignedIn, selectedSlug, user]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -353,37 +350,30 @@ export function LeaderboardClient() {
       ) : (
         <>
           {isSignedIn && yourEntry ? (
-            <YourRankCard
-              entry={yourEntry}
-              eventTitle={eventTitle}
-              total={entries.length}
-            />
+            <YourRankCard entry={yourEntry} total={entries.length} />
           ) : null}
 
           {isSignedIn && !yourEntry ? (
-            <div className="card mt-10 border-dashed p-6 text-center">
-              <p className="text-sm font-medium">You&apos;re not on this board yet</p>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[var(--muted)]">
-                Finish your run, upload GPS proof, and after approval your rank shows here with
-                a clear <strong>You</strong> marker.
-              </p>
-              <div className="mt-5 flex flex-wrap justify-center gap-2">
-                <Link className="btn btn-primary h-9 px-4" href="/register">
+            <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] px-4 py-3 sm:mt-8">
+              <p className="text-sm text-[var(--muted)]">
+                You&apos;re not on this board yet.{" "}
+                <Link className="font-medium text-[var(--foreground)] underline-offset-2 hover:underline" href="/register">
                   Register
                 </Link>
-                <Link className="btn btn-secondary h-9 px-4" href="/dashboard">
+                {" · "}
+                <Link className="font-medium text-[var(--foreground)] underline-offset-2 hover:underline" href="/dashboard">
                   Dashboard
                 </Link>
-              </div>
+              </p>
             </div>
           ) : null}
 
           {!isSignedIn ? (
-            <div className="mt-10 rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] px-4 py-3 text-center text-sm text-[var(--muted)]">
-              <Link className="font-medium text-[var(--foreground)] underline-offset-4 hover:underline" href="/sign-in">
+            <div className="mt-6 rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] px-4 py-3 text-sm text-[var(--muted)] sm:mt-8">
+              <Link className="font-medium text-[var(--foreground)] underline-offset-2 hover:underline" href="/sign-in">
                 Sign in
               </Link>{" "}
-              to track your own position on the leaderboard.
+              to see your rank on this board.
             </div>
           ) : null}
 
