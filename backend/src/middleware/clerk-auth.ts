@@ -88,13 +88,34 @@ export async function requireAdmin(
       throw new ApiError(401, "Authentication required");
     }
 
+    // Prefer DB role (synced user), fall back to Clerk metadata
+    const { prisma } = await import("../lib/prisma.js");
+    const dbUser = await prisma.user.findFirst({
+      where: { clerkId: request.auth.userId },
+      select: { role: true },
+    });
+
+    if (dbUser?.role === "ADMIN" || dbUser?.role === "SUPER_ADMIN") {
+      next();
+      return;
+    }
+
     const user = await clerkClient.users.getUser(request.auth.userId);
     const role = (user.publicMetadata?.role ?? user.privateMetadata?.role) as
       | string
       | undefined;
 
-    if (role !== "admin" && role !== "super_admin") {
+    const normalized = (role ?? "").toLowerCase().replace(/-/g, "_");
+    if (normalized !== "admin" && normalized !== "super_admin") {
       throw new ApiError(403, "Admin access required");
+    }
+
+    // Mirror Clerk admin role into DB if user exists as RUNNER
+    if (dbUser) {
+      await prisma.user.updateMany({
+        where: { clerkId: request.auth.userId, role: "RUNNER" },
+        data: { role: normalized === "super_admin" ? "SUPER_ADMIN" : "ADMIN" },
+      });
     }
 
     next();

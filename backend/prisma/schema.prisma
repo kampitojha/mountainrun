@@ -21,22 +21,25 @@ model User {
 }
 
 model Event {
-  id             String         @id @default(cuid())
-  title          String
-  slug           String         @unique
-  description    String
-  status         EventStatus    @default(DRAFT)
-  startsAt       DateTime
-  endsAt         DateTime
-  proofClosesAt  DateTime
-  distances      String[]
-  priceInPaise   Int
-  medalIncluded  Boolean        @default(true)
-  city           String?
-  bannerImageUrl String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  registrations  Registration[]
+  id               String         @id @default(cuid())
+  title            String
+  slug             String         @unique
+  description      String
+  status           EventStatus    @default(DRAFT)
+  startsAt         DateTime
+  endsAt           DateTime
+  proofClosesAt    DateTime
+  distances        String[]
+  priceInPaise     Int
+  paymentRequired  Boolean        @default(true)
+  medalIncluded    Boolean        @default(true)
+  featured         Boolean        @default(false)
+  maxCapacity      Int?
+  city             String?
+  bannerImageUrl   String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  registrations    Registration[]
 }
 
 model Registration {
@@ -56,6 +59,7 @@ model Registration {
   shippingCity      String
   shippingState     String
   shippingPincode   String
+  adminNote         String?
   certificate       Certificate?
   medalDelivery     MedalDelivery?
   payment           Payment?
@@ -66,6 +70,8 @@ model Registration {
   @@unique([userId, eventId, distance])
   @@index([eventId, proofStatus])
   @@index([eventId, finishTimeSeconds])
+  @@index([status])
+  @@index([registeredAt])
 }
 
 model Payment {
@@ -123,6 +129,7 @@ model Coupon {
   maxRedemptions Int?
   redeemedCount  Int       @default(0)
   expiresAt      DateTime?
+  active         Boolean   @default(true)
   createdAt      DateTime  @default(now())
 }
 
@@ -134,6 +141,20 @@ model Notification {
   body      String
   readAt    DateTime?
   createdAt DateTime  @default(now())
+}
+
+model AdminAuditLog {
+  id           String   @id @default(cuid())
+  actorClerkId String?
+  actorEmail   String?
+  action       String
+  entityType   String
+  entityId     String?
+  summary      String?
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
 }
 
 enum UserRole {

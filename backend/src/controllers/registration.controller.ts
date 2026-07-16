@@ -54,6 +54,18 @@ export async function createRegistration(request: AuthenticatedRequest, response
     throw new ApiError(422, "Selected distance is not available for this event");
   }
 
+  if (event.maxCapacity != null) {
+    const filled = await prisma.registration.count({
+      where: {
+        eventId: event.id,
+        status: { in: ["PENDING_PAYMENT", "CONFIRMED", "COMPLETED"] },
+      },
+    });
+    if (filled >= event.maxCapacity) {
+      throw new ApiError(422, "This event is full. Registration is closed.");
+    }
+  }
+
   const clerkId = payload.clerkId ?? request.auth?.userId;
   const email = payload.email?.toLowerCase();
 
@@ -110,11 +122,14 @@ export async function createRegistration(request: AuthenticatedRequest, response
     throw new ApiError(409, "You are already registered for this distance in this event.");
   }
 
+  const freeEntry = !event.paymentRequired || event.priceInPaise <= 0;
+
   const registration = await prisma.registration.create({
     data: {
       userId: user.id,
       eventId: event.id,
       distance: payload.distance,
+      status: freeEntry ? "CONFIRMED" : "PENDING_PAYMENT",
       shippingName: payload.shippingName,
       shippingPhone: payload.shippingPhone,
       shippingLine1: payload.shippingLine1,
@@ -127,10 +142,11 @@ export async function createRegistration(request: AuthenticatedRequest, response
     include: {
       event: true,
       user: true,
+      payment: true,
     },
   });
 
-  response.status(201).json({ data: registration });
+  response.status(201).json({ data: registration, meta: { freeEntry } });
 }
 
 export async function submitProof(request: AuthenticatedRequest, response: Response) {

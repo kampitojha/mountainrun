@@ -3,6 +3,7 @@ import express, { type NextFunction, type Request, type Response } from "express
 import helmet from "helmet";
 import morgan from "morgan";
 import { env } from "./config/env.js";
+import { adminRouter } from "./routes/admin.routes.js";
 import { certificateRouter } from "./routes/certificate.routes.js";
 import { dashboardRouter } from "./routes/dashboard.routes.js";
 import { eventRouter } from "./routes/event.routes.js";
@@ -60,6 +61,7 @@ app.get("/health", (_request, response) => {
   response.json({ status: "ok", service: "mountainrun-api" });
 });
 
+app.use("/api/admin", adminRouter);
 app.use("/api/events", eventRouter);
 app.use("/api/users", userRouter);
 app.use("/api/registrations", registrationRouter);
