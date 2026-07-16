@@ -24,6 +24,13 @@ export function isClerkConfigured(secretKey = readEnv("CLERK_SECRET_KEY")) {
   return secretKey.startsWith("sk_");
 }
 
+function parseEmailList(raw: string) {
+  return raw
+    .split(",")
+    .map((part) => part.trim().toLowerCase())
+    .filter(Boolean);
+}
+
 export const env = {
   port: Number(process.env.PORT ?? 4000),
   frontendUrl: process.env.FRONTEND_URL ?? "http://localhost:3000",
@@ -36,6 +43,15 @@ export const env = {
     process.env.RESEND_FROM_EMAIL ?? "Mountain Run <onboarding@resend.dev>",
   clerkSecretKey: readEnv("CLERK_SECRET_KEY"),
   clerkPublishableKey: readEnv("CLERK_PUBLISHABLE_KEY"),
+  /** Comma-separated emails that always get admin (e.g. you@gmail.com) */
+  adminEmails: parseEmailList(readEnv("ADMIN_EMAILS")),
+  /**
+   * When true (default in development), the first signed-in user who hits
+   * an admin route becomes SUPER_ADMIN if no admin exists yet.
+   */
+  adminBootstrap:
+    readEnv("ADMIN_BOOTSTRAP", process.env.NODE_ENV === "production" ? "false" : "true")
+      .toLowerCase() === "true",
   get clerkEnabled() {
     return isClerkConfigured(this.clerkSecretKey);
   },

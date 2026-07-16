@@ -38,7 +38,16 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const token = await getToken().catch(() => null);
+      // Wait briefly for Clerk session token after redirect from sign-in
+      let token: string | null = null;
+      for (let attempt = 0; attempt < 6; attempt += 1) {
+        token = await getToken().catch(() => null);
+        if (token || !isSignedIn) {
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+
       const json = await adminFetch<{ data: AdminMe }>("/api/admin/me", token);
       setMe(json.data);
     } catch (err) {
@@ -47,19 +56,52 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [getToken]);
+  }, [getToken, isSignedIn]);
 
   useEffect(() => {
     if (!isLoaded) {
       return;
     }
+
+    if (!isSignedIn) {
+      setLoading(false);
+      setMe(null);
+      setError(null);
+      return;
+    }
+
     void loadMe();
   }, [isLoaded, isSignedIn, loadMe]);
 
-  if (!isLoaded || loading) {
+  if (!isLoaded || (isSignedIn && loading)) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--background)] text-sm text-[var(--muted)]">
-        Loading admin…
+      <div className="flex min-h-screen items-center justify-center bg-[var(--background)] px-4 text-center text-sm text-[var(--muted)]">
+        <div>
+          <p className="font-medium text-[var(--foreground)]">Loading admin…</p>
+          <p className="mt-2 text-xs text-[var(--muted-soft)]">Checking your session and permissions.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isSignedIn) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--background)] px-4">
+        <div className="card max-w-md p-8 text-center">
+          <p className="eyebrow">Admin</p>
+          <h1 className="mt-3 text-xl font-semibold tracking-tight">Sign in required</h1>
+          <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
+            Sign in with your admin account to open the console. You will return here after login.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            <Link className="btn btn-primary" href="/sign-in?redirect_url=/admin">
+              Sign in
+            </Link>
+            <Link className="btn btn-ghost" href="/">
+              Back home
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
@@ -67,28 +109,38 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   if (error || !me) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--background)] px-4">
-        <div className="card max-w-md p-8 text-center">
+        <div className="card max-w-lg p-8 text-center">
           <p className="eyebrow">Admin</p>
           <h1 className="mt-3 text-xl font-semibold tracking-tight">Access restricted</h1>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-            {error ?? "Sign in with an admin account to continue."}
+            {error ?? "Your account is signed in but is not an admin yet."}
           </p>
-          <p className="mt-4 text-xs leading-5 text-[var(--muted-soft)]">
-            Grant access: set user role to ADMIN in the database, or Clerk publicMetadata
-            {" "}
-            <code className="rounded bg-[var(--panel-soft)] px-1">role: &quot;admin&quot;</code>.
-            Local dev without Clerk keys uses a bypass.
-          </p>
+          <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] p-4 text-left text-xs leading-5 text-[var(--muted)]">
+            <p className="font-medium text-[var(--foreground)]">How to get access</p>
+            <ol className="mt-2 list-decimal space-y-1 pl-4">
+              <li>
+                Backend <code className="rounded bg-white px-1">ADMIN_EMAILS</code> me apna email
+                add karo (comma-separated).
+              </li>
+              <li>
+                Ya Clerk Dashboard → User → publicMetadata:{" "}
+                <code className="rounded bg-white px-1">{`{ "role": "admin" }`}</code>
+              </li>
+              <li>Ya DB me User.role = ADMIN / SUPER_ADMIN set karo.</li>
+            </ol>
+            {user?.primaryEmailAddress?.emailAddress ? (
+              <p className="mt-3">
+                Signed in as{" "}
+                <span className="font-medium text-[var(--foreground)]">
+                  {user.primaryEmailAddress.emailAddress}
+                </span>
+              </p>
+            ) : null}
+          </div>
           <div className="mt-6 flex flex-wrap justify-center gap-2">
-            {!isSignedIn ? (
-              <Link className="btn btn-primary" href="/sign-in">
-                Sign in
-              </Link>
-            ) : (
-              <button className="btn btn-secondary" onClick={() => void loadMe()} type="button">
-                Retry
-              </button>
-            )}
+            <button className="btn btn-secondary" onClick={() => void loadMe()} type="button">
+              Retry
+            </button>
             <Link className="btn btn-ghost" href="/">
               Back home
             </Link>

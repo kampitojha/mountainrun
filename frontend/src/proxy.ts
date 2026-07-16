@@ -21,7 +21,13 @@ export default clerkMiddleware(async (auth, request) => {
   }
 
   if (isProtectedRoute(request)) {
-    await auth.protect();
+    // Keep return URL so /admin → sign-in → back to /admin (not /register)
+    await auth.protect({
+      unauthenticatedUrl: new URL(
+        `/sign-in?redirect_url=${encodeURIComponent(request.nextUrl.pathname)}`,
+        request.url,
+      ).toString(),
+    });
   }
 });
 

@@ -1,6 +1,7 @@
 import { createClerkClient, verifyToken } from "@clerk/backend";
 import type { NextFunction, Request, Response } from "express";
 import { env } from "../config/env.js";
+import { prisma } from "../lib/prisma.js";
 import { ApiError } from "../utils/api-error.js";
 
 export type AuthenticatedRequest = Request & {
@@ -16,6 +17,16 @@ const clerkClient = env.clerkEnabled
 
 function allowDevBypass() {
   return env.nodeEnv !== "production" && !env.clerkEnabled;
+}
+
+function primaryEmailFromClerkUser(user: {
+  emailAddresses?: Array<{ id: string; emailAddress: string }>;
+  primaryEmailAddressId?: string | null;
+}) {
+  const list = user.emailAddresses ?? [];
+  const primary =
+    list.find((item) => item.id === user.primaryEmailAddressId) ?? list[0];
+  return primary?.emailAddress?.toLowerCase() ?? null;
 }
 
 export async function requireClerkAuth(
@@ -46,7 +57,11 @@ export async function requireClerkAuth(
 
     const payload = await verifyToken(token, {
       secretKey: env.clerkSecretKey,
-      authorizedParties: [env.frontendUrl, "http://localhost:3000", "http://127.0.0.1:3000"],
+      authorizedParties: [
+        env.frontendUrl,
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+      ],
     });
 
     if (!payload.sub) {
@@ -69,6 +84,30 @@ export async function requireClerkAuth(
   }
 }
 
+async function elevateToAdmin(clerkId: string, email: string | null, superAdmin: boolean) {
+  const role = superAdmin ? "SUPER_ADMIN" : "ADMIN";
+
+  const byClerk = await prisma.user.findFirst({ where: { clerkId } });
+  if (byClerk) {
+    return prisma.user.update({
+      where: { id: byClerk.id },
+      data: { role },
+    });
+  }
+
+  if (email) {
+    const byEmail = await prisma.user.findFirst({ where: { email } });
+    if (byEmail) {
+      return prisma.user.update({
+        where: { id: byEmail.id },
+        data: { role, clerkId },
+      });
+    }
+  }
+
+  return null;
+}
+
 export async function requireAdmin(
   request: AuthenticatedRequest,
   _response: Response,
@@ -88,11 +127,12 @@ export async function requireAdmin(
       throw new ApiError(401, "Authentication required");
     }
 
-    // Prefer DB role (synced user), fall back to Clerk metadata
-    const { prisma } = await import("../lib/prisma.js");
-    const dbUser = await prisma.user.findFirst({
-      where: { clerkId: request.auth.userId },
-      select: { role: true },
+    const clerkId = request.auth.userId;
+
+    // 1) DB role already admin
+    let dbUser = await prisma.user.findFirst({
+      where: { clerkId },
+      select: { id: true, role: true, email: true },
     });
 
     if (dbUser?.role === "ADMIN" || dbUser?.role === "SUPER_ADMIN") {
@@ -100,23 +140,39 @@ export async function requireAdmin(
       return;
     }
 
-    const user = await clerkClient.users.getUser(request.auth.userId);
-    const role = (user.publicMetadata?.role ?? user.privateMetadata?.role) as
+    // 2) Clerk metadata role
+    const clerkUser = await clerkClient.users.getUser(clerkId);
+    const email = primaryEmailFromClerkUser(clerkUser);
+    const metaRole = (clerkUser.publicMetadata?.role ?? clerkUser.privateMetadata?.role) as
       | string
       | undefined;
+    const normalized = (metaRole ?? "").toLowerCase().replace(/-/g, "_");
+    const metaIsAdmin = normalized === "admin" || normalized === "super_admin";
 
-    const normalized = (role ?? "").toLowerCase().replace(/-/g, "_");
-    if (normalized !== "admin" && normalized !== "super_admin") {
-      throw new ApiError(403, "Admin access required");
-    }
+    // 3) ADMIN_EMAILS allow-list
+    const emailIsAdmin = Boolean(email && env.adminEmails.includes(email));
 
-    // Mirror Clerk admin role into DB if user exists as RUNNER
-    if (dbUser) {
-      await prisma.user.updateMany({
-        where: { clerkId: request.auth.userId, role: "RUNNER" },
-        data: { role: normalized === "super_admin" ? "SUPER_ADMIN" : "ADMIN" },
+    // 4) Bootstrap first admin (dev default / explicit env)
+    let bootstrapOk = false;
+    if (env.adminBootstrap) {
+      const adminCount = await prisma.user.count({
+        where: { role: { in: ["ADMIN", "SUPER_ADMIN"] } },
       });
+      bootstrapOk = adminCount === 0;
     }
+
+    if (!metaIsAdmin && !emailIsAdmin && !bootstrapOk) {
+      throw new ApiError(
+        403,
+        "Admin access required. Ask an owner to set your role to ADMIN, or add your email to ADMIN_EMAILS.",
+      );
+    }
+
+    await elevateToAdmin(
+      clerkId,
+      email ?? dbUser?.email ?? null,
+      normalized === "super_admin" || bootstrapOk,
+    );
 
     next();
   } catch (error) {
