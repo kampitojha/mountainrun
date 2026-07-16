@@ -64,7 +64,7 @@ export default function AdminPaymentsPage() {
   }
 
   return (
-    <div>
+    <div className="admin-stack">
       <AdminPageHeader
         kicker="Finance"
         title="Payments"
@@ -91,9 +91,9 @@ export default function AdminPaymentsPage() {
         </button>
       </div>
 
-      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)", marginBottom: "0.75rem" }}>{error}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)" }}>{error}</p> : null}
 
-      <div className="table-wrap table-scroll">
+      <div className="table-wrap table-scroll admin-fill">
         <table className="table-clean min-w-[860px]">
           <thead>
             <tr>

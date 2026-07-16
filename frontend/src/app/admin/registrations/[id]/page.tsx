@@ -115,8 +115,8 @@ export default function AdminRegistrationDetailPage() {
   }
 
   return (
-    <div>
-      <div style={{ marginBottom: "0.75rem" }}>
+    <div className="admin-stack">
+      <div>
         <AdminBackLink href="/admin/registrations" label="Registrations" />
       </div>
       <AdminPageHeader
@@ -137,9 +137,9 @@ export default function AdminRegistrationDetailPage() {
         }
       />
 
-      {message ? <p className="admin-muted" style={{ marginBottom: "0.75rem" }}>{message}</p> : null}
+      {message ? <p className="admin-muted">{message}</p> : null}
 
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="admin-layout-split is-equal">
         <AdminPanel title="Runner & shipping">
           <div className="space-y-2 text-sm admin-muted">
             <p>
@@ -239,7 +239,7 @@ export default function AdminRegistrationDetailPage() {
           </div>
         </AdminPanel>
 
-        <AdminPanel className="lg:col-span-2" title="Admin controls">
+        <AdminPanel className="span-2" title="Admin controls">
           <div className="space-y-3">
             <label className="block max-w-xs text-sm">
               <span className="field-label">Status</span>

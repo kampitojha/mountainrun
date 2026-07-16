@@ -43,7 +43,7 @@ export default function AdminUsersPage() {
   }, [load]);
 
   return (
-    <div>
+    <div className="admin-stack">
       <AdminPageHeader
         kicker="People"
         title="Users"
@@ -70,9 +70,9 @@ export default function AdminUsersPage() {
         </button>
       </div>
 
-      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)", marginBottom: "0.75rem" }}>{error}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)" }}>{error}</p> : null}
 
-      <div className="table-wrap table-scroll">
+      <div className="table-wrap table-scroll admin-fill">
         <table className="table-clean min-w-[720px]">
           <thead>
             <tr>

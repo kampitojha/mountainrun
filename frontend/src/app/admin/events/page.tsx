@@ -188,7 +188,7 @@ export default function AdminEventsPage() {
   }
 
   return (
-    <div>
+    <div className="admin-stack">
       <AdminPageHeader
         kicker="Operations"
         title="Events"
@@ -209,11 +209,11 @@ export default function AdminEventsPage() {
         }
       />
 
-      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)", marginBottom: "0.75rem" }}>{error}</p> : null}
-      {message ? <p className="admin-muted" style={{ marginBottom: "0.75rem" }}>{message}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)" }}>{error}</p> : null}
+      {message ? <p className="admin-muted">{message}</p> : null}
 
-      <div className="grid gap-4 xl:grid-cols-[360px_1fr]">
-        <form className="admin-panel admin-panel-pad h-fit space-y-3" onSubmit={onSubmit}>
+      <div className="admin-layout-split is-form-list admin-fill">
+        <form className="admin-panel admin-panel-pad space-y-3" onSubmit={onSubmit}>
           <h2 className="admin-panel-title">{editingId ? "Edit event" : "New event"}</h2>
           <label className="block text-sm">
             <span className="field-label">Title</span>
@@ -362,7 +362,7 @@ export default function AdminEventsPage() {
           </button>
         </form>
 
-        <div className="space-y-3">
+        <div className="admin-stack">
           {items.map((event) => (
             <article className="admin-panel admin-panel-pad" key={event.id}>
               <div className="flex flex-wrap items-start justify-between gap-3">

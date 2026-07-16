@@ -108,7 +108,7 @@ export default function AdminOverviewPage() {
   ];
 
   return (
-    <div>
+    <div className="admin-stack">
       <AdminPageHeader
         kicker="Workspace"
         title="Overview"
@@ -131,8 +131,9 @@ export default function AdminOverviewPage() {
         ))}
       </div>
 
-      <div className="admin-split" style={{ marginTop: "1rem" }}>
+      <div className="admin-split">
         <AdminPanel
+          fill
           action={
             <Link className="admin-link" href="/admin/registrations">
               View all
@@ -144,7 +145,7 @@ export default function AdminOverviewPage() {
           {data.recentRegistrations.length === 0 ? (
             <AdminEmpty>No registrations yet.</AdminEmpty>
           ) : (
-            <div className="admin-list">
+            <div className="admin-list is-stretch">
               {data.recentRegistrations.map((row) => (
                 <Link className="admin-list-item" href={`/admin/registrations/${row.id}`} key={row.id}>
                   <div>
@@ -166,6 +167,7 @@ export default function AdminOverviewPage() {
         </AdminPanel>
 
         <AdminPanel
+          fill
           action={
             <Link className="admin-link" href="/admin/payments">
               View all
@@ -177,7 +179,7 @@ export default function AdminOverviewPage() {
           {data.recentPayments.length === 0 ? (
             <AdminEmpty>No payments yet.</AdminEmpty>
           ) : (
-            <div className="admin-list">
+            <div className="admin-list is-stretch">
               {data.recentPayments.map((row) => (
                 <div className="admin-list-item" key={row.id}>
                   <div>

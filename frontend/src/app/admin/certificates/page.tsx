@@ -57,14 +57,14 @@ export default function AdminCertificatesPage() {
   }
 
   return (
-    <div>
+    <div className="admin-stack">
       <AdminPageHeader
         kicker="Fulfillment"
         title="Certificates"
         description="Queue, generate, and mark sent."
       />
 
-      <div className="admin-toolbar" style={{ gridTemplateColumns: "minmax(0, 16rem) auto" }}>
+      <div className="admin-toolbar is-two">
         <select className="input" onChange={(e) => setStatus(e.target.value)} value={status}>
           <option value="">All</option>
           {["QUEUED", "GENERATED", "SENT"].map((s) => (
@@ -78,9 +78,9 @@ export default function AdminCertificatesPage() {
         </button>
       </div>
 
-      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)", marginBottom: "0.75rem" }}>{error}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)" }}>{error}</p> : null}
 
-      <div className="table-wrap table-scroll">
+      <div className="table-wrap table-scroll admin-fill">
         <table className="table-clean min-w-[720px]">
           <thead>
             <tr>

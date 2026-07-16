@@ -30,15 +30,19 @@ export function AdminPanel({
   action,
   children,
   className = "",
+  fill = false,
 }: {
   title?: string;
   subtitle?: string;
   action?: ReactNode;
   children: ReactNode;
   className?: string;
+  fill?: boolean;
 }) {
   return (
-    <section className={`admin-panel admin-panel-pad ${className}`.trim()}>
+    <section
+      className={`admin-panel admin-panel-pad ${fill ? "is-fill" : ""} ${className}`.trim()}
+    >
       {title ? (
         <div className="admin-section-label">
           <div>
@@ -48,7 +52,7 @@ export function AdminPanel({
           {action}
         </div>
       ) : null}
-      {children}
+      <div className={fill ? "admin-fill" : undefined}>{children}</div>
     </section>
   );
 }

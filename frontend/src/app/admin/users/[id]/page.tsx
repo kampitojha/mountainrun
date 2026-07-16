@@ -69,8 +69,8 @@ export default function AdminUserDetailPage() {
   if (!data) return <p className="text-sm text-[var(--muted)]">Loading…</p>;
 
   return (
-    <div>
-      <div style={{ marginBottom: "0.75rem" }}>
+    <div className="admin-stack">
+      <div>
         <AdminBackLink href="/admin/users" label="Users" />
       </div>
       <AdminPageHeader
@@ -79,10 +79,10 @@ export default function AdminUserDetailPage() {
         description={`${data.email}${data.phone ? ` · ${data.phone}` : ""} · joined ${formatDateTime(data.createdAt)}`}
       />
 
-      {message ? <p className="admin-muted" style={{ marginBottom: "0.75rem" }}>{message}</p> : null}
+      {message ? <p className="admin-muted">{message}</p> : null}
 
-      <div className="grid gap-3 lg:grid-cols-[280px_1fr]">
-        <AdminPanel title="Role">
+      <div className="admin-layout-split is-aside-main admin-fill">
+        <AdminPanel fill title="Role">
           <div className="space-y-3">
             <select className="input" onChange={(e) => setRole(e.target.value)} value={role}>
               {["RUNNER", "ADMIN", "SUPER_ADMIN"].map((r) => (
@@ -100,11 +100,11 @@ export default function AdminUserDetailPage() {
           </div>
         </AdminPanel>
 
-        <AdminPanel title="Registrations" subtitle={`${data.registrations.length} total`}>
+        <AdminPanel fill title="Registrations" subtitle={`${data.registrations.length} total`}>
           {data.registrations.length === 0 ? (
             <AdminEmpty>No registrations.</AdminEmpty>
           ) : (
-            <div className="admin-list">
+            <div className="admin-list is-stretch">
               {data.registrations.map((reg) => (
                 <Link className="admin-list-item" href={`/admin/registrations/${reg.id}`} key={reg.id}>
                   <div>

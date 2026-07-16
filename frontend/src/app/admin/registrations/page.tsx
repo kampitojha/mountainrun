@@ -68,7 +68,7 @@ export default function AdminRegistrationsPage() {
   }
 
   return (
-    <div>
+    <div className="admin-stack">
       <AdminPageHeader
         kicker="Operations"
         title="Registrations"
@@ -100,9 +100,9 @@ export default function AdminRegistrationsPage() {
         </button>
       </div>
 
-      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)", marginBottom: "0.75rem" }}>{error}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)" }}>{error}</p> : null}
 
-      <div className="table-wrap table-scroll">
+      <div className="table-wrap table-scroll admin-fill">
         <table className="table-clean min-w-[800px]">
           <thead>
             <tr>

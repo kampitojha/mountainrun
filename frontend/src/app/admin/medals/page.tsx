@@ -61,14 +61,14 @@ export default function AdminMedalsPage() {
   }
 
   return (
-    <div>
+    <div className="admin-stack">
       <AdminPageHeader
         kicker="Fulfillment"
         title="Medals"
         description="Dispatch tracking for finisher medals."
       />
 
-      <div className="admin-toolbar" style={{ gridTemplateColumns: "minmax(0, 16rem) auto" }}>
+      <div className="admin-toolbar is-two">
         <select className="input" onChange={(e) => setStatus(e.target.value)} value={status}>
           <option value="">All statuses</option>
           {["PENDING", "DISPATCHED", "DELIVERED", "RETURNED", "NOT_ELIGIBLE"].map((s) => (
@@ -82,9 +82,9 @@ export default function AdminMedalsPage() {
         </button>
       </div>
 
-      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)", marginBottom: "0.75rem" }}>{error}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)" }}>{error}</p> : null}
 
-      <div className="space-y-3">
+      <div className="admin-stack admin-fill">
         {items.map((row) => (
           <article className="admin-panel admin-panel-pad" key={row.id}>
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -134,7 +134,7 @@ export default function AdminMedalsPage() {
           </article>
         ))}
         {items.length === 0 ? (
-          <div className="admin-panel admin-panel-pad">
+          <div className="admin-panel admin-panel-pad is-fill">
             <AdminEmpty>No medal rows yet.</AdminEmpty>
           </div>
         ) : null}

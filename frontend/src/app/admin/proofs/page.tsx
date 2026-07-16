@@ -66,7 +66,7 @@ export default function AdminProofsPage() {
   }
 
   return (
-    <div>
+    <div className="admin-stack">
       <AdminPageHeader
         kicker="Operations"
         title="Proof queue"
@@ -78,16 +78,19 @@ export default function AdminProofsPage() {
         }
       />
 
-      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)", marginBottom: "0.75rem" }}>{error}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)" }}>{error}</p> : null}
 
-      <div className="space-y-3">
+      <div className="admin-stack admin-fill">
         {items.length === 0 ? (
-          <div className="admin-panel admin-panel-pad">
+          <div className="admin-panel admin-panel-pad is-fill">
             <AdminEmpty>Queue is empty.</AdminEmpty>
           </div>
         ) : (
           items.map((row) => (
-            <article className="admin-panel admin-panel-pad grid gap-4 lg:grid-cols-[1fr_220px]" key={row.id}>
+            <article
+              className="admin-panel admin-panel-pad grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(200px,240px)]"
+              key={row.id}
+            >
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-base font-semibold tracking-tight">{row.user.name}</h2>

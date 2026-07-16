@@ -88,87 +88,94 @@ export default function AdminCouponsPage() {
   }
 
   return (
-    <div>
+    <div className="admin-stack">
       <AdminPageHeader
         kicker="Growth"
         title="Coupons"
         description="Create and manage discount codes for checkout."
       />
 
-      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)", marginBottom: "0.75rem" }}>{error}</p> : null}
-      {message ? <p className="admin-muted" style={{ marginBottom: "0.75rem" }}>{message}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)" }}>{error}</p> : null}
+      {message ? <p className="admin-muted">{message}</p> : null}
 
-      <form className="admin-panel admin-panel-pad grid max-w-xl gap-3 sm:grid-cols-2" onSubmit={onCreate}>
-        <label className="block text-sm sm:col-span-2">
-          <span className="field-label">Code</span>
-          <input
-            className="input"
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
-            placeholder="MONSOON100"
-            required
-            value={code}
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="field-label">Discount (INR)</span>
-          <input
-            className="input"
-            inputMode="numeric"
-            onChange={(e) => setDiscountInr(e.target.value)}
-            required
-            value={discountInr}
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="field-label">Max redemptions</span>
-          <input
-            className="input"
-            inputMode="numeric"
-            onChange={(e) => setMaxRedemptions(e.target.value)}
-            placeholder="Unlimited"
-            value={maxRedemptions}
-          />
-        </label>
-        <button className="btn btn-primary sm:col-span-2" type="submit">
-          Create coupon
-        </button>
-      </form>
+      <div className="admin-layout-split is-form-list admin-fill">
+        <form className="admin-panel admin-panel-pad admin-form-grid is-2" onSubmit={onCreate}>
+          <h2 className="admin-panel-title span-2">New coupon</h2>
+          <label className="block text-sm span-2">
+            <span className="field-label">Code</span>
+            <input
+              className="input"
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              placeholder="MONSOON100"
+              required
+              value={code}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="field-label">Discount (INR)</span>
+            <input
+              className="input"
+              inputMode="numeric"
+              onChange={(e) => setDiscountInr(e.target.value)}
+              required
+              value={discountInr}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="field-label">Max redemptions</span>
+            <input
+              className="input"
+              inputMode="numeric"
+              onChange={(e) => setMaxRedemptions(e.target.value)}
+              placeholder="Unlimited"
+              value={maxRedemptions}
+            />
+          </label>
+          <button className="btn btn-primary span-2" type="submit">
+            Create coupon
+          </button>
+        </form>
 
-      <div className="mt-4 space-y-3">
-        {items.map((coupon) => (
-          <article className="admin-panel admin-panel-pad flex flex-wrap items-center justify-between gap-3" key={coupon.id}>
-            <div>
-              <p className="font-mono text-sm font-semibold">{coupon.code}</p>
-              <p className="mt-1 text-sm text-[var(--muted)]">
-                {formatInrFromPaise(coupon.discountPaise)} off · used {coupon.redeemedCount}
-                {coupon.maxRedemptions != null ? ` / ${coupon.maxRedemptions}` : ""}
-                {coupon.expiresAt ? ` · expires ${formatDateTime(coupon.expiresAt)}` : ""}
-              </p>
-              <span className="badge mt-2">{coupon.active ? "ACTIVE" : "OFF"}</span>
+        <div className="admin-stack">
+          {items.map((coupon) => (
+            <article
+              className="admin-panel admin-panel-pad flex flex-wrap items-center justify-between gap-3"
+              key={coupon.id}
+            >
+              <div>
+                <p className="font-mono text-sm font-semibold">{coupon.code}</p>
+                <p className="mt-1 text-sm admin-muted">
+                  {formatInrFromPaise(coupon.discountPaise)} off · used {coupon.redeemedCount}
+                  {coupon.maxRedemptions != null ? ` / ${coupon.maxRedemptions}` : ""}
+                  {coupon.expiresAt ? ` · expires ${formatDateTime(coupon.expiresAt)}` : ""}
+                </p>
+                <span className="badge mt-2">{coupon.active ? "ACTIVE" : "OFF"}</span>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => void toggleActive(coupon)}
+                  type="button"
+                >
+                  {coupon.active ? "Disable" : "Enable"}
+                </button>
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => void remove(coupon.id)}
+                  style={{ color: "var(--admin-danger)" }}
+                  type="button"
+                >
+                  Delete
+                </button>
+              </div>
+            </article>
+          ))}
+          {items.length === 0 ? (
+            <div className="admin-panel admin-panel-pad is-fill">
+              <AdminEmpty>No coupons yet. Create one on the left.</AdminEmpty>
             </div>
-            <div className="flex gap-2">
-              <button
-                className="btn btn-secondary h-9 px-3"
-                onClick={() => void toggleActive(coupon)}
-                type="button"
-              >
-                {coupon.active ? "Disable" : "Enable"}
-              </button>
-              <button
-                className="btn btn-ghost h-9 px-3 text-[var(--danger)]"
-                onClick={() => void remove(coupon.id)}
-                type="button"
-              >
-                Delete
-              </button>
-            </div>
-          </article>
-        ))}
-        {items.length === 0 ? (
-          <div className="admin-panel admin-panel-pad">
-            <AdminEmpty>No coupons yet.</AdminEmpty>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </div>
   );
