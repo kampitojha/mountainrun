@@ -295,7 +295,7 @@ export function LeaderboardClient() {
     }
     const pub = publicEvents.find((e) => e.slug === selectedSlug);
     if (pub?.distance) {
-      return pub.distance.split("·").map((d) => d.trim()).filter(Boolean);
+      return pub.distance.split("/").map((d) => d.trim()).filter(Boolean);
     }
     return ["5K", "10K", "21K"];
   }, [events, selectedSlug]);
@@ -396,11 +396,19 @@ export function LeaderboardClient() {
   }, [currentClerkId, distance, events, isSignedIn, selectedSlug, user]);
 
   useEffect(() => {
-    void loadEvents();
+    const timer = window.setTimeout(() => {
+      void loadEvents();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [loadEvents]);
 
   useEffect(() => {
-    void loadLeaderboard();
+    const timer = window.setTimeout(() => {
+      void loadLeaderboard();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [loadLeaderboard]);
 
   const yourEntry = useMemo(() => {

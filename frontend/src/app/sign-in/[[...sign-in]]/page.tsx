@@ -1,4 +1,4 @@
-import { SignIn } from "@clerk/nextjs";
+import { ClerkLoaded, ClerkLoading, SignIn } from "@clerk/nextjs";
 import Link from "next/link";
 import { PageShell } from "../../components/app-shell";
 
@@ -18,21 +18,31 @@ export default function SignInPage() {
           </div>
 
           <div className="mx-auto mt-6 flex w-full max-w-[400px] justify-center sm:mt-8">
-            <SignIn
-              fallbackRedirectUrl="/register"
-              forceRedirectUrl="/register"
-              path="/sign-in"
-              routing="path"
-              signUpUrl="/sign-up"
-              appearance={{
-                elements: {
-                  rootBox: "mx-auto w-full",
-                  cardBox: "w-full shadow-none",
-                  card: "w-full shadow-none border border-[var(--line)] rounded-2xl",
-                  footer: "bg-transparent",
-                },
-              }}
-            />
+            <ClerkLoading>
+              <div className="w-full rounded-2xl border border-[var(--line)] bg-white p-6 shadow-[var(--shadow)]">
+                <div className="h-5 w-32 rounded-full bg-[var(--panel-soft)]" />
+                <div className="mt-6 h-11 rounded-lg bg-[var(--panel-soft)]" />
+                <div className="mt-3 h-11 rounded-lg bg-[var(--panel-soft)]" />
+                <div className="mt-6 h-10 rounded-full bg-[var(--foreground)]/10" />
+              </div>
+            </ClerkLoading>
+            <ClerkLoaded>
+              <SignIn
+                fallbackRedirectUrl="/register"
+                forceRedirectUrl="/register"
+                path="/sign-in"
+                routing="path"
+                signUpUrl="/sign-up"
+                appearance={{
+                  elements: {
+                    rootBox: "mx-auto w-full",
+                    cardBox: "w-full shadow-none",
+                    card: "w-full shadow-none border border-[var(--line)] rounded-2xl",
+                    footer: "bg-transparent",
+                  },
+                }}
+              />
+            </ClerkLoaded>
           </div>
 
           <p className="mt-8 text-center text-sm text-[var(--muted)]">

@@ -8,7 +8,7 @@ export function AppFooter() {
     <footer className="mt-auto border-t border-[var(--line)]">
       <div className="container-page py-8 sm:py-10">
         <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
-          <div className="max-w-xs">
+          <div className="max-w-sm">
             <Link
               aria-label="Mountain Run home"
               className="inline-flex items-center gap-2.5"
@@ -27,7 +27,8 @@ export function AppFooter() {
               </span>
             </Link>
             <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-              Virtual races with verified finishes, clean leaderboards, and medals.
+              Virtual races with verified finishes, clean leaderboards, medals, merch,
+              and simple post-run proof upload.
             </p>
           </div>
 
@@ -40,6 +41,16 @@ export function AppFooter() {
                 <li>
                   <Link className="hover:text-[var(--foreground)]" href="/events">
                     Events
+                  </Link>
+                </li>
+                <li>
+                  <Link className="hover:text-[var(--foreground)]" href="/gallery">
+                    Gallery
+                  </Link>
+                </li>
+                <li>
+                  <Link className="hover:text-[var(--foreground)]" href="/about">
+                    About
                   </Link>
                 </li>
                 <li>
@@ -62,8 +73,8 @@ export function AppFooter() {
                     </Link>
                   </li>
                   <li>
-                    <Link className="hover:text-[var(--foreground)]" href="/register">
-                      Register
+                    <Link className="hover:text-[var(--foreground)]" href="/events">
+                      Join a run
                     </Link>
                   </li>
                 </Show>
@@ -85,7 +96,10 @@ export function AppFooter() {
         </div>
 
         <div className="mt-8 border-t border-[var(--line)] pt-5 text-xs text-[var(--muted-soft)] sm:mt-10 sm:pt-6">
-          © {new Date().getFullYear()} Mountain Run
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <span>Copyright {new Date().getFullYear()} Mountain Run</span>
+            <span>Support: hello@mountainrun.in | India-wide virtual events</span>
+          </div>
         </div>
       </div>
     </footer>

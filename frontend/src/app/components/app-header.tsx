@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 /** Public nav — Register is not duplicated here. */
 const publicNav = [
   ["Events", "/events"],
+  ["Gallery", "/gallery"],
+  ["About", "/about"],
   ["Leaderboard", "/leaderboard"],
 ] as const;
 
@@ -126,11 +128,6 @@ export function AppHeader() {
   const isActive = (href: string) =>
     pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
 
-  // Close mobile menu on route change
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
   // Prevent body scroll when menu open
   useEffect(() => {
     if (!open) {
@@ -168,8 +165,8 @@ export function AppHeader() {
                 <Link className="btn btn-ghost h-9 px-3" href="/sign-in">
                   Sign in
                 </Link>
-                <Link className="btn btn-primary h-9 px-4" href="/register">
-                  Register
+                <Link className="btn btn-primary h-9 px-4" href="/events">
+                  Join a run
                 </Link>
               </Show>
               <Show when="signed-in">
@@ -263,10 +260,10 @@ export function AppHeader() {
                   </Link>
                   <Link
                     className="btn btn-primary h-11 w-full"
-                    href="/register"
+                    href="/events"
                     onClick={() => setOpen(false)}
                   >
-                    Register
+                    Join a run
                   </Link>
                 </div>
               </Show>
