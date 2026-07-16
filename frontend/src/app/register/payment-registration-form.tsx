@@ -5,7 +5,7 @@ import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import { Field, inputClass } from "../components/app-shell";
 import { authHeaders, getApiUrl, readApiError } from "../../lib/api";
-import { type FieldErrors, validateRegistrationForm } from "../../lib/validation";
+import { asString, type FieldErrors, validateRegistrationForm } from "../../lib/validation";
 
 type CheckoutResponse = {
   razorpay_order_id: string;

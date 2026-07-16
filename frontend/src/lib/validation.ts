@@ -4,7 +4,7 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phonePattern = /^(\+91[\s-]?)?[6-9]\d{9}$/;
 const pincodePattern = /^[1-9][0-9]{5}$/;
 
-function asString(value: FormDataEntryValue | null) {
+export function asString(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
 }
 
