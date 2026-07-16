@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import { ClerkUserSync } from "../components/clerk-user-sync";
 import "./globals.css";
 
@@ -14,10 +14,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const display = Space_Grotesk({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: "Mountain Run",
   description:
-    "Minimal virtual running events with UPI registration, GPS proof, leaderboards, certificates, and medals.",
+    "Virtual running events with UPI registration, GPS proof, leaderboards, certificates, and medals.",
   icons: {
     icon: "/favicon.svg",
   },
@@ -26,7 +32,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#fafaf9",
+  themeColor: "#f7f7f5",
 };
 
 const publishableKey =
@@ -42,7 +48,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${display.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)]">
         <ClerkProvider
@@ -50,7 +56,7 @@ export default function RootLayout({
           appearance={{
             variables: {
               colorPrimary: "#0a0a0a",
-              borderRadius: "0.75rem",
+              borderRadius: "0.85rem",
             },
             elements: {
               formButtonPrimary:

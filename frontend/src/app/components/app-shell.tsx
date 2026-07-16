@@ -1,12 +1,16 @@
 import { AppFooter } from "./app-footer";
 import { AppHeader } from "./app-header";
+import { FloatCta } from "./float-cta";
+import { ScrollProgress } from "./scroll-progress";
 
 export function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="page-shell flex min-h-screen flex-col">
+      <ScrollProgress />
       <AppHeader />
       <main className="flex-1">{children}</main>
       <AppFooter />
+      <FloatCta />
     </div>
   );
 }

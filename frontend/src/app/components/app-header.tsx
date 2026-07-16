@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-/** Public nav — Register is not duplicated here. */
 const publicNav = [
   ["Events", "/events"],
   ["Gallery", "/gallery"],
@@ -48,11 +47,7 @@ function NavLink({
 }) {
   return (
     <Link
-      className={`rounded-full px-3 py-2 text-sm transition lg:px-3.5 ${
-        active
-          ? "bg-[var(--panel)] text-[var(--foreground)] shadow-[var(--shadow)]"
-          : "text-[var(--muted)] hover:text-[var(--foreground)]"
-      }`}
+      className={`nav-link ${active ? "is-active" : ""}`}
       href={href}
       onClick={onClick}
     >
@@ -97,8 +92,13 @@ function IconRun() {
   );
 }
 
-/** Brand: mountain mark + clear “Mountain Run” text → home */
-function BrandLogo({ onNavigate }: { onNavigate?: () => void }) {
+function BrandLogo({
+  onNavigate,
+  onDark,
+}: {
+  onNavigate?: () => void;
+  onDark?: boolean;
+}) {
   return (
     <Link
       aria-label="Mountain Run home"
@@ -109,12 +109,16 @@ function BrandLogo({ onNavigate }: { onNavigate?: () => void }) {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         alt=""
-        className="block h-8 w-8 shrink-0 sm:h-9 sm:w-9"
+        className="brand-mark block shrink-0"
         height={36}
         src="/logo-mark.svg"
         width={36}
       />
-      <span className="text-[0.95rem] font-semibold tracking-tight text-[var(--foreground)] sm:text-base">
+      <span
+        className={`text-[0.95rem] font-semibold tracking-tight sm:text-base ${
+          onDark ? "text-white" : "text-[var(--foreground)]"
+        }`}
+      >
         Mountain Run
       </span>
     </Link>
@@ -123,12 +127,20 @@ function BrandLogo({ onNavigate }: { onNavigate?: () => void }) {
 
 export function AppHeader() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const isHome = pathname === "/";
 
   const isActive = (href: string) =>
     pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
 
-  // Prevent body scroll when menu open
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   useEffect(() => {
     if (!open) {
       return;
@@ -140,13 +152,22 @@ export function AppHeader() {
     };
   }, [open]);
 
-  return (
-    <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-[rgba(250,250,249,0.92)] backdrop-blur-xl">
-      <div className="container-page">
-        <div className="flex h-14 items-center justify-between gap-2 sm:h-16 sm:gap-4">
-          <BrandLogo onNavigate={() => setOpen(false)} />
+  // On home at top: transparent over hero. Elsewhere always glass.
+  const atHeroTop = isHome && !scrolled && !open;
+  const headerClass = `site-header ${atHeroTop ? "is-top" : "is-scrolled"}`;
+  const onDark = atHeroTop;
 
-          <nav className="hidden items-center gap-0.5 md:flex">
+  return (
+    <header className={headerClass}>
+      <div className="container-page">
+        <div className="header-inner flex items-center justify-between gap-2 sm:gap-4">
+          <BrandLogo onDark={onDark} onNavigate={() => setOpen(false)} />
+
+          <nav
+            className={`hidden items-center gap-0.5 md:flex ${
+              onDark ? "[&_.nav-link]:text-white/70 [&_.nav-link.is-active]:text-white [&_.nav-link:hover]:text-white" : ""
+            }`}
+          >
             {publicNav.map(([label, href]) => (
               <NavLink active={isActive(href)} href={href} key={href} label={label} />
             ))}
@@ -162,7 +183,10 @@ export function AppHeader() {
           <div className="flex items-center gap-1.5 sm:gap-2">
             <div className="hidden items-center gap-2 md:flex">
               <Show when="signed-out">
-                <Link className="btn btn-ghost h-9 px-3" href="/sign-in">
+                <Link
+                  className={`btn h-9 px-3 ${onDark ? "btn-on-dark" : "btn-ghost"}`}
+                  href="/sign-in"
+                >
                   Sign in
                 </Link>
                 <Link className="btn btn-primary h-9 px-4" href="/events">
@@ -174,7 +198,6 @@ export function AppHeader() {
               </Show>
             </div>
 
-            {/* Mobile: profile avatar when signed in + menu */}
             <div className="flex items-center gap-1.5 md:hidden">
               <Show when="signed-in">
                 <ProfileButton />
@@ -182,7 +205,11 @@ export function AppHeader() {
               <button
                 aria-expanded={open}
                 aria-label={open ? "Close menu" : "Open menu"}
-                className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--line)] bg-white text-[var(--foreground)]"
+                className={`focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border ${
+                  onDark
+                    ? "border-white/20 bg-white/10 text-white"
+                    : "border-[var(--line)] bg-white text-[var(--foreground)]"
+                }`}
                 onClick={() => setOpen((value) => !value)}
                 type="button"
               >
@@ -192,16 +219,10 @@ export function AppHeader() {
           </div>
         </div>
 
-        {/* Mobile drawer */}
-        <div
-          className={`md:hidden ${
-            open ? "pointer-events-auto" : "pointer-events-none"
-          }`}
-        >
-          {/* Backdrop */}
+        <div className={`md:hidden ${open ? "pointer-events-auto" : "pointer-events-none"}`}>
           <button
             aria-hidden={!open}
-            className={`fixed inset-0 top-14 z-30 bg-black/20 transition-opacity sm:top-16 ${
+            className={`fixed inset-0 top-14 z-30 bg-black/25 transition-opacity sm:top-16 ${
               open ? "opacity-100" : "opacity-0"
             }`}
             onClick={() => setOpen(false)}
@@ -250,7 +271,7 @@ export function AppHeader() {
                 </Link>
               </Show>
               <Show when="signed-out">
-                <div className="mt-1 grid grid-cols-1 gap-2 border-t border-[var(--line)] pt-2 xs:grid-cols-2 sm:grid-cols-2">
+                <div className="mt-1 grid grid-cols-1 gap-2 border-t border-[var(--line)] pt-2 sm:grid-cols-2">
                   <Link
                     className="btn btn-secondary h-11 w-full"
                     href="/sign-in"
