@@ -7,6 +7,7 @@ import {
   createCertificateNumber,
   createCertificateQrPayload,
 } from "../services/certificate.service.js";
+import { ensureDefaultEvents, isRegistrationOpen } from "../services/event.service.js";
 import { upsertUserFromClerk } from "../services/user.service.js";
 import { ApiError } from "../utils/api-error.js";
 import { routeParam } from "../utils/params.js";
@@ -19,6 +20,8 @@ import {
 
 export async function createRegistration(request: AuthenticatedRequest, response: Response) {
   const payload = validateBody(createRegistrationSchema, request);
+  await ensureDefaultEvents();
+
   let event = payload.eventId
     ? await prisma.event.findUnique({ where: { id: payload.eventId } })
     : await prisma.event.findUnique({ where: { slug: payload.eventSlug } });
@@ -36,6 +39,15 @@ export async function createRegistration(request: AuthenticatedRequest, response
 
   if (!event) {
     throw new ApiError(404, "Event not found");
+  }
+
+  if (!isRegistrationOpen(event)) {
+    throw new ApiError(
+      422,
+      event.status === "COMPLETED" || event.endsAt.getTime() < Date.now()
+        ? "This event has already ended. Registration is closed."
+        : "Registration is not open for this event.",
+    );
   }
 
   if (!event.distances.includes(payload.distance)) {
@@ -203,6 +215,8 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
     typeof request.query.distance === "string" && request.query.distance.trim()
       ? request.query.distance.trim()
       : undefined;
+
+  await ensureDefaultEvents();
 
   // Accept either event id or slug
   const event = await prisma.event.findFirst({

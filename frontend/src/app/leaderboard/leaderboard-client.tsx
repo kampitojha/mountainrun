@@ -28,7 +28,7 @@ const DEMO_ENTRIES: LeaderboardEntry[] = [
   {
     rank: 1,
     runnerName: "Aarav Sharma",
-    distance: "21K",
+    distance: "21 km",
     finishTimeSeconds: 6138,
     bibNumber: "MR-2101",
     status: "Verified",
@@ -36,7 +36,7 @@ const DEMO_ENTRIES: LeaderboardEntry[] = [
   {
     rank: 2,
     runnerName: "Nisha Rawat",
-    distance: "10K",
+    distance: "10 km",
     finishTimeSeconds: 2942,
     bibNumber: "MR-1044",
     status: "Verified",
@@ -44,7 +44,7 @@ const DEMO_ENTRIES: LeaderboardEntry[] = [
   {
     rank: 3,
     runnerName: "Kabir Sethi",
-    distance: "10K",
+    distance: "10 km",
     finishTimeSeconds: 3104,
     bibNumber: "MR-1088",
     status: "Verified",
@@ -52,7 +52,7 @@ const DEMO_ENTRIES: LeaderboardEntry[] = [
   {
     rank: 4,
     runnerName: "Meera Joshi",
-    distance: "5K",
+    distance: "5 km",
     finishTimeSeconds: 1459,
     bibNumber: "MR-0521",
     status: "Verified",
@@ -60,7 +60,7 @@ const DEMO_ENTRIES: LeaderboardEntry[] = [
   {
     rank: 5,
     runnerName: "Rohan Kapoor",
-    distance: "21K",
+    distance: "21 km",
     finishTimeSeconds: 6535,
     bibNumber: "MR-2112",
     status: "Verified",
@@ -68,7 +68,7 @@ const DEMO_ENTRIES: LeaderboardEntry[] = [
   {
     rank: 6,
     runnerName: "Ananya Iyer",
-    distance: "5K",
+    distance: "5 km",
     finishTimeSeconds: 1571,
     bibNumber: "MR-0533",
     status: "Verified",
@@ -76,7 +76,7 @@ const DEMO_ENTRIES: LeaderboardEntry[] = [
   {
     rank: 7,
     runnerName: "Dev Malhotra",
-    distance: "10K",
+    distance: "10 km",
     finishTimeSeconds: 3288,
     bibNumber: "MR-1099",
     status: "Verified",
@@ -84,7 +84,7 @@ const DEMO_ENTRIES: LeaderboardEntry[] = [
   {
     rank: 8,
     runnerName: "Isha Verma",
-    distance: "21K",
+    distance: "21 km",
     finishTimeSeconds: 7020,
     bibNumber: "MR-2140",
     status: "Verified",
@@ -167,7 +167,7 @@ export function LeaderboardClient() {
     if (pub?.distance) {
       return pub.distance.split("/").map((d) => d.trim()).filter(Boolean);
     }
-    return ["5K", "10K", "21K"];
+    return ["5 km", "10 km", "21 km"];
   }, [events, selectedSlug]);
 
   const loadEvents = useCallback(async () => {
@@ -238,7 +238,7 @@ export function LeaderboardClient() {
             {
               rank: 5,
               runnerName: youName,
-              distance: distance !== "all" ? distance : "10K",
+              distance: distance !== "all" ? distance : "10 km",
               finishTimeSeconds: 3400,
               bibNumber: "MR-YOU",
               clerkId: currentClerkId,

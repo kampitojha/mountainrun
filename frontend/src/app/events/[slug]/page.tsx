@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageShell } from "../../components/app-shell";
-import { eventBenefits, publicEvents } from "../../data/events";
+import {
+  allPublicEvents,
+  eventBenefits,
+  getEventBySlug,
+} from "../../data/events";
 
 export function generateStaticParams() {
-  return publicEvents.map((event) => ({ slug: event.slug }));
+  return allPublicEvents.map((event) => ({ slug: event.slug }));
 }
 
 export default async function EventDetailPage({
@@ -13,11 +17,13 @@ export default async function EventDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const event = publicEvents.find((item) => item.slug === slug);
+  const event = getEventBySlug(slug);
 
   if (!event) {
     notFound();
   }
+
+  const isPast = event.status === "past";
 
   return (
     <PageShell>
@@ -32,7 +38,14 @@ export default async function EventDetailPage({
 
           <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_340px] lg:gap-16">
             <div>
-              <p className="eyebrow">Event</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="eyebrow">{isPast ? "Past event" : "Event"}</p>
+                <span
+                  className={`badge ${isPast ? "badge-sage" : "badge-solid"}`}
+                >
+                  {isPast ? "Completed" : "Open for registration"}
+                </span>
+              </div>
               <h1 className="display mt-4 max-w-3xl">{event.name}</h1>
               <p className="lede mt-6 max-w-2xl">{event.description}</p>
 
@@ -51,8 +64,39 @@ export default async function EventDetailPage({
                 ))}
               </div>
 
+              {isPast ? (
+                <div className="mt-10">
+                  <h2 className="heading">Event recap</h2>
+                  <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">
+                    {event.resultNote ??
+                      "This race has finished. Here is a quick look at participation and rewards."}
+                  </p>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                    {[
+                      ["Finishers", event.finishers],
+                      ["Verified results", event.verifiedResults],
+                      ["Cities", event.cities],
+                    ].map(([label, value]) => (
+                      <div className="card p-5" key={String(label)}>
+                        <p className="text-xs font-medium uppercase tracking-[0.1em] text-[var(--muted)]">
+                          {label}
+                        </p>
+                        <p className="mt-2 text-2xl font-semibold tracking-tight">
+                          {typeof value === "number"
+                            ? value.toLocaleString("en-IN")
+                            : "—"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-6 text-sm leading-6 text-[var(--muted)]">
+                    {event.highlight}
+                  </p>
+                </div>
+              ) : null}
+
               <div className="mt-14">
-                <h2 className="heading">What you get</h2>
+                <h2 className="heading">{isPast ? "What finishers received" : "What you get"}</h2>
                 <ul className="mt-6 grid gap-3 sm:grid-cols-2">
                   {eventBenefits.map((benefit) => (
                     <li
@@ -70,22 +114,45 @@ export default async function EventDetailPage({
             </div>
 
             <aside className="card h-fit p-6 lg:sticky lg:top-24">
-              <p className="eyebrow">Register</p>
-              <h2 className="mt-3 text-2xl font-semibold tracking-tight">
-                Join this event
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                Sign in, choose your distance, add delivery details, and pay with
-                UPI. Run within the event window, then upload GPS proof.
-              </p>
-              <div className="mt-6 space-y-2">
-                <Link className="btn btn-primary btn-full" href="/register">
-                  Register now
-                </Link>
-                <Link className="btn btn-secondary btn-full" href="/events">
-                  Browse other events
-                </Link>
-              </div>
+              {isPast ? (
+                <>
+                  <p className="eyebrow">Closed</p>
+                  <h2 className="mt-3 text-2xl font-semibold tracking-tight">
+                    Event completed
+                  </h2>
+                  <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
+                    Registration for this race is closed. Explore the recap on this
+                    page, or open an upcoming event to register for the next run.
+                  </p>
+                  <div className="mt-6 space-y-2">
+                    <Link className="btn btn-primary btn-full" href="/events">
+                      Browse open events
+                    </Link>
+                    <Link className="btn btn-secondary btn-full" href="/leaderboard">
+                      View leaderboard
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="eyebrow">Register</p>
+                  <h2 className="mt-3 text-2xl font-semibold tracking-tight">
+                    Join this event
+                  </h2>
+                  <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
+                    Sign in, choose your distance, add delivery details, and pay with
+                    UPI. Run within the event window, then upload GPS proof.
+                  </p>
+                  <div className="mt-6 space-y-2">
+                    <Link className="btn btn-primary btn-full" href="/register">
+                      Register now
+                    </Link>
+                    <Link className="btn btn-secondary btn-full" href="/events">
+                      Browse other events
+                    </Link>
+                  </div>
+                </>
+              )}
             </aside>
           </div>
         </div>

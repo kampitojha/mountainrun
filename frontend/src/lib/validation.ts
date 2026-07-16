@@ -70,7 +70,7 @@ export function validateAdminEventForm(formData: FormData): FieldErrors {
   }
 
   if (!distances || !distances.split(",").some((part) => part.trim().length > 0)) {
-    errors.distances = "Add at least one distance (e.g. 5K, 10K).";
+    errors.distances = "Add at least one distance (e.g. 5 km, 10 km).";
   }
 
   const priceNumber = Number(price);

@@ -32,17 +32,17 @@ const rewards = [
 const reviews = [
   {
     name: "Aarav Sharma",
-    run: "10K finisher",
+    run: "10 km finisher",
     text: "Registration was simple and the proof upload was clear. Getting my certificate the same week felt great.",
   },
   {
     name: "Nisha Verma",
-    run: "5K beginner",
+    run: "5 km beginner",
     text: "I liked that I could run in my own city but still feel part of an event. The medal made it memorable.",
   },
   {
     name: "Rohan Mehta",
-    run: "21K finisher",
+    run: "21 km finisher",
     text: "The leaderboard gave my long run a real target. Clean experience from payment to verification.",
   },
 ];

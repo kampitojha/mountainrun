@@ -2,7 +2,7 @@
 
 import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Field, inputClass } from "../components/app-shell";
 import { authHeaders, getApiUrl, readApiError } from "../../lib/api";
 import { asString, type FieldErrors, validateRegistrationForm } from "../../lib/validation";
@@ -25,10 +25,32 @@ declare global {
   }
 }
 
-const events = [
-  { label: "Monsoon Mountain Miles", value: "monsoon-mountain-miles", amount: "₹499" },
-  { label: "Independence Endurance Run", value: "independence-endurance-run", amount: "₹649" },
-  { label: "Himalayan Winter Sprint", value: "himalayan-winter-sprint", amount: "₹399" },
+type RegisterEventOption = {
+  label: string;
+  value: string;
+  amount: string;
+  distances: string[];
+};
+
+const fallbackEvents: RegisterEventOption[] = [
+  {
+    label: "Monsoon Mountain Miles",
+    value: "monsoon-mountain-miles",
+    amount: "₹499",
+    distances: ["3 km", "5 km", "10 km", "21 km"],
+  },
+  {
+    label: "Independence Endurance Run",
+    value: "independence-endurance-run",
+    amount: "₹649",
+    distances: ["5 km", "10 km", "25 km"],
+  },
+  {
+    label: "Himalayan Winter Sprint",
+    value: "himalayan-winter-sprint",
+    amount: "₹399",
+    distances: ["2 km", "5 km", "10 km"],
+  },
 ];
 
 async function loadRazorpayScript() {
@@ -66,13 +88,71 @@ export function PaymentRegistrationForm() {
   const { user } = useUser();
   const [status, setStatus] = useState<"idle" | "creating" | "paying" | "paid" | "error">("idle");
   const [message, setMessage] = useState("Complete the form and continue to secure checkout.");
-  const [selectedEvent, setSelectedEvent] = useState(events[0].value);
+  const [events, setEvents] = useState<RegisterEventOption[]>(fallbackEvents);
+  const [selectedEvent, setSelectedEvent] = useState(fallbackEvents[0].value);
+  const [selectedDistance, setSelectedDistance] = useState(fallbackEvents[0].distances[0] ?? "");
   const [errors, setErrors] = useState<FieldErrors>({});
 
-  const selectedAmount = useMemo(
-    () => events.find((event) => event.value === selectedEvent)?.amount ?? "₹499",
-    [selectedEvent],
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadOpenEvents() {
+      try {
+        const response = await fetch(getApiUrl("/api/events?scope=open"));
+        if (!response.ok) {
+          return;
+        }
+        const json = await response.json();
+        const rows = (json.data ?? []) as Array<{
+          title: string;
+          slug: string;
+          distances: string[];
+          priceInPaise: number;
+          registrationOpen?: boolean;
+        }>;
+
+        const open = rows
+          .filter((row) => row.registrationOpen !== false)
+          .map((row) => ({
+            label: row.title,
+            value: row.slug,
+            amount: `₹${Math.round(row.priceInPaise / 100)}`,
+            distances: row.distances?.length ? row.distances : ["5 km"],
+          }));
+
+        if (cancelled || open.length === 0) {
+          return;
+        }
+
+        setEvents(open);
+        setSelectedEvent((prev) =>
+          open.some((event) => event.value === prev) ? prev : open[0].value,
+        );
+      } catch {
+        // keep fallback open events
+      }
+    }
+
+    void loadOpenEvents();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const activeEvent = useMemo(
+    () => events.find((event) => event.value === selectedEvent) ?? events[0],
+    [events, selectedEvent],
   );
+
+  const distanceOptions = activeEvent?.distances ?? ["5 km"];
+
+  useEffect(() => {
+    if (!distanceOptions.includes(selectedDistance)) {
+      setSelectedDistance(distanceOptions[0] ?? "");
+    }
+  }, [distanceOptions, selectedDistance]);
+
+  const selectedAmount = activeEvent?.amount ?? "₹499";
 
   const defaultName = user?.fullName ?? user?.firstName ?? "";
   const defaultEmail = user?.primaryEmailAddress?.emailAddress ?? "";
@@ -281,20 +361,6 @@ export function PaymentRegistrationForm() {
           />
           <FieldError message={errors.phone} />
         </Field>
-        <Field label="Distance">
-          <select
-            aria-invalid={Boolean(errors.distance)}
-            className={inputClass}
-            name="distance"
-            required
-          >
-            <option value="">Select distance</option>
-            <option value="5K">5K</option>
-            <option value="10K">10K</option>
-            <option value="21K">21K</option>
-          </select>
-          <FieldError message={errors.distance} />
-        </Field>
         <Field label="Event">
           <select
             aria-invalid={Boolean(errors.eventSlug)}
@@ -311,6 +377,24 @@ export function PaymentRegistrationForm() {
             ))}
           </select>
           <FieldError message={errors.eventSlug} />
+        </Field>
+        <Field label="Distance">
+          <select
+            aria-invalid={Boolean(errors.distance)}
+            className={inputClass}
+            name="distance"
+            onChange={(event) => setSelectedDistance(event.target.value)}
+            required
+            value={selectedDistance}
+          >
+            <option value="">Select distance</option>
+            {distanceOptions.map((distance) => (
+              <option key={distance} value={distance}>
+                {distance}
+              </option>
+            ))}
+          </select>
+          <FieldError message={errors.distance} />
         </Field>
         <Field label="City">
           <input

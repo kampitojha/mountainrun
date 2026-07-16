@@ -45,7 +45,7 @@ export function AdminEventForm() {
             aria-invalid={Boolean(errors.title)}
             className={inputClass}
             name="title"
-            placeholder="City Night 10K"
+            placeholder="City Night 10 km"
             required
           />
           <FieldError message={errors.title} />
@@ -55,7 +55,7 @@ export function AdminEventForm() {
             aria-invalid={Boolean(errors.distances)}
             className={inputClass}
             name="distances"
-            placeholder="5K, 10K, 21K"
+            placeholder="5 km, 10 km, 21 km"
             required
           />
           <FieldError message={errors.distances} />

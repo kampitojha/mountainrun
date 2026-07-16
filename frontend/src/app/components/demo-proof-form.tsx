@@ -69,12 +69,12 @@ export function DemoProofForm() {
           <select
             aria-invalid={Boolean(errors.distance)}
             className={inputClass}
-            defaultValue="10K"
+            defaultValue="10 km"
             name="distance"
           >
-            <option value="5K">5K</option>
-            <option value="10K">10K</option>
-            <option value="21K">21K</option>
+            <option value="5 km">5 km</option>
+            <option value="10 km">10 km</option>
+            <option value="21 km">21 km</option>
           </select>
           {errors.distance ? (
             <p className="mt-1.5 text-xs text-[var(--danger)]">{errors.distance}</p>
