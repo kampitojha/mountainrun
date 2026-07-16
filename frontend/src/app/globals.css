@@ -250,6 +250,17 @@ img:not([width]) {
   background: var(--panel-soft);
 }
 
+.btn-on-dark {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-on-dark:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
 .btn-full {
   width: 100%;
 }
