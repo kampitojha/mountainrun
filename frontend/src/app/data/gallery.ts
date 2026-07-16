@@ -15,9 +15,7 @@ export type GalleryItem = {
   date: string;
   photographer: string;
   category: Exclude<GalleryCategory, "All">;
-  image: string;
-  objectPosition: string;
-  tall?: boolean;
+  note: string;
   featured?: boolean;
 };
 
@@ -31,45 +29,38 @@ export const galleryCategories: GalleryCategory[] = [
   "Awards",
 ];
 
-/** One hero asset, varied crops/positions for a richer grid until more photos ship. */
-const img = "/images/mountain-run-hero.png";
-
 export const galleryItems: GalleryItem[] = [
   {
     id: "g1",
     title: "Ridge line finish",
     event: "Monsoon Mountain Miles",
-    location: "Lonavala ridge",
+    location: "Lonavala",
     date: "Jul 2026",
     photographer: "Aarav Mehta",
     category: "Trail Run",
-    image: img,
-    objectPosition: "50% 28%",
-    tall: true,
+    note: "Verified 10 km finish under monsoon cloud cover.",
     featured: true,
   },
   {
     id: "g2",
     title: "First light warmup",
     event: "Himalayan Winter Sprint",
-    location: "Manali foothills",
+    location: "Manali",
     date: "Dec 2026",
     photographer: "Nisha Verma",
     category: "Training",
-    image: img,
-    objectPosition: "70% 40%",
+    note: "Pre-race strides with the local club pack.",
   },
   {
     id: "g3",
     title: "Club pack at km 8",
     event: "Independence Endurance Run",
-    location: "Pune clubs",
+    location: "Pune",
     date: "Aug 2026",
     photographer: "Rohan Kapoor",
     category: "Community",
-    image: img,
-    objectPosition: "30% 60%",
-    tall: true,
+    note: "Eight runners holding the same pace target.",
+    featured: true,
   },
   {
     id: "g4",
@@ -79,8 +70,7 @@ export const galleryItems: GalleryItem[] = [
     date: "Mar 2026",
     photographer: "Isha Jain",
     category: "Awards",
-    image: img,
-    objectPosition: "50% 70%",
+    note: "First finisher medals landed after proof approval.",
     featured: true,
   },
   {
@@ -91,20 +81,17 @@ export const galleryItems: GalleryItem[] = [
     date: "Jan 2026",
     photographer: "Dev Malhotra",
     category: "Nature",
-    image: img,
-    objectPosition: "20% 35%",
+    note: "Quiet 21 km effort above the valley fog.",
   },
   {
     id: "g6",
-    title: "21 km split board",
+    title: "Half marathon split board",
     event: "Independence Endurance Run",
     location: "Bengaluru",
     date: "Aug 2026",
     photographer: "Meera Joshi",
     category: "Marathon",
-    image: img,
-    objectPosition: "80% 55%",
-    tall: true,
+    note: "Even splits posted after verification.",
   },
   {
     id: "g7",
@@ -114,8 +101,7 @@ export const galleryItems: GalleryItem[] = [
     date: "Mar 2026",
     photographer: "Kabir Sethi",
     category: "Community",
-    image: img,
-    objectPosition: "45% 20%",
+    note: "Families finishing together on the short course.",
   },
   {
     id: "g8",
@@ -125,8 +111,7 @@ export const galleryItems: GalleryItem[] = [
     date: "Jul 2026",
     photographer: "Ananya Iyer",
     category: "Trail Run",
-    image: img,
-    objectPosition: "60% 75%",
+    note: "Single-track section before the final climb.",
   },
   {
     id: "g9",
@@ -136,49 +121,13 @@ export const galleryItems: GalleryItem[] = [
     date: "Mar 2026",
     photographer: "Vikram Shah",
     category: "Awards",
-    image: img,
-    objectPosition: "40% 50%",
-    featured: true,
-  },
-  {
-    id: "g10",
-    title: "Tempo loops at dusk",
-    event: "City Training Series",
-    location: "Hyderabad",
-    date: "Feb 2026",
-    photographer: "Sara Khan",
-    category: "Training",
-    image: img,
-    objectPosition: "15% 45%",
-    tall: true,
-  },
-  {
-    id: "g11",
-    title: "Fog valley climb",
-    event: "Himalayan Winter Sprint",
-    location: "Shimla belt",
-    date: "Dec 2026",
-    photographer: "Arjun Nair",
-    category: "Nature",
-    image: img,
-    objectPosition: "55% 15%",
-  },
-  {
-    id: "g12",
-    title: "Half marathon cadence",
-    event: "Independence Endurance Run",
-    location: "Chennai coast",
-    date: "Aug 2026",
-    photographer: "Priya Rao",
-    category: "Marathon",
-    image: img,
-    objectPosition: "35% 65%",
+    note: "QR certificates shared after review closed.",
   },
 ];
 
 export const galleryStats = [
-  { label: "Photos", value: 1280 },
+  { label: "Moments logged", value: 1280 },
   { label: "Events covered", value: 24 },
-  { label: "Participants", value: 5400 },
-  { label: "Memories shared", value: 9100 },
+  { label: "Cities", value: 62 },
+  { label: "Verified finishes", value: 5400 },
 ];
