@@ -2,7 +2,7 @@
 
 import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { authHeaders, getApiUrl, readApiError } from "../../lib/api";
 
 type Registration = {
@@ -11,6 +11,7 @@ type Registration = {
   distance: string;
   status: string;
   proofStatus: string;
+  finishTimeSeconds?: number | null;
   registeredAt: string;
   event: {
     title: string;
@@ -19,6 +20,19 @@ type Registration = {
   payment: {
     status: string;
     amountInPaise: number;
+  } | null;
+  proofUpload?: {
+    activityImageUrl: string;
+    sourceApp: string;
+    status: string;
+  } | null;
+  certificate?: {
+    certificateNumber: string;
+    status: string;
+  } | null;
+  medalDelivery?: {
+    status: string;
+    trackingNumber: string | null;
   } | null;
 };
 
@@ -45,6 +59,10 @@ function statusBadge(status: string) {
     SUBMITTED: "badge",
     REJECTED: "badge",
     NOT_SUBMITTED: "badge",
+    GENERATED: "badge-sage",
+    SENT: "badge-sage",
+    DISPATCHED: "badge-sage",
+    DELIVERED: "badge-sage",
   };
   return map[status] ?? "badge";
 }
@@ -59,6 +77,12 @@ export function DashboardClient() {
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [proofRegId, setProofRegId] = useState<string | null>(null);
+  const [proofUrl, setProofUrl] = useState("");
+  const [sourceApp, setSourceApp] = useState("Strava");
+  const [finishMinutes, setFinishMinutes] = useState("");
+  const [proofMessage, setProofMessage] = useState<string | null>(null);
+  const [proofBusy, setProofBusy] = useState(false);
 
   const load = useCallback(async () => {
     if (!isSignedIn) {
@@ -70,7 +94,6 @@ export function DashboardClient() {
     setError(null);
 
     try {
-      // Ensure DB row exists, then load profile + registrations
       const token = await getToken();
       if (!token) {
         throw new Error("Could not get session token. Sign in again.");
@@ -116,6 +139,51 @@ export function DashboardClient() {
     return () => window.clearTimeout(timer);
   }, [isLoaded, load]);
 
+  async function submitProof(event: FormEvent) {
+    event.preventDefault();
+    if (!proofRegId) {
+      return;
+    }
+
+    setProofBusy(true);
+    setProofMessage(null);
+
+    try {
+      const token = await getToken();
+      if (!token) {
+        throw new Error("Sign in again to submit proof.");
+      }
+
+      const minutes = Number(finishMinutes);
+      const finishTimeSeconds =
+        Number.isFinite(minutes) && minutes > 0 ? Math.round(minutes * 60) : undefined;
+
+      const response = await fetch(getApiUrl(`/api/registrations/${proofRegId}/proof`), {
+        method: "POST",
+        headers: authHeaders(token),
+        body: JSON.stringify({
+          activityImageUrl: proofUrl.trim(),
+          sourceApp: sourceApp.trim() || "Other",
+          finishTimeSeconds,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await readApiError(response, "Proof submit failed"));
+      }
+
+      setProofMessage("Proof submitted. Waiting for admin review.");
+      setProofRegId(null);
+      setProofUrl("");
+      setFinishMinutes("");
+      await load();
+    } catch (err) {
+      setProofMessage(err instanceof Error ? err.message : "Proof submit failed");
+    } finally {
+      setProofBusy(false);
+    }
+  }
+
   if (!isLoaded || loading) {
     return (
       <div className="card p-10 text-center">
@@ -158,7 +226,7 @@ export function DashboardClient() {
           <p className="eyebrow">Your account</p>
           <h1 className="display mt-3">Hi, {displayName.split(" ")[0]}</h1>
           <p className="lede mt-3 max-w-xl">
-            This is why login matters — track every race, payment, and proof in one place.
+            Track every race, payment, proof, certificate, and medal in one place.
           </p>
         </div>
         <Link className="btn btn-primary w-full shrink-0 sm:w-auto" href="/register">
@@ -175,7 +243,12 @@ export function DashboardClient() {
         </div>
       ) : null}
 
-      {/* Profile card */}
+      {proofMessage ? (
+        <div className="rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] px-4 py-3 text-sm text-[var(--muted)]">
+          {proofMessage}
+        </div>
+      ) : null}
+
       <div className="card flex flex-col gap-5 p-4 sm:gap-6 sm:p-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3 sm:gap-4">
           {user?.imageUrl ? (
@@ -211,29 +284,16 @@ export function DashboardClient() {
           </div>
           <div className="rounded-xl bg-[var(--panel-soft)] px-3 py-3 text-center sm:px-4">
             <p className="text-xl font-semibold tracking-tight sm:text-2xl">{paidCount}</p>
-            <p className="mt-0.5 text-xs text-[var(--muted)]">Paid</p>
+            <p className="mt-0.5 text-xs text-[var(--muted)]">Paid / confirmed</p>
           </div>
         </div>
       </div>
 
-      {/* Quick actions — only once, not repeated in nav style */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {[
-          {
-            href: "/register",
-            title: "Register",
-            text: "Pick event, distance, pay with UPI",
-          },
-          {
-            href: "/events",
-            title: "Browse events",
-            text: "See open races and details",
-          },
-          {
-            href: "/leaderboard",
-            title: "Leaderboard",
-            text: "View verified finish times",
-          },
+          { href: "/register", title: "Register", text: "Pick event, distance, pay with UPI" },
+          { href: "/events", title: "Browse events", text: "See open races and details" },
+          { href: "/leaderboard", title: "Leaderboard", text: "View verified finish times" },
         ].map((item) => (
           <Link className="card card-hover block p-5" href={item.href} key={item.href}>
             <p className="font-semibold tracking-tight">{item.title}</p>
@@ -242,13 +302,12 @@ export function DashboardClient() {
         ))}
       </div>
 
-      {/* Registrations */}
       <div>
         <div className="flex items-end justify-between gap-4">
           <div>
             <h2 className="heading">My registrations</h2>
             <p className="mt-2 text-sm text-[var(--muted)]">
-              Payments and proof status for every event you joined.
+              Payments, proof upload, certificates, and medals for every event you joined.
             </p>
           </div>
         </div>
@@ -257,8 +316,7 @@ export function DashboardClient() {
           <div className="card mt-6 p-8 text-center">
             <p className="text-base font-medium">No registrations yet</p>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[var(--muted)]">
-              You&apos;re logged in — next step is join an event. After payment, it will show
-              here with bib number and status.
+              Join an event to see bib number, payment, and proof status here.
             </p>
             <Link className="btn btn-primary mt-6" href="/register">
               Register for an event
@@ -266,47 +324,144 @@ export function DashboardClient() {
           </div>
         ) : (
           <div className="mt-6 space-y-3">
-            {registrations.map((reg) => (
-              <article className="card p-5" key={reg.id}>
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-base font-semibold tracking-tight">{reg.event.title}</p>
-                    <p className="mt-1 text-sm text-[var(--muted)]">
-                      {reg.distance} · Bib {reg.bibNumber}
-                    </p>
-                    <p className="mt-1 text-xs text-[var(--muted-soft)]">
-                      Registered {new Date(reg.registeredAt).toLocaleDateString("en-IN")}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className={statusBadge(reg.status)}>{labelStatus(reg.status)}</span>
-                    <span className={statusBadge(reg.proofStatus)}>
-                      proof: {labelStatus(reg.proofStatus)}
-                    </span>
-                    {reg.payment ? (
-                      <span className={statusBadge(reg.payment.status)}>
-                        {labelStatus(reg.payment.status)}
-                        {reg.payment.amountInPaise
-                          ? ` · ${formatMoney(reg.payment.amountInPaise)}`
-                          : ""}
+            {registrations.map((reg) => {
+              const canUploadProof =
+                (reg.status === "CONFIRMED" || reg.payment?.status === "PAID") &&
+                (reg.proofStatus === "NOT_SUBMITTED" || reg.proofStatus === "REJECTED");
+
+              return (
+                <article className="card p-5" key={reg.id}>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-base font-semibold tracking-tight">{reg.event.title}</p>
+                      <p className="mt-1 text-sm text-[var(--muted)]">
+                        {reg.distance} · Bib {reg.bibNumber}
+                      </p>
+                      <p className="mt-1 text-xs text-[var(--muted-soft)]">
+                        Registered {new Date(reg.registeredAt).toLocaleDateString("en-IN")}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <span className={statusBadge(reg.status)}>{labelStatus(reg.status)}</span>
+                      <span className={statusBadge(reg.proofStatus)}>
+                        proof: {labelStatus(reg.proofStatus)}
                       </span>
-                    ) : (
-                      <span className="badge">no payment yet</span>
-                    )}
+                      {reg.payment ? (
+                        <span className={statusBadge(reg.payment.status)}>
+                          {labelStatus(reg.payment.status)}
+                          {reg.payment.amountInPaise
+                            ? ` · ${formatMoney(reg.payment.amountInPaise)}`
+                            : ""}
+                        </span>
+                      ) : (
+                        <span className="badge">no payment yet</span>
+                      )}
+                      {reg.certificate ? (
+                        <Link
+                          className="badge badge-sage"
+                          href={`/certificates/${reg.certificate.certificateNumber}`}
+                        >
+                          cert: {labelStatus(reg.certificate.status)}
+                        </Link>
+                      ) : null}
+                      {reg.medalDelivery ? (
+                        <span className={statusBadge(reg.medalDelivery.status)}>
+                          medal: {labelStatus(reg.medalDelivery.status)}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Link className="btn btn-secondary h-9 px-3 text-xs" href={`/events/${reg.event.slug}`}>
-                    Event details
-                  </Link>
-                  {reg.status === "PENDING_PAYMENT" || reg.payment?.status === "CREATED" ? (
-                    <Link className="btn btn-primary h-9 px-3 text-xs" href="/register">
-                      Complete payment
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Link
+                      className="btn btn-secondary h-9 px-3 text-xs"
+                      href={`/events/${reg.event.slug}`}
+                    >
+                      Event details
                     </Link>
+                    {reg.status === "PENDING_PAYMENT" || reg.payment?.status === "CREATED" ? (
+                      <Link className="btn btn-primary h-9 px-3 text-xs" href="/register">
+                        Complete payment
+                      </Link>
+                    ) : null}
+                    {canUploadProof ? (
+                      <button
+                        className="btn btn-primary h-9 px-3 text-xs"
+                        onClick={() => {
+                          setProofRegId(reg.id);
+                          setProofMessage(null);
+                        }}
+                        type="button"
+                      >
+                        Upload GPS proof
+                      </button>
+                    ) : null}
+                    {reg.certificate ? (
+                      <Link
+                        className="btn btn-secondary h-9 px-3 text-xs"
+                        href={`/certificates/${reg.certificate.certificateNumber}`}
+                      >
+                        View certificate
+                      </Link>
+                    ) : null}
+                  </div>
+
+                  {proofRegId === reg.id ? (
+                    <form className="mt-5 space-y-3 rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] p-4" onSubmit={submitProof}>
+                      <p className="text-sm font-medium">Submit GPS proof</p>
+                      <p className="text-xs text-[var(--muted)]">
+                        Paste a public image URL of your activity screenshot (Strava, Garmin, Nike
+                        Run Club, etc.). Admin will review it for the leaderboard.
+                      </p>
+                      <label className="block text-sm">
+                        <span className="field-label">Activity image URL</span>
+                        <input
+                          className="input"
+                          onChange={(e) => setProofUrl(e.target.value)}
+                          placeholder="https://..."
+                          required
+                          type="url"
+                          value={proofUrl}
+                        />
+                      </label>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <label className="block text-sm">
+                          <span className="field-label">Source app</span>
+                          <input
+                            className="input"
+                            onChange={(e) => setSourceApp(e.target.value)}
+                            required
+                            value={sourceApp}
+                          />
+                        </label>
+                        <label className="block text-sm">
+                          <span className="field-label">Finish time (minutes)</span>
+                          <input
+                            className="input"
+                            inputMode="decimal"
+                            onChange={(e) => setFinishMinutes(e.target.value)}
+                            placeholder="e.g. 52"
+                            value={finishMinutes}
+                          />
+                        </label>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button className="btn btn-primary h-9" disabled={proofBusy} type="submit">
+                          {proofBusy ? "Submitting…" : "Submit proof"}
+                        </button>
+                        <button
+                          className="btn btn-ghost h-9"
+                          onClick={() => setProofRegId(null)}
+                          type="button"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
                   ) : null}
-                </div>
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </div>
         )}
       </div>

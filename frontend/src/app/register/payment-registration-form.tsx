@@ -245,6 +245,15 @@ export function PaymentRegistrationForm() {
 
       const registrationJson = await registrationResponse.json();
       const registrationId = registrationJson.data.id as string;
+      const freeEntry =
+        registrationJson.meta?.freeEntry === true ||
+        registrationJson.data?.status === "CONFIRMED";
+
+      if (freeEntry) {
+        setStatus("paid");
+        setMessage("Registration confirmed. No payment required for this event.");
+        return;
+      }
 
       const orderResponse = await fetch(getApiUrl("/api/payments/create-order"), {
         method: "POST",

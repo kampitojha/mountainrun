@@ -3,91 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getApiUrl } from "../../lib/api";
+import { type ApiEvent, mapApiEventToPublic } from "../../lib/events-api";
 import {
-  allPublicEvents,
   pastEvents as staticPastEvents,
   publicEvents as staticUpcomingEvents,
   type PublicEvent,
 } from "../data/events";
-
-type ApiEvent = {
-  id: string;
-  title: string;
-  slug: string;
-  description: string;
-  status: string;
-  startsAt: string;
-  endsAt: string;
-  distances: string[];
-  priceInPaise: number;
-  phase?: "upcoming" | "live" | "past";
-  registrationOpen?: boolean;
-  _count?: { registrations: number };
-  stats?: { registrations?: number; verifiedResults?: number; finishers?: number };
-};
-
-function formatDateRange(startsAt: string, endsAt: string) {
-  const start = new Date(startsAt);
-  const end = new Date(endsAt);
-  const sameMonth =
-    start.getUTCFullYear() === end.getUTCFullYear() &&
-    start.getUTCMonth() === end.getUTCMonth();
-
-  const day = new Intl.DateTimeFormat("en-GB", { day: "numeric", timeZone: "UTC" });
-  const monthYear = new Intl.DateTimeFormat("en-GB", {
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-
-  if (sameMonth) {
-    return `${day.format(start)}-${day.format(end)} ${monthYear.format(end)}`;
-  }
-
-  const full = new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-  return `${full.format(start)} – ${full.format(end)}`;
-}
-
-function formatPrice(priceInPaise: number) {
-  return `Rs. ${Math.round(priceInPaise / 100)}`;
-}
-
-function mapApiEvent(event: ApiEvent, phase: "upcoming" | "past"): PublicEvent {
-  const isPast = phase === "past" || event.phase === "past" || event.registrationOpen === false;
-  const staticMatch = allPublicEvents.find((item) => item.slug === event.slug);
-  const apiFinishers = event.stats?.finishers ?? event._count?.registrations;
-  const apiVerified = event.stats?.verifiedResults ?? event._count?.registrations;
-
-  return {
-    name: event.title,
-    slug: event.slug,
-    date: formatDateRange(event.startsAt, event.endsAt),
-    distance: event.distances.join(" / "),
-    price: formatPrice(event.priceInPaise),
-    description: event.description,
-    highlight:
-      staticMatch?.highlight ??
-      (isPast
-        ? "Completed · Tap to view recap and rewards."
-        : "Open for registration · Choose distance and join."),
-    banner: staticMatch?.banner ?? (isPast ? "Past race" : "Open event"),
-    reward: staticMatch?.reward ?? (isPast ? "Medal + certificate" : "Register now"),
-    status: isPast ? "past" : "upcoming",
-    finishers:
-      apiFinishers && apiFinishers > 0 ? apiFinishers : staticMatch?.finishers ?? apiFinishers,
-    verifiedResults:
-      apiVerified && apiVerified > 0
-        ? apiVerified
-        : staticMatch?.verifiedResults ?? apiVerified,
-    cities: staticMatch?.cities,
-    resultNote: staticMatch?.resultNote,
-  };
-}
 
 function EventCard({
   event,
@@ -180,8 +101,8 @@ export function EventsCatalog() {
           return;
         }
 
-        setUpcoming(upcomingApi.map((event) => mapApiEvent(event, "upcoming")));
-        setPast(pastApi.map((event) => mapApiEvent(event, "past")));
+        setUpcoming(upcomingApi.map((event) => mapApiEventToPublic(event, "upcoming")));
+        setPast(pastApi.map((event) => mapApiEventToPublic(event, "past")));
         setSource("api");
       } catch {
         // keep static catalog

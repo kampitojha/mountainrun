@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageShell } from "../../components/app-shell";
-import {
-  allPublicEvents,
-  eventBenefits,
-  getEventBySlug,
-} from "../../data/events";
+import { allPublicEvents, eventBenefits } from "../../data/events";
+import { fetchEventBySlug } from "../../../lib/events-api";
 
 export function generateStaticParams() {
   return allPublicEvents.map((event) => ({ slug: event.slug }));
 }
+
+/** Allow admin-created event slugs that are not in the static catalog. */
+export const dynamicParams = true;
 
 export default async function EventDetailPage({
   params,
@@ -17,7 +17,7 @@ export default async function EventDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const event = getEventBySlug(slug);
+  const event = await fetchEventBySlug(slug);
 
   if (!event) {
     notFound();
@@ -40,9 +40,7 @@ export default async function EventDetailPage({
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <p className="eyebrow">{isPast ? "Past event" : "Event"}</p>
-                <span
-                  className={`badge ${isPast ? "badge-sage" : "badge-solid"}`}
-                >
+                <span className={`badge ${isPast ? "badge-sage" : "badge-solid"}`}>
                   {isPast ? "Completed" : "Open for registration"}
                 </span>
               </div>
@@ -82,16 +80,12 @@ export default async function EventDetailPage({
                           {label}
                         </p>
                         <p className="mt-2 text-2xl font-semibold tracking-tight">
-                          {typeof value === "number"
-                            ? value.toLocaleString("en-IN")
-                            : "—"}
+                          {typeof value === "number" ? value.toLocaleString("en-IN") : "—"}
                         </p>
                       </div>
                     ))}
                   </div>
-                  <p className="mt-6 text-sm leading-6 text-[var(--muted)]">
-                    {event.highlight}
-                  </p>
+                  <p className="mt-6 text-sm leading-6 text-[var(--muted)]">{event.highlight}</p>
                 </div>
               ) : null}
 
@@ -117,12 +111,10 @@ export default async function EventDetailPage({
               {isPast ? (
                 <>
                   <p className="eyebrow">Closed</p>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-tight">
-                    Event completed
-                  </h2>
+                  <h2 className="mt-3 text-2xl font-semibold tracking-tight">Event completed</h2>
                   <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                    Registration for this race is closed. Explore the recap on this
-                    page, or open an upcoming event to register for the next run.
+                    Registration for this race is closed. Explore the recap on this page, or open
+                    an upcoming event to register for the next run.
                   </p>
                   <div className="mt-6 space-y-2">
                     <Link className="btn btn-primary btn-full" href="/events">
@@ -136,12 +128,10 @@ export default async function EventDetailPage({
               ) : (
                 <>
                   <p className="eyebrow">Register</p>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-tight">
-                    Join this event
-                  </h2>
+                  <h2 className="mt-3 text-2xl font-semibold tracking-tight">Join this event</h2>
                   <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                    Sign in, choose your distance, add delivery details, and pay with
-                    UPI. Run within the event window, then upload GPS proof.
+                    Sign in, choose your distance, add delivery details, and pay with UPI. Run
+                    within the event window, then upload GPS proof from your dashboard.
                   </p>
                   <div className="mt-6 space-y-2">
                     <Link className="btn btn-primary btn-full" href="/register">

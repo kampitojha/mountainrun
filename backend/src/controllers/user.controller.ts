@@ -43,17 +43,22 @@ export async function getCurrentUser(request: AuthenticatedRequest, response: Re
     throw new ApiError(401, "Authentication required");
   }
 
+  const registrationInclude = {
+    orderBy: { registeredAt: "desc" as const },
+    take: 20,
+    include: {
+      event: true,
+      payment: true,
+      proofUpload: true,
+      certificate: true,
+      medalDelivery: true,
+    },
+  };
+
   let user = await prisma.user.findFirst({
     where: { clerkId },
     include: {
-      registrations: {
-        orderBy: { registeredAt: "desc" },
-        take: 20,
-        include: {
-          event: true,
-          payment: true,
-        },
-      },
+      registrations: registrationInclude,
     },
   });
 
@@ -62,14 +67,7 @@ export async function getCurrentUser(request: AuthenticatedRequest, response: Re
     user = await prisma.user.findFirst({
       where: { clerkId },
       include: {
-        registrations: {
-          orderBy: { registeredAt: "desc" },
-          take: 20,
-          include: {
-            event: true,
-            payment: true,
-          },
-        },
+        registrations: registrationInclude,
       },
     });
   }
