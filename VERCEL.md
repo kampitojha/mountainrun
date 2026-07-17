@@ -4,25 +4,38 @@
 
 This repo is a monorepo: the Next.js app lives in **`frontend/`**, not the repo root.
 
-Vercel → **Settings** → **General** → **Root Directory** → set to **`frontend`**
+Pick **one** setup — mixing both causes `cd frontend: No such file or directory`.
 
-Then Vercel → **Settings** → **General** → **Build & Development Settings**:
+### Option A — recommended
+
+Vercel → **Settings** → **General**:
 
 | Setting | Value |
 |---------|--------|
-| Framework Preset | Next.js |
 | Root Directory | `frontend` |
-| Install Command | *(leave empty — default `npm install`)* |
-| Build Command | *(leave empty — default `next build`)* |
-| Output Directory | *(leave empty — Next.js default)* |
+| Install Command | **Override OFF** (uses `frontend/vercel.json` → `npm install`) |
+| Build Command | **Override OFF** (uses `frontend/vercel.json` → `npm run build`) |
 
-**Do not** use `cd frontend && npm install` when Root Directory is already `frontend`. That causes:
+### Option B — repo root
 
-```text
-cd frontend: No such file or directory
-```
+Vercel → **Settings** → **General**:
 
-There is **no** root `vercel.json` on purpose — deploy config comes from `frontend/vercel.json` only.
+| Setting | Value |
+|---------|--------|
+| Root Directory | **empty / `.`** |
+| Install Command | **Override OFF** (uses root `vercel.json` → `cd frontend && npm install`) |
+| Build Command | **Override OFF** (uses root `vercel.json` → `cd frontend && npm run build`) |
+
+### If deploy is failing right now
+
+Your Vercel project likely has **Root Directory = `frontend`** and a saved **Install Command = `cd frontend && npm install`**. That combo is broken.
+
+Fix in 30 seconds:
+
+1. Vercel → **Settings** → **General** → **Build & Development Settings**
+2. Turn **Override** **OFF** for Install Command and Build Command
+3. Set **Root Directory** to `frontend`
+4. **Redeploy** (Build Cache off)
 
 ## Common errors
 
