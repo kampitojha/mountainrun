@@ -13,25 +13,21 @@ import { userRouter } from "./routes/user.routes.js";
 import { ApiError } from "./utils/api-error.js";
 
 export const app = express();
-const allowedOrigins = new Set([
-  env.frontendUrl,
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "http://127.0.0.1:49154",
-]);
+const allowedOrigins = new Set(env.allowedOrigins);
 
 function isAllowedOrigin(origin: string | undefined) {
   if (!origin) {
     return true;
   }
 
-  if (allowedOrigins.has(origin)) {
+  const normalized = origin.replace(/\/$/, "");
+  if (allowedOrigins.has(normalized)) {
     return true;
   }
 
   if (env.nodeEnv !== "production") {
     try {
-      const url = new URL(origin);
+      const url = new URL(normalized);
       return url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname);
     } catch {
       return false;
@@ -49,7 +45,7 @@ app.use(cors({
       return;
     }
 
-    callback(new ApiError(403, "Origin is not allowed by CORS"));
+    callback(null, false);
   },
   credentials: true,
 }));

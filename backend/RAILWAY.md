@@ -18,7 +18,7 @@ If Root Directory is the repo root, Railway builds the Next.js frontend instead 
 |----------|----------|
 | `DATABASE_URL` | Yes — PostgreSQL connection string (Railway Postgres plugin) |
 | `CLERK_SECRET_KEY` | Yes — `sk_test_...` or `sk_live_...` |
-| `FRONTEND_URL` | Yes — e.g. `https://your-app.vercel.app` |
+| `FRONTEND_URL` | Yes — e.g. `https://mountainrun.in,https://www.mountainrun.in` |
 | `NODE_ENV` | `production` |
 | `ADMIN_EMAILS` | Your admin email(s), comma-separated |
 | `ADMIN_BOOTSTRAP` | `false` in production |

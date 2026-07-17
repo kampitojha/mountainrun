@@ -57,11 +57,7 @@ export async function requireClerkAuth(
 
     const payload = await verifyToken(token, {
       secretKey: env.clerkSecretKey,
-      authorizedParties: [
-        env.frontendUrl,
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-      ],
+      authorizedParties: env.allowedOrigins,
     });
 
     if (!payload.sub) {

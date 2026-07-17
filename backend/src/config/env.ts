@@ -31,9 +31,33 @@ function parseEmailList(raw: string) {
     .filter(Boolean);
 }
 
+function parseOriginList(raw: string) {
+  return raw
+    .split(",")
+    .map((part) => part.trim().replace(/\/$/, ""))
+    .filter(Boolean);
+}
+
+const configuredFrontendOrigins = parseOriginList(
+  readEnv("FRONTEND_URL", "http://localhost:3000"),
+);
+
+/** Browser origins allowed for CORS + Clerk token verification. */
+const allowedOrigins = Array.from(
+  new Set([
+    ...configuredFrontendOrigins,
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:49154",
+    "https://mountainrun.in",
+    "https://www.mountainrun.in",
+  ]),
+);
+
 export const env = {
   port: Number(process.env.PORT ?? 4000),
-  frontendUrl: process.env.FRONTEND_URL ?? "http://localhost:3000",
+  frontendUrl: configuredFrontendOrigins[0] ?? "http://localhost:3000",
+  allowedOrigins,
   nodeEnv: process.env.NODE_ENV ?? "development",
   razorpayKeyId: process.env.RAZORPAY_KEY_ID ?? "",
   razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET ?? "",
