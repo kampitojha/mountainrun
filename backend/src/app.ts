@@ -61,6 +61,15 @@ app.get("/health", (_request, response) => {
   response.json({ status: "ok", service: "mountainrun-api" });
 });
 
+app.get("/", (_request, response) => {
+  response.json({
+    service: "mountainrun-api",
+    status: "ok",
+    health: "/health",
+    docs: "API routes are under /api/*",
+  });
+});
+
 app.use("/api/admin", adminRouter);
 app.use("/api/events", eventRouter);
 app.use("/api/users", userRouter);
