@@ -2,8 +2,8 @@ import { app } from "./app.js";
 import { env } from "./config/env.js";
 import { prisma } from "./lib/prisma.js";
 
-const server = app.listen(env.port, "127.0.0.1", () => {
-  console.log(`Mountain Run API listening on http://127.0.0.1:${env.port}`);
+const server = app.listen(env.port, "0.0.0.0", () => {
+  console.log(`Mountain Run API listening on port ${env.port}`);
 });
 
 async function shutdown() {
