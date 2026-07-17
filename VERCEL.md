@@ -1,10 +1,36 @@
 # Vercel deploy checklist (Mountain Run)
 
-## Error you saw
+## Project setup (do this first)
+
+This repo is a monorepo: the Next.js app lives in **`frontend/`**, not the repo root.
+
+Vercel → **Settings** → **General** → **Root Directory** → set to **`frontend`**
+
+Then Vercel → **Settings** → **General** → **Build & Development Settings**:
+
+| Setting | Value |
+|---------|--------|
+| Framework Preset | Next.js |
+| Root Directory | `frontend` |
+| Install Command | *(leave empty — default `npm install`)* |
+| Build Command | *(leave empty — default `next build`)* |
+| Output Directory | *(leave empty — Next.js default)* |
+
+**Do not** use `cd frontend && npm install` when Root Directory is already `frontend`. That causes:
 
 ```text
-@clerk/nextjs: Missing publishableKey
+cd frontend: No such file or directory
 ```
+
+There is **no** root `vercel.json` on purpose — deploy config comes from `frontend/vercel.json` only.
+
+## Common errors
+
+### `cd frontend: No such file or directory`
+
+Root Directory is `frontend`, but Install/Build still run `cd frontend && ...` from an old root `vercel.json` or a manual override. Fix: Root Directory = `frontend`, clear custom Install/Build commands, redeploy.
+
+### `@clerk/nextjs: Missing publishableKey`
 
 Clerk keys are **not** on Vercel (or wrong name / no redeploy).
 
@@ -27,28 +53,14 @@ Add for **Production**, **Preview**, **Development**:
 **Important:** publishable key name must include `NEXT_PUBLIC_`.  
 `CLERK_PUBLISHABLE_KEY` alone is **not** enough for Next.js (code now maps it as fallback, but use the correct name).
 
-## 2. Root Directory (recommended)
-
-Vercel → **Settings** → **General** → **Root Directory**
-
-- Prefer: set to **`frontend`**
-- Then clear custom Install/Build overrides (use defaults for Next.js)
-
-If Root Directory is **empty** (repo root), repo `vercel.json` runs:
-
-```text
-cd frontend && npm install
-cd frontend && npm run build
-```
-
-## 3. Redeploy after env change
+## 2. Redeploy after env change
 
 Env change **does not** update a live deployment by itself.
 
 **Deployments** → latest → **⋯** → **Redeploy**  
 (check “Use existing Build Cache” **off** if still broken)
 
-## 4. Clerk Dashboard
+## 3. Clerk Dashboard
 
 Add your Vercel domain under allowed origins / domains:
 
