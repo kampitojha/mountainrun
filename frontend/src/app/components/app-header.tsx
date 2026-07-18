@@ -181,7 +181,8 @@ export function AppHeader() {
           </nav>
 
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <ThemeToggle size="sm" className="hidden sm:inline-flex" />
+            {/* Single theme control — all breakpoints (avoid duplicate mobile toggles) */}
+            <ThemeToggle size="sm" />
             <div className="hidden items-center gap-2 md:flex">
               <Show when="signed-out">
                 <Link className="btn btn-ghost h-9 px-3" href="/sign-in">
@@ -196,9 +197,8 @@ export function AppHeader() {
               </Show>
             </div>
 
-            {/* Mobile Actions: theme + Profile Avatar + Animated Hamburger */}
+            {/* Mobile: profile + menu (theme lives once above) */}
             <div className="flex items-center gap-1.5 md:hidden">
-              <ThemeToggle size="sm" className="sm:hidden" />
               <Show when="signed-in">
                 <ProfileButton />
               </Show>

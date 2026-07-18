@@ -362,17 +362,19 @@ function SidebarNav({
       </nav>
 
       <div className="admin-sidebar-foot">
-        <div className="admin-user-chip">
-          <div className="avatar">{initial}</div>
-          <div className="meta">
-            <strong>{displayName}</strong>
-            <span>
-              {me.role ?? "ADMIN"}
-              {me.mode === "dev-bypass" ? " · dev" : ""}
-            </span>
+        <div className="admin-sidebar-foot-top">
+          <div className="admin-user-chip">
+            <div className="avatar">{initial}</div>
+            <div className="meta">
+              <strong>{displayName}</strong>
+              <span>
+                {me.role ?? "ADMIN"}
+                {me.mode === "dev-bypass" ? " · dev" : ""}
+              </span>
+            </div>
           </div>
+          <AdminThemeToggle className="is-icon-only" />
         </div>
-        <AdminThemeToggle />
         <div className="admin-sidebar-links">
           <Link href="/">View site</Link>
           <Link href="/dashboard">My dashboard</Link>
