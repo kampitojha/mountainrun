@@ -38,6 +38,7 @@ export function ClerkUserSync() {
             clerkId: user!.id,
             email: user!.primaryEmailAddress?.emailAddress,
             name: user!.fullName ?? user!.firstName ?? undefined,
+            username: user!.username ?? undefined,
             phone: user!.primaryPhoneNumber?.phoneNumber ?? undefined,
             avatarUrl: user!.imageUrl,
           }),

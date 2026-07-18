@@ -77,6 +77,7 @@ export async function createRegistration(request: AuthenticatedRequest, response
       email,
       name: payload.name ?? payload.shippingName,
       phone: payload.phone ?? payload.shippingPhone,
+      username: payload.username,
     });
   } else if (payload.userId) {
     user = await prisma.user.findUnique({ where: { id: payload.userId } });
@@ -87,10 +88,12 @@ export async function createRegistration(request: AuthenticatedRequest, response
         name: payload.name ?? payload.shippingName,
         email,
         phone: payload.phone ?? payload.shippingPhone,
+        username: payload.username,
       },
       update: {
         name: payload.name ?? payload.shippingName,
         phone: payload.phone ?? payload.shippingPhone,
+        username: payload.username,
       },
     });
   }

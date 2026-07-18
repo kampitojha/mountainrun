@@ -11,6 +11,7 @@ export type SyncUserInput = {
   clerkId: string;
   email?: string;
   name?: string;
+  username?: string | null;
   phone?: string | null;
   avatarUrl?: string | null;
 };
@@ -27,6 +28,7 @@ export async function upsertUserFromClerk(input: SyncUserInput) {
 
   let email = input.email?.trim().toLowerCase();
   let name = input.name?.trim();
+  let username = input.username?.trim() || null;
   let phone = input.phone?.trim() || null;
   let avatarUrl = input.avatarUrl?.trim() || null;
 
@@ -46,6 +48,7 @@ export async function upsertUserFromClerk(input: SyncUserInput) {
         [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ").trim() ||
         clerkUser.username ||
         name;
+      username = clerkUser.username ?? username;
       phone = primaryPhone ?? phone;
       avatarUrl = clerkUser.imageUrl ?? avatarUrl;
     } catch {
@@ -74,6 +77,7 @@ export async function upsertUserFromClerk(input: SyncUserInput) {
         clerkId: existing.clerkId ?? clerkId,
         email,
         name,
+        username: username ?? existing.username,
         phone: phone ?? existing.phone,
         avatarUrl: avatarUrl ?? existing.avatarUrl,
       },
@@ -85,6 +89,7 @@ export async function upsertUserFromClerk(input: SyncUserInput) {
       clerkId,
       email,
       name,
+      username,
       phone,
       avatarUrl,
     },

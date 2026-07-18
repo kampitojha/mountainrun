@@ -155,6 +155,7 @@ export function PaymentRegistrationForm() {
   const selectedAmount = activeEvent?.amount ?? "₹499";
 
   const defaultName = user?.fullName ?? user?.firstName ?? "";
+  const defaultUsername = user?.username ?? "";
   const defaultEmail = user?.primaryEmailAddress?.emailAddress ?? "";
   const defaultPhone = user?.primaryPhoneNumber?.phoneNumber ?? "";
 
@@ -226,6 +227,7 @@ export function PaymentRegistrationForm() {
         body: JSON.stringify({
           clerkId: user?.id,
           name: formData.get("name"),
+          username: formData.get("username"),
           email: formData.get("email"),
           phone: formData.get("phone"),
           eventSlug: formData.get("eventSlug"),
@@ -346,6 +348,17 @@ export function PaymentRegistrationForm() {
             required
           />
           <FieldError message={errors.name} />
+        </Field>
+        <Field label="Username">
+          <input
+            aria-invalid={Boolean(errors.username)}
+            className={inputClass}
+            defaultValue={defaultUsername}
+            name="username"
+            placeholder="runner123"
+            required
+          />
+          <FieldError message={errors.username} />
         </Field>
         <Field label="Email">
           <input

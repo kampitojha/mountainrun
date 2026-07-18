@@ -13,6 +13,7 @@ export async function syncCurrentUser(request: AuthenticatedRequest, response: R
     clerkId?: string;
     email?: string;
     name?: string;
+    username?: string | null;
     phone?: string | null;
     avatarUrl?: string | null;
   };
@@ -26,6 +27,7 @@ export async function syncCurrentUser(request: AuthenticatedRequest, response: R
     clerkId,
     email: body.email,
     name: body.name,
+    username: body.username,
     phone: body.phone,
     avatarUrl: body.avatarUrl,
   });

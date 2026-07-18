@@ -11,6 +11,7 @@ export function asString(value: FormDataEntryValue | null) {
 export function validateRegistrationForm(formData: FormData): FieldErrors {
   const errors: FieldErrors = {};
   const name = asString(formData.get("name"));
+  const username = asString(formData.get("username"));
   const email = asString(formData.get("email"));
   const phone = asString(formData.get("phone")).replace(/\s+/g, "");
   const distance = asString(formData.get("distance"));
@@ -22,6 +23,12 @@ export function validateRegistrationForm(formData: FormData): FieldErrors {
 
   if (name.length < 2) {
     errors.name = "Full name must be at least 2 characters.";
+  }
+
+  if (username.length < 3) {
+    errors.username = "Username must be at least 3 characters.";
+  } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    errors.username = "Username can only contain alphanumeric characters and underscores.";
   }
 
   if (!emailPattern.test(email)) {

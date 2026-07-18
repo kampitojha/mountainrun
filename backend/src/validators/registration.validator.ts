@@ -18,6 +18,12 @@ export const createRegistrationSchema = z
     userId: z.string().min(1).optional(),
     clerkId: z.string().min(1).optional(),
     name: z.string().trim().min(2, "Name must be at least 2 characters").optional(),
+    username: z
+      .string()
+      .trim()
+      .min(3, "Username must be at least 3 characters")
+      .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain alphanumeric characters and underscores")
+      .optional(),
     email: z.string().trim().email("Enter a valid email").optional(),
     phone: phoneSchema.optional(),
     eventId: z.string().min(1).optional(),
