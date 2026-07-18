@@ -85,7 +85,7 @@ function StarRating({ rating }: { rating: number }) {
           className={`h-3.5 w-3.5 ${
             i < rating
               ? "fill-amber-400 text-amber-400"
-              : "fill-slate-200 text-slate-200"
+              : "fill-(--line-strong) text-(--line-strong)"
           }`}
         />
       ))}
@@ -101,7 +101,7 @@ function ReviewCard({
   index: number;
 }) {
   return (
-    <article className="feature-card card-premium-glow group shrink-0 w-72 sm:w-80 p-6 bg-white flex flex-col justify-between select-none">
+    <article className="feature-card card-premium-glow group shrink-0 w-72 sm:w-80 p-6 bg-(--panel) flex flex-col justify-between select-none">
       <div>
         <div className="flex items-start justify-between gap-4">
           {/* Top Left: Initials Avatar in a beautiful gradient feature-icon */}
@@ -123,7 +123,7 @@ function ReviewCard({
           </div>
         </div>
 
-        <h3 className="mt-6 text-base font-bold tracking-tight text-slate-900 group-hover:text-(--sage) transition-colors duration-300">
+        <h3 className="mt-6 text-base font-bold tracking-tight text-(--foreground) group-hover:text-(--sage) transition-colors duration-300">
           {review.name}
         </h3>
         <p className="mt-0.5 text-xs text-(--muted-soft) font-medium">

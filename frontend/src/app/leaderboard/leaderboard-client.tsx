@@ -120,7 +120,7 @@ function YourRankCard({
   return (
     <div className="mt-6 rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] px-4 py-3 sm:mt-8">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="rounded-md bg-[var(--foreground)] px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider text-white">
+        <span className="rounded-md bg-[var(--accent)] px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider text-[var(--on-accent)]">
           You
         </span>
         <p className="text-sm font-semibold tracking-tight">
@@ -410,7 +410,7 @@ export function LeaderboardClient() {
                         <span className="inline-flex flex-wrap items-center gap-2">
                           {row.runnerName}
                           {isYou ? (
-                            <span className="rounded-full bg-[var(--foreground)] px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider text-white">
+                            <span className="rounded-full bg-[var(--accent)] px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider text-[var(--on-accent)]">
                               You
                             </span>
                           ) : null}

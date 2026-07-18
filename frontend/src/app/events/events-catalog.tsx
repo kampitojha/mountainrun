@@ -21,7 +21,7 @@ function EventCard({
 
   return (
     <article className={`card card-hover flex flex-col overflow-hidden ${isPast ? "opacity-95" : ""}`}>
-      <div className={`px-6 py-4 text-white ${isPast ? "bg-[var(--sage)]" : "bg-[var(--foreground)]"}`}>
+      <div className={`event-card-banner px-6 py-4 text-white ${isPast ? "!bg-[var(--sage)]" : ""}`}>
         <div className="flex items-start justify-between gap-3">
           <p className="text-xs font-medium uppercase tracking-[0.14em] text-white/60">
             {event.banner}

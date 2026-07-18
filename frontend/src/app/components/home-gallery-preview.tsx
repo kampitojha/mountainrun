@@ -52,7 +52,7 @@ export function HomeGalleryPreview({
           {moments.map((moment, index) => (
             <StaggerItem key={moment.title}>
               <Link 
-                className="gallery-card card-premium-glow group block overflow-hidden border border-(--line) rounded-(--radius) bg-white/70 backdrop-blur-md shadow-xs transition-all duration-300 hover:bg-white hover:border-slate-300 hover:shadow-md hover:-translate-y-1" 
+                className="gallery-card card-premium-glow group block overflow-hidden border border-(--line) rounded-(--radius) bg-(--panel-glass) backdrop-blur-md shadow-xs transition-all duration-300 hover:bg-(--panel) hover:border-(--line-strong) hover:shadow-md hover:-translate-y-1" 
                 href="/gallery"
               >
                 <div
@@ -66,12 +66,12 @@ export function HomeGalleryPreview({
                     height={300}
                     loading="lazy"
                   />
-                  <span className="absolute left-3.5 bottom-3.5 z-10 rounded-full border border-white/20 bg-white/75 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-slate-800 backdrop-blur-md shadow-xs">
+                  <span className="absolute left-3.5 bottom-3.5 z-10 rounded-full border border-white/20 bg-(--panel-glass-strong) px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-(--foreground) backdrop-blur-md shadow-xs">
                     {moment.meta}
                   </span>
                 </div>
                 <div className="p-4 bg-transparent">
-                  <h3 className="text-sm font-bold text-slate-900 transition-colors duration-300 group-hover:text-(--sage)">
+                  <h3 className="text-sm font-bold text-(--foreground) transition-colors duration-300 group-hover:text-(--sage)">
                     {moment.title}
                   </h3>
                   <p className="mt-1 text-xs text-(--muted-soft) font-medium">{moment.meta}</p>

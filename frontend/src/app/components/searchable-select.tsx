@@ -84,7 +84,7 @@ export function SearchableSelect({
 
       {open ? (
         <ul
-          className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-[var(--radius-sm)] border border-[var(--line)] bg-white py-1 shadow-lg"
+          className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-[var(--radius-sm)] border border-[var(--line)] bg-(--panel) py-1 shadow-lg"
           id={listboxId}
           role="listbox"
         >

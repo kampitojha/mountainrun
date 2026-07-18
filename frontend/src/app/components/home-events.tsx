@@ -14,7 +14,7 @@ function EventCard({ event }: { event: PublicEvent }) {
 
   return (
     <motion.article
-      className="event-card card-premium-glow flex flex-col overflow-hidden bg-white border border-(--line) rounded-(--radius) shadow-sm"
+      className="event-card card-premium-glow flex flex-col overflow-hidden bg-(--panel) border border-(--line) rounded-(--radius) shadow-sm"
       whileHover={reduce ? undefined : { y: -6 }}
       transition={{ type: "spring", stiffness: 350, damping: 24 }}
     >

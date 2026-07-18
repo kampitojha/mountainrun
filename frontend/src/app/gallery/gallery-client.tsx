@@ -48,7 +48,7 @@ function StatCard({ label, value }: { label: string; value: number }) {
 
   return (
     <div
-      className="rounded-2xl border border-[var(--line)] bg-white p-5 shadow-[var(--shadow)] sm:p-6"
+      className="rounded-2xl border border-[var(--line)] bg-(--panel) p-5 shadow-[var(--shadow)] sm:p-6"
       ref={ref}
     >
       <p className="text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl">
@@ -73,7 +73,7 @@ function MomentCard({
     <StaggerItem>
       <motion.button
         className={cn(
-          "group flex h-full min-h-[17.5rem] w-full flex-col rounded-2xl border border-[var(--line)] bg-white p-5 text-left shadow-[var(--shadow)]",
+          "group flex h-full min-h-[17.5rem] w-full flex-col rounded-2xl border border-[var(--line)] bg-(--panel) p-5 text-left shadow-[var(--shadow)]",
           "transition hover:border-[var(--sage)]/25 hover:shadow-[var(--shadow-hover)]",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--foreground)]/20",
         )}
@@ -141,7 +141,7 @@ function DetailModal({
         type="button"
       />
       <motion.div
-        className="relative z-10 w-full max-w-lg rounded-3xl border border-[var(--line)] bg-white p-6 shadow-2xl sm:p-8"
+        className="relative z-10 w-full max-w-lg rounded-3xl border border-[var(--line)] bg-(--panel) p-6 shadow-2xl sm:p-8"
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 8 }}
@@ -253,7 +253,7 @@ export function GalleryClient() {
               <label className="relative w-full max-w-md">
                 <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
                 <input
-                  className="input h-11 rounded-xl border-[var(--line)] bg-white pl-10"
+                  className="input h-11 rounded-xl border-[var(--line)] bg-(--panel) pl-10"
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search…"
                   type="search"
@@ -271,8 +271,8 @@ export function GalleryClient() {
                   className={cn(
                     "rounded-full border px-3.5 py-1.5 text-sm font-medium transition",
                     activePill
-                      ? "border-[var(--foreground)] bg-[var(--foreground)] text-white"
-                      : "border-[var(--line)] bg-white text-[var(--muted)] hover:text-[var(--foreground)]",
+                      ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--on-accent)]"
+                      : "border-[var(--line)] bg-(--panel) text-[var(--muted)] hover:text-[var(--foreground)]",
                   )}
                   key={cat}
                   onClick={() => setCategory(cat)}

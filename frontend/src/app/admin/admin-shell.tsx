@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { adminFetch } from "../../lib/admin-api";
+import { AdminThemeProvider, AdminThemeToggle, useAdminTheme } from "./admin-theme";
 import "./admin.css";
 
 type NavItem = { label: string; href: string; icon: string };
@@ -167,10 +168,25 @@ function Spinner() {
   );
 }
 
+function AdminThemed({
+  children,
+  className = "admin-app",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const { theme } = useAdminTheme();
+  return (
+    <div className={className} data-admin-theme={theme}>
+      {children}
+    </div>
+  );
+}
+
 /* ── Gate: not signed in ────────────────────────────────── */
 function GateSignIn() {
   return (
-    <div className="admin-app admin-gate">
+    <AdminThemed className="admin-app admin-gate">
       <div className="admin-gate-card">
         <div className="admin-gate-logo">
           <div className="admin-gate-logo-icon">
@@ -201,7 +217,7 @@ function GateSignIn() {
           Mountain Run · Operations Console
         </div>
       </div>
-    </div>
+    </AdminThemed>
   );
 }
 
@@ -221,7 +237,7 @@ function GateRestricted({
     void signOut({ redirectUrl: "/sign-in?redirect_url=/admin" });
   }
   return (
-    <div className="admin-app admin-gate">
+    <AdminThemed className="admin-app admin-gate">
       <div className="admin-gate-card">
         <div className="admin-gate-logo">
           <div className="admin-gate-logo-icon">
@@ -272,14 +288,14 @@ function GateRestricted({
           Need access? Ask the admin to add your email to <code style={{ background: "var(--admin-surface-3)", color: "var(--admin-teal)", padding: "0.1rem 0.3rem", borderRadius: 4, fontSize: "0.7rem" }}>ADMIN_EMAILS</code>
         </div>
       </div>
-    </div>
+    </AdminThemed>
   );
 }
 
 /* ── Gate: loading ──────────────────────────────────────── */
 function GateLoading() {
   return (
-    <div className="admin-app admin-gate">
+    <AdminThemed className="admin-app admin-gate">
       <div className="admin-gate-card">
         <div className="admin-gate-logo">
           <div className="admin-gate-logo-icon">
@@ -294,7 +310,7 @@ function GateLoading() {
           Verifying admin session…
         </p>
       </div>
-    </div>
+    </AdminThemed>
   );
 }
 
@@ -356,6 +372,7 @@ function SidebarNav({
             </span>
           </div>
         </div>
+        <AdminThemeToggle />
         <div className="admin-sidebar-links">
           <Link href="/">View site</Link>
           <Link href="/dashboard">My dashboard</Link>
@@ -365,8 +382,8 @@ function SidebarNav({
   );
 }
 
-/* ── Main AdminShell ────────────────────────────────────── */
-export function AdminShell({ children }: { children: React.ReactNode }) {
+/* ── Inner shell (must sit under AdminThemeProvider) ────── */
+function AdminShellInner({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn, getToken } = useAuth();
   const { user } = useUser();
   const pathname = usePathname();
@@ -440,7 +457,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="admin-app">
+    <AdminThemed>
       {/* Mobile top bar */}
       <div className="admin-mobile-bar">
         <div className="admin-mobile-bar-brand">
@@ -449,13 +466,16 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             Mountain <em>Run</em>
           </strong>
         </div>
-        <button
-          className="btn btn-secondary"
-          onClick={() => setMobileOpen((v) => !v)}
-          type="button"
-        >
-          {mobileOpen ? "Close" : "Menu"}
-        </button>
+        <div className="admin-mobile-bar-actions">
+          <AdminThemeToggle className="is-icon-only" />
+          <button
+            className="btn btn-secondary"
+            onClick={() => setMobileOpen((v) => !v)}
+            type="button"
+          >
+            {mobileOpen ? "Close" : "Menu"}
+          </button>
+        </div>
       </div>
 
       {/* Mobile drawer */}
@@ -477,6 +497,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <div className="admin-page">{children}</div>
         </main>
       </div>
-    </div>
+    </AdminThemed>
+  );
+}
+
+/* ── Main AdminShell ────────────────────────────────────── */
+export function AdminShell({ children }: { children: React.ReactNode }) {
+  return (
+    <AdminThemeProvider>
+      <AdminShellInner>{children}</AdminShellInner>
+    </AdminThemeProvider>
   );
 }

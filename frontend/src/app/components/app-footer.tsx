@@ -62,7 +62,7 @@ const socialLinks = [
     label: "X / Twitter",
     href: "https://twitter.com/mountainrun",
     icon: <XIcon />,
-    hoverClass: "hover:border-slate-800 hover:text-slate-900 hover:bg-slate-50",
+    hoverClass: "hover:border-(--foreground) hover:text-(--foreground) hover:bg-(--panel-soft)",
   },
 ];
 
@@ -72,7 +72,7 @@ export function AppFooter() {
   };
 
   return (
-    <footer className="relative mt-auto bg-white border-t border-(--line) shadow-xs">
+    <footer className="relative mt-auto bg-(--panel) border-t border-(--line) shadow-xs">
       {/* Top accent line matching the header exactly */}
       <div className="h-[2px] w-full bg-linear-to-r from-(--sage) via-emerald-400 to-indigo-500" />
 
@@ -95,7 +95,7 @@ export function AppFooter() {
                 src="/logo-mark.svg"
                 width={32}
               />
-              <span className="text-base font-semibold tracking-tight text-slate-800 transition-colors duration-300 group-hover:text-slate-900">
+              <span className="text-base font-semibold tracking-tight text-(--foreground) transition-colors duration-300">
                 Mountain{" "}
                 <span className="font-extrabold text-transparent bg-clip-text bg-linear-to-r from-emerald-500 to-indigo-600">
                   Run
@@ -117,7 +117,7 @@ export function AppFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className={`flex h-9 w-9 items-center justify-center rounded-full border border-(--line) bg-white text-(--muted) transition-all duration-300 hover:-translate-y-1 shadow-xs ${hoverClass}`}
+                  className={`flex h-9 w-9 items-center justify-center rounded-full border border-(--line) bg-(--panel) text-(--muted) transition-all duration-300 hover:-translate-y-1 shadow-xs ${hoverClass}`}
                 >
                   {icon}
                 </a>
@@ -255,7 +255,7 @@ export function AppFooter() {
               onClick={scrollToTop}
               type="button"
               aria-label="Scroll to top"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-(--line) bg-white text-(--muted) transition-all duration-300 hover:text-foreground hover:border-slate-300 hover:-translate-y-1 active:scale-95 cursor-pointer shadow-xs"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-(--line) bg-(--panel) text-(--muted) transition-all duration-300 hover:text-foreground hover:border-(--line-strong) hover:-translate-y-1 active:scale-95 cursor-pointer shadow-xs"
             >
               <ArrowUp className="h-4 w-4" />
             </button>

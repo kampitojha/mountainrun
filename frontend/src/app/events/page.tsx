@@ -6,7 +6,7 @@ export default function EventsPage() {
     <PageShell>
       <section className="section">
         <div className="container-page">
-          <div className="overflow-hidden rounded-[var(--radius)] border border-[var(--line)] bg-white">
+          <div className="overflow-hidden rounded-[var(--radius)] border border-[var(--line)] bg-(--panel)">
             <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
               <div className="p-6 sm:p-8 lg:p-10">
                 <PageHeader
@@ -22,7 +22,7 @@ export default function EventsPage() {
                   ))}
                 </div>
               </div>
-              <div className="relative min-h-64 bg-[var(--foreground)]">
+              <div className="relative min-h-64 bg-[#0f172a]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   alt=""

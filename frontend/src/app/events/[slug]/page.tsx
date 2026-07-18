@@ -98,7 +98,7 @@ export default async function EventDetailPage({
                 <ul className="mt-6 grid gap-3 sm:grid-cols-2">
                   {eventBenefits.map((benefit) => (
                     <li
-                      className="flex items-start gap-3 rounded-xl border border-(--line) bg-white px-4 py-3.5 text-sm"
+                      className="flex items-start gap-3 rounded-xl border border-(--line) bg-(--panel) px-4 py-3.5 text-sm"
                       key={benefit}
                     >
                       <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-(--panel-soft) text-[0.65rem] font-semibold">

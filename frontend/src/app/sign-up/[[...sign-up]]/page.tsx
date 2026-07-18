@@ -20,7 +20,7 @@ export default function SignUpPage() {
 
           <div className="mx-auto mt-6 flex w-full max-w-[400px] justify-center sm:mt-8">
             <ClerkLoading>
-              <div className="w-full rounded-2xl border border-(--line) bg-white p-6 shadow-(--shadow)">
+              <div className="w-full rounded-2xl border border-(--line) bg-(--panel) p-6 shadow-(--shadow)">
                 <div className="h-5 w-36 rounded-full bg-(--panel-soft)" />
                 <div className="mt-6 h-11 rounded-lg bg-(--panel-soft)" />
                 <div className="mt-3 h-11 rounded-lg bg-(--panel-soft)" />

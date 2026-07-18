@@ -57,7 +57,7 @@ function Counter({ label, value }: { label: string; value: number }) {
 
   return (
     <div
-      className="flex h-full min-h-[7.5rem] flex-col justify-center rounded-2xl border border-[var(--line)] bg-white p-5 shadow-[var(--shadow)] sm:p-6"
+      className="flex h-full min-h-[7.5rem] flex-col justify-center rounded-2xl border border-[var(--line)] bg-(--panel) p-5 shadow-[var(--shadow)] sm:p-6"
       ref={ref}
     >
       <p className="text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl">
@@ -121,7 +121,7 @@ function TestimonialCarousel() {
   const item = aboutTestimonials[index];
 
   return (
-    <div className="relative h-full min-h-[18rem] overflow-hidden rounded-2xl border border-[var(--line)] bg-white p-6 shadow-[var(--shadow)] sm:p-8">
+    <div className="relative h-full min-h-[18rem] overflow-hidden rounded-2xl border border-[var(--line)] bg-(--panel) p-6 shadow-[var(--shadow)] sm:p-8">
       <AnimatePresence mode="wait">
         <motion.figure
           key={item.name}
@@ -231,7 +231,7 @@ export function AboutClient() {
                 },
               ].map((card) => (
                 <StaggerItem key={card.title}>
-                  <div className="flex h-full min-h-[10rem] flex-col rounded-2xl border border-[var(--line)] bg-white p-5 shadow-[var(--shadow)]">
+                  <div className="flex h-full min-h-[10rem] flex-col rounded-2xl border border-[var(--line)] bg-(--panel) p-5 shadow-[var(--shadow)]">
                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--sage)]">
                       {card.title}
                     </p>
@@ -281,7 +281,7 @@ export function AboutClient() {
               const Icon = valueIcons[index % valueIcons.length];
               return (
                 <StaggerItem key={value.title}>
-                  <article className="flex h-full min-h-[12.5rem] flex-col rounded-2xl border border-[var(--line)] bg-white p-5 shadow-[var(--shadow)] transition hover:border-[var(--sage)]/20 hover:shadow-[var(--shadow-hover)] sm:p-6">
+                  <article className="flex h-full min-h-[12.5rem] flex-col rounded-2xl border border-[var(--line)] bg-(--panel) p-5 shadow-[var(--shadow)] transition hover:border-[var(--sage)]/20 hover:shadow-[var(--shadow-hover)] sm:p-6">
                     <div className="grid h-10 w-10 place-items-center rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] text-[var(--sage)]">
                       <Icon className="h-5 w-5" />
                     </div>
@@ -306,7 +306,7 @@ export function AboutClient() {
             {aboutTeam.map((member) => (
               <StaggerItem key={member.name}>
                 <article className="flex h-full min-h-[13rem] flex-col rounded-2xl border border-[var(--line)] bg-[var(--panel-soft)]/50 p-5 sm:p-6">
-                  <div className="grid h-11 w-11 place-items-center rounded-full bg-white text-sm font-semibold text-[var(--foreground)] shadow-sm">
+                  <div className="grid h-11 w-11 place-items-center rounded-full bg-(--panel) text-sm font-semibold text-[var(--foreground)] shadow-sm">
                     {member.name
                       .split(" ")
                       .map((p) => p[0])
@@ -351,7 +351,7 @@ export function AboutClient() {
               return (
                 <StaggerItem key={feature.title}>
                   <div className="flex h-full min-h-[9.5rem] gap-4 rounded-2xl border border-[var(--line)] bg-[var(--panel-soft)]/40 p-5">
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-[var(--sage)] shadow-sm">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-(--panel) text-[var(--sage)] shadow-sm">
                       <Icon className="h-5 w-5" />
                     </div>
                     <div>
@@ -376,7 +376,7 @@ export function AboutClient() {
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {aboutSponsors.map((name) => (
               <div
-                className="flex min-h-[4.5rem] items-center justify-center rounded-2xl border border-[var(--line)] bg-white px-4 text-center text-sm font-semibold tracking-tight text-[var(--muted)]"
+                className="flex min-h-[4.5rem] items-center justify-center rounded-2xl border border-[var(--line)] bg-(--panel) px-4 text-center text-sm font-semibold tracking-tight text-[var(--muted)]"
                 key={name}
               >
                 {name}
@@ -407,7 +407,7 @@ export function AboutClient() {
             <SectionEyebrow>FAQ</SectionEyebrow>
             <SectionTitle className="text-2xl sm:text-3xl">Common questions</SectionTitle>
           </Reveal>
-          <div className="mt-6 rounded-2xl border border-[var(--line)] bg-white px-5 shadow-[var(--shadow)] sm:px-6">
+          <div className="mt-6 rounded-2xl border border-[var(--line)] bg-(--panel) px-5 shadow-[var(--shadow)] sm:px-6">
             {aboutFaqs.map((item) => (
               <FaqItem a={item.a} key={item.q} q={item.q} />
             ))}

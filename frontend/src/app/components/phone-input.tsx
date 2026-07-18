@@ -74,7 +74,7 @@ function CountryCodePicker({
 
       {open ? (
         <ul
-          className="absolute z-20 mt-1 w-52 overflow-hidden rounded-[var(--radius-sm)] border border-[var(--line)] bg-white py-1 shadow-lg"
+          className="absolute z-20 mt-1 w-52 overflow-hidden rounded-[var(--radius-sm)] border border-[var(--line)] bg-(--panel) py-1 shadow-lg"
           role="listbox"
         >
           {PHONE_COUNTRIES.map((item) => (

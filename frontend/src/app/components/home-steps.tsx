@@ -50,7 +50,7 @@ export function HomeSteps() {
               const Icon = item.icon;
               return (
                 <StaggerItem key={item.step}>
-                  <article className="feature-card card-premium-glow group h-full p-6 sm:p-8 bg-white/70 backdrop-blur-md border border-(--line) rounded-(--radius) shadow-xs transition-all duration-300 hover:bg-white hover:border-slate-300 hover:shadow-md hover:-translate-y-1">
+                  <article className="feature-card card-premium-glow group h-full p-6 sm:p-8 bg-(--panel-glass) backdrop-blur-md border border-(--line) rounded-(--radius) shadow-xs transition-all duration-300 hover:bg-(--panel) hover:border-(--line-strong) hover:shadow-md hover:-translate-y-1">
                     <div className="flex items-start justify-between gap-4">
                       <div className="feature-icon glow-icon-bg shadow-xs transition-transform duration-300 group-hover:scale-110">
                         <Icon aria-hidden="true" className="h-5 w-5 transition-transform duration-300 group-hover:rotate-6" strokeWidth={1.75} />

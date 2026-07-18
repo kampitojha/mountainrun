@@ -28,7 +28,7 @@ export function HomeHero() {
       <div className="container-page relative py-16 sm:py-24 md:py-32 lg:py-36">
         <div className="mx-auto max-w-3xl text-center">
           <FadeIn>
-            <p className="eyebrow inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white px-3.5 py-1.5 text-xs font-semibold text-[var(--foreground)] shadow-sm">
+            <p className="eyebrow inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-(--panel) px-3.5 py-1.5 text-xs font-semibold text-[var(--foreground)] shadow-sm">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--sage)] opacity-75"></span>
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--sage)]"></span>

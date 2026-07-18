@@ -57,7 +57,7 @@ export function HomeRewards() {
               const Icon = item.icon;
               return (
                 <StaggerItem key={item.title}>
-                  <article className="feature-card card-premium-glow group h-full p-6 bg-white/70 backdrop-blur-md border border-(--line) rounded-(--radius) shadow-xs transition-all duration-300 hover:bg-white hover:border-slate-300 hover:shadow-md hover:-translate-y-1">
+                  <article className="feature-card card-premium-glow group h-full p-6 bg-(--panel-glass) backdrop-blur-md border border-(--line) rounded-(--radius) shadow-xs transition-all duration-300 hover:bg-(--panel) hover:border-(--line-strong) hover:shadow-md hover:-translate-y-1">
                     <div className="feature-icon glow-icon-bg shadow-xs transition-all duration-300 group-hover:scale-110 group-hover:bg-(--sage-soft)">
                       <Icon 
                         aria-hidden="true" 

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, Image as ImageIcon, Info, Trophy, LayoutDashboard, Award, LogIn } from "lucide-react";
+import { ThemeToggle } from "./theme-toggle";
 
 /** Public nav — Register is not duplicated here. */
 const publicNav = [
@@ -20,7 +21,7 @@ function ProfileButton() {
     <UserButton
       appearance={{
         elements: {
-          avatarBox: "h-9 w-9 border border-(--line) hover:border-slate-300 transition-colors",
+          avatarBox: "h-9 w-9 border border-(--line) hover:border-(--line-strong) transition-colors",
         },
       }}
     >
@@ -48,7 +49,7 @@ function NavLink({
   return (
     <Link
       className={`relative rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors duration-300 ${
-        active ? "text-slate-900" : "text-(--muted) hover:text-slate-900"
+        active ? "text-(--foreground)" : "text-(--muted) hover:text-(--foreground)"
       }`}
       href={href}
       onClick={onClick}
@@ -56,7 +57,7 @@ function NavLink({
       {active && (
         <motion.span
           layoutId="active-nav-pill"
-          className="absolute inset-0 bg-white border border-(--line) rounded-full shadow-xs -z-10"
+          className="absolute inset-0 bg-(--panel) border border-(--line) rounded-full shadow-xs -z-10"
           transition={{ type: "spring", stiffness: 380, damping: 28 }}
         />
       )}
@@ -81,7 +82,7 @@ function BrandLogo({ onNavigate }: { onNavigate?: () => void }) {
         src="/logo-mark.svg"
         width={36}
       />
-      <span className="text-base font-semibold tracking-tight text-slate-800 transition-colors duration-300 group-hover:text-slate-900 sm:text-lg">
+      <span className="text-base font-semibold tracking-tight text-(--foreground) transition-colors duration-300 sm:text-lg">
         Mountain{" "}
         <span className="font-extrabold text-transparent bg-clip-text bg-linear-to-r from-emerald-500 to-indigo-600">
           Run
@@ -103,7 +104,7 @@ function HamburgerButton({
     <button
       aria-expanded={open}
       aria-label={open ? "Close menu" : "Open menu"}
-      className="focus-ring relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-(--line) bg-white text-foreground hover:bg-slate-50 transition-colors cursor-pointer"
+      className="focus-ring relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-(--line) bg-(--panel) text-foreground hover:bg-(--panel-soft) transition-colors cursor-pointer"
       onClick={onClick}
       type="button"
     >
@@ -157,7 +158,7 @@ export function AppHeader() {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-(--line) bg-white/80 backdrop-blur-xl shadow-xs">
+    <header className="sticky top-0 z-40 border-b border-(--line) bg-(--header-bg) backdrop-blur-xl shadow-xs">
       {/* Accent color gradient bar */}
       <div className="h-[2px] w-full bg-linear-to-r from-(--sage) via-emerald-400 to-indigo-500" />
       
@@ -180,6 +181,7 @@ export function AppHeader() {
           </nav>
 
           <div className="flex items-center gap-1.5 sm:gap-2">
+            <ThemeToggle size="sm" className="hidden sm:inline-flex" />
             <div className="hidden items-center gap-2 md:flex">
               <Show when="signed-out">
                 <Link className="btn btn-ghost h-9 px-3" href="/sign-in">
@@ -194,8 +196,9 @@ export function AppHeader() {
               </Show>
             </div>
 
-            {/* Mobile Actions: Profile Avatar + Animated Hamburger */}
+            {/* Mobile Actions: theme + Profile Avatar + Animated Hamburger */}
             <div className="flex items-center gap-1.5 md:hidden">
+              <ThemeToggle size="sm" className="sm:hidden" />
               <Show when="signed-in">
                 <ProfileButton />
               </Show>
@@ -215,7 +218,7 @@ export function AppHeader() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setOpen(false)}
-              className="fixed inset-x-0 bottom-0 top-[56px] sm:top-[64px] z-30 bg-slate-900/20 backdrop-blur-xs md:hidden"
+              className="fixed inset-x-0 bottom-0 top-[56px] sm:top-[64px] z-30 bg-(--overlay) backdrop-blur-xs md:hidden"
             />
 
             {/* Floating Drawer Overlay */}
@@ -224,7 +227,7 @@ export function AppHeader() {
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ type: "spring", duration: 0.4, bounce: 0 }}
-              className="absolute left-0 right-0 top-full z-40 border-b border-(--line) bg-white px-4 pb-6 pt-2 shadow-lg md:hidden overflow-hidden"
+              className="absolute left-0 right-0 top-full z-40 border-b border-(--line) bg-(--panel) px-4 pb-6 pt-2 shadow-lg md:hidden overflow-hidden"
             >
               <nav className="flex flex-col gap-1.5">
                 {publicNav.map(([label, href, Icon]) => {

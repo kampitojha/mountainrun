@@ -17,8 +17,8 @@ export function MarketingSection({
       className={cn(
         "relative py-16 sm:py-20 lg:py-24",
         tone === "soft" && "bg-[var(--panel-soft)]/80",
-        tone === "white" && "bg-white",
-        tone === "dark" && "bg-[var(--foreground)] text-white",
+        tone === "white" && "bg-(--panel)",
+        tone === "dark" && "bg-[#0f172a] text-white",
         className,
       )}
       id={id}
