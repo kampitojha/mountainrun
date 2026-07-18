@@ -23,6 +23,7 @@ type CheckoutResponse = {
 
 type RazorpayCheckout = {
   open: () => void;
+  on: (event: string, handler: (response: unknown) => void) => void;
 };
 
 type RazorpayConstructor = new (options: Record<string, unknown>) => RazorpayCheckout;
@@ -285,55 +286,56 @@ export function PaymentRegistrationForm() {
       }
 
       setStatus("paying");
-      setMessage("Checkout opened. Prefer UPI for the fastest payment.");
+      setMessage("Checkout opened — UPI is listed first (apps on mobile, QR on desktop).");
 
-      // Normalize contact for Razorpay (digits with country code, no spaces).
-      const rawPhone = asString(formData.get("phone")).replace(/[^\d+]/g, "");
-      const contact = rawPhone.startsWith("+")
-        ? rawPhone.replace(/\D/g, "")
-        : rawPhone.replace(/\D/g, "");
+      // Razorpay contact: digits only, keep country code (e.g. 9198…).
+      // Indian contact helps Checkout surface UPI for INR orders.
+      const contact = asString(formData.get("phone")).replace(/\D/g, "");
 
+      /**
+       * UPI Collect (enter VPA) was deprecated by NPCI (28 Feb 2026).
+       * If Collect is still the only flow on the account, UPI can disappear.
+       * Hide Collect → Checkout shows UPI Intent (mobile) / QR (desktop).
+       * Reorder: UPI first, then card → wallet → netbanking.
+       *
+       * @see https://razorpay.com/docs/announcements/upi-collect-migration/standard-integration/
+       * @see https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/configure-payment-methods/sample-code/
+       */
       const checkout = new window.Razorpay({
         key: order.keyId,
         amount: order.amountInPaise,
-        currency: order.currency,
+        currency: order.currency || "INR",
         name: "Mountain Run",
         description: `Registration ${order.bibNumber}`,
+        image: "/logo-mark.svg",
         order_id: order.orderId,
         prefill: {
           name: asString(formData.get("name")),
           email: asString(formData.get("email")),
-          contact,
+          contact: contact || undefined,
         },
-        // Keep methods enabled; display order is controlled via config below.
-        method: {
-          upi: true,
-          card: true,
-          netbanking: true,
-          wallet: true,
-        },
-        /**
-         * UPI first (recommended for India), then card / wallet / netbanking.
-         * Official reorder pattern: config.display.blocks + sequence.
-         * @see https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/configure-payment-methods/sample-code/
-         */
+        // Do NOT pass method: { … } filters — they can hide UPI when
+        // Collect is deprecated and Intent/QR is the only valid flow.
         config: {
           display: {
             blocks: {
-              preferred: {
-                name: "UPI (Recommended)",
-                instruments: [{ method: "upi" }],
-              },
-              other: {
-                name: "Other payment methods",
+              banks: {
+                name: "All payment options",
                 instruments: [
+                  { method: "upi" },
                   { method: "card" },
                   { method: "wallet" },
                   { method: "netbanking" },
                 ],
               },
             },
-            sequence: ["block.preferred", "block.other"],
+            hide: [
+              {
+                method: "upi",
+                flows: ["collect"],
+              },
+            ],
+            sequence: ["block.banks"],
             preferences: {
               show_default_blocks: false,
             },
@@ -369,6 +371,14 @@ export function PaymentRegistrationForm() {
             setMessage("Payment cancelled. You can try again.");
           },
         },
+      });
+
+      checkout.on("payment.failed", (response: unknown) => {
+        const err = response as { error?: { description?: string } };
+        setStatus("error");
+        setMessage(
+          err?.error?.description ?? "Payment failed. Try UPI again or another method.",
+        );
       });
 
       checkout.open();
