@@ -53,10 +53,27 @@ export default function AdminProofsPage() {
       const note = approved
         ? undefined
         : window.prompt("Rejection reason (optional)") || undefined;
-      await adminFetch(`/api/admin/proofs/${id}/review`, token, {
+      const json = await adminFetch<{
+        meta?: {
+          certificate?: {
+            certificateNumber?: string;
+            emailSent?: boolean;
+            emailError?: string | null;
+            status?: string;
+          } | null;
+        };
+      }>(`/api/admin/proofs/${id}/review`, token, {
         method: "POST",
         body: JSON.stringify({ approved, reviewerNote: note }),
       });
+      if (approved && json.meta?.certificate) {
+        const c = json.meta.certificate;
+        window.alert(
+          c.emailSent
+            ? `Approved. Certificate ${c.certificateNumber} generated and emailed.`
+            : `Approved. Certificate ${c.certificateNumber} → ${c.status}. Email: ${c.emailError ?? "not sent (check RESEND_API_KEY or send from Certificates)."}`,
+        );
+      }
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Review failed");

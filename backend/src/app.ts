@@ -9,6 +9,7 @@ import { dashboardRouter } from "./routes/dashboard.routes.js";
 import { eventRouter } from "./routes/event.routes.js";
 import { paymentRouter } from "./routes/payment.routes.js";
 import { registrationRouter } from "./routes/registration.routes.js";
+import { uploadRouter } from "./routes/upload.routes.js";
 import { userRouter } from "./routes/user.routes.js";
 import { ApiError } from "./utils/api-error.js";
 
@@ -50,7 +51,8 @@ app.use(cors({
   credentials: true,
 }));
 app.use("/api/payments/webhook", express.raw({ type: "application/json" }));
-app.use(express.json({ limit: "1mb" }));
+// 2mb: proof screenshots as data URLs before Cloudinary (prefer Cloudinary in prod)
+app.use(express.json({ limit: "2mb" }));
 app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
 
 app.get("/health", (_request, response) => {
@@ -73,6 +75,7 @@ app.use("/api/registrations", registrationRouter);
 app.use("/api/payments", paymentRouter);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/certificates", certificateRouter);
+app.use("/api/uploads", uploadRouter);
 
 app.use((_request, _response, next) => {
   next(new ApiError(404, "Route not found"));

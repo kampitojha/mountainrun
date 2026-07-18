@@ -156,11 +156,53 @@ export async function submitProof(request: AuthenticatedRequest, response: Respo
   const payload = validateBody(submitProofSchema, request);
   const registrationId = routeParam(request, "id");
 
+  const existing = await prisma.registration.findUnique({
+    where: { id: registrationId },
+    include: {
+      user: true,
+      payment: true,
+      proofUpload: true,
+      event: true,
+    },
+  });
+
+  if (!existing) {
+    throw new ApiError(404, "Registration not found");
+  }
+
+  // Ownership: signed-in Clerk user must own this registration (when Clerk is on).
+  const clerkId = request.auth?.userId;
+  if (clerkId && existing.user.clerkId && existing.user.clerkId !== clerkId) {
+    throw new ApiError(403, "You can only submit proof for your own registration");
+  }
+
+  const isPaid =
+    existing.status === "CONFIRMED" ||
+    existing.status === "COMPLETED" ||
+    existing.payment?.status === "PAID" ||
+    !existing.event.paymentRequired ||
+    existing.event.priceInPaise <= 0;
+
+  if (!isPaid) {
+    throw new ApiError(422, "Complete payment before uploading GPS proof");
+  }
+
+  if (existing.proofStatus === "APPROVED") {
+    throw new ApiError(409, "Proof already approved. Contact support to re-submit.");
+  }
+
+  if (existing.proofStatus === "SUBMITTED") {
+    throw new ApiError(
+      409,
+      "Proof already submitted and waiting for review. You can re-upload only after rejection.",
+    );
+  }
+
   const registration = await prisma.registration.update({
     where: { id: registrationId },
     data: {
       proofStatus: "SUBMITTED",
-      finishTimeSeconds: payload.finishTimeSeconds,
+      finishTimeSeconds: payload.finishTimeSeconds ?? existing.finishTimeSeconds,
       proofUpload: {
         upsert: {
           create: {
@@ -173,14 +215,21 @@ export async function submitProof(request: AuthenticatedRequest, response: Respo
             sourceApp: payload.sourceApp,
             submittedAt: new Date(),
             status: "SUBMITTED",
+            reviewerNote: null,
+            reviewedAt: null,
           },
         },
       },
     },
-    include: { proofUpload: true },
+    include: { proofUpload: true, event: true },
   });
 
-  response.json({ data: registration });
+  response.json({
+    data: registration,
+    meta: {
+      message: "Proof submitted. Our team will review it for leaderboard and certificate.",
+    },
+  });
 }
 
 export async function reviewProof(request: AuthenticatedRequest, response: Response) {

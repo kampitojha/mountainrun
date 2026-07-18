@@ -410,6 +410,28 @@ select.input {
   color: var(--sage);
 }
 
+.badge-warn {
+  border-color: transparent;
+  background: color-mix(in srgb, #f59e0b 14%, transparent);
+  color: #d97706;
+}
+
+.badge-danger {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+}
+
+html.dark .badge-warn,
+html[data-theme="dark"] .badge-warn {
+  color: #fbbf24;
+}
+
+html.dark .badge-danger,
+html[data-theme="dark"] .badge-danger {
+  color: #fb7185;
+}
+
 .divider {
   height: 1px;
   width: 100%;

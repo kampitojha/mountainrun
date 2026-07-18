@@ -65,6 +65,12 @@ export const env = {
   resendApiKey: process.env.RESEND_API_KEY ?? "",
   resendFromEmail:
     process.env.RESEND_FROM_EMAIL ?? "Mountain Run <onboarding@resend.dev>",
+  cloudinaryCloudName: readEnv("CLOUDINARY_CLOUD_NAME"),
+  cloudinaryApiKey: readEnv("CLOUDINARY_API_KEY"),
+  cloudinaryApiSecret: readEnv("CLOUDINARY_API_SECRET"),
+  /** When true, proof approve auto-generates + emails certificate. */
+  certificateAutoSend:
+    readEnv("CERTIFICATE_AUTO_SEND", "true").toLowerCase() !== "false",
   clerkSecretKey: readEnv("CLERK_SECRET_KEY"),
   clerkPublishableKey: readEnv("CLERK_PUBLISHABLE_KEY"),
   /** Comma-separated emails that always get admin (e.g. you@gmail.com) */

@@ -9,6 +9,11 @@ import {
   adminGetRegistration,
   adminGetUser,
   adminListAudit,
+  adminBulkGenerateCertificates,
+  adminBulkSendCertificates,
+  adminEnsureCertificateForRegistration,
+  adminGenerateAndSendCertificate,
+  adminGenerateCertificate,
   adminListCertificates,
   adminListCoupons,
   adminListEvents,
@@ -21,6 +26,7 @@ import {
   adminMe,
   adminOverview,
   adminReviewProof,
+  adminSendCertificate,
   adminUpdateCertificate,
   adminUpdateCoupon,
   adminUpdateEvent,
@@ -67,6 +73,18 @@ adminRouter.patch("/medals/:id", asyncHandler(adminUpdateMedal));
 
 adminRouter.get("/certificates", asyncHandler(adminListCertificates));
 adminRouter.patch("/certificates/:id", asyncHandler(adminUpdateCertificate));
+adminRouter.post("/certificates/:id/generate", asyncHandler(adminGenerateCertificate));
+adminRouter.post("/certificates/:id/send", asyncHandler(adminSendCertificate));
+adminRouter.post(
+  "/certificates/:id/generate-and-send",
+  asyncHandler(adminGenerateAndSendCertificate),
+);
+adminRouter.post("/certificates/bulk-generate", asyncHandler(adminBulkGenerateCertificates));
+adminRouter.post("/certificates/bulk-send", asyncHandler(adminBulkSendCertificates));
+adminRouter.post(
+  "/registrations/:id/certificate",
+  asyncHandler(adminEnsureCertificateForRegistration),
+);
 
 adminRouter.get("/coupons", asyncHandler(adminListCoupons));
 adminRouter.post("/coupons", asyncHandler(adminCreateCoupon));

@@ -4,9 +4,13 @@ import type { AuthenticatedRequest } from "../middleware/clerk-auth.js";
 import { prisma } from "../lib/prisma.js";
 import { writeAdminAudit } from "../services/admin-audit.service.js";
 import {
-  createCertificateNumber,
-  createCertificateQrPayload,
-} from "../services/certificate.service.js";
+  bulkEmailGeneratedCertificates,
+  bulkGenerateQueuedCertificates,
+  emailCertificate,
+  ensureCertificateForRegistration,
+  generateCertificate,
+  issueCertificateAfterApproval,
+} from "../services/certificate-issue.service.js";
 import { ensureDefaultEvents } from "../services/event.service.js";
 import { ApiError } from "../utils/api-error.js";
 import { routeParam } from "../utils/params.js";
@@ -784,25 +788,25 @@ export async function adminReviewProof(request: AuthenticatedRequest, response: 
     },
   });
 
-  if (payload.approved) {
-    const certificateNumber = createCertificateNumber(registration.bibNumber);
-    await prisma.certificate.upsert({
-      where: { registrationId: id },
-      create: {
-        registrationId: id,
-        certificateNumber,
-        qrPayload: createCertificateQrPayload(certificateNumber),
-        status: "QUEUED",
-      },
-      update: { status: "QUEUED" },
-    });
+  let certificateIssue: Awaited<ReturnType<typeof issueCertificateAfterApproval>> | null =
+    null;
 
+  if (payload.approved) {
     if (existing.event.medalIncluded) {
       await prisma.medalDelivery.upsert({
         where: { registrationId: id },
         create: { registrationId: id, status: "PENDING" },
         update: {},
       });
+    }
+
+    // Scalable path: queue → generate public cert URL → email (if auto-send on)
+    try {
+      certificateIssue = await issueCertificateAfterApproval(id);
+    } catch (err) {
+      // Proof still approved even if cert pipeline hiccups; admin can retry.
+      console.error("[admin] certificate issue after approve failed:", err);
+      await ensureCertificateForRegistration(id);
     }
   }
 
@@ -813,7 +817,32 @@ export async function adminReviewProof(request: AuthenticatedRequest, response: 
     summary: `${status} proof for ${registration.bibNumber}`,
   });
 
-  response.json({ data: registration });
+  const refreshed = await prisma.registration.findUnique({
+    where: { id },
+    include: {
+      user: true,
+      event: true,
+      proofUpload: true,
+      certificate: true,
+      medalDelivery: true,
+    },
+  });
+
+  response.json({
+    data: refreshed ?? registration,
+    meta: {
+      certificate: certificateIssue
+        ? {
+            id: certificateIssue.certificate.id,
+            status: certificateIssue.certificate.status,
+            certificateNumber: certificateIssue.certificate.certificateNumber,
+            pdfUrl: certificateIssue.certificate.pdfUrl,
+            emailSent: certificateIssue.email.sent,
+            emailError: certificateIssue.email.error ?? null,
+          }
+        : null,
+    },
+  });
 }
 
 // ── Medals ─────────────────────────────────────────────────────
@@ -949,6 +978,131 @@ export async function adminUpdateCertificate(request: AuthenticatedRequest, resp
   });
 
   response.json({ data: certificate });
+}
+
+export async function adminGenerateCertificate(
+  request: AuthenticatedRequest,
+  response: Response,
+) {
+  const id = routeParam(request, "id");
+  const certificate = await generateCertificate(id);
+
+  await writeAdminAudit(request, {
+    action: "certificate.generate",
+    entityType: "Certificate",
+    entityId: id,
+    summary: `Generated ${certificate.certificateNumber}`,
+  });
+
+  response.json({ data: certificate });
+}
+
+export async function adminSendCertificate(request: AuthenticatedRequest, response: Response) {
+  const id = routeParam(request, "id");
+  const result = await emailCertificate(id);
+
+  await writeAdminAudit(request, {
+    action: "certificate.send",
+    entityType: "Certificate",
+    entityId: id,
+    summary: result.email.sent
+      ? `Emailed ${result.certificate.certificateNumber}`
+      : `Email failed for ${result.certificate.certificateNumber}: ${result.email.error ?? "unknown"}`,
+  });
+
+  response.json({
+    data: result.certificate,
+    meta: { email: result.email },
+  });
+}
+
+export async function adminGenerateAndSendCertificate(
+  request: AuthenticatedRequest,
+  response: Response,
+) {
+  const id = routeParam(request, "id");
+  await generateCertificate(id);
+  const result = await emailCertificate(id);
+
+  await writeAdminAudit(request, {
+    action: "certificate.generate_send",
+    entityType: "Certificate",
+    entityId: id,
+    summary: `Generate+send ${result.certificate.certificateNumber} (email: ${result.email.sent ? "ok" : "fail"})`,
+  });
+
+  response.json({
+    data: result.certificate,
+    meta: { email: result.email },
+  });
+}
+
+export async function adminBulkGenerateCertificates(
+  request: AuthenticatedRequest,
+  response: Response,
+) {
+  const limitRaw = typeof request.query.limit === "string" ? Number(request.query.limit) : 50;
+  const items = await bulkGenerateQueuedCertificates(Number.isFinite(limitRaw) ? limitRaw : 50);
+
+  await writeAdminAudit(request, {
+    action: "certificate.bulk_generate",
+    entityType: "Certificate",
+    entityId: "bulk",
+    summary: `Bulk generated ${items.length} certificates`,
+  });
+
+  response.json({ data: items, meta: { count: items.length } });
+}
+
+export async function adminBulkSendCertificates(
+  request: AuthenticatedRequest,
+  response: Response,
+) {
+  const limitRaw = typeof request.query.limit === "string" ? Number(request.query.limit) : 50;
+  const items = await bulkEmailGeneratedCertificates(Number.isFinite(limitRaw) ? limitRaw : 50);
+  const sent = items.filter((i) => i.email.sent).length;
+
+  await writeAdminAudit(request, {
+    action: "certificate.bulk_send",
+    entityType: "Certificate",
+    entityId: "bulk",
+    summary: `Bulk emailed ${sent}/${items.length} certificates`,
+  });
+
+  response.json({
+    data: items.map((i) => ({
+      certificate: i.certificate,
+      email: i.email,
+    })),
+    meta: { count: items.length, sent },
+  });
+}
+
+/** Create a certificate row for an approved registration that is missing one. */
+export async function adminEnsureCertificateForRegistration(
+  request: AuthenticatedRequest,
+  response: Response,
+) {
+  const registrationId = routeParam(request, "id");
+  const registration = await prisma.registration.findUnique({ where: { id: registrationId } });
+  if (!registration) {
+    throw new ApiError(404, "Registration not found");
+  }
+  if (registration.proofStatus !== "APPROVED") {
+    throw new ApiError(422, "Certificate can only be created for approved proofs");
+  }
+
+  const cert = await ensureCertificateForRegistration(registrationId);
+  const generated = await generateCertificate(cert.id);
+
+  await writeAdminAudit(request, {
+    action: "certificate.ensure",
+    entityType: "Certificate",
+    entityId: generated.id,
+    summary: `Ensured certificate for registration ${registration.bibNumber}`,
+  });
+
+  response.json({ data: generated });
 }
 
 // ── Coupons ────────────────────────────────────────────────────

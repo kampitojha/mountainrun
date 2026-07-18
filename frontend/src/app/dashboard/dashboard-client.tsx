@@ -2,7 +2,7 @@
 
 import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { authHeaders, getApiUrl, readApiError } from "../../lib/api";
 
 type Registration = {
@@ -25,10 +25,12 @@ type Registration = {
     activityImageUrl: string;
     sourceApp: string;
     status: string;
+    reviewerNote?: string | null;
   } | null;
   certificate?: {
     certificateNumber: string;
     status: string;
+    pdfUrl?: string | null;
   } | null;
   medalDelivery?: {
     status: string;
@@ -45,6 +47,17 @@ type DbUser = {
   registrations: Registration[];
 };
 
+const SOURCE_APPS = [
+  "Strava",
+  "Garmin Connect",
+  "Nike Run Club",
+  "Adidas Running",
+  "Apple Fitness",
+  "Google Fit",
+  "MapMyRun",
+  "Other",
+];
+
 function formatMoney(paise: number) {
   return `₹${(paise / 100).toFixed(0)}`;
 }
@@ -56,13 +69,14 @@ function statusBadge(status: string) {
     APPROVED: "badge-sage",
     PENDING_PAYMENT: "badge",
     CREATED: "badge",
-    SUBMITTED: "badge",
-    REJECTED: "badge",
+    SUBMITTED: "badge-warn",
+    REJECTED: "badge-danger",
     NOT_SUBMITTED: "badge",
     GENERATED: "badge-sage",
     SENT: "badge-sage",
     DISPATCHED: "badge-sage",
     DELIVERED: "badge-sage",
+    QUEUED: "badge",
   };
   return map[status] ?? "badge";
 }
@@ -71,17 +85,64 @@ function labelStatus(status: string) {
   return status.replaceAll("_", " ").toLowerCase();
 }
 
+function isRegistrationEligible(reg: Registration) {
+  return (
+    reg.status === "CONFIRMED" ||
+    reg.status === "COMPLETED" ||
+    reg.payment?.status === "PAID"
+  );
+}
+
+function canUploadProof(reg: Registration) {
+  return (
+    isRegistrationEligible(reg) &&
+    (reg.proofStatus === "NOT_SUBMITTED" || reg.proofStatus === "REJECTED")
+  );
+}
+
+/** Compress image client-side for upload without Cloudinary oversized payloads. */
+async function fileToUploadPayload(file: File): Promise<string> {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Please choose an image file (PNG, JPG, or WebP).");
+  }
+  if (file.size > 8 * 1024 * 1024) {
+    throw new Error("Image must be under 8 MB. Compress or crop the screenshot.");
+  }
+
+  const bitmap = await createImageBitmap(file);
+  const maxSide = 1600;
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+  const width = Math.round(bitmap.width * scale);
+  const height = Math.round(bitmap.height * scale);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Could not process image in this browser.");
+  }
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  bitmap.close();
+
+  // JPEG keeps screenshots small enough for API + email previews.
+  return canvas.toDataURL("image/jpeg", 0.82);
+}
+
 export function DashboardClient() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const [proofRegId, setProofRegId] = useState<string | null>(null);
   const [proofUrl, setProofUrl] = useState("");
+  const [proofFileName, setProofFileName] = useState<string | null>(null);
   const [sourceApp, setSourceApp] = useState("Strava");
   const [finishMinutes, setFinishMinutes] = useState("");
   const [proofMessage, setProofMessage] = useState<string | null>(null);
+  const [proofError, setProofError] = useState<string | null>(null);
   const [proofBusy, setProofBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -139,6 +200,35 @@ export function DashboardClient() {
     return () => window.clearTimeout(timer);
   }, [isLoaded, load]);
 
+  const registrations = dbUser?.registrations ?? [];
+  const needsProof = useMemo(
+    () => registrations.filter((r) => canUploadProof(r)),
+    [registrations],
+  );
+  const waitingReview = useMemo(
+    () => registrations.filter((r) => r.proofStatus === "SUBMITTED"),
+    [registrations],
+  );
+
+  async function onPickFile(file: File | null) {
+    setProofError(null);
+    setProofFileName(null);
+    setProofUrl("");
+    if (!file) {
+      return;
+    }
+    try {
+      setProofBusy(true);
+      const dataUrl = await fileToUploadPayload(file);
+      setProofUrl(dataUrl);
+      setProofFileName(file.name);
+    } catch (err) {
+      setProofError(err instanceof Error ? err.message : "Could not read image");
+    } finally {
+      setProofBusy(false);
+    }
+  }
+
   async function submitProof(event: FormEvent) {
     event.preventDefault();
     if (!proofRegId) {
@@ -147,11 +237,35 @@ export function DashboardClient() {
 
     setProofBusy(true);
     setProofMessage(null);
+    setProofError(null);
 
     try {
       const token = await getToken();
       if (!token) {
         throw new Error("Sign in again to submit proof.");
+      }
+
+      let activityImageUrl = proofUrl.trim();
+      if (!activityImageUrl) {
+        throw new Error("Upload a screenshot or paste an image URL.");
+      }
+
+      // Upload via API (Cloudinary when configured; data URL / https fallback).
+      if (activityImageUrl.startsWith("data:") || activityImageUrl.startsWith("https://")) {
+        const uploadRes = await fetch(getApiUrl("/api/uploads/image"), {
+          method: "POST",
+          headers: authHeaders(token),
+          body: JSON.stringify({ file: activityImageUrl, folder: "mountainrun/proofs" }),
+        });
+        if (!uploadRes.ok) {
+          // If upload endpoint fails for https URL, still try direct URL for proof.
+          if (!activityImageUrl.startsWith("https://")) {
+            throw new Error(await readApiError(uploadRes, "Image upload failed"));
+          }
+        } else {
+          const uploadJson = await uploadRes.json();
+          activityImageUrl = uploadJson.data.url as string;
+        }
       }
 
       const minutes = Number(finishMinutes);
@@ -162,7 +276,7 @@ export function DashboardClient() {
         method: "POST",
         headers: authHeaders(token),
         body: JSON.stringify({
-          activityImageUrl: proofUrl.trim(),
+          activityImageUrl,
           sourceApp: sourceApp.trim() || "Other",
           finishTimeSeconds,
         }),
@@ -172,13 +286,16 @@ export function DashboardClient() {
         throw new Error(await readApiError(response, "Proof submit failed"));
       }
 
-      setProofMessage("Proof submitted. Waiting for admin review.");
+      setProofMessage(
+        "Proof submitted successfully. You’ll get a certificate email after admin approval.",
+      );
       setProofRegId(null);
       setProofUrl("");
+      setProofFileName(null);
       setFinishMinutes("");
       await load();
     } catch (err) {
-      setProofMessage(err instanceof Error ? err.message : "Proof submit failed");
+      setProofError(err instanceof Error ? err.message : "Proof submit failed");
     } finally {
       setProofBusy(false);
     }
@@ -214,10 +331,7 @@ export function DashboardClient() {
 
   const displayName = dbUser?.name || user?.fullName || user?.firstName || "Runner";
   const email = dbUser?.email || user?.primaryEmailAddress?.emailAddress || "—";
-  const registrations = dbUser?.registrations ?? [];
-  const paidCount = registrations.filter(
-    (r) => r.payment?.status === "PAID" || r.status === "CONFIRMED",
-  ).length;
+  const paidCount = registrations.filter((r) => isRegistrationEligible(r)).length;
 
   return (
     <div className="space-y-8">
@@ -226,7 +340,7 @@ export function DashboardClient() {
           <p className="eyebrow">Your account</p>
           <h1 className="display mt-3">Hi, {displayName.split(" ")[0]}</h1>
           <p className="lede mt-3 max-w-xl">
-            Track every race, payment, proof, certificate, and medal in one place.
+            Track races, upload GPS proof after you finish, and download certificates here.
           </p>
         </div>
         <Link className="btn btn-primary w-full shrink-0 sm:w-auto" href="/register">
@@ -244,8 +358,52 @@ export function DashboardClient() {
       ) : null}
 
       {proofMessage ? (
-        <div className="rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] px-4 py-3 text-sm text-[var(--muted)]">
+        <div className="rounded-xl border border-[var(--sage)]/30 bg-[var(--sage-soft)] px-4 py-3 text-sm text-[var(--sage)]">
           {proofMessage}
+        </div>
+      ) : null}
+
+      {/* Proof action strip — always visible when action needed */}
+      {needsProof.length > 0 ? (
+        <div className="card border-[var(--sage)]/25 bg-[var(--sage-soft)]/40 p-5 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold tracking-tight text-[var(--foreground)]">
+                Upload GPS proof ({needsProof.length} ready)
+              </p>
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                After your run, upload a screenshot from Strava / Garmin / NRC. Admin review unlocks
+                leaderboard + certificate email.
+              </p>
+            </div>
+            <button
+              className="btn btn-primary shrink-0"
+              onClick={() => {
+                setProofRegId(needsProof[0].id);
+                setProofMessage(null);
+                setProofError(null);
+                document.getElementById(`reg-${needsProof[0].id}`)?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
+              }}
+              type="button"
+            >
+              Submit proof now
+            </button>
+          </div>
+          <ol className="mt-4 grid gap-2 text-xs text-[var(--muted)] sm:grid-cols-3">
+            <li className="rounded-lg bg-[var(--panel)]/80 px-3 py-2">1. Finish your run with GPS on</li>
+            <li className="rounded-lg bg-[var(--panel)]/80 px-3 py-2">2. Screenshot activity summary</li>
+            <li className="rounded-lg bg-[var(--panel)]/80 px-3 py-2">3. Upload here · wait for approval</li>
+          </ol>
+        </div>
+      ) : null}
+
+      {waitingReview.length > 0 ? (
+        <div className="rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] px-4 py-3 text-sm text-[var(--muted)]">
+          {waitingReview.length} proof{waitingReview.length === 1 ? "" : "s"} waiting for admin
+          review.
         </div>
       ) : null}
 
@@ -268,11 +426,6 @@ export function DashboardClient() {
               {displayName}
             </p>
             <p className="mt-0.5 truncate text-sm text-[var(--muted)]">{email}</p>
-            {dbUser?.clerkId ? (
-              <p className="mt-1 font-mono text-[0.65rem] text-[var(--muted-soft)]">
-                Linked to Clerk
-              </p>
-            ) : null}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:min-w-[200px] sm:gap-3">
@@ -289,25 +442,12 @@ export function DashboardClient() {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {[
-          { href: "/register", title: "Register", text: "Pick event, distance, pay with UPI" },
-          { href: "/events", title: "Browse events", text: "See open races and details" },
-          { href: "/leaderboard", title: "Leaderboard", text: "View verified finish times" },
-        ].map((item) => (
-          <Link className="card card-hover block p-5" href={item.href} key={item.href}>
-            <p className="font-semibold tracking-tight">{item.title}</p>
-            <p className="mt-1 text-sm text-[var(--muted)]">{item.text}</p>
-          </Link>
-        ))}
-      </div>
-
       <div>
         <div className="flex items-end justify-between gap-4">
           <div>
             <h2 className="heading">My registrations</h2>
             <p className="mt-2 text-sm text-[var(--muted)]">
-              Payments, proof upload, certificates, and medals for every event you joined.
+              Pay → run → upload GPS proof → get certificate after approval.
             </p>
           </div>
         </div>
@@ -325,12 +465,11 @@ export function DashboardClient() {
         ) : (
           <div className="mt-6 space-y-3">
             {registrations.map((reg) => {
-              const canUploadProof =
-                (reg.status === "CONFIRMED" || reg.payment?.status === "PAID") &&
-                (reg.proofStatus === "NOT_SUBMITTED" || reg.proofStatus === "REJECTED");
+              const eligible = isRegistrationEligible(reg);
+              const uploadOk = canUploadProof(reg);
 
               return (
-                <article className="card p-5" key={reg.id}>
+                <article className="card p-5" id={`reg-${reg.id}`} key={reg.id}>
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <p className="text-base font-semibold tracking-tight">{reg.event.title}</p>
@@ -357,20 +496,18 @@ export function DashboardClient() {
                         <span className="badge">no payment yet</span>
                       )}
                       {reg.certificate ? (
-                        <Link
-                          className="badge badge-sage"
-                          href={`/certificates/${reg.certificate.certificateNumber}`}
-                        >
+                        <span className={statusBadge(reg.certificate.status)}>
                           cert: {labelStatus(reg.certificate.status)}
-                        </Link>
-                      ) : null}
-                      {reg.medalDelivery ? (
-                        <span className={statusBadge(reg.medalDelivery.status)}>
-                          medal: {labelStatus(reg.medalDelivery.status)}
                         </span>
                       ) : null}
                     </div>
                   </div>
+
+                  {reg.proofStatus === "REJECTED" && reg.proofUpload?.reviewerNote ? (
+                    <p className="mt-3 rounded-lg border border-red-200/60 bg-red-50/80 px-3 py-2 text-xs text-[var(--danger)]">
+                      Rejected: {reg.proofUpload.reviewerNote}. Re-upload a clearer GPS screenshot.
+                    </p>
+                  ) : null}
 
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Link
@@ -384,19 +521,25 @@ export function DashboardClient() {
                         Complete payment
                       </Link>
                     ) : null}
-                    {canUploadProof ? (
+                    {uploadOk ? (
                       <button
                         className="btn btn-primary h-9 px-3 text-xs"
                         onClick={() => {
-                          setProofRegId(reg.id);
+                          setProofRegId(reg.id === proofRegId ? null : reg.id);
                           setProofMessage(null);
+                          setProofError(null);
                         }}
                         type="button"
                       >
-                        Upload GPS proof
+                        {proofRegId === reg.id ? "Close proof form" : "Upload GPS proof"}
                       </button>
                     ) : null}
-                    {reg.certificate ? (
+                    {reg.proofStatus === "SUBMITTED" ? (
+                      <span className="inline-flex h-9 items-center rounded-full border border-[var(--line)] px-3 text-xs text-[var(--muted)]">
+                        Under review
+                      </span>
+                    ) : null}
+                    {reg.certificate && reg.certificate.status !== "QUEUED" ? (
                       <Link
                         className="btn btn-secondary h-9 px-3 text-xs"
                         href={`/certificates/${reg.certificate.certificateNumber}`}
@@ -404,35 +547,90 @@ export function DashboardClient() {
                         View certificate
                       </Link>
                     ) : null}
+                    {!eligible && reg.status !== "PENDING_PAYMENT" ? (
+                      <span className="inline-flex h-9 items-center text-xs text-[var(--muted-soft)]">
+                        Confirm payment to unlock proof upload
+                      </span>
+                    ) : null}
                   </div>
 
                   {proofRegId === reg.id ? (
-                    <form className="mt-5 space-y-3 rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] p-4" onSubmit={submitProof}>
-                      <p className="text-sm font-medium">Submit GPS proof</p>
-                      <p className="text-xs text-[var(--muted)]">
-                        Paste a public image URL of your activity screenshot (Strava, Garmin, Nike
-                        Run Club, etc.). Admin will review it for the leaderboard.
-                      </p>
-                      <label className="block text-sm">
-                        <span className="field-label">Activity image URL</span>
+                    <form
+                      className="mt-5 space-y-4 rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] p-4 sm:p-5"
+                      onSubmit={submitProof}
+                    >
+                      <div>
+                        <p className="text-sm font-semibold">Submit GPS proof</p>
+                        <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
+                          Upload a clear screenshot of your finished activity (map + distance + time
+                          visible). Or paste a public image link.
+                        </p>
+                      </div>
+
+                      {proofError ? (
+                        <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-[var(--danger)]">
+                          {proofError}
+                        </p>
+                      ) : null}
+
+                      <label className="block">
+                        <span className="field-label">Activity screenshot</span>
+                        <input
+                          accept="image/*"
+                          className="input cursor-pointer py-2 file:mr-3 file:rounded-full file:border-0 file:bg-[var(--accent)] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[var(--on-accent)]"
+                          disabled={proofBusy}
+                          onChange={(e) => void onPickFile(e.target.files?.[0] ?? null)}
+                          type="file"
+                        />
+                        {proofFileName ? (
+                          <p className="mt-1.5 text-xs text-[var(--sage)]">
+                            Ready: {proofFileName}
+                          </p>
+                        ) : null}
+                      </label>
+
+                      <label className="block">
+                        <span className="field-label">Or image URL (optional)</span>
                         <input
                           className="input"
-                          onChange={(e) => setProofUrl(e.target.value)}
-                          placeholder="https://..."
-                          required
+                          disabled={proofBusy || Boolean(proofFileName)}
+                          onChange={(e) => {
+                            setProofUrl(e.target.value);
+                            setProofFileName(null);
+                          }}
+                          placeholder="https://… (public image)"
                           type="url"
-                          value={proofUrl}
+                          value={proofFileName ? "" : proofUrl.startsWith("data:") ? "" : proofUrl}
                         />
                       </label>
+
+                      {proofUrl.startsWith("data:") ||
+                      (proofUrl.startsWith("https://") && /\.(png|jpe?g|webp)/i.test(proofUrl)) ? (
+                        <div className="overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--panel)]">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            alt="Proof preview"
+                            className="max-h-48 w-full object-contain"
+                            src={proofUrl}
+                          />
+                        </div>
+                      ) : null}
+
                       <div className="grid gap-3 sm:grid-cols-2">
                         <label className="block text-sm">
                           <span className="field-label">Source app</span>
-                          <input
+                          <select
                             className="input"
                             onChange={(e) => setSourceApp(e.target.value)}
                             required
                             value={sourceApp}
-                          />
+                          >
+                            {SOURCE_APPS.map((app) => (
+                              <option key={app} value={app}>
+                                {app}
+                              </option>
+                            ))}
+                          </select>
                         </label>
                         <label className="block text-sm">
                           <span className="field-label">Finish time (minutes)</span>
@@ -445,13 +643,19 @@ export function DashboardClient() {
                           />
                         </label>
                       </div>
+
                       <div className="flex flex-wrap gap-2">
                         <button className="btn btn-primary h-9" disabled={proofBusy} type="submit">
-                          {proofBusy ? "Submitting…" : "Submit proof"}
+                          {proofBusy ? "Submitting…" : "Submit proof for review"}
                         </button>
                         <button
                           className="btn btn-ghost h-9"
-                          onClick={() => setProofRegId(null)}
+                          onClick={() => {
+                            setProofRegId(null);
+                            setProofUrl("");
+                            setProofFileName(null);
+                            setProofError(null);
+                          }}
                           type="button"
                         >
                           Cancel

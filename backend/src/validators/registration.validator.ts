@@ -64,7 +64,16 @@ export const createRegistrationSchema = z
   });
 
 export const submitProofSchema = z.object({
-  activityImageUrl: z.string().url("Activity image URL is invalid"),
+  activityImageUrl: z
+    .string()
+    .min(12, "Activity image is required")
+    .refine(
+      (value) =>
+        value.startsWith("https://") ||
+        value.startsWith("http://localhost") ||
+        value.startsWith("data:image/"),
+      "Provide a public image URL or uploaded image data",
+    ),
   sourceApp: z.string().min(2, "Source app is required"),
   finishTimeSeconds: z.number().int().positive().optional(),
 });

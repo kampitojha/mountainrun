@@ -1,5 +1,9 @@
 import { Resend } from "resend";
 import { env } from "../config/env.js";
+import {
+  buildCertificateEmailHtml,
+  type CertificateRenderData,
+} from "./certificate.service.js";
 
 const resend = env.resendApiKey ? new Resend(env.resendApiKey) : null;
 
@@ -46,9 +50,11 @@ function buildConfirmationHtml(payload: RegistrationEmailPayload) {
   `;
 }
 
+export type EmailSendResult = { sent: boolean; id?: string; error?: string };
+
 export async function sendRegistrationConfirmationEmail(
   payload: RegistrationEmailPayload,
-): Promise<{ sent: boolean; id?: string; error?: string }> {
+): Promise<EmailSendResult> {
   if (!resend) {
     console.warn(
       "[email] RESEND_API_KEY is not set. Skipping confirmation email to",
@@ -80,6 +86,51 @@ export async function sendRegistrationConfirmationEmail(
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown email error";
     console.error("[email] Failed to send confirmation:", message);
+    return { sent: false, error: message };
+  }
+}
+
+export async function sendCertificateEmail(input: {
+  to: string;
+  data: CertificateRenderData;
+}): Promise<EmailSendResult> {
+  if (!resend) {
+    console.warn(
+      "[email] RESEND_API_KEY is not set. Skipping certificate email to",
+      input.to,
+    );
+    console.info("[email] Would send certificate:", {
+      to: input.to,
+      certificateNumber: input.data.certificateNumber,
+      verifyUrl: input.data.verifyUrl,
+    });
+    return { sent: false, error: "RESEND_API_KEY is not configured" };
+  }
+
+  try {
+    const result = await resend.emails.send({
+      from: env.resendFromEmail,
+      to: input.to,
+      subject: `Your Mountain Run certificate — ${input.data.eventTitle}`,
+      html: buildCertificateEmailHtml(input.data),
+    });
+
+    if (result.error) {
+      console.error("[email] Certificate Resend error:", result.error);
+      return { sent: false, error: result.error.message };
+    }
+
+    console.info(
+      "[email] Certificate sent:",
+      result.data?.id,
+      "to",
+      input.to,
+      input.data.certificateNumber,
+    );
+    return { sent: true, id: result.data?.id };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown email error";
+    console.error("[email] Failed to send certificate:", message);
     return { sent: false, error: message };
   }
 }
