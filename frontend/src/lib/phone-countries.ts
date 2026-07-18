@@ -73,18 +73,23 @@ export function parseStoredPhone(value: string) {
     if (normalized.startsWith(country.dialCode)) {
       return {
         countryCode: country.code,
-        phoneNumber: normalized.slice(country.dialCode.length),
+        phoneNumber: normalized.slice(country.dialCode.length).replace(/\D/g, ""),
       };
     }
-    if (normalized.startsWith(dialDigits)) {
-      return {
-        countryCode: country.code,
-        phoneNumber: normalized.slice(dialDigits.length),
-      };
+    if (normalized.startsWith(dialDigits) && normalized.length > dialDigits.length) {
+      const phoneNumber = normalized.slice(dialDigits.length).replace(/\D/g, "");
+      if (country.pattern.test(phoneNumber)) {
+        return { countryCode: country.code, phoneNumber };
+      }
     }
   }
 
-  return { countryCode: DEFAULT_PHONE_COUNTRY.code, phoneNumber: normalized.replace(/^\+/, "") };
+  const digitsOnly = normalized.replace(/\D/g, "");
+  if (DEFAULT_PHONE_COUNTRY.pattern.test(digitsOnly)) {
+    return { countryCode: DEFAULT_PHONE_COUNTRY.code, phoneNumber: digitsOnly };
+  }
+
+  return { countryCode: DEFAULT_PHONE_COUNTRY.code, phoneNumber: digitsOnly };
 }
 
 export function formatFullPhone(countryCode: string, phoneNumber: string) {
