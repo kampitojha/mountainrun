@@ -69,16 +69,20 @@ export async function sendRegistrationConfirmationEmail(
   }
 
   try {
+    const from = env.resendFromEmail;
     const result = await resend.emails.send({
-      from: env.resendFromEmail,
+      from,
       to: payload.to,
       subject: `Mountain Run confirmed — Bib ${payload.bibNumber}`,
       html: buildConfirmationHtml(payload),
     });
 
     if (result.error) {
-      console.error("[email] Resend error:", result.error);
-      return { sent: false, error: result.error.message };
+      console.error("[email] Resend error:", result.error, { from });
+      return {
+        sent: false,
+        error: `${result.error.message} (from: ${from})`,
+      };
     }
 
     console.info("[email] Confirmation sent:", result.data?.id, "to", payload.to);
@@ -108,16 +112,20 @@ export async function sendCertificateEmail(input: {
   }
 
   try {
+    const from = env.resendFromEmail;
     const result = await resend.emails.send({
-      from: env.resendFromEmail,
+      from,
       to: input.to,
       subject: `Your Mountain Run certificate — ${input.data.eventTitle}`,
       html: buildCertificateEmailHtml(input.data),
     });
 
     if (result.error) {
-      console.error("[email] Certificate Resend error:", result.error);
-      return { sent: false, error: result.error.message };
+      console.error("[email] Certificate Resend error:", result.error, { from });
+      return {
+        sent: false,
+        error: `${result.error.message} (from: ${from})`,
+      };
     }
 
     console.info(

@@ -54,6 +54,51 @@ const allowedOrigins = Array.from(
   ]),
 );
 
+/**
+ * Resend requires: `email@example.com` or `Name <email@example.com>`.
+ * Broken env values (unquoted spaces, stripped <email>, extra quotes) are normalized.
+ */
+function normalizeResendFrom(raw: string | undefined): string {
+  const fallback = "Mountain Run <onboarding@resend.dev>";
+  if (!raw) return fallback;
+
+  let value = raw.trim();
+  // Strip wrapping single/double quotes from env files
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    value = value.slice(1, -1).trim();
+  }
+
+  // Already valid: Name <email@domain>
+  if (/^[^<>\n]+<[^\s<>]+@[^\s<>]+\.[^\s<>]+>$/.test(value)) {
+    return value;
+  }
+
+  // Bare email
+  if (/^[^\s<>]+@[^\s<>]+\.[^\s<>]+$/.test(value)) {
+    return `Mountain Run <${value}>`;
+  }
+
+  // Recover email if present anywhere in the string
+  const emailMatch = value.match(/[^\s<>]+@[^\s<>]+\.[^\s<>]+/);
+  if (emailMatch) {
+    const email = emailMatch[0];
+    const name = value
+      .replace(/<[^>]*>/g, " ")
+      .replace(email, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return name ? `${name} <${email}>` : `Mountain Run <${email}>`;
+  }
+
+  console.warn(
+    `[env] RESEND_FROM_EMAIL is invalid ("${raw}"). Expected "Name <email@domain.com>" or "email@domain.com". Using fallback.`,
+  );
+  return fallback;
+}
+
 export const env = {
   port: Number(process.env.PORT ?? 4000),
   frontendUrl: configuredFrontendOrigins[0] ?? "http://localhost:3000",
@@ -62,9 +107,8 @@ export const env = {
   razorpayKeyId: process.env.RAZORPAY_KEY_ID ?? "",
   razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET ?? "",
   razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET ?? "",
-  resendApiKey: process.env.RESEND_API_KEY ?? "",
-  resendFromEmail:
-    process.env.RESEND_FROM_EMAIL ?? "Mountain Run <onboarding@resend.dev>",
+  resendApiKey: readEnv("RESEND_API_KEY"),
+  resendFromEmail: normalizeResendFrom(process.env.RESEND_FROM_EMAIL),
   cloudinaryCloudName: readEnv("CLOUDINARY_CLOUD_NAME"),
   cloudinaryApiKey: readEnv("CLOUDINARY_API_KEY"),
   cloudinaryApiSecret: readEnv("CLOUDINARY_API_SECRET"),
