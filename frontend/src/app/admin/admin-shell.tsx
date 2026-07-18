@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useAuth, useClerk, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -215,6 +215,11 @@ function GateRestricted({
   error: string | null;
   onRetry: () => void;
 }) {
+  const { signOut } = useClerk();
+
+  function handleSwitchAccount() {
+    void signOut({ redirectUrl: "/sign-in?redirect_url=/admin" });
+  }
   return (
     <div className="admin-app admin-gate">
       <div className="admin-gate-card">
@@ -248,12 +253,13 @@ function GateRestricted({
         ) : null}
 
         <div className="admin-gate-actions">
-          <Link
+          <button
             className="btn btn-primary"
-            href="/sign-in?redirect_url=/admin"
+            onClick={handleSwitchAccount}
+            type="button"
           >
             Switch account
-          </Link>
+          </button>
           <button className="btn btn-secondary" onClick={onRetry} type="button">
             Retry
           </button>

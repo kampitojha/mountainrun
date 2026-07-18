@@ -59,9 +59,7 @@ export default function RootLayout({
               socialButtonsBlockButton: "border border-[var(--line)]",
             },
           }}
-          signInFallbackRedirectUrl="/dashboard"
           signInUrl="/sign-in"
-          signUpFallbackRedirectUrl="/dashboard"
           signUpUrl="/sign-up"
           afterSignOutUrl="/"
         >

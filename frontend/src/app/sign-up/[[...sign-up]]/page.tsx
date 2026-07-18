@@ -1,3 +1,4 @@
+
 import { ClerkLoaded, ClerkLoading, SignUp } from "@clerk/nextjs";
 import Link from "next/link";
 import { PageShell } from "../../components/app-shell";
@@ -28,8 +29,7 @@ export default function SignUpPage() {
             </ClerkLoading>
             <ClerkLoaded>
               <SignUp
-                fallbackRedirectUrl="/register"
-                forceRedirectUrl="/register"
+                fallbackRedirectUrl="/dashboard"
                 path="/sign-up"
                 routing="path"
                 signInUrl="/sign-in"
