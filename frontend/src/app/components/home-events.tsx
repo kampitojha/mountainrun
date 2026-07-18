@@ -69,9 +69,10 @@ export function HomeEvents({ initial = staticUpcoming.slice(0, 3) }: { initial?:
 
   useEffect(() => {
     let cancelled = false;
-    void fetchOpenEvents().then((list) => {
+    // Admin “featured” events appear first on homepage open events.
+    void fetchOpenEvents({ homeFeaturedFirst: true, limit: 3 }).then((list) => {
       if (!cancelled && list.length > 0) {
-        setEvents(list.slice(0, 3));
+        setEvents(list);
       }
     });
     return () => {

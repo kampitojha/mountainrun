@@ -35,6 +35,8 @@ type Registration = {
   medalDelivery?: {
     status: string;
     trackingNumber: string | null;
+    trackingUrl?: string | null;
+    courier?: string | null;
   } | null;
 };
 
@@ -44,6 +46,7 @@ type DbUser = {
   email: string;
   phone: string | null;
   clerkId: string | null;
+  role?: string;
   registrations: Registration[];
 };
 
@@ -201,12 +204,25 @@ export function DashboardClient() {
   }, [isLoaded, load]);
 
   const registrations = dbUser?.registrations ?? [];
+  const isAdmin =
+    dbUser?.role === "ADMIN" || dbUser?.role === "SUPER_ADMIN";
   const needsProof = useMemo(
     () => registrations.filter((r) => canUploadProof(r)),
     [registrations],
   );
   const waitingReview = useMemo(
     () => registrations.filter((r) => r.proofStatus === "SUBMITTED"),
+    [registrations],
+  );
+  /** Medal / prize tracking only after proof is in (submitted or approved). */
+  const trackableRewards = useMemo(
+    () =>
+      registrations.filter(
+        (r) =>
+          (r.proofStatus === "SUBMITTED" || r.proofStatus === "APPROVED") &&
+          (r.medalDelivery ||
+            (r.certificate && r.certificate.status !== "QUEUED")),
+      ),
     [registrations],
   );
 
@@ -337,16 +353,57 @@ export function DashboardClient() {
     <div className="space-y-8">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end sm:gap-6">
         <div className="min-w-0">
-          <p className="eyebrow">Your account</p>
+          <p className="eyebrow">{isAdmin ? "Admin account" : "Your account"}</p>
           <h1 className="display mt-3">Hi, {displayName.split(" ")[0]}</h1>
           <p className="lede mt-3 max-w-xl">
-            Track races, upload GPS proof after you finish, and download certificates here.
+            {isAdmin
+              ? "You have ops access. Use the admin console for proofs, content, and fulfilment — or manage your own races below."
+              : "Track races, upload GPS proof after you finish, and download certificates here."}
           </p>
         </div>
-        <Link className="btn btn-primary w-full shrink-0 sm:w-auto" href="/register">
-          Join an event
-        </Link>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          {isAdmin ? (
+            <Link className="btn btn-primary w-full sm:w-auto" href="/admin">
+              Open admin console
+            </Link>
+          ) : null}
+          <Link
+            className={`btn w-full shrink-0 sm:w-auto ${isAdmin ? "btn-secondary" : "btn-primary"}`}
+            href="/register"
+          >
+            Join an event
+          </Link>
+        </div>
       </div>
+
+      {isAdmin ? (
+        <div className="rounded-2xl border border-(--sage)/30 bg-(--sage-soft)/50 p-5 sm:p-6">
+          <p className="text-sm font-semibold tracking-tight text-(--foreground)">
+            Operations console
+          </p>
+          <p className="mt-1 text-sm text-(--muted)">
+            Review proofs, send certificates, manage homepage gallery/reviews, and track medal
+            dispatch — separate from your runner dashboard.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link className="btn btn-secondary h-9 px-3 text-xs" href="/admin">
+              Overview
+            </Link>
+            <Link className="btn btn-secondary h-9 px-3 text-xs" href="/admin/proofs">
+              Proof queue
+            </Link>
+            <Link className="btn btn-secondary h-9 px-3 text-xs" href="/admin/content">
+              Homepage & gallery
+            </Link>
+            <Link className="btn btn-secondary h-9 px-3 text-xs" href="/admin/medals">
+              Medals
+            </Link>
+            <Link className="btn btn-secondary h-9 px-3 text-xs" href="/admin/certificates">
+              Certificates
+            </Link>
+          </div>
+        </div>
+      ) : null}
 
       {error ? (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-[var(--danger)]">
@@ -404,6 +461,98 @@ export function DashboardClient() {
         <div className="rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] px-4 py-3 text-sm text-[var(--muted)]">
           {waitingReview.length} proof{waitingReview.length === 1 ? "" : "s"} waiting for admin
           review.
+        </div>
+      ) : null}
+
+      {/* Rewards tracking — only after proof submit/approve */}
+      {trackableRewards.length > 0 ? (
+        <div className="space-y-3">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight sm:text-xl">
+              Medals & rewards tracking
+            </h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              Available after you submit GPS proof. Status updates when ops reviews and ships.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {trackableRewards.map((reg) => (
+              <article
+                key={`reward-${reg.id}`}
+                className="card flex flex-col gap-3 p-4 sm:p-5"
+              >
+                <div>
+                  <p className="text-sm font-semibold tracking-tight">{reg.event.title}</p>
+                  <p className="mt-0.5 text-xs text-[var(--muted)]">
+                    {reg.distance} · Bib {reg.bibNumber}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className={statusBadge(reg.proofStatus)}>
+                    proof: {labelStatus(reg.proofStatus)}
+                  </span>
+                  {reg.certificate ? (
+                    <span className={statusBadge(reg.certificate.status)}>
+                      cert: {labelStatus(reg.certificate.status)}
+                    </span>
+                  ) : null}
+                  {reg.medalDelivery ? (
+                    <span className={statusBadge(reg.medalDelivery.status)}>
+                      medal: {labelStatus(reg.medalDelivery.status)}
+                    </span>
+                  ) : (
+                    <span className="badge">medal: not yet</span>
+                  )}
+                </div>
+                {reg.medalDelivery ? (
+                  <div className="rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] px-3 py-2.5 text-xs text-[var(--muted)]">
+                    {reg.medalDelivery.courier ? (
+                      <p>
+                        Courier:{" "}
+                        <span className="font-medium text-[var(--foreground)]">
+                          {reg.medalDelivery.courier}
+                        </span>
+                      </p>
+                    ) : null}
+                    {reg.medalDelivery.trackingNumber ? (
+                      <p className="mt-1">
+                        Tracking #:{" "}
+                        <span className="font-mono font-medium text-[var(--foreground)]">
+                          {reg.medalDelivery.trackingNumber}
+                        </span>
+                      </p>
+                    ) : (
+                      <p className="mt-1">
+                        Tracking number appears here once your medal is dispatched.
+                      </p>
+                    )}
+                    {reg.medalDelivery.trackingUrl ? (
+                      <a
+                        className="mt-2 inline-flex font-medium text-[var(--sage)] underline-offset-2 hover:underline"
+                        href={reg.medalDelivery.trackingUrl}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        Open tracking link
+                      </a>
+                    ) : null}
+                  </div>
+                ) : null}
+                {reg.certificate && reg.certificate.status !== "QUEUED" ? (
+                  <Link
+                    className="btn btn-secondary h-9 w-full text-xs sm:w-auto"
+                    href={`/certificates/${reg.certificate.certificateNumber}`}
+                  >
+                    View certificate
+                  </Link>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        </div>
+      ) : registrations.some((r) => isRegistrationEligible(r)) ? (
+        <div className="rounded-xl border border-dashed border-[var(--line)] bg-[var(--panel-soft)]/50 px-4 py-4 text-sm text-[var(--muted)]">
+          Medal & prize tracking unlocks after you upload GPS proof for a paid race.
         </div>
       ) : null}
 

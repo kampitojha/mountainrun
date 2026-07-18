@@ -6,11 +6,12 @@ import { X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   galleryCategories,
-  galleryItems,
+  galleryItems as staticGalleryItems,
   galleryStats,
   type GalleryCategory,
   type GalleryItem,
 } from "../data/gallery";
+import { fetchGalleryContent } from "../../lib/events-api";
 import { cn } from "../../lib/cn";
 
 function useCountUp(target: number, active: boolean, duration = 1100) {
@@ -192,11 +193,33 @@ function Lightbox({ item, onClose }: { item: GalleryItem; onClose: () => void })
 export function GalleryClient() {
   const [category, setCategory] = useState<GalleryCategory>("All");
   const [active, setActive] = useState<GalleryItem | null>(null);
+  const [items, setItems] = useState<GalleryItem[]>(staticGalleryItems);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchGalleryContent().then((rows) => {
+      if (cancelled || !rows || rows.length === 0) return;
+      setItems(
+        rows.map((row) => ({
+          id: row.id,
+          title: row.title,
+          event: row.event,
+          location: row.location,
+          date: row.date,
+          category: (row.category as GalleryItem["category"]) || "Community",
+          image: row.image,
+        })),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filtered = useMemo(() => {
-    if (category === "All") return galleryItems;
-    return galleryItems.filter((item) => item.category === category);
-  }, [category]);
+    if (category === "All") return items;
+    return items.filter((item) => item.category === category);
+  }, [category, items]);
 
   return (
     <div className="min-w-0">

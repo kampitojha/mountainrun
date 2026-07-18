@@ -14,6 +14,7 @@ export type ApiEvent = {
   priceInPaise: number;
   paymentRequired?: boolean;
   medalIncluded?: boolean;
+  featured?: boolean;
   phase?: "upcoming" | "live" | "past";
   registrationOpen?: boolean;
   city?: string | null;
@@ -114,8 +115,12 @@ export async function fetchEventBySlug(slug: string): Promise<PublicEvent | null
   return getEventBySlug(slug) ?? null;
 }
 
-/** Fetch open/upcoming events for home & previews. */
-export async function fetchOpenEvents(): Promise<PublicEvent[]> {
+/** Fetch open/upcoming events for home & previews. Featured first when set by admin. */
+export async function fetchOpenEvents(options?: {
+  homeFeaturedFirst?: boolean;
+  limit?: number;
+}): Promise<PublicEvent[]> {
+  const limit = options?.limit;
   try {
     const response = await fetch(getApiUrl("/api/events?scope=open"), {
       next: { revalidate: 60 },
@@ -123,12 +128,84 @@ export async function fetchOpenEvents(): Promise<PublicEvent[]> {
     if (response.ok) {
       const json = (await response.json()) as { data: ApiEvent[] };
       if (Array.isArray(json.data) && json.data.length > 0) {
-        return json.data.map((event) => mapApiEventToPublic(event, "upcoming"));
+        let rows = [...json.data];
+        if (options?.homeFeaturedFirst) {
+          rows.sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
+        }
+        if (limit != null) {
+          rows = rows.slice(0, limit);
+        }
+        return rows.map((event) => mapApiEventToPublic(event, "upcoming"));
       }
     }
   } catch {
     // fallback
   }
 
-  return allPublicEvents.filter((event) => event.status === "upcoming");
+  const fallback = allPublicEvents.filter((event) => event.status === "upcoming");
+  return limit != null ? fallback.slice(0, limit) : fallback;
+}
+
+export type HomeMoment = {
+  id?: string;
+  title: string;
+  meta: string;
+  image: string;
+};
+
+export type HomeTestimonial = {
+  id?: string;
+  name: string;
+  role: string;
+  city?: string | null;
+  quote: string;
+  rating: number;
+};
+
+export async function fetchHomeContent(): Promise<{
+  moments: HomeMoment[];
+  testimonials: HomeTestimonial[];
+}> {
+  try {
+    const response = await fetch(getApiUrl("/api/content/home"), {
+      next: { revalidate: 30 },
+    });
+    if (response.ok) {
+      const json = (await response.json()) as {
+        data: { moments: HomeMoment[]; testimonials: HomeTestimonial[] };
+      };
+      return {
+        moments: json.data?.moments ?? [],
+        testimonials: json.data?.testimonials ?? [],
+      };
+    }
+  } catch {
+    // fallback empty → components use static defaults
+  }
+  return { moments: [], testimonials: [] };
+}
+
+export async function fetchGalleryContent(category?: string) {
+  try {
+    const qs = category && category !== "All" ? `?category=${encodeURIComponent(category)}` : "";
+    const response = await fetch(getApiUrl(`/api/content/gallery${qs}`), {
+      next: { revalidate: 30 },
+    });
+    if (response.ok) {
+      const json = await response.json();
+      return (json.data ?? []) as Array<{
+        id: string;
+        title: string;
+        event: string;
+        location: string;
+        date: string;
+        category: string;
+        image: string;
+        meta?: string | null;
+      }>;
+    }
+  } catch {
+    // fallback
+  }
+  return null;
 }

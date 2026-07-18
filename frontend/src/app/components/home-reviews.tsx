@@ -3,64 +3,34 @@
 import Link from "next/link";
 import { ArrowUpRight, Star } from "lucide-react";
 import { useReducedMotion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { fetchHomeContent, type HomeTestimonial } from "../../lib/events-api";
 import { HomeSectionHeader } from "./home-section-header";
 
-const reviews = [
+const fallbackReviews: HomeTestimonial[] = [
   {
     name: "Aarav Sharma",
-    run: "10 km finisher",
+    role: "10 km finisher",
     city: "Pune",
     rating: 5,
-    text: "Registration was simple and the proof upload was clear. Getting my certificate the same week felt amazing.",
+    quote:
+      "Registration was simple and the proof upload was clear. Getting my certificate the same week felt amazing.",
   },
   {
     name: "Nisha Verma",
-    run: "5 km beginner",
+    role: "5 km beginner",
     city: "Mumbai",
     rating: 5,
-    text: "I liked that I could run in my own city but still feel part of an event. The medal made it truly memorable.",
+    quote:
+      "I liked that I could run in my own city but still feel part of an event. The medal made it truly memorable.",
   },
   {
     name: "Rohan Mehta",
-    run: "21 km finisher",
+    role: "21 km finisher",
     city: "Delhi",
     rating: 5,
-    text: "The leaderboard gave my long run a real target. Clean experience from payment all the way to verification.",
-  },
-  {
-    name: "Priya Iyer",
-    run: "10 km finisher",
-    city: "Bengaluru",
-    rating: 5,
-    text: "Never thought a virtual event would feel this real. The certificate is beautiful and arrived super fast.",
-  },
-  {
-    name: "Karan Joshi",
-    run: "5 km beginner",
-    city: "Ahmedabad",
-    rating: 4,
-    text: "Loved running at my own pace and still getting a proper medal at the end. Will definitely sign up again.",
-  },
-  {
-    name: "Divya Nair",
-    run: "21 km finisher",
-    city: "Chennai",
-    rating: 5,
-    text: "The GPS verification process was seamless. My time was logged correctly and I climbed the leaderboard fast.",
-  },
-  {
-    name: "Arjun Kapoor",
-    run: "10 km team effort",
-    city: "Hyderabad",
-    rating: 5,
-    text: "We ran as a club and the group leaderboard was a great motivator. Everyone loved the experience.",
-  },
-  {
-    name: "Sneha Pillai",
-    run: "5 km finisher",
-    city: "Kolkata",
-    rating: 4,
-    text: "Simple to join, simple to prove. The QR certificate I shared on LinkedIn got so many reactions!",
+    quote:
+      "The leaderboard gave my long run a real target. Clean experience from payment all the way to verification.",
   },
 ];
 
@@ -71,8 +41,6 @@ const avatarGradients = [
   "from-violet-500 to-purple-400",
   "from-amber-500 to-yellow-400",
   "from-cyan-500 to-teal-400",
-  "from-pink-500 to-rose-400",
-  "from-green-500 to-emerald-400",
 ];
 
 function StarRating({ rating }: { rating: number }) {
@@ -97,14 +65,13 @@ function ReviewCard({
   review,
   index,
 }: {
-  review: (typeof reviews)[0];
+  review: HomeTestimonial;
   index: number;
 }) {
   return (
     <article className="feature-card card-premium-glow group shrink-0 w-72 sm:w-80 p-6 bg-(--panel) flex flex-col justify-between select-none">
       <div>
         <div className="flex items-start justify-between gap-4">
-          {/* Top Left: Initials Avatar in a beautiful gradient feature-icon */}
           <span
             aria-hidden="true"
             className={`feature-icon bg-linear-to-tr ${
@@ -117,7 +84,6 @@ function ReviewCard({
               .join("")
               .slice(0, 2)}
           </span>
-          {/* Top Right: Rating Stars */}
           <div className="flex items-center gap-0.5 pt-1.5">
             <StarRating rating={review.rating} />
           </div>
@@ -127,18 +93,19 @@ function ReviewCard({
           {review.name}
         </h3>
         <p className="mt-0.5 text-xs text-(--muted-soft) font-medium">
-          {review.run} · {review.city}
+          {review.role}
+          {review.city ? ` · ${review.city}` : ""}
         </p>
 
         <blockquote className="mt-4 text-sm leading-relaxed text-(--muted) font-normal italic relative">
-          &ldquo;{review.text}&rdquo;
+          &ldquo;{review.quote}&rdquo;
         </blockquote>
       </div>
     </article>
   );
 }
 
-function DesktopMarquee() {
+function DesktopMarquee({ reviews }: { reviews: HomeTestimonial[] }) {
   const doubled = [...reviews, ...reviews];
 
   return (
@@ -146,13 +113,10 @@ function DesktopMarquee() {
       className="relative w-full overflow-hidden"
       style={{
         maskImage: "linear-gradient(to right, transparent, white 15%, white 85%, transparent)",
-        WebkitMaskImage: "linear-gradient(to right, transparent, white 15%, white 85%, transparent)",
+        WebkitMaskImage:
+          "linear-gradient(to right, transparent, white 15%, white 85%, transparent)",
       }}
     >
-      {/* 
-        We use hardware accelerated CSS keyframe animation here. 
-        This completely bypasses the main JS thread and eliminates stutter/lag.
-      */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -168,12 +132,8 @@ function DesktopMarquee() {
               animation-play-state: paused;
             }
             @keyframes marquee {
-              0% {
-                transform: translate3d(0, 0, 0);
-              }
-              100% {
-                transform: translate3d(-50%, 0, 0);
-              }
+              0% { transform: translate3d(0, 0, 0); }
+              100% { transform: translate3d(-50%, 0, 0); }
             }
           `,
         }}
@@ -194,25 +154,45 @@ function DesktopMarquee() {
 
 export function HomeReviews() {
   const reduce = useReducedMotion();
+  const [reviews, setReviews] = useState<HomeTestimonial[]>(fallbackReviews);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchHomeContent().then((data) => {
+      if (!cancelled && data.testimonials.length > 0) {
+        setReviews(data.testimonials);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (reviews.length === 0) {
+    return null;
+  }
 
   return (
-    <section 
+    <section
       className="section overflow-hidden border-b border-(--line) relative"
       style={{
-        background: "radial-gradient(at 0% 0%, rgba(13, 148, 136, 0.04) 0px, transparent 65%), radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.03) 0px, transparent 65%), var(--background)",
+        background:
+          "radial-gradient(at 0% 0%, rgba(13, 148, 136, 0.04) 0px, transparent 65%), radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.03) 0px, transparent 65%), var(--background)",
       }}
     >
-      {/* Decorative ambient orbs */}
-      <div aria-hidden="true" className="absolute top-1/4 left-10 h-80 w-80 rounded-full bg-teal-500/3 blur-3xl pointer-events-none" />
-      <div aria-hidden="true" className="absolute bottom-1/4 right-10 h-80 w-80 rounded-full bg-indigo-500/4 blur-3xl pointer-events-none" />
+      <div
+        aria-hidden="true"
+        className="absolute top-1/4 left-10 h-80 w-80 rounded-full bg-teal-500/3 blur-3xl pointer-events-none"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute bottom-1/4 right-10 h-80 w-80 rounded-full bg-indigo-500/4 blur-3xl pointer-events-none"
+      />
 
       <div className="container-page relative z-10">
         <HomeSectionHeader
           action={
-            <Link
-              className="btn btn-secondary group w-full sm:w-auto"
-              href="/about"
-            >
+            <Link className="btn btn-secondary group w-full sm:w-auto" href="/about">
               About Mountain Run
               <ArrowUpRight
                 aria-hidden="true"
@@ -225,27 +205,25 @@ export function HomeReviews() {
           title="Experiences from the community"
         />
 
-        {/* Mobile: native snap-scroll row centered container */}
         <div className="md:hidden mt-8">
           <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar">
             {reviews.map((review, i) => (
-              <div key={review.name} className="snap-start">
+              <div key={review.id ?? review.name} className="snap-start">
                 <ReviewCard review={review} index={i} />
               </div>
             ))}
           </div>
         </div>
 
-        {/* Desktop: marquee strictly inside the centered container-page layout */}
         <div className="hidden md:block mt-10">
           {reduce ? (
             <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
               {reviews.map((review, i) => (
-                <ReviewCard key={review.name} review={review} index={i} />
+                <ReviewCard key={review.id ?? review.name} review={review} index={i} />
               ))}
             </div>
           ) : (
-            <DesktopMarquee />
+            <DesktopMarquee reviews={reviews} />
           )}
         </div>
       </div>

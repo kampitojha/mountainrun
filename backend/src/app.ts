@@ -5,6 +5,7 @@ import morgan from "morgan";
 import { env } from "./config/env.js";
 import { adminRouter } from "./routes/admin.routes.js";
 import { certificateRouter } from "./routes/certificate.routes.js";
+import { adminContentRouter, contentRouter } from "./routes/content.routes.js";
 import { dashboardRouter } from "./routes/dashboard.routes.js";
 import { eventRouter } from "./routes/event.routes.js";
 import { paymentRouter } from "./routes/payment.routes.js";
@@ -69,6 +70,8 @@ app.get("/", (_request, response) => {
 });
 
 app.use("/api/admin", adminRouter);
+app.use("/api/admin/content", adminContentRouter);
+app.use("/api/content", contentRouter);
 app.use("/api/events", eventRouter);
 app.use("/api/users", userRouter);
 app.use("/api/registrations", registrationRouter);

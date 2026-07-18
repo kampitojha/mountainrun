@@ -43,6 +43,10 @@ const navGroups: NavGroup[] = [
     label: "Growth",
     items: [{ label: "Coupons", href: "/admin/coupons", icon: "tag" }],
   },
+  {
+    label: "Website",
+    items: [{ label: "Homepage & gallery", href: "/admin/content", icon: "doc" }],
+  },
 ];
 
 type AdminMe = {

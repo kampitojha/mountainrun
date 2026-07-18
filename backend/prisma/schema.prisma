@@ -158,6 +158,46 @@ model AdminAuditLog {
   @@index([entityType, entityId])
 }
 
+/** Admin-managed photo for gallery + homepage “Moments of glory”. */
+model SiteMedia {
+  id                String   @id @default(cuid())
+  title             String
+  imageUrl          String
+  category          String   @default("Community")
+  location          String?
+  eventLabel        String?
+  dateLabel         String?
+  meta              String?
+  sortOrder         Int      @default(0)
+  published         Boolean  @default(true)
+  showInGallery     Boolean  @default(true)
+  showOnHomeMoments Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([published, showInGallery])
+  @@index([published, showOnHomeMoments])
+  @@index([sortOrder])
+}
+
+/** Admin-managed community reviews for homepage. */
+model SiteTestimonial {
+  id         String   @id @default(cuid())
+  name       String
+  role       String
+  city       String?
+  quote      String
+  rating     Int      @default(5)
+  sortOrder  Int      @default(0)
+  published  Boolean  @default(true)
+  showOnHome Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([published, showOnHome])
+  @@index([sortOrder])
+}
+
 enum UserRole {
   RUNNER
   ADMIN

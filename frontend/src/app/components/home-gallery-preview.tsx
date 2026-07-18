@@ -3,11 +3,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
+import { useEffect, useState } from "react";
 import { galleryMoments } from "../data/events";
+import { fetchHomeContent, type HomeMoment } from "../../lib/events-api";
 import { HomeSectionHeader } from "./home-section-header";
 import { Stagger, StaggerItem } from "./marketing/motion";
-
-type GalleryMoment = (typeof galleryMoments)[number];
 
 const galleryTones = [
   "from-[#fef3c7] via-[#fde68a] to-[#f5f5f4]",
@@ -16,21 +16,54 @@ const galleryTones = [
   "from-[#eff6ff] via-[#dbeafe] to-[#f5f5f4]",
 ];
 
+const fallbackMoments: HomeMoment[] = galleryMoments.map((m, i) => ({
+  id: `static-${i}`,
+  title: m.title,
+  meta: m.meta,
+  image: m.image,
+}));
+
 export function HomeGalleryPreview({
-  moments,
+  moments: initial,
 }: {
-  moments: GalleryMoment[];
+  moments?: HomeMoment[];
 }) {
+  const [moments, setMoments] = useState<HomeMoment[]>(
+    initial && initial.length > 0 ? initial : fallbackMoments,
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchHomeContent().then((data) => {
+      if (!cancelled && data.moments.length > 0) {
+        setMoments(data.moments.slice(0, 4));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (moments.length === 0) {
+    return null;
+  }
+
   return (
-    <section 
+    <section
       className="section border-b border-(--line) relative overflow-hidden"
       style={{
-        background: "radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.03) 0px, transparent 65%), radial-gradient(at 100% 100%, rgba(13, 148, 136, 0.04) 0px, transparent 65%), var(--background)",
+        background:
+          "radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.03) 0px, transparent 65%), radial-gradient(at 100% 100%, rgba(13, 148, 136, 0.04) 0px, transparent 65%), var(--background)",
       }}
     >
-      {/* Decorative ambient orbs */}
-      <div aria-hidden="true" className="absolute top-1/3 left-10 h-80 w-80 rounded-full bg-indigo-500/3 blur-3xl pointer-events-none" />
-      <div aria-hidden="true" className="absolute bottom-1/3 right-10 h-80 w-80 rounded-full bg-emerald-500/4 blur-3xl pointer-events-none" />
+      <div
+        aria-hidden="true"
+        className="absolute top-1/3 left-10 h-80 w-80 rounded-full bg-indigo-500/3 blur-3xl pointer-events-none"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute bottom-1/3 right-10 h-80 w-80 rounded-full bg-emerald-500/4 blur-3xl pointer-events-none"
+      />
 
       <div className="container-page relative z-10">
         <HomeSectionHeader
@@ -50,9 +83,9 @@ export function HomeGalleryPreview({
 
         <Stagger className="mt-8 grid grid-cols-2 gap-3.5 sm:gap-5 lg:grid-cols-4">
           {moments.map((moment, index) => (
-            <StaggerItem key={moment.title}>
-              <Link 
-                className="gallery-card card-premium-glow group block overflow-hidden border border-(--line) rounded-(--radius) bg-(--panel-glass) backdrop-blur-md shadow-xs transition-all duration-300 hover:bg-(--panel) hover:border-(--line-strong) hover:shadow-md hover:-translate-y-1" 
+            <StaggerItem key={moment.id ?? `${moment.title}-${index}`}>
+              <Link
+                className="gallery-card card-premium-glow group block overflow-hidden border border-(--line) rounded-(--radius) bg-(--panel-glass) backdrop-blur-md shadow-xs transition-all duration-300 hover:bg-(--panel) hover:border-(--line-strong) hover:shadow-md hover:-translate-y-1"
                 href="/gallery"
               >
                 <div
