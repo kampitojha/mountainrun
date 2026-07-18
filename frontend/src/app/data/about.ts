@@ -1,128 +1,63 @@
-export const aboutTimeline = [
+/** Real product facts for the About page — keep copy grounded, no invented team/sponsors. */
+
+export const aboutSteps = [
   {
-    year: "2021",
-    title: "First virtual challenge",
-    text: "A small cohort of runners finished verified 5 km and 10 km efforts from home cities across India.",
+    step: "01",
+    title: "Register & pay",
+    text: "Pick an open event and distance, add your shipping address for the medal, and pay with UPI. Your bib shows up on the dashboard right after confirmation.",
   },
   {
-    year: "2022",
-    title: "Proof and ranking",
-    text: "GPS screenshot review and public leaderboards made virtual finishes feel fair and competitive.",
+    step: "02",
+    title: "Run on your schedule",
+    text: "Finish within the event window — park loop, trail, or road. Use any GPS app you already train with (Strava, Garmin, NRC, and so on).",
   },
   {
-    year: "2023",
-    title: "Rewards that arrive",
-    text: "Medals, certificates, and merch fulfilment turned solo runs into real finish-line moments.",
+    step: "03",
+    title: "Upload GPS proof",
+    text: "Send a clear activity screenshot from your dashboard. Our team reviews it before you hit the leaderboard or get a certificate.",
   },
   {
-    year: "2024",
-    title: "Club partnerships",
-    text: "Running clubs adopted Mountain Run weekends for members who train locally but race together.",
-  },
-  {
-    year: "2026",
-    title: "Premium series",
-    text: "A full season of mountain-themed virtual events with polished registration, proof, and ops.",
+    step: "04",
+    title: "Get your rewards",
+    text: "Approved finishes earn a digital certificate (email + public link), leaderboard placement, and medal shipping when the event includes one.",
   },
 ];
 
-export const aboutValues = [
+export const aboutPillars = [
   {
-    title: "Adventure",
-    text: "Every route can be a ridge, a river path, or a city loop — the story is the effort.",
+    title: "Verified, not guessed",
+    text: "Finishes only count after GPS proof is reviewed. That keeps the leaderboard honest for everyone.",
   },
   {
-    title: "Community",
-    text: "Shared leaderboards and club challenges connect runners who never share a start line.",
+    title: "Run from anywhere",
+    text: "No start-line travel. You race on your own roads or trails, then join a shared India-wide board.",
   },
   {
-    title: "Discipline",
-    text: "Clear windows, verified proofs, and honest rankings reward consistent training.",
-  },
-  {
-    title: "Nature",
-    text: "Mountain imagery and trail culture keep outdoor spirit at the centre of every event.",
-  },
-  {
-    title: "Health",
-    text: "Distances from 2 km to 25 km welcome first timers and seasoned marathoners alike.",
-  },
-  {
-    title: "Achievement",
-    text: "Certificates, medals, and published results make progress visible and memorable.",
-  },
-];
-
-export const aboutTeam = [
-  {
-    name: "Anika Sharma",
-    role: "Founder & Race Director",
-    bio: "Former trail racer focused on clean virtual event operations and fair verification.",
-  },
-  {
-    name: "Rahul Desai",
-    role: "Product & Experience",
-    bio: "Designs the registration-to-reward journey so every step feels intentional.",
-  },
-  {
-    name: "Meera Kapoor",
-    role: "Community Lead",
-    bio: "Partners with clubs, photographers, and city ambassadors across India.",
-  },
-  {
-    name: "Vikram Iyer",
-    role: "Operations",
-    bio: "Owns proof queues, medal dispatch, and certificate fulfilment quality.",
-  },
-];
-
-export const aboutFeatures = [
-  {
-    title: "Verified finishes",
-    text: "GPS proof review keeps leaderboards trustworthy for every distance.",
-  },
-  {
-    title: "Clear event windows",
-    text: "Start, end, and proof deadlines are always visible before you register.",
-  },
-  {
-    title: "Rewards that ship",
-    text: "Medals, certificates, and merch kits move through a tracked fulfilment flow.",
-  },
-  {
-    title: "India-wide access",
-    text: "Run from your city — no travel required to earn a verified result.",
-  },
-  {
-    title: "Club friendly",
-    text: "Groups can train together and still race on a shared public board.",
-  },
-  {
-    title: "Secure checkout",
-    text: "UPI and card payments with confirmed registrations in your dashboard.",
+    title: "Clear end-to-end flow",
+    text: "Register → run → proof → certificate & medal. Status lives on your dashboard so nothing is a mystery.",
   },
 ];
 
 export const aboutFaqs = [
   {
-    q: "Is Mountain Run only for trail runners?",
-    a: "No. Distances and events welcome road runners, beginners, and clubs. The mountain theme is the brand spirit — you can finish anywhere.",
+    q: "Do I need a mountain trail to join?",
+    a: "No. Mountain Run is the brand spirit — you can finish on road, track, or trail. Distances range from short intro efforts to longer challenges.",
   },
   {
-    q: "How is proof verified?",
-    a: "After payment, upload a GPS activity screenshot from your preferred app. Our ops team reviews submissions before leaderboard placement.",
+    q: "How does proof work?",
+    a: "After you’ve paid and finished, open Dashboard, upload a GPS activity screenshot (map + distance + time visible), and wait for review. Approved results go to the leaderboard.",
   },
   {
-    q: "When do medals ship?",
-    a: "Eligible kits move to dispatch after proof approval. Tracking appears on your dashboard once the courier is assigned.",
+    q: "What do I get after finishing?",
+    a: "An approved proof unlocks your e-certificate (view online and by email), a place on the event leaderboard, and medal delivery when that event includes one.",
   },
   {
-    q: "Can clubs join as a group?",
-    a: "Yes. Members register individually, then appear under the same event on the leaderboard for friendly competition.",
+    q: "Can I join more than one event?",
+    a: "Yes. You’re only blocked from registering the same distance in the same event twice. Other events and other distances stay open.",
   },
   {
-    q: "What if I miss the proof window?",
-    a: "Proof closes after the event ends. Late uploads cannot be ranked, so submit early once your run is complete.",
+    q: "How do I pay?",
+    a: "Checkout uses Razorpay with UPI first (Intent on mobile, QR on desktop), plus card, wallet, and netbanking when available.",
   },
 ];
 
@@ -130,37 +65,5 @@ export const aboutStats = [
   { label: "Verified finishes", value: 5400 },
   { label: "Cities represented", value: 62 },
   { label: "Events hosted", value: 24 },
-  { label: "Club partners", value: 38 },
-];
-
-export const aboutSponsors = [
-  "Ridge Co.",
-  "Trail Form",
-  "AeroKnit",
-  "Peak Fuel",
-  "Northline",
-  "Stride Lab",
-  "Summit Kit",
-  "River Run Co.",
-];
-
-export const aboutTestimonials = [
-  {
-    name: "Aarav Sharma",
-    role: "10 km finisher",
-    quote:
-      "Registration was simple and proof upload was clear. Getting my certificate the same week felt great.",
-  },
-  {
-    name: "Nisha Verma",
-    role: "5 km beginner",
-    quote:
-      "I ran in my own city but still felt part of a real event. The medal made it memorable.",
-  },
-  {
-    name: "Rohan Mehta",
-    role: "21 km finisher",
-    quote:
-      "The leaderboard gave my long run a real target. Clean experience from payment to verification.",
-  },
+  { label: "Moments in gallery", value: 1280 },
 ];
