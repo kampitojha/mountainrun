@@ -1,7 +1,9 @@
+import { validatePhoneFields } from "./phone-countries";
+import { isIndianState } from "./indian-states";
+
 export type FieldErrors = Record<string, string>;
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const phonePattern = /^(\+91[\s-]?)?[6-9]\d{9}$/;
 const pincodePattern = /^[1-9][0-9]{5}$/;
 
 export function asString(value: FormDataEntryValue | null) {
@@ -13,13 +15,13 @@ export function validateRegistrationForm(formData: FormData): FieldErrors {
   const name = asString(formData.get("name"));
   const username = asString(formData.get("username"));
   const email = asString(formData.get("email"));
-  const phone = asString(formData.get("phone")).replace(/\s+/g, "");
   const distance = asString(formData.get("distance"));
   const eventSlug = asString(formData.get("eventSlug"));
   const city = asString(formData.get("city"));
   const state = asString(formData.get("state"));
   const pincode = asString(formData.get("pincode"));
   const address = asString(formData.get("address"));
+  const landmark = asString(formData.get("landmark"));
 
   if (name.length < 2) {
     errors.name = "Full name must be at least 2 characters.";
@@ -35,8 +37,9 @@ export function validateRegistrationForm(formData: FormData): FieldErrors {
     errors.email = "Enter a valid email address.";
   }
 
-  if (!phonePattern.test(phone)) {
-    errors.phone = "Enter a valid 10-digit Indian mobile number.";
+  const phoneError = validatePhoneFields(formData);
+  if (phoneError) {
+    errors.phone = phoneError;
   }
 
   if (!distance) {
@@ -51,8 +54,10 @@ export function validateRegistrationForm(formData: FormData): FieldErrors {
     errors.city = "City is required.";
   }
 
-  if (state.length < 2) {
-    errors.state = "State is required.";
+  if (!state) {
+    errors.state = "Select a state.";
+  } else if (!isIndianState(state)) {
+    errors.state = "Choose a valid Indian state from the list.";
   }
 
   if (!pincodePattern.test(pincode)) {
@@ -61,6 +66,10 @@ export function validateRegistrationForm(formData: FormData): FieldErrors {
 
   if (address.length < 5) {
     errors.address = "Shipping address must be at least 5 characters.";
+  }
+
+  if (landmark.length > 120) {
+    errors.landmark = "Landmark must be 120 characters or fewer.";
   }
 
   return errors;

@@ -4,7 +4,10 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Field, inputClass } from "../components/app-shell";
+import { PhoneInput } from "../components/phone-input";
+import { SearchableSelect } from "../components/searchable-select";
 import { authHeaders, getApiUrl, readApiError } from "../../lib/api";
+import { INDIAN_STATES } from "../../lib/indian-states";
 import { asString, type FieldErrors, validateRegistrationForm } from "../../lib/validation";
 
 type CheckoutResponse = {
@@ -235,6 +238,7 @@ export function PaymentRegistrationForm() {
           shippingName: formData.get("name"),
           shippingPhone: formData.get("phone"),
           shippingLine1: formData.get("address"),
+          shippingLine2: asString(formData.get("landmark")) || undefined,
           shippingCity: formData.get("city"),
           shippingState: formData.get("state"),
           shippingPincode: formData.get("pincode"),
@@ -373,14 +377,7 @@ export function PaymentRegistrationForm() {
           <FieldError message={errors.email} />
         </Field>
         <Field label="Phone">
-          <input
-            aria-invalid={Boolean(errors.phone)}
-            className={inputClass}
-            defaultValue={defaultPhone}
-            name="phone"
-            placeholder="+91 98765 43210"
-            required
-          />
+          <PhoneInput defaultValue={defaultPhone} invalid={Boolean(errors.phone)} />
           <FieldError message={errors.phone} />
         </Field>
         <Field label="Event">
@@ -429,11 +426,12 @@ export function PaymentRegistrationForm() {
           <FieldError message={errors.city} />
         </Field>
         <Field label="State">
-          <input
-            aria-invalid={Boolean(errors.state)}
-            className={inputClass}
+          <SearchableSelect
+            emptyMessage="No state found. Try another search."
+            invalid={Boolean(errors.state)}
             name="state"
-            placeholder="Maharashtra"
+            options={INDIAN_STATES}
+            placeholder="Search state…"
             required
           />
           <FieldError message={errors.state} />
@@ -460,6 +458,17 @@ export function PaymentRegistrationForm() {
               required
             />
             <FieldError message={errors.address} />
+          </Field>
+        </div>
+        <div className="sm:col-span-2">
+          <Field label="Landmark">
+            <input
+              aria-invalid={Boolean(errors.landmark)}
+              className={inputClass}
+              name="landmark"
+              placeholder="Near metro station, mall, etc."
+            />
+            <FieldError message={errors.landmark} />
           </Field>
         </div>
       </div>

@@ -1,11 +1,19 @@
 import { z } from "zod";
+import { isIndianState } from "../data/indian-states.js";
 
 const phoneSchema = z
   .string()
   .trim()
   .transform((value) => value.replace(/\s+/g, ""))
-  .refine((value) => /^(\+91[\s-]?)?[6-9]\d{9}$/.test(value), {
-    message: "Enter a valid 10-digit Indian mobile number",
+  .refine((value) => /^\+\d{8,15}$/.test(value), {
+    message: "Enter a valid mobile number with country code",
+  });
+
+const indianStateSchema = z
+  .string()
+  .trim()
+  .refine((value) => isIndianState(value), {
+    message: "Choose a valid Indian state",
   });
 
 const pincodeSchema = z
@@ -32,9 +40,9 @@ export const createRegistrationSchema = z
     shippingName: z.string().trim().min(2, "Shipping name is required"),
     shippingPhone: phoneSchema,
     shippingLine1: z.string().trim().min(5, "Address must be at least 5 characters"),
-    shippingLine2: z.string().trim().optional(),
+    shippingLine2: z.string().trim().max(120, "Landmark must be 120 characters or fewer").optional(),
     shippingCity: z.string().trim().min(2, "City is required"),
-    shippingState: z.string().trim().min(2, "State is required"),
+    shippingState: indianStateSchema,
     shippingPincode: pincodeSchema,
   })
   .superRefine((value, context) => {
