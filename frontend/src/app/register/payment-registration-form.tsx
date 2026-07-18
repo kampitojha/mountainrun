@@ -306,7 +306,7 @@ function PaymentRegistrationFormInner() {
 
   if (!isLoaded) {
     return (
-      <div className="card mt-8 p-10 text-center">
+      <div className="card mt-6 p-8 text-center sm:mt-8 sm:p-10">
         <p className="text-sm text-[var(--muted)]">Checking your session…</p>
       </div>
     );
@@ -314,19 +314,20 @@ function PaymentRegistrationFormInner() {
 
   if (!isSignedIn) {
     return (
-      <div className="card mt-6 p-6 sm:mt-8 sm:p-8">
+      <div className="card mt-6 p-5 sm:mt-8 sm:p-8">
         <p className="eyebrow">Account required</p>
         <h2 className="mt-3 text-xl font-semibold tracking-tight sm:text-2xl">
           Sign in to continue
         </h2>
         <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">
-          Sign in with Google or email, then complete this form to register and pay with UPI.
+          Create a free account with email and password. After sign-in you can register and pay
+          with UPI.
         </p>
-        <div className="btn-row mt-6">
-          <Link className="btn btn-primary" href="/sign-in">
+        <div className="btn-row mt-6 sm:mt-8">
+          <Link className="btn btn-primary w-full sm:w-auto" href="/sign-in">
             Sign in
           </Link>
-          <Link className="btn btn-secondary" href="/sign-up">
+          <Link className="btn btn-secondary w-full sm:w-auto" href="/sign-up">
             Create account
           </Link>
         </div>
@@ -526,12 +527,17 @@ function PaymentRegistrationFormInner() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card mt-6 p-4 sm:mt-8 sm:p-8" noValidate>
-      <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
+    <form
+      onSubmit={handleSubmit}
+      className="card mt-6 w-full min-w-0 overflow-hidden p-4 sm:mt-8 sm:p-6 md:p-8"
+      noValidate
+    >
+      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
         <Field label="Full name" required>
           <input
             aria-invalid={Boolean(errors.name)}
-            className={inputClass}
+            autoComplete="name"
+            className={`${inputClass} min-w-0`}
             defaultValue={defaultName}
             key={`name-${defaultName}`}
             name="name"
@@ -541,14 +547,18 @@ function PaymentRegistrationFormInner() {
           <FieldError message={errors.name} />
         </Field>
 
-        <div>
+        <div className="min-w-0">
           <span className="field-label">Username</span>
-          <div className={`${inputClass} flex items-center gap-2 bg-[var(--panel-soft)] text-[var(--muted)]`}>
+          <div
+            className={`${inputClass} flex min-w-0 items-center gap-2 bg-[var(--panel-soft)] text-[var(--muted)]`}
+          >
             <Lock className="h-3.5 w-3.5 shrink-0 opacity-70" strokeWidth={1.75} />
-            <span className="truncate font-medium text-[var(--foreground)]">@{username}</span>
+            <span className="min-w-0 truncate font-medium text-[var(--foreground)]">
+              @{username}
+            </span>
           </div>
           <input name="username" type="hidden" value={username} />
-          <p className="mt-1.5 text-[0.7rem] text-[var(--muted-soft)]">
+          <p className="mt-1.5 text-[0.7rem] leading-snug text-[var(--muted-soft)]">
             From your account · not editable
           </p>
         </div>
@@ -556,7 +566,8 @@ function PaymentRegistrationFormInner() {
         <Field label="Email" required>
           <input
             aria-invalid={Boolean(errors.email)}
-            className={`${inputClass} bg-[var(--panel-soft)]`}
+            autoComplete="email"
+            className={`${inputClass} min-w-0 bg-[var(--panel-soft)]`}
             defaultValue={defaultEmail}
             key={`email-${defaultEmail}`}
             name="email"
@@ -575,7 +586,7 @@ function PaymentRegistrationFormInner() {
         <Field label="Event" required>
           <select
             aria-invalid={Boolean(errors.eventSlug)}
-            className={inputClass}
+            className={`${inputClass} min-w-0 max-w-full`}
             name="eventSlug"
             onChange={(e) => setSelectedEvent(e.target.value)}
             required
@@ -593,7 +604,7 @@ function PaymentRegistrationFormInner() {
         <Field label="Distance" required>
           <select
             aria-invalid={Boolean(errors.distance)}
-            className={inputClass}
+            className={`${inputClass} min-w-0 max-w-full`}
             name="distance"
             onChange={(e) => setSelectedDistance(e.target.value)}
             required
@@ -612,11 +623,11 @@ function PaymentRegistrationFormInner() {
           </select>
           <FieldError message={errors.distance} />
           {distanceAlreadyTaken ? (
-            <p className="mt-1.5 text-xs text-[var(--danger)]">
+            <p className="mt-1.5 text-xs leading-snug text-[var(--danger)]">
               Already registered for this distance. Pick another distance or event.
             </p>
           ) : pendingSame ? (
-            <p className="mt-1.5 text-xs text-[var(--sage)]">
+            <p className="mt-1.5 text-xs leading-snug text-[var(--sage)]">
               Pending payment — submit to resume checkout.
             </p>
           ) : null}
@@ -625,7 +636,8 @@ function PaymentRegistrationFormInner() {
         <Field label="City" required>
           <input
             aria-invalid={Boolean(errors.city)}
-            className={inputClass}
+            autoComplete="address-level2"
+            className={`${inputClass} min-w-0`}
             name="city"
             placeholder="Mumbai"
             required
@@ -648,7 +660,8 @@ function PaymentRegistrationFormInner() {
         <Field label="Pincode" required>
           <input
             aria-invalid={Boolean(errors.pincode)}
-            className={inputClass}
+            autoComplete="postal-code"
+            className={`${inputClass} min-w-0`}
             inputMode="numeric"
             maxLength={6}
             name="pincode"
@@ -658,11 +671,12 @@ function PaymentRegistrationFormInner() {
           <FieldError message={errors.pincode} />
         </Field>
 
-        <div className="sm:col-span-2">
+        <div className="min-w-0 sm:col-span-2">
           <Field label="Shipping address" required>
             <input
               aria-invalid={Boolean(errors.address)}
-              className={inputClass}
+              autoComplete="street-address"
+              className={`${inputClass} min-w-0`}
               name="address"
               placeholder="House, street, area"
               required
@@ -671,11 +685,11 @@ function PaymentRegistrationFormInner() {
           </Field>
         </div>
 
-        <div className="sm:col-span-2">
+        <div className="min-w-0 sm:col-span-2">
           <Field label="Landmark">
             <input
               aria-invalid={Boolean(errors.landmark)}
-              className={inputClass}
+              className={`${inputClass} min-w-0`}
               name="landmark"
               placeholder="Near metro station, mall, etc."
             />
@@ -684,22 +698,24 @@ function PaymentRegistrationFormInner() {
         </div>
       </div>
 
-      <div className="mt-6 flex flex-col gap-3 rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+      <div className="mt-5 flex min-w-0 flex-col gap-3 rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] p-4 sm:mt-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-5">
+        <div className="min-w-0">
           <p className="text-sm font-medium">Secure checkout</p>
           <p
-            className={`mt-1 text-sm ${
+            className={`mt-1 break-words text-sm leading-snug ${
               status === "error" ? "text-[var(--danger)]" : "text-[var(--muted)]"
             }`}
           >
             {message}
           </p>
         </div>
-        <p className="text-2xl font-semibold tracking-tight">{selectedAmount}</p>
+        <p className="shrink-0 text-2xl font-semibold tracking-tight sm:text-right">
+          {selectedAmount}
+        </p>
       </div>
 
       <button
-        className="btn btn-primary btn-full mt-6 disabled:cursor-not-allowed disabled:opacity-50"
+        className="btn btn-primary btn-full mt-5 min-h-12 touch-manipulation disabled:cursor-not-allowed disabled:opacity-50 sm:mt-6"
         disabled={
           status === "creating" ||
           status === "paying" ||
@@ -726,7 +742,7 @@ export function PaymentRegistrationForm() {
   return (
     <Suspense
       fallback={
-        <div className="card mt-8 p-10 text-center">
+        <div className="card mt-6 p-8 text-center sm:mt-8 sm:p-10">
           <p className="text-sm text-[var(--muted)]">Loading form…</p>
         </div>
       }

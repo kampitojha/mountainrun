@@ -5,11 +5,11 @@ export default function RegisterPage() {
   return (
     <PageShell>
       <section className="section">
-        <div className="container-page max-w-2xl">
+        <div className="container-page w-full max-w-3xl px-4 sm:px-0">
           <PageHeader
             eyebrow="Registration"
-            title="Register"
-            description="Fill your details, pick event & distance, add shipping, and pay with UPI."
+            title="Join an event"
+            description="Pick event and distance, add shipping, pay with UPI. After login your races also show on Dashboard."
           />
           <PaymentRegistrationForm />
         </div>
