@@ -138,21 +138,21 @@ export const galleryMoments = [
   {
     title: "Sunrise finish",
     meta: "5 km finisher",
-    image: "/images/mountain-run-hero.png",
+    image: "/images/sunrise-finish.png",
   },
   {
     title: "Club leaderboard push",
     meta: "10 km team effort",
-    image: "/images/mountain-run-hero.png",
+    image: "/images/club-push.png",
   },
   {
     title: "First medal day",
     meta: "New runner story",
-    image: "/images/mountain-run-hero.png",
+    image: "/images/first-medal.png",
   },
   {
     title: "Weekend long run",
     meta: "21 km verified",
-    image: "/images/mountain-run-hero.png",
+    image: "/images/weekend-long-run.png",
   },
 ];

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import {
   aboutFaqs,
   aboutFeatures,
@@ -159,6 +160,7 @@ function TestimonialCarousel() {
 
 export function AboutClient() {
   const reduce = useReducedMotion();
+  const { isSignedIn } = useAuth();
 
   return (
     <>
@@ -180,12 +182,25 @@ export function AboutClient() {
               medals.
             </SectionLead>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link className="btn btn-primary rounded-xl px-6" href="/register">
-                Register now
-              </Link>
-              <Link className="btn btn-secondary rounded-xl px-6" href="/events">
-                Browse events
-              </Link>
+              {isSignedIn ? (
+                <>
+                  <Link className="btn btn-primary rounded-xl px-6" href="/dashboard">
+                    My dashboard
+                  </Link>
+                  <Link className="btn btn-secondary rounded-xl px-6" href="/register">
+                    Join an event
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link className="btn btn-primary rounded-xl px-6" href="/register">
+                    Register now
+                  </Link>
+                  <Link className="btn btn-secondary rounded-xl px-6" href="/events">
+                    Browse events
+                  </Link>
+                </>
+              )}
             </div>
           </motion.div>
         </MarketingContainer>
@@ -411,12 +426,25 @@ export function AboutClient() {
               Pick a distance, run on your schedule, upload proof, claim your result.
             </SectionLead>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link className="btn btn-primary rounded-xl px-6" href="/register">
-                Register now
-              </Link>
-              <Link className="btn btn-secondary rounded-xl px-6" href="/gallery">
-                View gallery
-              </Link>
+              {isSignedIn ? (
+                <>
+                  <Link className="btn btn-primary rounded-xl px-6" href="/dashboard">
+                    My dashboard
+                  </Link>
+                  <Link className="btn btn-secondary rounded-xl px-6" href="/register">
+                    Join an event
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link className="btn btn-primary rounded-xl px-6" href="/register">
+                    Register now
+                  </Link>
+                  <Link className="btn btn-secondary rounded-xl px-6" href="/gallery">
+                    View gallery
+                  </Link>
+                </>
+              )}
             </div>
           </Reveal>
         </MarketingContainer>

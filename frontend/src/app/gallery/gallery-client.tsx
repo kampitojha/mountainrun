@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-mot
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import {
   galleryCategories,
   galleryItems,
@@ -188,6 +189,7 @@ export function GalleryClient() {
   const [category, setCategory] = useState<GalleryCategory>("All");
   const [query, setQuery] = useState("");
   const [active, setActive] = useState<GalleryItem | null>(null);
+  const { isSignedIn } = useAuth();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -321,12 +323,25 @@ export function GalleryClient() {
               Register, run, upload proof — your result joins the leaderboard.
             </SectionLead>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link className="btn btn-primary rounded-xl px-6" href="/register">
-                Register now
-              </Link>
-              <Link className="btn btn-secondary rounded-xl px-6" href="/events">
-                Browse events
-              </Link>
+              {isSignedIn ? (
+                <>
+                  <Link className="btn btn-primary rounded-xl px-6" href="/dashboard">
+                    My dashboard
+                  </Link>
+                  <Link className="btn btn-secondary rounded-xl px-6" href="/register">
+                    Join an event
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link className="btn btn-primary rounded-xl px-6" href="/register">
+                    Register now
+                  </Link>
+                  <Link className="btn btn-secondary rounded-xl px-6" href="/events">
+                    Browse events
+                  </Link>
+                </>
+              )}
             </div>
           </Reveal>
         </MarketingContainer>

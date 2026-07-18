@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { PageShell } from "../../components/app-shell";
 import { allPublicEvents, eventBenefits } from "../../data/events";
 import { fetchEventBySlug } from "../../../lib/events-api";
+import { auth } from "@clerk/nextjs/server";
 
 export function generateStaticParams() {
   return allPublicEvents.map((event) => ({ slug: event.slug }));
@@ -23,6 +24,9 @@ export default async function EventDetailPage({
     notFound();
   }
 
+  const { userId } = await auth();
+  const isSignedIn = !!userId;
+
   const isPast = event.status === "past";
 
   return (
@@ -30,7 +34,7 @@ export default async function EventDetailPage({
       <section className="section">
         <div className="container-page">
           <Link
-            className="text-sm text-[var(--muted)] transition hover:text-[var(--foreground)]"
+            className="text-sm text-(--muted) transition hover:text-foreground"
             href="/events"
           >
             ← All events
@@ -54,7 +58,7 @@ export default async function EventDetailPage({
                   ["Entry", event.price],
                 ].map(([label, value]) => (
                   <div className="card p-5" key={label}>
-                    <p className="text-xs font-medium uppercase tracking-[0.1em] text-[var(--muted)]">
+                    <p className="text-xs font-medium uppercase tracking-widest text-(--muted)">
                       {label}
                     </p>
                     <p className="mt-2 text-sm font-semibold tracking-tight">{value}</p>
@@ -65,7 +69,7 @@ export default async function EventDetailPage({
               {isPast ? (
                 <div className="mt-10">
                   <h2 className="heading">Event recap</h2>
-                  <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">
+                  <p className="mt-3 max-w-2xl text-sm leading-6 text-(--muted)">
                     {event.resultNote ??
                       "This race has finished. Here is a quick look at participation and rewards."}
                   </p>
@@ -76,7 +80,7 @@ export default async function EventDetailPage({
                       ["Cities", event.cities],
                     ].map(([label, value]) => (
                       <div className="card p-5" key={String(label)}>
-                        <p className="text-xs font-medium uppercase tracking-[0.1em] text-[var(--muted)]">
+                        <p className="text-xs font-medium uppercase tracking-widest text-(--muted)">
                           {label}
                         </p>
                         <p className="mt-2 text-2xl font-semibold tracking-tight">
@@ -85,7 +89,7 @@ export default async function EventDetailPage({
                       </div>
                     ))}
                   </div>
-                  <p className="mt-6 text-sm leading-6 text-[var(--muted)]">{event.highlight}</p>
+                  <p className="mt-6 text-sm leading-6 text-(--muted)">{event.highlight}</p>
                 </div>
               ) : null}
 
@@ -94,13 +98,13 @@ export default async function EventDetailPage({
                 <ul className="mt-6 grid gap-3 sm:grid-cols-2">
                   {eventBenefits.map((benefit) => (
                     <li
-                      className="flex items-start gap-3 rounded-xl border border-[var(--line)] bg-white px-4 py-3.5 text-sm"
+                      className="flex items-start gap-3 rounded-xl border border-(--line) bg-white px-4 py-3.5 text-sm"
                       key={benefit}
                     >
-                      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--panel-soft)] text-[0.65rem] font-semibold">
+                      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-(--panel-soft) text-[0.65rem] font-semibold">
                         ✓
                       </span>
-                      <span className="leading-6 text-[var(--muted)]">{benefit}</span>
+                      <span className="leading-6 text-(--muted)">{benefit}</span>
                     </li>
                   ))}
                 </ul>
@@ -112,7 +116,7 @@ export default async function EventDetailPage({
                 <>
                   <p className="eyebrow">Closed</p>
                   <h2 className="mt-3 text-2xl font-semibold tracking-tight">Event completed</h2>
-                  <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
+                  <p className="mt-3 text-sm leading-6 text-(--muted)">
                     Registration for this race is closed. Explore the recap on this page, or open
                     an upcoming event to register for the next run.
                   </p>
@@ -129,13 +133,14 @@ export default async function EventDetailPage({
                 <>
                   <p className="eyebrow">Register</p>
                   <h2 className="mt-3 text-2xl font-semibold tracking-tight">Join this event</h2>
-                  <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                    Sign in, choose your distance, add delivery details, and pay with UPI. Run
-                    within the event window, then upload GPS proof from your dashboard.
+                  <p className="mt-3 text-sm leading-6 text-(--muted)">
+                    {isSignedIn
+                      ? "Choose your distance, add delivery details, and pay with UPI to secure your spot. Run within the event window, then upload GPS proof from your dashboard."
+                      : "Sign in, choose your distance, add delivery details, and pay with UPI. Run within the event window, then upload GPS proof from your dashboard."}
                   </p>
                   <div className="mt-6 space-y-2">
                     <Link className="btn btn-primary btn-full" href="/register">
-                      Register now
+                      {isSignedIn ? "Register for this race" : "Register now"}
                     </Link>
                     <Link className="btn btn-secondary btn-full" href="/events">
                       Browse other events
