@@ -285,7 +285,13 @@ export function PaymentRegistrationForm() {
       }
 
       setStatus("paying");
-      setMessage("Checkout opened. Complete payment with UPI.");
+      setMessage("Checkout opened. Prefer UPI for the fastest payment.");
+
+      // Normalize contact for Razorpay (digits with country code, no spaces).
+      const rawPhone = asString(formData.get("phone")).replace(/[^\d+]/g, "");
+      const contact = rawPhone.startsWith("+")
+        ? rawPhone.replace(/\D/g, "")
+        : rawPhone.replace(/\D/g, "");
 
       const checkout = new window.Razorpay({
         key: order.keyId,
@@ -297,15 +303,43 @@ export function PaymentRegistrationForm() {
         prefill: {
           name: asString(formData.get("name")),
           email: asString(formData.get("email")),
-          contact: asString(formData.get("phone")),
+          contact,
         },
+        // Keep methods enabled; display order is controlled via config below.
         method: {
           upi: true,
           card: true,
           netbanking: true,
           wallet: true,
         },
-        theme: { color: "#0a0a0a" },
+        /**
+         * UPI first (recommended for India), then card / wallet / netbanking.
+         * Official reorder pattern: config.display.blocks + sequence.
+         * @see https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/configure-payment-methods/sample-code/
+         */
+        config: {
+          display: {
+            blocks: {
+              preferred: {
+                name: "UPI (Recommended)",
+                instruments: [{ method: "upi" }],
+              },
+              other: {
+                name: "Other payment methods",
+                instruments: [
+                  { method: "card" },
+                  { method: "wallet" },
+                  { method: "netbanking" },
+                ],
+              },
+            },
+            sequence: ["block.preferred", "block.other"],
+            preferences: {
+              show_default_blocks: false,
+            },
+          },
+        },
+        theme: { color: "#0d9488" },
         handler: async (response: CheckoutResponse) => {
           const verifyResponse = await fetch(getApiUrl("/api/payments/verify"), {
             method: "POST",
