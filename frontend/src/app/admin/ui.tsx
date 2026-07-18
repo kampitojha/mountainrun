@@ -61,16 +61,25 @@ export function AdminStat({
   label,
   value,
   hint,
+  trend,
+  trendDir,
 }: {
   label: string;
   value: string;
   hint?: string;
+  trend?: string;
+  trendDir?: "up" | "down";
 }) {
   return (
     <div className="admin-stat">
       <div className="label">{label}</div>
       <div className="value">{value}</div>
       {hint ? <div className="hint">{hint}</div> : null}
+      {trend ? (
+        <div className={`trend ${trendDir ?? ""}`}>
+          {trendDir === "up" ? "↑" : trendDir === "down" ? "↓" : ""} {trend}
+        </div>
+      ) : null}
     </div>
   );
 }

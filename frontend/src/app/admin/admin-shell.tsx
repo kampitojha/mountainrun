@@ -18,9 +18,9 @@ const navGroups: NavGroup[] = [
   {
     label: "Operations",
     items: [
-      { label: "Events", href: "/admin/events", icon: "flag" },
+      { label: "Events",        href: "/admin/events",        icon: "flag" },
       { label: "Registrations", href: "/admin/registrations", icon: "list" },
-      { label: "Proofs", href: "/admin/proofs", icon: "check" },
+      { label: "Proofs",        href: "/admin/proofs",        icon: "check" },
     ],
   },
   {
@@ -34,7 +34,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Fulfillment",
     items: [
-      { label: "Medals", href: "/admin/medals", icon: "medal" },
+      { label: "Medals",       href: "/admin/medals",       icon: "medal" },
       { label: "Certificates", href: "/admin/certificates", icon: "doc" },
     ],
   },
@@ -51,6 +51,7 @@ type AdminMe = {
   mode?: string;
 };
 
+/* ── Icon component ─────────────────────────────────────── */
 function NavIcon({ name }: { name: string }) {
   const common = {
     className: "admin-nav-icon",
@@ -64,7 +65,10 @@ function NavIcon({ name }: { name: string }) {
     case "grid":
       return (
         <svg {...common}>
-          <path d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z" />
+          <rect x="3" y="3" width="7" height="7" rx="1.5" />
+          <rect x="14" y="3" width="7" height="7" rx="1.5" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" />
+          <rect x="14" y="14" width="7" height="7" rx="1.5" />
         </svg>
       );
     case "flag":
@@ -127,6 +131,235 @@ function NavIcon({ name }: { name: string }) {
   }
 }
 
+/* ── Lock icon for gate ─────────────────────────────────── */
+function LockIcon() {
+  return (
+    <svg fill="none" height="22" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} viewBox="0 0 24 24" width="22">
+      <rect height="11" rx="2" width="18" x="3" y="11" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg fill="none" height="22" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} viewBox="0 0 24 24" width="22">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+/* ── Brand logo mark (shared across gate + sidebar) ─────── */
+function BrandMark({ size = 28 }: { size?: number }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img alt="Mountain Run" height={size} src="/logo-mark.svg" width={size} />
+  );
+}
+
+/* ── Loading spinner dots ───────────────────────────────── */
+function Spinner() {
+  return (
+    <div className="admin-spinner">
+      <span /><span /><span />
+    </div>
+  );
+}
+
+/* ── Gate: not signed in ────────────────────────────────── */
+function GateSignIn() {
+  return (
+    <div className="admin-app admin-gate">
+      <div className="admin-gate-card">
+        <div className="admin-gate-logo">
+          <div className="admin-gate-logo-icon">
+            <BrandMark size={22} />
+          </div>
+          <span className="admin-gate-logo-text">
+            Mountain <em>Run</em>
+          </span>
+        </div>
+
+        <div className="admin-gate-lock">
+          <LockIcon />
+        </div>
+
+        <h1>Admin Console</h1>
+        <p>Restricted to authorised admins only. Sign in with your admin account to continue.</p>
+
+        <div className="admin-gate-actions">
+          <Link className="btn btn-primary" href="/sign-in?redirect_url=/admin">
+            Sign in to Admin
+          </Link>
+          <Link className="btn btn-ghost" href="/">
+            Back to site
+          </Link>
+        </div>
+
+        <div className="admin-gate-divider">
+          Mountain Run · Operations Console
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Gate: signed in but not admin ─────────────────────── */
+function GateRestricted({
+  email,
+  error,
+  onRetry,
+}: {
+  email?: string;
+  error: string | null;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="admin-app admin-gate">
+      <div className="admin-gate-card">
+        <div className="admin-gate-logo">
+          <div className="admin-gate-logo-icon">
+            <BrandMark size={22} />
+          </div>
+          <span className="admin-gate-logo-text">
+            Mountain <em>Run</em>
+          </span>
+        </div>
+
+        <div className="admin-gate-lock" style={{ color: "var(--admin-rose)" }}>
+          <ShieldIcon />
+        </div>
+
+        <h1>Access Restricted</h1>
+        <p>{error ?? "Your account does not have admin privileges."}</p>
+
+        {email ? (
+          <div className="admin-gate-restricted" style={{ marginTop: "1rem" }}>
+            <div className="admin-gate-restricted-email">
+              <span>Signed in as</span>
+              <strong>{email}</strong>
+            </div>
+            <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--admin-muted)" }}>
+              This account is not authorised. Contact the system owner to grant admin access,
+              or sign out and use a different account.
+            </p>
+          </div>
+        ) : null}
+
+        <div className="admin-gate-actions">
+          <Link
+            className="btn btn-primary"
+            href="/sign-in?redirect_url=/admin"
+          >
+            Switch account
+          </Link>
+          <button className="btn btn-secondary" onClick={onRetry} type="button">
+            Retry
+          </button>
+          <Link className="btn btn-ghost" href="/">
+            Back to site
+          </Link>
+        </div>
+
+        <div className="admin-gate-divider">
+          Need access? Ask the admin to add your email to <code style={{ background: "var(--admin-surface-3)", color: "var(--admin-teal)", padding: "0.1rem 0.3rem", borderRadius: 4, fontSize: "0.7rem" }}>ADMIN_EMAILS</code>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Gate: loading ──────────────────────────────────────── */
+function GateLoading() {
+  return (
+    <div className="admin-app admin-gate">
+      <div className="admin-gate-card">
+        <div className="admin-gate-logo">
+          <div className="admin-gate-logo-icon">
+            <BrandMark size={22} />
+          </div>
+          <span className="admin-gate-logo-text">
+            Mountain <em>Run</em>
+          </span>
+        </div>
+        <Spinner />
+        <p style={{ marginTop: "0.75rem", fontSize: "0.84rem", color: "var(--admin-muted)" }}>
+          Verifying admin session…
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ── Sidebar nav body ───────────────────────────────────── */
+function SidebarNav({
+  me,
+  displayName,
+  initial,
+  isActive,
+  onNavClick,
+}: {
+  me: AdminMe;
+  displayName: string;
+  initial: string;
+  isActive: (href: string) => boolean;
+  onNavClick?: () => void;
+}) {
+  return (
+    <>
+      <div className="admin-sidebar-brand">
+        <div className="admin-sidebar-brand-icon">
+          <BrandMark size={20} />
+        </div>
+        <div className="admin-sidebar-brand-text">
+          <strong>
+            Mountain <em>Run</em>
+          </strong>
+          <span>Operations</span>
+        </div>
+      </div>
+
+      <nav aria-label="Admin" className="admin-nav">
+        {navGroups.map((group) => (
+          <div className="admin-nav-group" key={group.label}>
+            <div className="admin-nav-group-label">{group.label}</div>
+            {group.items.map((item) => (
+              <Link
+                className={`admin-nav-link ${isActive(item.href) ? "is-active" : ""}`}
+                href={item.href}
+                key={item.href}
+                onClick={onNavClick}
+              >
+                <NavIcon name={item.icon} />
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        ))}
+      </nav>
+
+      <div className="admin-sidebar-foot">
+        <div className="admin-user-chip">
+          <div className="avatar">{initial}</div>
+          <div className="meta">
+            <strong>{displayName}</strong>
+            <span>
+              {me.role ?? "ADMIN"}
+              {me.mode === "dev-bypass" ? " · dev" : ""}
+            </span>
+          </div>
+        </div>
+        <div className="admin-sidebar-links">
+          <Link href="/">View site</Link>
+          <Link href="/dashboard">My dashboard</Link>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ── Main AdminShell ────────────────────────────────────── */
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn, getToken } = useAuth();
   const { user } = useUser();
@@ -170,147 +403,70 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const isActive = (href: string) =>
     href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
 
+  /* ── Gates ─────────────────────────────────────────────── */
   if (!isLoaded || (isSignedIn && loading)) {
-    return (
-      <div className="admin-app admin-gate">
-        <div className="admin-gate-card">
-          <p className="admin-kicker">Admin</p>
-          <h1>Loading console</h1>
-          <p>Checking session and permissions…</p>
-        </div>
-      </div>
-    );
+    return <GateLoading />;
   }
 
   if (!isSignedIn) {
-    return (
-      <div className="admin-app admin-gate">
-        <div className="admin-gate-card">
-          <p className="admin-kicker">Admin</p>
-          <h1>Sign in required</h1>
-          <p>Use an admin account. You will return to this console after login.</p>
-          <div className="admin-actions" style={{ justifyContent: "center", marginTop: "1.25rem" }}>
-            <Link className="btn btn-primary" href="/sign-in?redirect_url=/admin">
-              Sign in
-            </Link>
-            <Link className="btn btn-secondary" href="/">
-              Back home
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
+    return <GateSignIn />;
   }
 
   if (error || !me) {
     return (
-      <div className="admin-app admin-gate">
-        <div className="admin-gate-card">
-          <p className="admin-kicker">Admin</p>
-          <h1>Access restricted</h1>
-          <p>{error ?? "Signed in, but this account is not an admin."}</p>
-          <div className="admin-help">
-            <strong style={{ color: "var(--admin-ink)" }}>Grant access</strong>
-            <ol>
-              <li>
-                Set <code>ADMIN_EMAILS</code> on the API
-              </li>
-              <li>
-                Or Clerk metadata <code>{`{ "role": "admin" }`}</code>
-              </li>
-              <li>
-                Or DB <code>User.role = ADMIN</code>
-              </li>
-            </ol>
-            {user?.primaryEmailAddress?.emailAddress ? (
-              <p style={{ marginTop: "0.65rem" }}>
-                Signed in as <strong>{user.primaryEmailAddress.emailAddress}</strong>
-              </p>
-            ) : null}
-          </div>
-          <div className="admin-actions" style={{ justifyContent: "center", marginTop: "1.25rem" }}>
-            <button className="btn btn-secondary" onClick={() => void loadMe()} type="button">
-              Retry
-            </button>
-            <Link className="btn btn-ghost" href="/">
-              Back home
-            </Link>
-          </div>
-        </div>
-      </div>
+      <GateRestricted
+        email={user?.primaryEmailAddress?.emailAddress}
+        error={error}
+        onRetry={() => void loadMe()}
+      />
     );
   }
 
-  const displayName = me.name || user?.fullName || me.email || "Admin";
+  /* ── Authenticated admin shell ──────────────────────────── */
+  const displayName = me.name ?? user?.fullName ?? me.email ?? "Admin";
   const initial = displayName.slice(0, 1).toUpperCase();
 
-  const navBody = (
-    <>
-      <div className="admin-sidebar-brand">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img alt="" height={28} src="/logo-mark.svg" width={28} />
-        <div className="admin-sidebar-brand-text">
-          <strong>Mountain Run</strong>
-          <span>Operations</span>
-        </div>
-      </div>
-
-      <nav className="admin-nav" aria-label="Admin">
-        {navGroups.map((group) => (
-          <div className="admin-nav-group" key={group.label}>
-            <div className="admin-nav-group-label">{group.label}</div>
-            {group.items.map((item) => (
-              <Link
-                className={`admin-nav-link ${isActive(item.href) ? "is-active" : ""}`}
-                href={item.href}
-                key={item.href}
-                onClick={() => setMobileOpen(false)}
-              >
-                <NavIcon name={item.icon} />
-                {item.label}
-              </Link>
-            ))}
-          </div>
-        ))}
-      </nav>
-
-      <div className="admin-sidebar-foot">
-        <div className="admin-user-chip">
-          <div className="avatar">{initial}</div>
-          <div className="meta">
-            <strong>{displayName}</strong>
-            <span>
-              {me.role ?? "ADMIN"}
-              {me.mode === "dev-bypass" ? " · dev" : ""}
-            </span>
-          </div>
-        </div>
-        <div className="admin-sidebar-links">
-          <Link href="/">View site</Link>
-          <Link href="/dashboard">My dashboard</Link>
-        </div>
-      </div>
-    </>
-  );
+  const navProps = {
+    me,
+    displayName,
+    initial,
+    isActive,
+  };
 
   return (
     <div className="admin-app">
+      {/* Mobile top bar */}
       <div className="admin-mobile-bar">
-        <div>
-          <strong style={{ fontSize: "0.875rem" }}>Admin</strong>
+        <div className="admin-mobile-bar-brand">
+          <BrandMark size={22} />
+          <strong>
+            Mountain <em>Run</em>
+          </strong>
         </div>
         <button
           className="btn btn-secondary"
-          onClick={() => setMobileOpen((value) => !value)}
+          onClick={() => setMobileOpen((v) => !v)}
           type="button"
         >
           {mobileOpen ? "Close" : "Menu"}
         </button>
       </div>
-      {mobileOpen ? <div className="admin-mobile-drawer">{navBody}</div> : null}
 
+      {/* Mobile drawer */}
+      {mobileOpen ? (
+        <div className="admin-mobile-drawer">
+          <SidebarNav
+            {...navProps}
+            onNavClick={() => setMobileOpen(false)}
+          />
+        </div>
+      ) : null}
+
+      {/* Desktop shell */}
       <div className="admin-shell">
-        <aside className="admin-sidebar">{navBody}</aside>
+        <aside className="admin-sidebar">
+          <SidebarNav {...navProps} />
+        </aside>
         <main className="admin-main">
           <div className="admin-page">{children}</div>
         </main>
