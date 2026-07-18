@@ -75,6 +75,20 @@ export function validateRegistrationForm(formData: FormData): FieldErrors {
   return errors;
 }
 
+export function getValidationSummaryMessage(errors: FieldErrors) {
+  const messages = Object.values(errors).filter(Boolean);
+
+  if (messages.length === 0) {
+    return "";
+  }
+
+  if (messages.length === 1) {
+    return messages[0];
+  }
+
+  return `Please review the ${messages.length} highlighted fields below before continuing to payment.`;
+}
+
 export function validateAdminEventForm(formData: FormData): FieldErrors {
   const errors: FieldErrors = {};
   const title = asString(formData.get("title"));

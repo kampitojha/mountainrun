@@ -15,14 +15,23 @@ export { AppFooter } from "./app-footer";
 
 export function Field({
   label,
+  required = false,
   children,
 }: {
   label: string;
+  required?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <label className="block">
-      <span className="field-label">{label}</span>
+      <span className="field-label">
+        {label}
+        {required ? (
+          <span aria-hidden="true" className="ml-0.5 text-[var(--danger)]">
+            *
+          </span>
+        ) : null}
+      </span>
       {children}
     </label>
   );

@@ -8,7 +8,12 @@ import { PhoneInput } from "../components/phone-input";
 import { SearchableSelect } from "../components/searchable-select";
 import { authHeaders, getApiUrl, readApiError } from "../../lib/api";
 import { INDIAN_STATES } from "../../lib/indian-states";
-import { asString, type FieldErrors, validateRegistrationForm } from "../../lib/validation";
+import {
+  asString,
+  getValidationSummaryMessage,
+  type FieldErrors,
+  validateRegistrationForm,
+} from "../../lib/validation";
 
 type CheckoutResponse = {
   razorpay_order_id: string;
@@ -203,7 +208,7 @@ export function PaymentRegistrationForm() {
 
     if (Object.keys(fieldErrors).length > 0) {
       setStatus("error");
-      setMessage("Please fix the highlighted fields and try again.");
+      setMessage(getValidationSummaryMessage(fieldErrors));
       return;
     }
 
@@ -342,7 +347,7 @@ export function PaymentRegistrationForm() {
   return (
     <form onSubmit={handleSubmit} className="card mt-6 p-4 sm:mt-10 sm:p-8" noValidate>
       <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
-        <Field label="Full name">
+        <Field label="Full name" required>
           <input
             aria-invalid={Boolean(errors.name)}
             className={inputClass}
@@ -353,7 +358,7 @@ export function PaymentRegistrationForm() {
           />
           <FieldError message={errors.name} />
         </Field>
-        <Field label="Username">
+        <Field label="Username" required>
           <input
             aria-invalid={Boolean(errors.username)}
             className={inputClass}
@@ -364,7 +369,7 @@ export function PaymentRegistrationForm() {
           />
           <FieldError message={errors.username} />
         </Field>
-        <Field label="Email">
+        <Field label="Email" required>
           <input
             aria-invalid={Boolean(errors.email)}
             className={inputClass}
@@ -376,11 +381,11 @@ export function PaymentRegistrationForm() {
           />
           <FieldError message={errors.email} />
         </Field>
-        <Field label="Phone">
+        <Field label="Phone" required>
           <PhoneInput defaultValue={defaultPhone} invalid={Boolean(errors.phone)} />
           <FieldError message={errors.phone} />
         </Field>
-        <Field label="Event">
+        <Field label="Event" required>
           <select
             aria-invalid={Boolean(errors.eventSlug)}
             className={inputClass}
@@ -397,7 +402,7 @@ export function PaymentRegistrationForm() {
           </select>
           <FieldError message={errors.eventSlug} />
         </Field>
-        <Field label="Distance">
+        <Field label="Distance" required>
           <select
             aria-invalid={Boolean(errors.distance)}
             className={inputClass}
@@ -415,7 +420,7 @@ export function PaymentRegistrationForm() {
           </select>
           <FieldError message={errors.distance} />
         </Field>
-        <Field label="City">
+        <Field label="City" required>
           <input
             aria-invalid={Boolean(errors.city)}
             className={inputClass}
@@ -425,7 +430,7 @@ export function PaymentRegistrationForm() {
           />
           <FieldError message={errors.city} />
         </Field>
-        <Field label="State">
+        <Field label="State" required>
           <SearchableSelect
             emptyMessage="No state found. Try another search."
             invalid={Boolean(errors.state)}
@@ -436,7 +441,7 @@ export function PaymentRegistrationForm() {
           />
           <FieldError message={errors.state} />
         </Field>
-        <Field label="Pincode">
+        <Field label="Pincode" required>
           <input
             aria-invalid={Boolean(errors.pincode)}
             className={inputClass}
@@ -449,7 +454,7 @@ export function PaymentRegistrationForm() {
           <FieldError message={errors.pincode} />
         </Field>
         <div className="sm:col-span-2">
-          <Field label="Shipping address">
+          <Field label="Shipping address" required>
             <input
               aria-invalid={Boolean(errors.address)}
               className={inputClass}
