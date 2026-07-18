@@ -1,10 +1,9 @@
 "use client";
 
 import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
-import { Search, X } from "lucide-react";
-import Link from "next/link";
+import Image from "next/image";
+import { X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
 import {
   galleryCategories,
   galleryItems,
@@ -12,17 +11,9 @@ import {
   type GalleryCategory,
   type GalleryItem,
 } from "../data/gallery";
-import { Reveal, Stagger, StaggerItem } from "../components/marketing/motion";
-import {
-  MarketingContainer,
-  MarketingSection,
-  SectionEyebrow,
-  SectionLead,
-  SectionTitle,
-} from "../components/marketing/section";
 import { cn } from "../../lib/cn";
 
-function useCountUp(target: number, active: boolean, duration = 1200) {
+function useCountUp(target: number, active: boolean, duration = 1100) {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
@@ -41,80 +32,93 @@ function useCountUp(target: number, active: boolean, duration = 1200) {
   return value;
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
+function StatPill({ label, value }: { label: string; value: number }) {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-10%" });
+  const inView = useInView(ref, { once: true, margin: "-12%" });
   const count = useCountUp(value, inView);
 
   return (
     <div
-      className="rounded-2xl border border-[var(--line)] bg-(--panel) p-5 shadow-[var(--shadow)] sm:p-6"
       ref={ref}
+      className="min-w-0 rounded-2xl border border-(--line) bg-(--panel)/90 px-4 py-4 text-center shadow-(--shadow) backdrop-blur-sm sm:px-5 sm:py-5"
     >
-      <p className="text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl">
+      <p className="text-xl font-semibold tracking-tight tabular-nums sm:text-2xl md:text-3xl">
         {count.toLocaleString("en-IN")}
         {value >= 100 ? "+" : ""}
       </p>
-      <p className="mt-2 text-sm text-[var(--muted)]">{label}</p>
+      <p className="mt-1 text-[0.7rem] font-medium text-(--muted) sm:mt-1.5 sm:text-xs">{label}</p>
     </div>
   );
 }
 
-function MomentCard({
+function GalleryCard({
   item,
+  index,
   onOpen,
 }: {
   item: GalleryItem;
+  index: number;
   onOpen: (item: GalleryItem) => void;
 }) {
   const reduce = useReducedMotion();
 
   return (
-    <StaggerItem>
-      <motion.button
-        className={cn(
-          "group flex h-full min-h-[17.5rem] w-full flex-col rounded-2xl border border-[var(--line)] bg-(--panel) p-5 text-left shadow-[var(--shadow)]",
-          "transition hover:border-[var(--sage)]/25 hover:shadow-[var(--shadow-hover)]",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--foreground)]/20",
-        )}
-        onClick={() => onOpen(item)}
-        type="button"
-        whileHover={reduce ? undefined : { y: -3 }}
-        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <span className="rounded-full bg-[var(--sage-soft)] px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[var(--sage)]">
-            {item.category}
-          </span>
-          <span className="text-xs text-[var(--muted-soft)]">{item.date}</span>
-        </div>
+    <motion.button
+      type="button"
+      onClick={() => onOpen(item)}
+      initial={reduce ? false : { opacity: 0, y: 14 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-8%" }}
+      transition={{ duration: 0.4, delay: Math.min(index * 0.04, 0.28), ease: [0.22, 1, 0.36, 1] }}
+      whileHover={reduce ? undefined : { y: -4 }}
+      className={cn(
+        "group relative w-full overflow-hidden rounded-2xl border border-(--line) bg-(--panel) text-left shadow-(--shadow)",
+        "transition-[box-shadow,border-color] duration-300",
+        "hover:border-(--sage)/30 hover:shadow-(--shadow-hover)",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--sage)/40",
+      )}
+    >
+      <div className="relative aspect-[4/5] w-full overflow-hidden sm:aspect-[3/4]">
+        <Image
+          alt={item.title}
+          src={item.image}
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+        />
+        {/* Soft gradient template so every card feels premium */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/75 via-black/15 to-black/5"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-linear-to-b from-black/25 to-transparent"
+        />
 
-        <h3 className="mt-5 text-lg font-semibold tracking-tight text-[var(--foreground)]">
-          {item.title}
-        </h3>
-        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{item.note}</p>
+        <span className="absolute top-3 left-3 rounded-full border border-white/20 bg-white/15 px-2.5 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-white backdrop-blur-md sm:top-3.5 sm:left-3.5">
+          {item.category}
+        </span>
 
-        <div className="mt-auto border-t border-[var(--line)] pt-4">
-          <p className="text-sm font-medium text-[var(--foreground)]">{item.event}</p>
-          <p className="mt-1 text-xs text-[var(--muted)]">
-            {item.location} · {item.photographer}
+        <div className="absolute inset-x-0 bottom-0 p-3.5 sm:p-4">
+          <h3 className="text-sm font-semibold tracking-tight text-white sm:text-base">
+            {item.title}
+          </h3>
+          <p className="mt-1 truncate text-[0.7rem] text-white/75 sm:text-xs">
+            {item.event}
+            <span className="mx-1.5 text-white/40">·</span>
+            {item.location}
           </p>
         </div>
-      </motion.button>
-    </StaggerItem>
+      </div>
+    </motion.button>
   );
 }
 
-function DetailModal({
-  item,
-  onClose,
-}: {
-  item: GalleryItem;
-  onClose: () => void;
-}) {
+function Lightbox({ item, onClose }: { item: GalleryItem; onClose: () => void }) {
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
@@ -127,59 +131,59 @@ function DetailModal({
 
   return (
     <motion.div
+      role="dialog"
       aria-modal
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      aria-label={item.title}
+      className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      role="dialog"
     >
       <button
-        aria-label="Close"
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
         type="button"
+        aria-label="Close"
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
       />
       <motion.div
-        className="relative z-10 w-full max-w-lg rounded-3xl border border-[var(--line)] bg-(--panel) p-6 shadow-2xl sm:p-8"
-        initial={{ opacity: 0, y: 12 }}
+        className="relative z-10 flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl bg-(--panel) shadow-2xl sm:max-h-[88vh] sm:rounded-3xl"
+        initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 8 }}
+        exit={{ opacity: 0, y: 16 }}
+        transition={{ type: "spring", stiffness: 360, damping: 32 }}
       >
-        <div className="flex items-start justify-between gap-3">
-          <span className="rounded-full bg-[var(--sage-soft)] px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[var(--sage)]">
-            {item.category}
-          </span>
+        <div className="relative aspect-[16/11] w-full shrink-0 bg-black sm:aspect-[16/10]">
+          <Image
+            alt={item.title}
+            src={item.image}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 768px"
+            priority
+          />
           <button
-            aria-label="Close"
-            className="grid h-9 w-9 place-items-center rounded-full border border-[var(--line)] text-[var(--muted)] transition hover:bg-[var(--panel-soft)]"
-            onClick={onClose}
             type="button"
+            aria-label="Close"
+            onClick={onClose}
+            className="absolute top-3 right-3 grid h-10 w-10 place-items-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md transition hover:bg-black/55"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <h2 className="mt-4 text-2xl font-semibold tracking-tight">{item.title}</h2>
-        <p className="mt-3 text-sm leading-7 text-[var(--muted)]">{item.note}</p>
-        <dl className="mt-6 space-y-3 text-sm">
-          {[
-            ["Event", item.event],
-            ["Location", item.location],
-            ["Date", item.date],
-            ["Credited to", item.photographer],
-          ].map(([label, value]) => (
-            <div
-              className="flex items-center justify-between gap-4 border-b border-[var(--line)] pb-3"
-              key={label}
-            >
-              <dt className="text-[var(--muted)]">{label}</dt>
-              <dd className="text-right font-medium">{value}</dd>
-            </div>
-          ))}
-        </dl>
-        <Link className="btn btn-primary mt-6 w-full rounded-xl" href="/events">
-          Browse related events
-        </Link>
+        <div className="min-h-0 overflow-y-auto p-4 sm:p-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-(--sage-soft) px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-(--sage)">
+              {item.category}
+            </span>
+            <span className="text-xs text-(--muted-soft)">{item.date}</span>
+          </div>
+          <h2 className="mt-3 text-xl font-semibold tracking-tight sm:text-2xl">{item.title}</h2>
+          <p className="mt-1.5 text-sm text-(--muted)">
+            {item.event}
+            <span className="mx-1.5 text-(--muted-soft)">·</span>
+            {item.location}
+          </p>
+        </div>
       </motion.div>
     </motion.div>
   );
@@ -187,96 +191,58 @@ function DetailModal({
 
 export function GalleryClient() {
   const [category, setCategory] = useState<GalleryCategory>("All");
-  const [query, setQuery] = useState("");
   const [active, setActive] = useState<GalleryItem | null>(null);
-  const { isSignedIn } = useAuth();
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return galleryItems.filter((item) => {
-      const catOk = category === "All" || item.category === category;
-      if (!catOk) return false;
-      if (!q) return true;
-      return [item.title, item.event, item.location, item.photographer, item.category, item.note]
-        .join(" ")
-        .toLowerCase()
-        .includes(q);
-    });
-  }, [category, query]);
-
-  const featured = useMemo(() => galleryItems.filter((item) => item.featured), []);
+    if (category === "All") return galleryItems;
+    return galleryItems.filter((item) => item.category === category);
+  }, [category]);
 
   return (
-    <>
-      <MarketingSection className="pt-10 sm:pt-14" tone="white">
-        <MarketingContainer>
-          <Reveal>
-            <SectionEyebrow>Gallery</SectionEyebrow>
-            <SectionTitle>Moments from the series</SectionTitle>
-            <SectionLead>
-              Clean highlights from finishes, clubs, awards, and training — no clutter, just the
-              story of each effort.
-            </SectionLead>
-          </Reveal>
+    <div className="min-w-0">
+      {/* Compact hero + stats only */}
+      <section className="relative overflow-hidden border-b border-(--line)">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10"
+          style={{
+            background:
+              "radial-gradient(ellipse 80% 60% at 50% -20%, color-mix(in srgb, var(--sage) 14%, transparent), transparent 60%), var(--background)",
+          }}
+        />
+        <div className="container-page py-10 sm:py-12 md:py-14">
+          <div className="mx-auto max-w-xl text-center">
+            <p className="eyebrow">Gallery</p>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl md:text-[2.75rem] md:leading-[1.1]">
+              Moments
+            </h1>
+          </div>
 
-          <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mx-auto mt-8 grid max-w-4xl grid-cols-2 gap-2.5 sm:mt-10 sm:gap-3 md:grid-cols-4 md:gap-4">
             {galleryStats.map((stat) => (
-              <StatCard key={stat.label} label={stat.label} value={stat.value} />
+              <StatPill key={stat.label} label={stat.label} value={stat.value} />
             ))}
           </div>
-        </MarketingContainer>
-      </MarketingSection>
+        </div>
+      </section>
 
-      <MarketingSection className="pt-4 sm:pt-6" tone="soft">
-        <MarketingContainer>
-          <Reveal>
-            <SectionEyebrow>Featured</SectionEyebrow>
-            <SectionTitle className="text-2xl sm:text-3xl">Standout chapters</SectionTitle>
-          </Reveal>
-          <Stagger className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.map((item) => (
-              <MomentCard item={item} key={item.id} onOpen={setActive} />
-            ))}
-          </Stagger>
-        </MarketingContainer>
-      </MarketingSection>
-
-      <MarketingSection id="gallery-grid" tone="white">
-        <MarketingContainer wide>
-          <Reveal>
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <SectionEyebrow>Archive</SectionEyebrow>
-                <SectionTitle className="text-2xl sm:text-3xl">Browse all moments</SectionTitle>
-                <SectionLead>Filter by category or search events and places.</SectionLead>
-              </div>
-              <label className="relative w-full max-w-md">
-                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
-                <input
-                  className="input h-11 rounded-xl border-[var(--line)] bg-(--panel) pl-10"
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search…"
-                  type="search"
-                  value={query}
-                />
-              </label>
-            </div>
-          </Reveal>
-
-          <div className="mt-8 flex flex-wrap gap-2">
+      {/* Filters + image grid */}
+      <section className="section pt-8 sm:pt-10">
+        <div className="container-page">
+          <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible">
             {galleryCategories.map((cat) => {
-              const activePill = category === cat;
+              const on = category === cat;
               return (
                 <button
-                  className={cn(
-                    "rounded-full border px-3.5 py-1.5 text-sm font-medium transition",
-                    activePill
-                      ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--on-accent)]"
-                      : "border-[var(--line)] bg-(--panel) text-[var(--muted)] hover:text-[var(--foreground)]",
-                  )}
                   key={cat}
-                  onClick={() => setCategory(cat)}
                   type="button"
+                  onClick={() => setCategory(cat)}
+                  className={cn(
+                    "shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium transition touch-manipulation",
+                    on
+                      ? "border-(--accent) bg-(--accent) text-(--on-accent) shadow-xs"
+                      : "border-(--line) bg-(--panel) text-(--muted) hover:border-(--line-strong) hover:text-(--foreground)",
+                  )}
                 >
                   {cat}
                 </button>
@@ -284,72 +250,26 @@ export function GalleryClient() {
             })}
           </div>
 
-          <p className="mt-5 text-sm text-[var(--muted)]">
-            {filtered.length} result{filtered.length === 1 ? "" : "s"}
-          </p>
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
+            {filtered.map((item, index) => (
+              <GalleryCard
+                key={item.id}
+                item={item}
+                index={index}
+                onOpen={setActive}
+              />
+            ))}
+          </div>
 
           {filtered.length === 0 ? (
-            <div className="mt-8 rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel-soft)] px-6 py-14 text-center">
-              <p className="font-medium">No matches</p>
-              <button
-                className="btn btn-secondary mt-5"
-                onClick={() => {
-                  setCategory("All");
-                  setQuery("");
-                }}
-                type="button"
-              >
-                Reset filters
-              </button>
-            </div>
-          ) : (
-            <Stagger className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((item) => (
-                <MomentCard item={item} key={item.id} onOpen={setActive} />
-              ))}
-            </Stagger>
-          )}
-        </MarketingContainer>
-      </MarketingSection>
-
-      <MarketingSection tone="soft">
-        <MarketingContainer className="text-center">
-          <Reveal>
-            <SectionEyebrow>Next</SectionEyebrow>
-            <SectionTitle className="mx-auto text-2xl sm:text-3xl">
-              Add your own verified finish
-            </SectionTitle>
-            <SectionLead className="mx-auto">
-              Register, run, upload proof — your result joins the leaderboard.
-            </SectionLead>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              {isSignedIn ? (
-                <>
-                  <Link className="btn btn-primary rounded-xl px-6" href="/dashboard">
-                    My dashboard
-                  </Link>
-                  <Link className="btn btn-secondary rounded-xl px-6" href="/register">
-                    Join an event
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link className="btn btn-primary rounded-xl px-6" href="/register">
-                    Register now
-                  </Link>
-                  <Link className="btn btn-secondary rounded-xl px-6" href="/events">
-                    Browse events
-                  </Link>
-                </>
-              )}
-            </div>
-          </Reveal>
-        </MarketingContainer>
-      </MarketingSection>
+            <p className="mt-12 text-center text-sm text-(--muted)">No moments in this category.</p>
+          ) : null}
+        </div>
+      </section>
 
       <AnimatePresence>
-        {active ? <DetailModal item={active} onClose={() => setActive(null)} /> : null}
+        {active ? <Lightbox item={active} onClose={() => setActive(null)} /> : null}
       </AnimatePresence>
-    </>
+    </div>
   );
 }

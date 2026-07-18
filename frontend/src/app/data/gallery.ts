@@ -13,11 +13,19 @@ export type GalleryItem = {
   event: string;
   location: string;
   date: string;
-  photographer: string;
   category: Exclude<GalleryCategory, "All">;
-  note: string;
+  image: string;
   featured?: boolean;
 };
+
+/** Site photography used as the visual template for every gallery card. */
+export const galleryImagePool = [
+  "/images/sunrise-finish.png",
+  "/images/mountain-run-hero.png",
+  "/images/first-medal.png",
+  "/images/club-push.png",
+  "/images/weekend-long-run.png",
+] as const;
 
 export const galleryCategories: GalleryCategory[] = [
   "All",
@@ -36,9 +44,8 @@ export const galleryItems: GalleryItem[] = [
     event: "Monsoon Mountain Miles",
     location: "Lonavala",
     date: "Jul 2026",
-    photographer: "Aarav Mehta",
     category: "Trail Run",
-    note: "Verified 10 km finish under monsoon cloud cover.",
+    image: galleryImagePool[0],
     featured: true,
   },
   {
@@ -47,9 +54,8 @@ export const galleryItems: GalleryItem[] = [
     event: "Himalayan Winter Sprint",
     location: "Manali",
     date: "Dec 2026",
-    photographer: "Nisha Verma",
     category: "Training",
-    note: "Pre-race strides with the local club pack.",
+    image: galleryImagePool[1],
   },
   {
     id: "g3",
@@ -57,9 +63,8 @@ export const galleryItems: GalleryItem[] = [
     event: "Independence Endurance Run",
     location: "Pune",
     date: "Aug 2026",
-    photographer: "Rohan Kapoor",
     category: "Community",
-    note: "Eight runners holding the same pace target.",
+    image: galleryImagePool[3],
     featured: true,
   },
   {
@@ -68,9 +73,8 @@ export const galleryItems: GalleryItem[] = [
     event: "Spring Valley Dash",
     location: "Mumbai",
     date: "Mar 2026",
-    photographer: "Isha Jain",
     category: "Awards",
-    note: "First finisher medals landed after proof approval.",
+    image: galleryImagePool[2],
     featured: true,
   },
   {
@@ -79,19 +83,17 @@ export const galleryItems: GalleryItem[] = [
     event: "New Year Night Miles",
     location: "Nilgiris",
     date: "Jan 2026",
-    photographer: "Dev Malhotra",
     category: "Nature",
-    note: "Quiet 21 km effort above the valley fog.",
+    image: galleryImagePool[4],
   },
   {
     id: "g6",
-    title: "Half marathon split board",
+    title: "Half marathon split",
     event: "Independence Endurance Run",
     location: "Bengaluru",
     date: "Aug 2026",
-    photographer: "Meera Joshi",
     category: "Marathon",
-    note: "Even splits posted after verification.",
+    image: galleryImagePool[0],
   },
   {
     id: "g7",
@@ -99,9 +101,8 @@ export const galleryItems: GalleryItem[] = [
     event: "Holi Color Virtual Run",
     location: "Ahmedabad",
     date: "Mar 2026",
-    photographer: "Kabir Sethi",
     category: "Community",
-    note: "Families finishing together on the short course.",
+    image: galleryImagePool[3],
   },
   {
     id: "g8",
@@ -109,9 +110,8 @@ export const galleryItems: GalleryItem[] = [
     event: "Monsoon Mountain Miles",
     location: "Mahabaleshwar",
     date: "Jul 2026",
-    photographer: "Ananya Iyer",
     category: "Trail Run",
-    note: "Single-track section before the final climb.",
+    image: galleryImagePool[1],
   },
   {
     id: "g9",
@@ -119,9 +119,35 @@ export const galleryItems: GalleryItem[] = [
     event: "Spring Valley Dash",
     location: "Delhi NCR",
     date: "Mar 2026",
-    photographer: "Vikram Shah",
     category: "Awards",
-    note: "QR certificates shared after review closed.",
+    image: galleryImagePool[2],
+  },
+  {
+    id: "g10",
+    title: "Sunday long miles",
+    event: "Weekend Club Run",
+    location: "Hyderabad",
+    date: "Jun 2026",
+    category: "Training",
+    image: galleryImagePool[4],
+  },
+  {
+    id: "g11",
+    title: "Valley dawn strides",
+    event: "Himalayan Winter Sprint",
+    location: "Shimla",
+    date: "Dec 2026",
+    category: "Nature",
+    image: galleryImagePool[0],
+  },
+  {
+    id: "g12",
+    title: "Finish line cheer",
+    event: "Independence Endurance Run",
+    location: "Jaipur",
+    date: "Aug 2026",
+    category: "Marathon",
+    image: galleryImagePool[1],
   },
 ];
 
