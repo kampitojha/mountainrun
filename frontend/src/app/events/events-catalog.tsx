@@ -65,7 +65,10 @@ function EventCard({
             {isPast ? "View recap" : "View details"}
           </Link>
           {!isPast ? (
-            <Link className="btn btn-secondary" href="/register">
+            <Link
+              className="btn btn-secondary"
+              href={`/register?event=${encodeURIComponent(event.slug)}`}
+            >
               Register
             </Link>
           ) : (

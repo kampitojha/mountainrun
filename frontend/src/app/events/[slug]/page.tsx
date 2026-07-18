@@ -139,7 +139,10 @@ export default async function EventDetailPage({
                       : "Sign in, choose your distance, add delivery details, and pay with UPI. Run within the event window, then upload GPS proof from your dashboard."}
                   </p>
                   <div className="mt-6 space-y-2">
-                    <Link className="btn btn-primary btn-full" href="/register">
+                    <Link
+                      className="btn btn-primary btn-full"
+                      href={`/register?event=${encodeURIComponent(event.slug)}`}
+                    >
                       {isSignedIn ? "Register for this race" : "Register now"}
                     </Link>
                     <Link className="btn btn-secondary btn-full" href="/events">
