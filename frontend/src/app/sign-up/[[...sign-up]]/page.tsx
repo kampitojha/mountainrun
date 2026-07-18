@@ -14,7 +14,7 @@ export default function SignUpPage() {
               Create account
             </h1>
             <p className="mt-3 text-sm leading-6 text-(--muted)">
-              Sign up with Google, or email and password. Set your username and name during event registration.
+              Sign up with Google or email. You&apos;ll land on the homepage after.
             </p>
           </div>
 
@@ -29,7 +29,8 @@ export default function SignUpPage() {
             </ClerkLoading>
             <ClerkLoaded>
               <SignUp
-                fallbackRedirectUrl="/dashboard"
+                fallbackRedirectUrl="/"
+                forceRedirectUrl="/"
                 path="/sign-up"
                 routing="path"
                 signInUrl="/sign-in"

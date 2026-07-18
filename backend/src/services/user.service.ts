@@ -64,6 +64,18 @@ export async function upsertUserFromClerk(input: SyncUserInput) {
     name = email.split("@")[0] || "Runner";
   }
 
+  // Prefer stable auto username from email when Clerk has none (Google OAuth often has no username).
+  if (!username) {
+    const base = email
+      .split("@")[0]
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_|_$/g, "")
+      .slice(0, 18);
+    username = base.length >= 3 ? base : `runner_${clerkId.slice(-6)}`;
+  }
+
   const existing = await prisma.user.findFirst({
     where: {
       OR: [{ clerkId }, { email }],
@@ -71,17 +83,39 @@ export async function upsertUserFromClerk(input: SyncUserInput) {
   });
 
   if (existing) {
+    // Never steal another user's username; keep existing if conflict or empty update.
+    let nextUsername = existing.username ?? username;
+    if (username && username !== existing.username) {
+      const taken = await prisma.user.findFirst({
+        where: { username, NOT: { id: existing.id } },
+        select: { id: true },
+      });
+      if (!taken) {
+        nextUsername = username;
+      }
+    }
+
     return prisma.user.update({
       where: { id: existing.id },
       data: {
         clerkId: existing.clerkId ?? clerkId,
         email,
-        name,
-        username: username ?? existing.username,
+        name: name || existing.name,
+        username: nextUsername,
         phone: phone ?? existing.phone,
         avatarUrl: avatarUrl ?? existing.avatarUrl,
       },
     });
+  }
+
+  // Ensure unique username on create
+  let uniqueUsername = username;
+  const clash = await prisma.user.findFirst({
+    where: { username: uniqueUsername },
+    select: { id: true },
+  });
+  if (clash) {
+    uniqueUsername = `${username.slice(0, 12)}_${clerkId.slice(-4)}`;
   }
 
   return prisma.user.create({
@@ -89,7 +123,7 @@ export async function upsertUserFromClerk(input: SyncUserInput) {
       clerkId,
       email,
       name,
-      username,
+      username: uniqueUsername,
       phone,
       avatarUrl,
     },

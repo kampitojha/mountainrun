@@ -102,6 +102,7 @@ export async function createRegistration(request: AuthenticatedRequest, response
     throw new ApiError(404, "User not found");
   }
 
+  // Unique key is (userId + eventId + distance) — other events/distances are always allowed.
   const existingRegistration = await prisma.registration.findUnique({
     where: {
       userId_eventId_distance: {
@@ -110,44 +111,84 @@ export async function createRegistration(request: AuthenticatedRequest, response
         distance: payload.distance,
       },
     },
+    include: { event: true, user: true, payment: true },
   });
 
   if (existingRegistration) {
-    if (existingRegistration.status === "PENDING_PAYMENT") {
-      const registration = await prisma.registration.findUnique({
-        where: { id: existingRegistration.id },
-        include: { event: true, user: true, payment: true },
+    // Resume unpaid checkout for the exact same event + distance only.
+    if (
+      existingRegistration.status === "PENDING_PAYMENT" ||
+      existingRegistration.payment?.status === "CREATED"
+    ) {
+      response.status(200).json({
+        data: existingRegistration,
+        meta: {
+          freeEntry: false,
+          resumed: true,
+          message: `Resuming payment for ${event.title} (${payload.distance}).`,
+        },
       });
-      response.status(200).json({ data: registration });
       return;
     }
 
-    throw new ApiError(409, "You are already registered for this distance in this event.");
+    throw new ApiError(
+      409,
+      `You are already registered for ${payload.distance} in “${event.title}”. Pick another distance or a different event.`,
+    );
   }
 
   const freeEntry = !event.paymentRequired || event.priceInPaise <= 0;
 
-  const registration = await prisma.registration.create({
-    data: {
-      userId: user.id,
-      eventId: event.id,
-      distance: payload.distance,
-      status: freeEntry ? "CONFIRMED" : "PENDING_PAYMENT",
-      shippingName: payload.shippingName,
-      shippingPhone: payload.shippingPhone,
-      shippingLine1: payload.shippingLine1,
-      shippingLine2: payload.shippingLine2,
-      shippingCity: payload.shippingCity,
-      shippingState: payload.shippingState,
-      shippingPincode: payload.shippingPincode,
-      bibNumber: createBibNumber(event.slug),
-    },
-    include: {
-      event: true,
-      user: true,
-      payment: true,
-    },
-  });
+  let registration;
+  try {
+    registration = await prisma.registration.create({
+      data: {
+        userId: user.id,
+        eventId: event.id,
+        distance: payload.distance,
+        status: freeEntry ? "CONFIRMED" : "PENDING_PAYMENT",
+        shippingName: payload.shippingName,
+        shippingPhone: payload.shippingPhone,
+        shippingLine1: payload.shippingLine1,
+        shippingLine2: payload.shippingLine2,
+        shippingCity: payload.shippingCity,
+        shippingState: payload.shippingState,
+        shippingPincode: payload.shippingPincode,
+        bibNumber: createBibNumber(event.slug),
+      },
+      include: {
+        event: true,
+        user: true,
+        payment: true,
+      },
+    });
+  } catch (error) {
+    // Race / unique collision → re-read and resume if pending
+    const raced = await prisma.registration.findUnique({
+      where: {
+        userId_eventId_distance: {
+          userId: user.id,
+          eventId: event.id,
+          distance: payload.distance,
+        },
+      },
+      include: { event: true, user: true, payment: true },
+    });
+    if (raced && (raced.status === "PENDING_PAYMENT" || raced.payment?.status === "CREATED")) {
+      response.status(200).json({
+        data: raced,
+        meta: { freeEntry: false, resumed: true },
+      });
+      return;
+    }
+    if (raced) {
+      throw new ApiError(
+        409,
+        `You are already registered for ${payload.distance} in “${event.title}”.`,
+      );
+    }
+    throw error;
+  }
 
   response.status(201).json({ data: registration, meta: { freeEntry } });
 }

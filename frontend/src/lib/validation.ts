@@ -27,10 +27,13 @@ export function validateRegistrationForm(formData: FormData): FieldErrors {
     errors.name = "Full name must be at least 2 characters.";
   }
 
-  if (username.length < 3) {
-    errors.username = "Username must be at least 3 characters.";
-  } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-    errors.username = "Username can only contain alphanumeric characters and underscores.";
+  // Username is profile-derived (read-only on form). Accept empty → backend fills from email.
+  if (username && username.length > 0) {
+    if (username.length < 3) {
+      errors.username = "Username must be at least 3 characters.";
+    } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      errors.username = "Username can only contain alphanumeric characters and underscores.";
+    }
   }
 
   if (!emailPattern.test(email)) {
