@@ -39,7 +39,7 @@ export default function SignUpPage() {
                     rootBox: "mx-auto w-full",
                     cardBox: "w-full shadow-none",
                     card: "w-full shadow-none border border-(--line) rounded-2xl",
-                    footer: "bg-transparent",
+                    footer: "hidden",
                   },
                 }}
               />
