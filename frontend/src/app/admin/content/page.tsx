@@ -321,7 +321,7 @@ export default function AdminContentPage() {
                       <td>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          alt={`Gallery image: ${row.caption || 'Running event photo'}`}
+                          alt={`Gallery image: ${row.title || "Running event photo"}`}
                           src={row.imageUrl}
                           className="h-12 w-16 rounded-md object-cover"
                         />
