@@ -491,7 +491,20 @@ html[data-theme="dark"] .badge-danger {
 /* Hide Clerk branding footer */
 .cl-footer,
 .cl-footerAction,
-.cl-footerActionText {
+.cl-footerActionText,
+.cl-userButtonPopoverFooter,
+.cl-userButtonPopoverFooterAction,
+.cl-userButtonPopoverFooterText,
+.cl-internal-b3gq5w,
+.cl-internal-s1m8kx {
+  display: none !important;
+}
+
+/* Hide any Clerk links and branding */
+[class*="cl-"] a[href*="clerk.com"],
+[class*="cl-"] a[href*="clerk.dev"],
+[class*="cl-"][class*="footer"],
+[class*="cl-"][class*="branding"] {
   display: none !important;
 }
 
