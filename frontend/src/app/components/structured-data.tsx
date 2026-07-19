@@ -5,7 +5,7 @@ const organizationSchema = {
   '@type': 'Organization',
   name: 'Mountain Run',
   url: SITE_URL,
-  logo: `${SITE_URL}/logo.png`,
+  logo: `${SITE_URL}/logo-mark.svg`,
   description: 'India\'s premier virtual running events platform with GPS verification, UPI registration, medals, and certificates.',
   sameAs: [
     'https://twitter.com/mountainrun',
