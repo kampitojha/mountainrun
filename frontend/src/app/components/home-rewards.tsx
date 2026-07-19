@@ -40,10 +40,10 @@ export function HomeRewards() {
       <div aria-hidden="true" className="absolute bottom-1/4 left-10 h-72 w-72 rounded-full bg-rose-500/3 blur-3xl pointer-events-none" />
 
       <div className="container-page relative z-10">
-        <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <Reveal className="space-y-4">
             <p className="eyebrow text-(--sage) font-bold tracking-widest">What you receive</p>
-            <h2 className="heading text-3xl font-extrabold tracking-tight sm:text-4xl">
+            <h2 className="heading font-extrabold tracking-tight">
               Rewards that make the finish feel real
             </h2>
             <p className="lede text-base leading-relaxed text-(--muted)">
@@ -52,12 +52,12 @@ export function HomeRewards() {
             </p>
           </Reveal>
 
-          <Stagger className="grid gap-5 sm:grid-cols-2">
+          <Stagger className="grid gap-4 grid-cols-2 sm:gap-5">
             {rewards.map((item) => {
               const Icon = item.icon;
               return (
                 <StaggerItem key={item.title}>
-                  <article className="feature-card card-premium-glow group h-full p-6 bg-(--panel-glass) backdrop-blur-md border border-(--line) rounded-(--radius) shadow-xs transition-all duration-300 hover:bg-(--panel) hover:border-(--line-strong) hover:shadow-md hover:-translate-y-1">
+                  <article className="feature-card card-premium-glow group h-full p-4 sm:p-6 bg-(--panel-glass) backdrop-blur-md border border-(--line) rounded-(--radius) shadow-xs transition-all duration-300 hover:bg-(--panel) hover:border-(--line-strong) hover:shadow-md hover:-translate-y-1">
                     <div className="feature-icon glow-icon-bg shadow-xs transition-all duration-300 group-hover:scale-110 group-hover:bg-(--sage-soft)">
                       <Icon 
                         aria-hidden="true" 
@@ -65,10 +65,10 @@ export function HomeRewards() {
                         strokeWidth={1.75} 
                       />
                     </div>
-                    <h3 className="mt-5 text-lg font-bold tracking-tight text-foreground transition-colors duration-300 group-hover:text-(--sage)">
+                    <h3 className="mt-4 text-sm font-bold tracking-tight text-foreground transition-colors duration-300 group-hover:text-(--sage) sm:mt-5 sm:text-lg">
                       {item.title}
                     </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-(--muted)">{item.text}</p>
+                    <p className="mt-1.5 text-xs leading-relaxed text-(--muted) sm:mt-2 sm:text-sm">{item.text}</p>
                   </article>
                 </StaggerItem>
               );

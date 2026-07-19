@@ -213,10 +213,10 @@ export function AppFooter() {
               <li>
                 <a
                   href="mailto:mountainrunofficial@gmail.com"
-                  className="group inline-flex items-center gap-2 text-(--muted) transition-all duration-200 hover:text-foreground"
+                  className="group inline-flex items-start gap-2 text-(--muted) transition-all duration-200 hover:text-foreground"
                 >
-                  <Mail className="h-3.5 w-3.5 shrink-0 text-(--muted-soft) group-hover:text-(--sage) transition-colors" />
-                  <span className="transition-transform duration-200 group-hover:translate-x-0.5">
+                  <Mail className="h-3.5 w-3.5 shrink-0 text-(--muted-soft) group-hover:text-(--sage) transition-colors mt-0.5" />
+                  <span className="footer-email transition-transform duration-200 group-hover:translate-x-0.5 break-all">
                     mountainrunofficial@gmail.com
                   </span>
                 </a>
@@ -243,19 +243,19 @@ export function AppFooter() {
         </div>
 
         {/* ── Bottom bar ── */}
-        <div className="mt-12 flex flex-col gap-4 border-t border-(--line) pt-6 sm:mt-14 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-10 flex flex-col gap-3 border-t border-(--line) pt-5 sm:mt-14 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-(--muted-soft)">
             © {new Date().getFullYear()} Mountain Run. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
-            <span className="text-xs text-(--muted-soft) hidden sm:block">
+            <span className="text-xs text-(--muted-soft)">
               Made with ♥ for Indian runners
             </span>
             <button
               onClick={scrollToTop}
               type="button"
               aria-label="Scroll to top"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-(--line) bg-(--panel) text-(--muted) transition-all duration-300 hover:text-foreground hover:border-(--line-strong) hover:-translate-y-1 active:scale-95 cursor-pointer shadow-xs"
+              className="ml-auto flex h-9 w-9 items-center justify-center rounded-full border border-(--line) bg-(--panel) text-(--muted) transition-all duration-300 hover:text-foreground hover:border-(--line-strong) hover:-translate-y-1 active:scale-95 cursor-pointer shadow-xs sm:ml-0"
             >
               <ArrowUp className="h-4 w-4" />
             </button>

@@ -726,7 +726,7 @@ function PaymentRegistrationFormInner() {
       </div>
 
       <button
-        className="btn btn-primary btn-full mt-5 min-h-12 touch-manipulation disabled:cursor-not-allowed disabled:opacity-50 sm:mt-6"
+        className="btn btn-primary btn-full mt-4 min-h-[3rem] touch-manipulation text-base disabled:cursor-not-allowed disabled:opacity-50 sm:mt-6"
         disabled={
           status === "creating" ||
           status === "paying" ||

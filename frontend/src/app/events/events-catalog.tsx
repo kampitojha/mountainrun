@@ -131,7 +131,7 @@ export function EventsCatalog() {
             {source === "api" ? " · live from API" : ""}
           </p>
         </div>
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 md:grid-cols-3">
           {upcoming.map((event) => (
             <EventCard event={event} key={event.slug} variant="upcoming" />
           ))}
@@ -153,7 +153,7 @@ export function EventsCatalog() {
           </p>
         </div>
 
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 md:grid-cols-3">
           {past.map((event) => (
             <EventCard event={event} key={event.slug} variant="past" />
           ))}

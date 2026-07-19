@@ -119,15 +119,14 @@ function YourRankCard({
 }) {
   return (
     <div className="mt-6 rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] px-4 py-3 sm:mt-8">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="rounded-md bg-[var(--accent)] px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider text-[var(--on-accent)]">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2">
+        <span className="rounded-md bg-[var(--accent)] px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider text-[var(--on-accent)] w-fit">
           You
         </span>
         <p className="text-sm font-semibold tracking-tight">
           Rank #{entry.rank}
           <span className="font-medium text-[var(--muted)]"> / {total}</span>
         </p>
-        <span className="hidden h-3 w-px bg-[var(--line)] sm:block" aria-hidden />
         <p className="text-sm text-[var(--muted)]">
           <span className="font-medium text-[var(--foreground)]">{entry.distance}</span>
           {" · "}
@@ -138,7 +137,7 @@ function YourRankCard({
           Bib {entry.bibNumber}
         </p>
         <a
-          className="ml-auto text-xs font-medium text-[var(--muted)] underline-offset-2 hover:text-[var(--foreground)] hover:underline"
+          className="text-xs font-medium text-[var(--muted)] underline-offset-2 hover:text-[var(--foreground)] hover:underline sm:ml-auto"
           href="#your-rank"
         >
           Jump to row
@@ -377,8 +376,8 @@ export function LeaderboardClient() {
             </div>
           ) : null}
 
-          <div className="table-wrap table-scroll mt-8 sm:mt-12">
-            <table className="table-clean min-w-[640px] sm:min-w-[720px]">
+          <div className="table-wrap mt-8 sm:mt-12" style={{overflowX: "auto", WebkitOverflowScrolling: "touch"}}>
+            <table className="table-clean" style={{minWidth: "36rem"}}>
               <thead>
                 <tr>
                   {["Rank", "Runner", "Distance", "Time", "Bib", "Status"].map((head) => (

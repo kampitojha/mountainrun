@@ -141,17 +141,17 @@ export default async function EventDetailPage({
               <h1 className="display mt-4 max-w-3xl">{event.name}</h1>
               <p className="lede mt-6 max-w-2xl">{event.description}</p>
 
-              <div className="mt-10 grid gap-3 sm:grid-cols-3">
+              <div className="mt-8 grid grid-cols-3 gap-3">
                 {[
                   ["Date", event.date],
                   ["Distance", event.distance],
                   ["Entry", event.price],
                 ].map(([label, value]) => (
-                  <div className="card p-5" key={label}>
-                    <p className="text-xs font-medium uppercase tracking-widest text-(--muted)">
+                  <div className="card p-4 sm:p-5" key={label}>
+                    <p className="text-[0.65rem] font-medium uppercase tracking-widest text-(--muted) sm:text-xs">
                       {label}
                     </p>
-                    <p className="mt-2 text-sm font-semibold tracking-tight">{value}</p>
+                    <p className="mt-1.5 text-sm font-semibold tracking-tight leading-snug">{value}</p>
                   </div>
                 ))}
               </div>
@@ -163,17 +163,17 @@ export default async function EventDetailPage({
                     {event.resultNote ??
                       "This race has finished. Here is a quick look at participation and rewards."}
                   </p>
-                  <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                <div className="mt-6 grid grid-cols-3 gap-3">
                     {[
                       ["Finishers", event.finishers],
                       ["Verified results", event.verifiedResults],
                       ["Cities", event.cities],
                     ].map(([label, value]) => (
-                      <div className="card p-5" key={String(label)}>
-                        <p className="text-xs font-medium uppercase tracking-widest text-(--muted)">
+                      <div className="card p-4 sm:p-5" key={String(label)}>
+                        <p className="text-[0.65rem] font-medium uppercase tracking-widest text-(--muted) sm:text-xs">
                           {label}
                         </p>
-                        <p className="mt-2 text-2xl font-semibold tracking-tight">
+                        <p className="mt-1.5 text-xl font-semibold tracking-tight sm:text-2xl">
                           {typeof value === "number" ? value.toLocaleString("en-IN") : "—"}
                         </p>
                       </div>
@@ -185,7 +185,7 @@ export default async function EventDetailPage({
 
               <div className="mt-14">
                 <h2 className="heading">{isPast ? "What finishers received" : "What you get"}</h2>
-                <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+                <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {eventBenefits.map((benefit) => (
                     <li
                       className="flex items-start gap-3 rounded-xl border border-(--line) bg-(--panel) px-4 py-3.5 text-sm"
@@ -201,7 +201,7 @@ export default async function EventDetailPage({
               </div>
             </div>
 
-            <aside className="card h-fit p-6 lg:sticky lg:top-24">
+            <aside className="card h-fit p-5 sm:p-6 lg:sticky lg:top-24">
               {isPast ? (
                 <>
                   <p className="eyebrow">Closed</p>

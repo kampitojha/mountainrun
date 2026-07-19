@@ -974,3 +974,150 @@ html[data-theme="dark"] .event-card-banner {
 .feature-card:hover .glow-icon-bg::after {
   opacity: 1;
 }
+
+/* ═══════════════════════════════════════════════
+   MOBILE RESPONSIVENESS FIXES
+   ═══════════════════════════════════════════════ */
+
+/* Gallery card media — use aspect-ratio instead of fixed height so images
+   scale naturally on all screen sizes */
+.gallery-card-media {
+  height: auto;
+  aspect-ratio: 4 / 3;
+}
+
+@media (max-width: 479px) {
+  /* Tighter container padding on very small phones */
+  .container-page {
+    padding-inline: 0.875rem;
+  }
+
+  /* Section vertical spacing — less cramped on mobile */
+  .section {
+    padding-block: 2.5rem;
+  }
+
+  /* Display heading — prevent overflow on narrow screens */
+  .display {
+    font-size: clamp(1.65rem, 9vw, 4rem);
+    letter-spacing: -0.035em;
+  }
+
+  /* Heading */
+  .heading {
+    font-size: clamp(1.2rem, 6vw, 2.25rem);
+  }
+
+  /* Feature icon — keep square on tiny screens */
+  .feature-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    flex-shrink: 0;
+  }
+
+  /* Step card number — slightly smaller on narrow phones */
+  .step-card-number {
+    font-size: 1.5rem;
+  }
+
+  /* Gallery preview cards on home — ensure 2-col stays readable */
+  .gallery-card-media {
+    aspect-ratio: 1 / 1;
+  }
+
+  /* Trust pills — allow wrapping tightly */
+  .trust-pill {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.7rem;
+  }
+
+  /* Card padding tighter */
+  .card {
+    border-radius: var(--radius-sm);
+  }
+
+  /* Table cells — tighter padding on mobile */
+  .table-clean th {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.65rem;
+  }
+
+  .table-clean td {
+    padding: 0.75rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  /* Event card banner */
+  .event-card-banner {
+    padding: 0.875rem 1rem;
+  }
+}
+
+/* Leaderboard table — always scrollable with clear indicator on mobile */
+@media (max-width: 767px) {
+  .table-wrap {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    border-radius: var(--radius-sm);
+  }
+
+  /* table-wrap scroll hint shadow on right edge */
+  .table-wrap::after {
+    content: "";
+    position: sticky;
+    right: 0;
+    top: 0;
+    display: block;
+    width: 24px;
+    background: linear-gradient(to right, transparent, var(--panel));
+    pointer-events: none;
+  }
+}
+
+/* Card premium glow — disable translate on mobile (causes layout jitter) */
+@media (max-width: 639px) {
+  .card-premium-glow:hover {
+    transform: none;
+  }
+
+  /* Feature card hover lift — reduce on mobile */
+  .feature-card:hover {
+    transform: translateY(-1px);
+  }
+
+  .gallery-card:hover {
+    transform: none;
+  }
+
+  /* Section header split — stack vertically, button full width */
+  .section-header-action {
+    width: 100%;
+  }
+
+  /* btn-row — ensure buttons fill width on extra small */
+  .btn-row {
+    flex-direction: column;
+  }
+
+  .btn-row > * {
+    width: 100%;
+  }
+}
+
+/* Footer email — prevent long emails overflowing */
+.footer-email {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+/* Admin quick-links row — wrap on mobile */
+@media (max-width: 639px) {
+  .admin-links-row {
+    flex-wrap: wrap;
+  }
+
+  .admin-links-row > * {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 0;
+  }
+}

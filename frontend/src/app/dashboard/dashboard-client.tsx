@@ -412,19 +412,19 @@ export function DashboardClient() {
             dispatch — separate from your runner dashboard.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Link className="btn btn-secondary h-9 px-3 text-xs" href="/admin">
+            <Link className="btn btn-secondary h-9 px-3 text-xs flex-1 sm:flex-none" href="/admin">
               Overview
             </Link>
-            <Link className="btn btn-secondary h-9 px-3 text-xs" href="/admin/proofs">
+            <Link className="btn btn-secondary h-9 px-3 text-xs flex-1 sm:flex-none" href="/admin/proofs">
               Proof queue
             </Link>
-            <Link className="btn btn-secondary h-9 px-3 text-xs" href="/admin/content">
-              Homepage & gallery
+            <Link className="btn btn-secondary h-9 px-3 text-xs flex-1 sm:flex-none" href="/admin/content">
+              Homepage &amp; gallery
             </Link>
-            <Link className="btn btn-secondary h-9 px-3 text-xs" href="/admin/medals">
+            <Link className="btn btn-secondary h-9 px-3 text-xs flex-1 sm:flex-none" href="/admin/medals">
               Medals
             </Link>
-            <Link className="btn btn-secondary h-9 px-3 text-xs" href="/admin/certificates">
+            <Link className="btn btn-secondary h-9 px-3 text-xs flex-1 sm:flex-none" href="/admin/certificates">
               Certificates
             </Link>
           </div>
@@ -475,7 +475,7 @@ export function DashboardClient() {
               Submit proof now
             </button>
           </div>
-          <ol className="mt-4 grid gap-2 text-xs text-[var(--muted)] sm:grid-cols-3">
+          <ol className="mt-4 grid gap-2 text-xs text-[var(--muted)] grid-cols-1 sm:grid-cols-3">
             <li className="rounded-lg bg-[var(--panel)]/80 px-3 py-2">1. Finish your run with GPS on</li>
             <li className="rounded-lg bg-[var(--panel)]/80 px-3 py-2">2. Screenshot activity summary</li>
             <li className="rounded-lg bg-[var(--panel)]/80 px-3 py-2">3. Upload here · wait for approval</li>
@@ -644,10 +644,10 @@ export function DashboardClient() {
               const uploadOk = canUploadProof(reg);
 
               return (
-                <article className="card p-5" id={`reg-${reg.id}`} key={reg.id}>
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="text-base font-semibold tracking-tight">{reg.event.title}</p>
+                <article className="card p-4 sm:p-5" id={`reg-${reg.id}`} key={reg.id}>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-base font-semibold tracking-tight truncate">{reg.event.title}</p>
                       <p className="mt-1 text-sm text-[var(--muted)]">
                         {reg.distance} · Bib {reg.bibNumber}
                       </p>
@@ -655,7 +655,7 @@ export function DashboardClient() {
                         Registered {new Date(reg.registeredAt).toLocaleDateString("en-IN")}
                       </p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       <span className={statusBadge(reg.status)}>{labelStatus(reg.status)}</span>
                       <span className={statusBadge(reg.proofStatus)}>
                         proof: {labelStatus(reg.proofStatus)}
