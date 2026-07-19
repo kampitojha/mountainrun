@@ -28,40 +28,38 @@ const rewards: { title: string; text: string; icon: LucideIcon }[] = [
 
 export function HomeRewards() {
   return (
-    <section
-      className="section relative overflow-hidden border-b border-(--line)"
-      style={{
-        background:
-          "radial-gradient(at 100% 0%, rgba(13, 148, 136, 0.04) 0px, transparent 65%), radial-gradient(at 0% 100%, rgba(239, 68, 68, 0.02) 0px, transparent 65%), var(--background)",
-      }}
-    >
-      <div className="container-page relative z-10">
+    <section className="section border-b border-(--line)">
+      <div className="container-page">
         {/* Header */}
-        <div className="max-w-xl">
-          <p className="eyebrow">What you receive</p>
-          <h2 className="heading mt-3">Rewards that make the finish feel real</h2>
-          <p className="lede mt-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-(--sage)">
+            What you receive
+          </p>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-(--foreground) sm:text-3xl md:text-4xl">
+            Rewards that make the finish feel real
+          </h2>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-(--muted) sm:text-base">
             Every verified runner gets a digital finish record, with physical rewards
             available based on the selected event kit.
           </p>
         </div>
 
-        {/* Reward cards — 2-col on all mobile, 4-col on lg */}
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-4 lg:grid-cols-4">
+        {/* Cards — 2 col mobile, 4 col desktop */}
+        <div className="mt-8 grid grid-cols-2 gap-4 sm:mt-10 sm:gap-5 lg:grid-cols-4">
           {rewards.map((item) => {
             const Icon = item.icon;
             return (
               <article
                 key={item.title}
-                className="flex flex-col rounded-(--radius) border border-(--line) bg-(--panel) p-4 shadow-xs sm:p-5"
+                className="flex flex-col rounded-2xl border border-(--line) bg-(--panel) p-4 sm:p-5"
               >
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--sage)">
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--sage)">
                   <Icon aria-hidden="true" className="h-5 w-5" strokeWidth={1.75} />
                 </span>
                 <h3 className="mt-4 text-sm font-bold tracking-tight text-(--foreground) sm:text-base">
                   {item.title}
                 </h3>
-                <p className="mt-1.5 text-xs leading-relaxed text-(--muted) sm:text-sm">
+                <p className="mt-2 text-xs leading-relaxed text-(--muted) sm:text-sm">
                   {item.text}
                 </p>
               </article>
