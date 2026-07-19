@@ -76,7 +76,7 @@ export function StaggerItem({
 
   return (
     <motion.div
-      className={className}
+      className={cn("flex flex-col", className)}
       variants={
         reduce
           ? undefined

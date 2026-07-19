@@ -2,7 +2,6 @@
 
 import { FileBadge, Medal, Shirt, Trophy } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Reveal, Stagger, StaggerItem } from "./marketing/motion";
 
 const rewards: { title: string; text: string; icon: LucideIcon }[] = [
   {
@@ -22,58 +21,52 @@ const rewards: { title: string; text: string; icon: LucideIcon }[] = [
   },
   {
     title: "Verified Timing",
-    text: "Official duration, split pacing, and stats verified on the leaderboard.",
+    text: "Official duration, split pacing, and stats on the leaderboard.",
     icon: Trophy,
   },
 ];
 
 export function HomeRewards() {
   return (
-    <section 
+    <section
       className="section relative overflow-hidden border-b border-(--line)"
       style={{
-        background: "radial-gradient(at 100% 0%, rgba(13, 148, 136, 0.04) 0px, transparent 65%), radial-gradient(at 0% 100%, rgba(239, 68, 68, 0.02) 0px, transparent 65%), var(--background)",
+        background:
+          "radial-gradient(at 100% 0%, rgba(13, 148, 136, 0.04) 0px, transparent 65%), radial-gradient(at 0% 100%, rgba(239, 68, 68, 0.02) 0px, transparent 65%), var(--background)",
       }}
     >
-      {/* Decorative ambient orbs */}
-      <div aria-hidden="true" className="absolute top-1/4 right-10 h-72 w-72 rounded-full bg-teal-500/5 blur-3xl pointer-events-none" />
-      <div aria-hidden="true" className="absolute bottom-1/4 left-10 h-72 w-72 rounded-full bg-rose-500/3 blur-3xl pointer-events-none" />
-
       <div className="container-page relative z-10">
-        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <Reveal className="space-y-4">
-            <p className="eyebrow text-(--sage) font-bold tracking-widest">What you receive</p>
-            <h2 className="heading font-extrabold tracking-tight">
-              Rewards that make the finish feel real
-            </h2>
-            <p className="lede text-base leading-relaxed text-(--muted)">
-              Every verified runner gets a digital finish record, with physical rewards
-              available based on the selected event kit.
-            </p>
-          </Reveal>
+        {/* Header */}
+        <div className="max-w-xl">
+          <p className="eyebrow">What you receive</p>
+          <h2 className="heading mt-3">Rewards that make the finish feel real</h2>
+          <p className="lede mt-3">
+            Every verified runner gets a digital finish record, with physical rewards
+            available based on the selected event kit.
+          </p>
+        </div>
 
-          <Stagger className="grid gap-4 grid-cols-2 sm:gap-5">
-            {rewards.map((item) => {
-              const Icon = item.icon;
-              return (
-                <StaggerItem key={item.title}>
-                  <article className="feature-card card-premium-glow group h-full p-4 sm:p-6 bg-(--panel-glass) backdrop-blur-md border border-(--line) rounded-(--radius) shadow-xs transition-all duration-300 hover:bg-(--panel) hover:border-(--line-strong) hover:shadow-md hover:-translate-y-1">
-                    <div className="feature-icon glow-icon-bg shadow-xs transition-all duration-300 group-hover:scale-110 group-hover:bg-(--sage-soft)">
-                      <Icon 
-                        aria-hidden="true" 
-                        className="h-5 w-5 transition-transform duration-300 group-hover:rotate-12" 
-                        strokeWidth={1.75} 
-                      />
-                    </div>
-                    <h3 className="mt-4 text-sm font-bold tracking-tight text-foreground transition-colors duration-300 group-hover:text-(--sage) sm:mt-5 sm:text-lg">
-                      {item.title}
-                    </h3>
-                    <p className="mt-1.5 text-xs leading-relaxed text-(--muted) sm:mt-2 sm:text-sm">{item.text}</p>
-                  </article>
-                </StaggerItem>
-              );
-            })}
-          </Stagger>
+        {/* Reward cards — 2-col on all mobile, 4-col on lg */}
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-4 lg:grid-cols-4">
+          {rewards.map((item) => {
+            const Icon = item.icon;
+            return (
+              <article
+                key={item.title}
+                className="flex flex-col rounded-(--radius) border border-(--line) bg-(--panel) p-4 shadow-xs sm:p-5"
+              >
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--sage)">
+                  <Icon aria-hidden="true" className="h-5 w-5" strokeWidth={1.75} />
+                </span>
+                <h3 className="mt-4 text-sm font-bold tracking-tight text-(--foreground) sm:text-base">
+                  {item.title}
+                </h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-(--muted) sm:text-sm">
+                  {item.text}
+                </p>
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>

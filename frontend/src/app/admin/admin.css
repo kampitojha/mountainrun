@@ -582,7 +582,11 @@
 }
 
 .admin-panel-pad {
-  padding: 1.1rem 1.2rem;
+  padding: 0.9rem 1rem;
+}
+
+@media (min-width: 480px) {
+  .admin-panel-pad { padding: 1.1rem 1.2rem; }
 }
 
 @media (min-width: 640px) {
@@ -606,22 +610,24 @@
 /* ── Stat grid ───────────────────────────────────────────── */
 .admin-stat-grid {
   display: grid;
-  gap: 0.6rem;
+  gap: 0.5rem;
   width: 100%;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 @media (min-width: 480px) {
-  .admin-stat-grid { gap: 0.75rem; }
+  .admin-stat-grid { gap: 0.65rem; }
 }
 
-@media (min-width: 720px) {
-  .admin-stat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (min-width: 640px) {
+  .admin-stat-grid {
+    gap: 0.75rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .admin-stat {
-  padding: 0.85rem 0.9rem;
-  min-height: 4.75rem;
+  padding: 0.75rem 0.8rem;
   background: var(--admin-surface);
   border: 1px solid var(--admin-line);
   border-radius: var(--admin-radius);
@@ -629,16 +635,19 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  gap: 0.25rem;
   transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
   position: relative;
   overflow: hidden;
+  min-height: 0;
 }
 
 @media (min-width: 480px) {
-  .admin-stat {
-    padding: 1.1rem 1.15rem;
-    min-height: 5.5rem;
-  }
+  .admin-stat { padding: 0.9rem 1rem; }
+}
+
+@media (min-width: 720px) {
+  .admin-stat { padding: 1.1rem 1.15rem; }
 }
 
 .admin-stat::before {
@@ -656,59 +665,55 @@
 }
 
 .admin-stat .label {
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--admin-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (min-width: 480px) {
+  .admin-stat .label { font-size: 0.62rem; }
+}
+
+@media (min-width: 720px) {
   .admin-stat .label { font-size: 0.65rem; }
 }
 
 .admin-stat .value {
-  margin-top: 0.4rem;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 650;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
   font-variant-numeric: tabular-nums;
   color: var(--admin-ink);
-  /* prevent long ₹ values overflowing */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 @media (min-width: 480px) {
-  .admin-stat .value {
-    margin-top: 0.5rem;
-    font-size: 1.45rem;
-    letter-spacing: -0.04em;
-  }
+  .admin-stat .value { font-size: 1.25rem; letter-spacing: -0.03em; }
+}
+
+@media (min-width: 720px) {
+  .admin-stat .value { font-size: 1.45rem; letter-spacing: -0.04em; }
 }
 
 .admin-stat .hint {
-  margin-top: 0.25rem;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   color: var(--admin-muted-2);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-@media (min-width: 480px) {
-  .admin-stat .hint {
-    margin-top: 0.3rem;
-    font-size: 0.72rem;
-  }
-}
-
 .admin-stat .trend {
   font-size: 0.72rem;
   font-weight: 600;
-  margin-top: 0.25rem;
 }
 
 .admin-stat .trend.up   { color: var(--admin-green); }
@@ -952,9 +957,12 @@
 
 .admin-split {
   display: grid;
-  gap: 1rem;
+  gap: 0.75rem;
   width: 100%;
-  flex: 1;
+}
+
+@media (min-width: 480px) {
+  .admin-split { gap: 1rem; }
 }
 
 @media (min-width: 960px) {
