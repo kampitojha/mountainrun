@@ -4,7 +4,7 @@ import { PaymentRegistrationForm } from "./payment-registration-form";
 export default function RegisterPage() {
   return (
     <PageShell>
-      <section className="section">
+      <section className="page-section">
         <div className="container-page w-full max-w-3xl px-4 sm:px-0">
           <PageHeader
             eyebrow="Registration"

@@ -3,7 +3,7 @@
 import { useAuth, useUser } from "@clerk/nextjs";
 import { Lock } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 import { Field, inputClass } from "../components/app-shell";
 import { PhoneInput } from "../components/phone-input";
@@ -133,6 +133,7 @@ function deriveUsername(input: {
 function PaymentRegistrationFormInner() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const eventFromQuery = searchParams.get("event")?.trim() ?? "";
   const distanceFromQuery = searchParams.get("distance")?.trim() ?? "";
@@ -469,38 +470,48 @@ function PaymentRegistrationFormInner() {
         },
         theme: { color: "#0d9488" },
         handler: async (response: CheckoutResponse) => {
-          const verifyResponse = await fetch(getApiUrl("/api/payments/verify"), {
-            method: "POST",
-            headers,
-            body: JSON.stringify(response),
-          });
-
-          if (!verifyResponse.ok) {
-            throw new Error(
-              await readApiError(verifyResponse, "Payment captured but verification failed"),
-            );
-          }
-
-          const verifyJson = await verifyResponse.json().catch(() => null);
-          const emailSent = verifyJson?.data?.emailSent === true;
-
-          setStatus("paid");
-          setMessage(
-            emailSent
-              ? "Payment verified. Confirmation email sent."
-              : "Payment verified. Registration confirmed.",
-          );
+          setStatus("paying");
+          setMessage("Payment captured. Verifying registration...");
 
           try {
-            const me = await fetch(getApiUrl("/api/users/me"), {
-              headers: authHeaders(token),
+            const verifyResponse = await fetch(getApiUrl("/api/payments/verify"), {
+              method: "POST",
+              headers,
+              body: JSON.stringify(response),
             });
-            if (me.ok) {
-              const meJson = await me.json();
-              setExistingRegs(meJson.data?.registrations ?? []);
+
+            if (!verifyResponse.ok) {
+              throw new Error(
+                await readApiError(verifyResponse, "Payment captured but verification failed"),
+              );
             }
-          } catch {
-            /* ignore */
+
+            const verifyJson = await verifyResponse.json().catch(() => null);
+            const emailSent = verifyJson?.data?.emailSent === true;
+
+            setStatus("paid");
+            setMessage(
+              emailSent
+                ? "Payment verified. Confirmation email sent."
+                : "Payment verified. Registration confirmed.",
+            );
+
+            try {
+              const me = await fetch(getApiUrl("/api/users/me"), {
+                headers: authHeaders(token),
+              });
+              if (me.ok) {
+                const meJson = await me.json();
+                setExistingRegs(meJson.data?.registrations ?? []);
+              }
+            } catch {
+              /* ignore */
+            }
+
+            router.push("/dashboard");
+          } catch (error) {
+            setStatus("error");
+            setMessage(getFriendlyErrorMessage(error));
           }
         },
         modal: {

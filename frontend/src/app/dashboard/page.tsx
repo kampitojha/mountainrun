@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function DashboardPage() {
   return (
     <PageShell>
-      <section className="section">
+      <section className="page-section">
         <div className="container-page max-w-5xl">
           <DashboardClient />
         </div>

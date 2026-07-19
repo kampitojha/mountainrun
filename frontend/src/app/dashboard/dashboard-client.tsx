@@ -2,7 +2,7 @@
 
 import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { authHeaders, getApiUrl, readApiError } from "../../lib/api";
 
 type Registration = {
@@ -103,6 +103,17 @@ function canUploadProof(reg: Registration) {
   );
 }
 
+function uniqueRegistrations(rows: Registration[]) {
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    if (seen.has(row.id)) {
+      return false;
+    }
+    seen.add(row.id);
+    return true;
+  });
+}
+
 /** Compress image client-side for upload without Cloudinary oversized payloads. */
 async function fileToUploadPayload(file: File): Promise<string> {
   if (!file.type.startsWith("image/")) {
@@ -147,8 +158,12 @@ export function DashboardClient() {
   const [proofMessage, setProofMessage] = useState<string | null>(null);
   const [proofError, setProofError] = useState<string | null>(null);
   const [proofBusy, setProofBusy] = useState(false);
+  const loadSequence = useRef(0);
 
   const load = useCallback(async () => {
+    const requestId = loadSequence.current + 1;
+    loadSequence.current = requestId;
+
     if (!isSignedIn) {
       setLoading(false);
       return;
@@ -184,11 +199,19 @@ export function DashboardClient() {
       }
 
       const json = await response.json();
+      if (loadSequence.current !== requestId) {
+        return;
+      }
       setDbUser(json.data as DbUser);
     } catch (err) {
+      if (loadSequence.current !== requestId) {
+        return;
+      }
       setError(err instanceof Error ? err.message : "Failed to load dashboard");
     } finally {
-      setLoading(false);
+      if (loadSequence.current === requestId) {
+        setLoading(false);
+      }
     }
   }, [getToken, isSignedIn, user]);
 
@@ -203,7 +226,10 @@ export function DashboardClient() {
     return () => window.clearTimeout(timer);
   }, [isLoaded, load]);
 
-  const registrations = dbUser?.registrations ?? [];
+  const registrations = useMemo(
+    () => uniqueRegistrations(dbUser?.registrations ?? []),
+    [dbUser?.registrations],
+  );
   const isAdmin =
     dbUser?.role === "ADMIN" || dbUser?.role === "SUPER_ADMIN";
   const needsProof = useMemo(
