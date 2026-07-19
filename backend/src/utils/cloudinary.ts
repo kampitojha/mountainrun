@@ -10,7 +10,7 @@ export interface UploadResult {
 }
 
 export async function uploadImage(
-  file: string | Buffer,
+  file: string,
   options?: {
     folder?: string;
     transformation?: string;
@@ -69,19 +69,17 @@ export function getImageUrl(
     crop?: string;
   }
 ): string {
-  const transformation = cloudinary
-    .image(publicId, {
-      transformation: [
-        {
-          width: options?.width,
-          height: options?.height,
-          quality: options?.quality || 'auto',
-          format: options?.format || 'auto',
-          crop: options?.crop || 'limit',
-        },
-      ],
-    })
-    .toURL();
+  const transformation = cloudinary.url(publicId, {
+    transformation: [
+      {
+        width: options?.width,
+        height: options?.height,
+        quality: options?.quality || 'auto',
+        format: options?.format || 'auto',
+        crop: options?.crop || 'limit',
+      },
+    ],
+  });
 
   return transformation;
 }
