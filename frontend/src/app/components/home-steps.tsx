@@ -45,24 +45,24 @@ export function HomeSteps() {
           {/* Connector Line for Desktop */}
           <div className="absolute top-[2.35rem] left-[15%] right-[15%] hidden h-[1.5px] bg-linear-to-r from-emerald-500/10 via-(--line) to-indigo-500/10 md:block z-0" />
           
-          <Stagger className="relative z-10 grid gap-5 md:grid-cols-3">
+          <Stagger className="relative z-10 grid gap-4 sm:gap-5 md:grid-cols-3">
             {steps.map((item) => {
               const Icon = item.icon;
               return (
                 <StaggerItem key={item.step}>
-                  <article className="feature-card card-premium-glow group h-full p-6 sm:p-8 bg-(--panel-glass) backdrop-blur-md border border-(--line) rounded-(--radius) shadow-xs transition-all duration-300 hover:bg-(--panel) hover:border-(--line-strong) hover:shadow-md hover:-translate-y-1">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="feature-icon glow-icon-bg shadow-xs transition-transform duration-300 group-hover:scale-110">
+                  <article className="feature-card card-premium-glow group h-full p-5 sm:p-6 bg-(--panel-glass) backdrop-blur-md border border-(--line) rounded-(--radius) shadow-xs transition-all duration-300 hover:bg-(--panel) hover:border-(--line-strong) hover:shadow-md">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="feature-icon glow-icon-bg shadow-xs shrink-0 transition-transform duration-300 group-hover:scale-110">
                         <Icon aria-hidden="true" className="h-5 w-5 transition-transform duration-300 group-hover:rotate-6" strokeWidth={1.75} />
                       </div>
-                      <span className="step-card-number text-2xl font-extrabold">
+                      <span className="step-card-number text-xl font-extrabold sm:text-2xl">
                         {item.step}
                       </span>
                     </div>
-                    <h3 className="mt-6 text-lg font-bold tracking-tight text-foreground group-hover:text-(--sage) transition-colors duration-300">
+                    <h3 className="mt-5 text-base font-bold tracking-tight text-foreground group-hover:text-(--sage) transition-colors duration-300 sm:text-lg">
                       {item.title}
                     </h3>
-                    <p className="mt-2.5 text-sm leading-6 text-(--muted)">{item.text}</p>
+                    <p className="mt-2 text-sm leading-6 text-(--muted)">{item.text}</p>
                   </article>
                 </StaggerItem>
               );
