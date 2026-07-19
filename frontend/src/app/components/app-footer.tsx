@@ -212,12 +212,12 @@ export function AppFooter() {
             <ul className="space-y-3 text-sm">
               <li>
                 <a
-                  href="mailto:hello@mountainrun.in"
+                  href="mailto:mountainrunofficial@gmail.com"
                   className="group inline-flex items-center gap-2 text-(--muted) transition-all duration-200 hover:text-foreground"
                 >
                   <Mail className="h-3.5 w-3.5 shrink-0 text-(--muted-soft) group-hover:text-(--sage) transition-colors" />
                   <span className="transition-transform duration-200 group-hover:translate-x-0.5">
-                    hello@mountainrun.in
+                    mountainrunofficial@gmail.com
                   </span>
                 </a>
               </li>
