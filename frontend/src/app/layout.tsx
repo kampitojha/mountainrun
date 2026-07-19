@@ -83,8 +83,8 @@ export const metadata: Metadata = {
     creator: "@mountainrun",
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
+    icon: "/logo-mark.svg",
+    shortcut: "/logo-mark.svg",
     apple: "/apple-touch-icon.png",
   },
   manifest: "/site.webmanifest",
