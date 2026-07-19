@@ -561,7 +561,7 @@ export function DashboardClient() {
           {user?.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              alt=""
+              alt={`${user.firstName || 'User'} ${user.lastName || ''} profile picture`}
               className="h-12 w-12 shrink-0 rounded-full object-cover sm:h-14 sm:w-14"
               src={user.imageUrl}
             />
@@ -758,7 +758,7 @@ export function DashboardClient() {
                         <div className="overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--panel)]">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
-                            alt="Proof preview"
+                            alt="GPS running proof screenshot showing completed distance and route"
                             className="max-h-48 w-full object-contain"
                             src={proofUrl}
                           />

@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import { PageShell } from "../components/app-shell";
 import { DashboardClient } from "./dashboard-client";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function DashboardPage() {
   return (

@@ -4,7 +4,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkUserSync } from "../components/clerk-user-sync";
 import { ThemeProvider } from "./components/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
+import { StructuredData } from "./components/structured-data";
 import "./globals.css";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mountainrun.in";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,11 +20,76 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mountain Run",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Mountain Run - Virtual Running Events with GPS Verification",
+    template: "%s | Mountain Run",
+  },
   description:
-    "Minimal virtual running events with UPI registration, GPS proof, leaderboards, certificates, and medals.",
+    "Join India's premier virtual running events. Register with UPI, track with GPS, earn medals & certificates. Compete in marathons, 5K, 10K runs from anywhere.",
+  keywords: [
+    "virtual running",
+    "online marathon",
+    "GPS run tracking",
+    "running events India",
+    "virtual marathon",
+    "5K run",
+    "10K run",
+    "half marathon",
+    "UPI registration",
+    "running medals",
+    "running certificates",
+    "fitness challenge",
+    "virtual race",
+  ],
+  authors: [{ name: "Mountain Run" }],
+  creator: "Mountain Run",
+  publisher: "Mountain Run",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    alternateLocale: ["en_IN"],
+    url: SITE_URL,
+    siteName: "Mountain Run",
+    title: "Mountain Run - Virtual Running Events with GPS Verification",
+    description:
+      "Join India's premier virtual running events. Register with UPI, track with GPS, earn medals & certificates.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Mountain Run - Virtual Running Events",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Mountain Run - Virtual Running Events with GPS Verification",
+    description:
+      "Join India's premier virtual running events. Register with UPI, track with GPS, earn medals & certificates.",
+    images: ["/og-image.png"],
+    creator: "@mountainrun",
+  },
   icons: {
-    icon: "/favicon.svg",
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/site.webmanifest",
+  alternates: {
+    canonical: SITE_URL,
   },
 };
 
@@ -68,6 +136,7 @@ export default function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: siteThemeInitScript }} />
+        <StructuredData />
       </head>
       <body className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)]">
         <ThemeProvider>

@@ -1,9 +1,68 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PageShell } from "../../components/app-shell";
+import { Breadcrumb } from "../../components/breadcrumb";
 import { allPublicEvents, eventBenefits } from "../../data/events";
 import { fetchEventBySlug } from "../../../lib/events-api";
 import { auth } from "@clerk/nextjs/server";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mountainrun.in";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const event = await fetchEventBySlug(slug);
+
+  if (!event) {
+    return {
+      title: "Event Not Found",
+    };
+  }
+
+  const isPast = event.status === "past";
+  const title = `${event.name} - ${event.distance} Virtual Run | Mountain Run`;
+  const description = isPast
+    ? `View results and recap for ${event.name}. ${event.finishers} finishers, ${event.verifiedResults} verified GPS results from across India.`
+    : `Register for ${event.name} - a ${event.distance} virtual running event. GPS verification, medals, certificates, and leaderboard. Entry: ${event.price}.`;
+
+  return {
+    title,
+    description,
+    keywords: [
+      event.name,
+      event.distance,
+      "virtual run",
+      "GPS verified",
+      "running event",
+      "marathon",
+      "5K run",
+      "10K run",
+      "half marathon",
+      "virtual race India",
+    ],
+    openGraph: {
+      title,
+      description,
+      url: `/events/${slug}`,
+      type: "website",
+      images: [
+        {
+          url: "/og-image.png",
+          width: 1200,
+          height: 630,
+          alt: event.name,
+        },
+      ],
+    },
+    alternates: {
+      canonical: `${SITE_URL}/events/${slug}`,
+    },
+  };
+}
 
 export function generateStaticParams() {
   return allPublicEvents.map((event) => ({ slug: event.slug }));
@@ -29,16 +88,47 @@ export default async function EventDetailPage({
 
   const isPast = event.status === "past";
 
+  // Event Schema for SEO
+  const eventSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'SportsEvent',
+    name: event.name,
+    description: event.description,
+    url: `${SITE_URL}/events/${slug}`,
+    startDate: event.date,
+    location: {
+      '@type': 'VirtualLocation',
+      url: `${SITE_URL}/events/${slug}`,
+    },
+    organizer: {
+      '@type': 'Organization',
+      name: 'Mountain Run',
+      url: SITE_URL,
+    },
+    offers: {
+      '@type': 'Offer',
+      price: event.price,
+      priceCurrency: 'INR',
+      availability: isPast ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
+    },
+    eventStatus: isPast ? 'https://schema.org/EventMovedOnline' : 'https://schema.org/EventScheduled',
+  };
+
   return (
     <PageShell>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(eventSchema) }}
+      />
       <section className="section">
         <div className="container-page">
-          <Link
-            className="text-sm text-(--muted) transition hover:text-foreground"
-            href="/events"
-          >
-            ← All events
-          </Link>
+          <Breadcrumb
+            items={[
+              { name: "Home", href: "/" },
+              { name: "Events", href: "/events" },
+              { name: event.name, href: `/events/${slug}` },
+            ]}
+          />
 
           <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_340px] lg:gap-16">
             <div>

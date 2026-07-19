@@ -89,7 +89,7 @@ export function AppFooter() {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                alt=""
+                alt="Mountain Run logo - virtual running events platform"
                 className="block h-8 w-8 shrink-0 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12"
                 height={32}
                 src="/logo-mark.svg"

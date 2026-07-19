@@ -161,7 +161,7 @@ export default function AdminProofsPage() {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    alt=""
+                    alt="GPS running activity proof showing route map and distance"
                     className="h-44 w-full object-cover"
                     src={row.proofUpload.activityImageUrl}
                   />

@@ -1,7 +1,14 @@
-
+import type { Metadata } from "next";
 import { ClerkLoaded, ClerkLoading, SignUp } from "@clerk/nextjs";
 import Link from "next/link";
 import { PageShell } from "../../components/app-shell";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function SignUpPage() {
   return (

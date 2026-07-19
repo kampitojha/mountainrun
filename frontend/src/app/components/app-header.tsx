@@ -76,7 +76,7 @@ function BrandLogo({ onNavigate }: { onNavigate?: () => void }) {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        alt=""
+        alt="Mountain Run logo - virtual running events platform"
         className="block h-8 w-8 shrink-0 sm:h-9 sm:w-9 transition-transform duration-500 ease-out group-hover:scale-110 group-hover:rotate-12"
         height={36}
         src="/logo-mark.svg"

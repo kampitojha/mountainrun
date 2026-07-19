@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { AppFooter } from "./components/app-footer";
@@ -9,6 +10,39 @@ import { HomeReviews } from "./components/home-reviews";
 import { HomeRewards } from "./components/home-rewards";
 import { HomeSectionHeader } from "./components/home-section-header";
 import { HomeSteps } from "./components/home-steps";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mountainrun.in";
+
+export const metadata: Metadata = {
+  title: "Mountain Run - Virtual Running Events with GPS Verification",
+  description:
+    "Join India's premier virtual running events. Register with UPI, track with GPS, earn medals & certificates. Compete in marathons, 5K, 10K runs from anywhere.",
+  keywords: [
+    "virtual running",
+    "online marathon",
+    "GPS run tracking",
+    "running events India",
+    "virtual marathon",
+    "5K run",
+    "10K run",
+    "half marathon",
+    "UPI registration",
+    "running medals",
+    "running certificates",
+    "fitness challenge",
+    "virtual race",
+  ],
+  openGraph: {
+    title: "Mountain Run - Virtual Running Events with GPS Verification",
+    description:
+      "Join India's premier virtual running events. Register with UPI, track with GPS, earn medals & certificates.",
+    url: "/",
+    type: "website",
+  },
+  alternates: {
+    canonical: SITE_URL,
+  },
+};
 
 export default function Home() {
   return (
