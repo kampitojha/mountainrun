@@ -392,6 +392,8 @@
   min-width: 0;
   flex: 1;
   overflow: hidden;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .admin-mobile-bar-brand img {
@@ -1297,4 +1299,25 @@
   align-items: center;
   gap: 0.45rem;
   flex-shrink: 0;
+}
+
+.admin-mobile-bar-site-link {
+  display: inline-flex;
+  align-items: center;
+  height: 2.25rem;
+  padding: 0 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--admin-sidebar-border);
+  background: var(--admin-sidebar-hover);
+  color: var(--admin-nav-idle);
+  font-size: 0.75rem;
+  font-weight: 550;
+  white-space: nowrap;
+  transition: background-color 120ms, color 120ms;
+  text-decoration: none;
+}
+
+.admin-mobile-bar-site-link:hover {
+  background: var(--admin-sidebar-active);
+  color: var(--admin-teal);
 }

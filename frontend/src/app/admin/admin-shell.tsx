@@ -466,13 +466,20 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
     <AdminThemed>
       {/* Mobile top bar */}
       <div className="admin-mobile-bar">
-        <div className="admin-mobile-bar-brand">
+        <Link href="/" className="admin-mobile-bar-brand">
           <BrandMark size={22} />
           <strong>
             Mountain <em>Run</em>
           </strong>
-        </div>
+        </Link>
         <div className="admin-mobile-bar-actions">
+          <Link
+            href="/"
+            className="admin-mobile-bar-site-link"
+            aria-label="Go to main site"
+          >
+            ← Site
+          </Link>
           <AdminThemeToggle className="is-icon-only" />
           <button
             className="btn btn-secondary"
