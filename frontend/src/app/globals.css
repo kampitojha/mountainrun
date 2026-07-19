@@ -149,15 +149,74 @@ body {
   padding-block: 3rem;
 }
 
+.page-section {
+  padding-block: 1.5rem 3.5rem;
+}
+
 @media (min-width: 640px) {
   .section {
     padding-block: 4.5rem;
+  }
+
+  .page-section {
+    padding-block: 2rem 4.5rem;
   }
 }
 
 @media (min-width: 768px) {
   .section {
     padding-block: 6rem;
+  }
+
+  .page-section {
+    padding-block: 2.5rem 5.5rem;
+  }
+}
+
+.page-breadcrumb {
+  display: flex;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-glass);
+  padding: 0.35rem 0.55rem;
+  width: fit-content;
+  color: var(--muted);
+  backdrop-filter: blur(10px);
+}
+
+.page-breadcrumb-item {
+  display: inline-flex;
+  min-height: 1.75rem;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding-inline: 0.45rem;
+  font-size: 0.8125rem;
+  font-weight: 550;
+  line-height: 1;
+}
+
+.page-breadcrumb-current {
+  background: var(--sage-soft);
+  color: var(--sage);
+}
+
+@media (max-width: 479px) {
+  .page-section {
+    padding-block: 1rem 3rem;
+  }
+
+  .page-breadcrumb {
+    border-radius: var(--radius-sm);
+    width: 100%;
+  }
+
+  .page-breadcrumb-item {
+    font-size: 0.75rem;
   }
 }
 
@@ -915,4 +974,3 @@ html[data-theme="dark"] .event-card-banner {
 .feature-card:hover .glow-icon-bg::after {
   opacity: 1;
 }
-

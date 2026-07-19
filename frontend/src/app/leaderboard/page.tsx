@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 export default function LeaderboardPage() {
   return (
     <PageShell>
-      <section className="section">
+      <section className="page-section">
         <div className="container-page max-w-5xl">
           <Breadcrumb
             items={[

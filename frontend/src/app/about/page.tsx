@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <PageShell>
-      <section className="section">
+      <section className="page-section">
         <div className="container-page">
           <Breadcrumb
             items={[

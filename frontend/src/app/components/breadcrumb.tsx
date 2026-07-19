@@ -30,15 +30,15 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-(--muted)">
+      <nav aria-label="Breadcrumb" className="page-breadcrumb">
         {items.map((item, index) => (
-          <div key={item.href} className="flex items-center gap-2">
-            {index > 0 && <ChevronRight className="h-4 w-4" />}
+          <div key={item.href} className="flex items-center gap-1">
+            {index > 0 && <ChevronRight className="h-3.5 w-3.5 text-(--muted-soft)" />}
             {index === items.length - 1 ? (
-              <span className="text-foreground">{item.name}</span>
+              <span className="page-breadcrumb-item page-breadcrumb-current">{item.name}</span>
             ) : (
               <Link
-                className="transition hover:text-foreground hover:underline"
+                className="page-breadcrumb-item transition hover:bg-(--panel-soft) hover:text-foreground"
                 href={item.href}
               >
                 {item.name}

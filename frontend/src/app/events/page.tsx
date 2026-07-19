@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 export default function EventsPage() {
   return (
     <PageShell>
-      <section className="section">
+      <section className="page-section">
         <div className="container-page">
           <Breadcrumb
             items={[
@@ -42,9 +42,9 @@ export default function EventsPage() {
               { name: "Events", href: "/events" },
             ]}
           />
-          <div className="overflow-hidden rounded-[var(--radius)] border border-[var(--line)] bg-(--panel)">
+          <div className="mt-4 overflow-hidden rounded-[var(--radius)] border border-[var(--line)] bg-(--panel) shadow-(--shadow) sm:mt-5">
             <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-              <div className="p-6 sm:p-8 lg:p-10">
+              <div className="p-5 sm:p-8 lg:p-10">
                 <PageHeader
                   eyebrow="Events"
                   description="Choose a run, register once, upload GPS proof, and appear on the verified leaderboard."
@@ -58,7 +58,7 @@ export default function EventsPage() {
                   ))}
                 </div>
               </div>
-              <div className="relative min-h-64 bg-[#0f172a]">
+              <div className="relative min-h-72 bg-[#0f172a] sm:min-h-80 lg:min-h-full">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   alt="Mountain Run virtual running event - runners completing GPS verified races"
