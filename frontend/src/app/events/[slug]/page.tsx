@@ -10,12 +10,6 @@ import { auth } from "@clerk/nextjs/server";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mountainrun.in";
 
-const activityConfig: Record<string, { icon: string; color: string; bg: string }> = {
-  running: { icon: "\u{1F3C3}", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/40" },
-  cycling: { icon: "\u{1F6B4}", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/40" },
-  walking: { icon: "\u{1F6B6}", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/40" },
-};
-
 const benefitIcons = [
   BadgeCheck, MapPin, Trophy, QrCode, Award, Shirt, MessageCircle,
 ];
@@ -71,13 +65,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         }),
       }} />
 
-      {/* ── Hero Section ── */}
       <section className="relative overflow-hidden border-b border-(--line)">
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(at 20% 20%, rgba(13,148,136,0.07) 0px, transparent 55%), radial-gradient(at 80% 0%, rgba(99,102,241,0.05) 0px, transparent 50%), radial-gradient(at 50% 100%, rgba(13,148,136,0.04) 0px, transparent 50%)" }}
+          style={{ background: "radial-gradient(at 20% 20%, var(--sage-soft) 0px, transparent 55%), radial-gradient(at 50% 100%, color-mix(in srgb, var(--sage) 4%, transparent) 0px, transparent 50%)" }}
         />
-        <div aria-hidden="true" className="absolute top-0 left-1/4 h-64 w-64 rounded-full bg-teal-500/4 blur-3xl pointer-events-none" />
-        <div aria-hidden="true" className="absolute top-1/3 right-10 h-48 w-48 rounded-full bg-indigo-500/4 blur-3xl pointer-events-none" />
+        <div aria-hidden="true" className="absolute top-0 left-1/4 h-64 w-64 rounded-full blur-3xl pointer-events-none" style={{ background: "color-mix(in srgb, var(--sage) 7%, transparent)" }} />
+        <div aria-hidden="true" className="absolute top-1/3 right-10 h-48 w-48 rounded-full blur-3xl pointer-events-none" style={{ background: "color-mix(in srgb, var(--sage) 5%, transparent)" }} />
 
         <div className="container-page relative z-10 py-12 sm:py-16 lg:py-20">
           <Breadcrumb items={[
@@ -87,15 +80,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           ]} />
 
           <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_380px] lg:gap-16">
-            {/* Left column */}
             <div>
-              {/* Status + badges row */}
               <div className="flex flex-wrap items-center gap-3">
                 <span className="eyebrow">{isPast ? "Past Event" : "Open Event"}</span>
                 <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${
                   isPast
-                    ? "bg-(--panel-soft) text-(--muted) border border-(--line)"
-                    : "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40"
+                    ? "bg-(--panel-soft) text-(--muted)"
+                    : "bg-(--sage-soft) text-(--sage)"
                 }`}>
                   {isPast ? <Timer className="h-3 w-3" /> : <Sparkles className="h-3 w-3" />}
                   {isPast ? "Completed" : "Open for registration"}
@@ -104,24 +95,19 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
               <h1 className="display mt-4 max-w-3xl text-(--foreground)">{event.name}</h1>
 
-              {/* Activity types */}
               {event.activityTypes && event.activityTypes.length > 0 ? (
                 <div className="mt-5 flex flex-wrap items-center gap-2">
-                  {event.activityTypes.map((type) => {
-                    const cfg = activityConfig[type] ?? { icon: "", color: "text-(--muted)", bg: "bg-(--panel-soft)" };
-                    return (
-                      <span key={type} className={`inline-flex items-center gap-1.5 rounded-full border border-(--line) px-3 py-1 text-xs font-semibold capitalize ${cfg.color} ${cfg.bg}`}>
-                        <span>{cfg.icon}</span>
-                        {type}
-                      </span>
-                    );
-                  })}
+                  {event.activityTypes.map((type) => (
+                    <span key={type} className="inline-flex items-center gap-1.5 rounded-full border border-(--line) bg-(--panel-soft) px-3 py-1 text-xs font-semibold capitalize text-(--muted)">
+                      <span>{type === "running" ? "\u{1F3C3}" : type === "cycling" ? "\u{1F6B4}" : "\u{1F6B6}"}</span>
+                      {type}
+                    </span>
+                  ))}
                 </div>
               ) : null}
 
               <p className="mt-6 text-base leading-relaxed text-(--muted) max-w-2xl">{event.description}</p>
 
-              {/* Quick info cards */}
               <div className="mt-8 grid grid-cols-3 gap-3 sm:gap-4">
                 {[
                   { label: "Date", value: event.date, icon: CalendarDays },
@@ -129,7 +115,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   { label: "Entry fee", value: event.price, icon: IndianRupee },
                 ].map(({ label, value, icon: Icon }) => (
                   <div key={label} className="card flex flex-col items-start gap-2 p-4 sm:p-5">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--panel-soft) text-(--sage)">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--sage-soft) text-(--sage)">
                       <Icon className="h-4 w-4" />
                     </span>
                     <div>
@@ -140,25 +126,22 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 ))}
               </div>
 
-              {/* Coupon banner */}
               {event.couponCode && event.showCouponOnCard && !isPast ? (
-                <div className="mt-6 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-transparent px-5 py-4 dark:border-emerald-800/40 dark:from-emerald-950/30">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400">
+                <div className="mt-6 flex items-center gap-3 rounded-2xl border border-(--line) bg-(--sage-soft) px-5 py-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-(--sage) text-white">
                     <Sparkles className="h-5 w-5" />
                   </span>
                   <div>
-                    <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">Special coupon available</p>
-                    <p className="mt-0.5 text-xs text-emerald-600 dark:text-emerald-400">
-                      Use code <code className="rounded-md bg-emerald-100 px-2 py-0.5 font-bold tracking-wider text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">{event.couponCode}</code> at checkout
+                    <p className="text-sm font-bold text-(--foreground)">Special coupon available</p>
+                    <p className="mt-0.5 text-xs text-(--muted)">
+                      Use code <code className="rounded-md bg-(--panel) px-2 py-0.5 font-bold tracking-wider text-(--sage)">{event.couponCode}</code> at checkout
                     </p>
                   </div>
                 </div>
               ) : null}
 
-              {/* Description / highlight */}
               <p className="mt-8 text-sm leading-relaxed text-(--muted) italic border-l-2 border-(--sage) pl-4">{event.highlight}</p>
 
-              {/* Benefits */}
               <div className="mt-14">
                 <h2 className="text-xl font-bold tracking-tight text-(--foreground) sm:text-2xl">{isPast ? "What finishers received" : "What you get"}</h2>
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -179,7 +162,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 </div>
               </div>
 
-              {/* How it works (upcoming only) */}
               {!isPast ? (
                 <div className="mt-14">
                   <h2 className="text-xl font-bold tracking-tight text-(--foreground) sm:text-2xl">How it works</h2>
@@ -190,7 +172,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                       { step: "03", title: "Upload proof", desc: "Submit your GPS activity from your dashboard. Get verified and claim your certificate + medal.", icon: Trophy },
                     ].map(({ step, title, desc, icon: Icon }) => (
                       <div key={step} className="relative rounded-xl border border-(--line) bg-(--panel) p-5 transition-all duration-200 hover:border-(--line-strong) hover:shadow-sm">
-                        <span className="text-[2rem] font-black leading-none text-(--sage) opacity-20 step-card-number">{step}</span>
+                        <span className="text-[2rem] font-black leading-none text-(--sage) opacity-15">{step}</span>
                         <span className="mt-3 flex h-9 w-9 items-center justify-center rounded-lg bg-(--sage-soft) text-(--sage)">
                           <Icon className="h-4.5 w-4.5" />
                         </span>
@@ -202,7 +184,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 </div>
               ) : null}
 
-              {/* Past event recap */}
               {isPast ? (
                 <div className="mt-14">
                   <h2 className="text-xl font-bold tracking-tight text-(--foreground) sm:text-2xl">Event recap</h2>
@@ -231,7 +212,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               ) : null}
             </div>
 
-            {/* ── Sidebar ── */}
             <aside className="lg:sticky lg:top-24 lg:self-start">
               <div className="rounded-2xl border border-(--line) bg-(--panel) p-6 shadow-sm sm:p-7">
                 {isPast ? (
@@ -258,16 +238,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                         <p className="text-xs font-bold uppercase tracking-wider text-(--muted-soft)">Entry fee</p>
                         <p className="text-3xl font-black tracking-tight text-(--foreground)">{event.price}</p>
                       </div>
-                      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-(--sage-soft) text-(--sage)">
                         <IndianRupee className="h-6 w-6" />
                       </span>
                     </div>
 
                     {event.couponCode && event.showCouponOnCard ? (
-                      <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800/40 dark:bg-emerald-950/30">
-                        <Sparkles className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                        <p className="text-xs text-emerald-700 dark:text-emerald-300">
-                          Use code <strong className="tracking-wider">{event.couponCode}</strong>
+                      <div className="mt-4 flex items-center gap-2 rounded-xl border border-(--line) bg-(--sage-soft) px-4 py-3">
+                        <Sparkles className="h-4 w-4 shrink-0 text-(--sage)" />
+                        <p className="text-xs text-(--muted)">
+                          Use code <strong className="tracking-wider text-(--sage)">{event.couponCode}</strong>
                         </p>
                       </div>
                     ) : null}
@@ -280,7 +260,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                       <Link className="btn btn-secondary btn-full text-sm" href="/events">Browse other events</Link>
                     </div>
 
-                    {/* Trust signals */}
                     <div className="mt-6 space-y-2.5 border-t border-(--line) pt-5">
                       {[
                         { icon: BadgeCheck, text: "GPS verified results" },
