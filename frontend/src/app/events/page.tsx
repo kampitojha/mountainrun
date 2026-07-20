@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { PageHeader, PageShell } from "../components/app-shell";
+import { PageShell } from "../components/app-shell";
 import { Breadcrumb } from "../components/breadcrumb";
 import { EventsCatalog } from "./events-catalog";
 
@@ -35,52 +35,77 @@ export const metadata: Metadata = {
 export default function EventsPage() {
   return (
     <PageShell>
-      <section className="page-section">
-        <div className="container-page">
+      <section className="relative overflow-hidden border-b border-(--line)">
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10"
+          style={{
+            background: [
+              "radial-gradient(ellipse 80% 50% at 0% 0%, color-mix(in srgb, var(--sage) 12%, transparent) 0%, transparent 60%)",
+              "radial-gradient(ellipse 50% 40% at 100% 100%, color-mix(in srgb, var(--sage) 6%, transparent) 0%, transparent 50%)",
+              "var(--background)",
+            ].join(", "),
+          }}
+        />
+        <div aria-hidden className="pointer-events-none absolute top-8 right-8 flex gap-1.5 opacity-20">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-1.5 w-1.5 rounded-full bg-(--sage) animate-pulse" style={{ animationDelay: `${i * 0.3}s` }} />
+          ))}
+        </div>
+
+        <div className="container-page py-8 sm:py-10">
           <Breadcrumb
             items={[
               { name: "Home", href: "/" },
               { name: "Events", href: "/events" },
             ]}
           />
-          <div className="mt-4 overflow-hidden rounded-[var(--radius)] border border-[var(--line)] bg-(--panel) shadow-(--shadow) sm:mt-5">
+
+          <div className="mt-6 overflow-hidden rounded-2xl border border-(--line) bg-(--panel) sm:mt-8">
             <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-              <div className="p-5 sm:p-8 lg:p-10">
-                <PageHeader
-                  eyebrow="Events"
-                  description="Choose a run, register once, upload GPS proof, and appear on the verified leaderboard."
-                  title="Upcoming virtual races"
-                />
-                <div className="mt-7 flex flex-wrap gap-2">
-                  {["Medals", "T-shirts", "Certificates", "Leaderboard"].map((item) => (
-                    <span className="badge badge-sage" key={item}>
-                      {item}
+              <div className="p-6 sm:p-8 lg:p-10">
+                <p className="eyebrow">Events</p>
+                <h1 className="mt-3 text-3xl font-bold leading-[1.1] tracking-tight text-(--foreground) sm:text-4xl">
+                  Upcoming virtual races
+                </h1>
+                <p className="lede mt-4 max-w-lg">
+                  Choose a run, register once, upload GPS proof, and appear on the verified leaderboard.
+                </p>
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {[
+                    { label: "Medals", icon: "🏅" },
+                    { label: "T-shirts", icon: "👕" },
+                    { label: "Certificates", icon: "📜" },
+                    { label: "Leaderboard", icon: "🏆" },
+                  ].map(({ label, icon }) => (
+                    <span key={label} className="inline-flex items-center gap-1.5 rounded-full border border-(--line) bg-(--sage-soft) px-3 py-1 text-xs font-semibold text-(--sage) transition-colors hover:border-(--sage)/30">
+                      <span>{icon}</span>
+                      {label}
                     </span>
                   ))}
                 </div>
               </div>
-              <div className="relative min-h-72 bg-[#0f172a] sm:min-h-80 lg:min-h-full overflow-hidden">
+              <div className="relative min-h-72 bg-[#0a0a0c] sm:min-h-80 lg:min-h-full overflow-hidden">
                 <Image
-                  alt="Mountain Run virtual running event - runners completing GPS verified races"
+                  alt="Mountain Run virtual running event"
                   src="/images/mountain-run-hero.png"
                   fill
-                  className="object-cover opacity-80"
+                  className="object-cover opacity-70 transition-opacity hover:opacity-80"
                   sizes="(max-width: 1024px) 100vw, 50vw"
-                  quality={75}
-                  priority={false}
+                  quality={80}
+                  priority
                 />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-6 text-white sm:p-8">
-                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-white/65">
-                    Run anywhere
-                  </p>
-                  <p className="mt-2 text-xl font-semibold tracking-tight">
-                    Finish with proof. Celebrate with rewards.
-                  </p>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="absolute bottom-0 inset-x-0 p-6 sm:p-8">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-white/60">Run anywhere</p>
+                  <p className="mt-1.5 text-lg font-bold text-white sm:text-xl">Finish with proof. Celebrate with rewards.</p>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
+      <section className="page-section">
+        <div className="container-page">
           <EventsCatalog />
         </div>
       </section>
