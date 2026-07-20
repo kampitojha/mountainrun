@@ -21,13 +21,38 @@ function ProfileButton() {
     <UserButton
       appearance={{
         elements: {
-          avatarBox: "h-9 w-9 border border-(--line) hover:border-(--line-strong) transition-colors",
+          avatarBox:
+            "h-9 w-9 rounded-full border-2 border-(--line) hover:border-(--sage) transition-all duration-200 shadow-sm",
+          userButtonPopoverCard:
+            "shadow-xl border border-(--line) rounded-2xl bg-(--panel) min-w-[220px]",
+          userButtonPopoverActionButton:
+            "rounded-xl text-sm font-medium text-(--foreground) hover:bg-(--panel-soft) transition-colors",
+          userButtonPopoverActionButtonText: "text-(--foreground) font-medium",
+          userButtonPopoverActionButtonIcon: "text-(--muted)",
+          userButtonPopoverFooter: "hidden",
+          userPreviewMainIdentifier:
+            "text-sm font-bold tracking-tight text-(--foreground)",
+          userPreviewSecondaryIdentifier: "text-xs text-(--muted)",
+          userButtonPopoverMain: "p-1",
+          userButtonTrigger: "focus:shadow-none focus-visible:ring-2 focus-visible:ring-(--sage)/40",
+        },
+        variables: {
+          colorPrimary: "#0d9488",
+          borderRadius: "0.75rem",
         },
       }}
     >
       <UserButton.MenuItems>
-        <UserButton.Link label="My dashboard" href="/dashboard" labelIcon={<LayoutDashboard className="h-4 w-4" />} />
-        <UserButton.Link label="Browse events" href="/events" labelIcon={<Award className="h-4 w-4" />} />
+        <UserButton.Link
+          label="My dashboard"
+          href="/dashboard"
+          labelIcon={<LayoutDashboard className="h-4 w-4" />}
+        />
+        <UserButton.Link
+          label="Browse events"
+          href="/events"
+          labelIcon={<Award className="h-4 w-4" />}
+        />
         <UserButton.Action label="manageAccount" />
         <UserButton.Action label="signOut" />
       </UserButton.MenuItems>

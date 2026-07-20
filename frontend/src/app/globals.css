@@ -1133,3 +1133,100 @@ html[data-theme="dark"] .event-card-banner {
     min-width: 0;
   }
 }
+
+/* ═══════════════════════════════════════════════
+   CLERK USER BUTTON POPUP — Custom styling
+   ═══════════════════════════════════════════════ */
+
+/* Popup card */
+.cl-userButtonPopoverCard {
+  background: var(--panel) !important;
+  border: 1px solid var(--line-strong) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 20px 40px -8px rgba(0,0,0,0.12), 0 8px 16px -4px rgba(0,0,0,0.06) !important;
+  min-width: 220px !important;
+  overflow: hidden !important;
+  padding: 0.25rem !important;
+}
+
+/* User preview section at top */
+.cl-userButtonPopoverUserPreview {
+  padding: 0.75rem 0.85rem !important;
+  border-radius: 0.75rem !important;
+  background: var(--panel-soft) !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.cl-userPreviewMainIdentifier {
+  font-size: 0.875rem !important;
+  font-weight: 700 !important;
+  color: var(--foreground) !important;
+  letter-spacing: -0.01em !important;
+}
+
+.cl-userPreviewSecondaryIdentifier {
+  font-size: 0.75rem !important;
+  color: var(--muted) !important;
+  margin-top: 0.1rem !important;
+}
+
+/* Action buttons */
+.cl-userButtonPopoverActionButton {
+  border-radius: 0.65rem !important;
+  padding: 0.6rem 0.75rem !important;
+  color: var(--foreground) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  transition: background-color 140ms ease !important;
+  width: 100% !important;
+}
+
+.cl-userButtonPopoverActionButton:hover {
+  background: var(--panel-soft) !important;
+}
+
+.cl-userButtonPopoverActionButtonText {
+  color: var(--foreground) !important;
+  font-weight: 500 !important;
+}
+
+.cl-userButtonPopoverActionButtonIcon {
+  color: var(--muted) !important;
+  opacity: 0.8 !important;
+}
+
+/* Sign out button — subtle red tint */
+.cl-userButtonPopoverActionButton__signOut {
+  color: var(--danger) !important;
+}
+
+.cl-userButtonPopoverActionButton__signOut:hover {
+  background: color-mix(in srgb, var(--danger) 8%, transparent) !important;
+}
+
+.cl-userButtonPopoverActionButton__signOut .cl-userButtonPopoverActionButtonText {
+  color: var(--danger) !important;
+}
+
+.cl-userButtonPopoverActionButton__signOut .cl-userButtonPopoverActionButtonIcon {
+  color: var(--danger) !important;
+  opacity: 1 !important;
+}
+
+/* Divider between items */
+.cl-userButtonPopoverActionsSeparator {
+  background: var(--line) !important;
+  margin: 0.2rem 0 !important;
+}
+
+/* Avatar ring on hover */
+.cl-userButtonTrigger:hover .cl-avatarBox,
+.cl-userButtonTrigger:focus .cl-avatarBox {
+  border-color: var(--sage) !important;
+}
+
+/* Dark mode shadows */
+html.dark .cl-userButtonPopoverCard,
+html[data-theme="dark"] .cl-userButtonPopoverCard {
+  box-shadow: 0 20px 40px -8px rgba(0,0,0,0.5), 0 8px 16px -4px rgba(0,0,0,0.35) !important;
+}
