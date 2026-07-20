@@ -44,19 +44,19 @@ const socialLinks = [
     label: "Instagram",
     href: "https://instagram.com/mountainrunofficial",
     icon: <InstagramIcon />,
-    hoverClass: "hover:border-pink-500 hover:text-pink-500 hover:bg-pink-50/50",
+    hoverClass: "hover:border-pink-500 hover:text-pink-500 hover:bg-pink-500/10",
   },
   {
     label: "WhatsApp",
     href: "https://wa.me/919999999999",
     icon: <WhatsAppIcon />,
-    hoverClass: "hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50/50",
+    hoverClass: "hover:border-emerald-500 hover:text-emerald-500 hover:bg-emerald-500/10",
   },
   {
     label: "Facebook",
     href: "https://facebook.com/mountainrunofficial",
     icon: <FacebookIcon />,
-    hoverClass: "hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/50",
+    hoverClass: "hover:border-blue-500 hover:text-blue-500 hover:bg-blue-500/10",
   },
   {
     label: "X / Twitter",

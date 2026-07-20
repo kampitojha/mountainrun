@@ -361,7 +361,7 @@ img:not([width]) {
 .btn-secondary {
   background: transparent;
   color: var(--foreground);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
 }
 
 .btn-secondary:hover {

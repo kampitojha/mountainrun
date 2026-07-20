@@ -10,17 +10,17 @@ import { fetchOpenEvents } from "../../lib/events-api";
 function EventCard({ event }: { event: PublicEvent }) {
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl border border-(--line) bg-(--panel)">
-      {/* Dark banner */}
+      {/* Dark banner — intentionally dark on both modes, white text always readable */}
       <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 px-5 py-5 text-white">
         <div className="flex items-start justify-between gap-3">
-          <p className="min-w-0 flex-1 text-xs font-semibold uppercase tracking-widest text-teal-400 leading-snug">
+          <p className="min-w-0 flex-1 text-xs font-semibold uppercase tracking-widest text-teal-300 leading-snug">
             {event.banner}
           </p>
-          <span className="shrink-0 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-emerald-400">
+          <span className="shrink-0 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-emerald-300">
             Active
           </span>
         </div>
-        <p className="mt-3 text-sm font-medium text-slate-200 leading-snug">{event.reward}</p>
+        <p className="mt-3 text-sm font-medium text-white/80 leading-snug">{event.reward}</p>
       </div>
 
       {/* Card body */}

@@ -432,7 +432,7 @@ export function DashboardClient() {
       ) : null}
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-[var(--danger)]">
+        <div className="rounded-xl border border-(--danger)/20 bg-(--danger)/8 px-4 py-3 text-sm text-[var(--danger)]">
           {error}{" "}
           <button className="underline" onClick={() => void load()} type="button">
             Retry
@@ -679,7 +679,7 @@ export function DashboardClient() {
                   </div>
 
                   {reg.proofStatus === "REJECTED" && reg.proofUpload?.reviewerNote ? (
-                    <p className="mt-3 rounded-lg border border-red-200/60 bg-red-50/80 px-3 py-2 text-xs text-[var(--danger)]">
+                    <p className="mt-3 rounded-lg border border-(--danger)/20 bg-(--danger)/8 px-3 py-2 text-xs text-[var(--danger)]">
                       Rejected: {reg.proofUpload.reviewerNote}. Re-upload a clearer GPS screenshot.
                     </p>
                   ) : null}
@@ -743,7 +743,7 @@ export function DashboardClient() {
                       </div>
 
                       {proofError ? (
-                        <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-[var(--danger)]">
+                        <p className="rounded-lg border border-(--danger)/20 bg-(--danger)/8 px-3 py-2 text-xs text-[var(--danger)]">
                           {proofError}
                         </p>
                       ) : null}

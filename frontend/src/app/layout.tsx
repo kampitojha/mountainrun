@@ -144,7 +144,7 @@ export default function RootLayout({
             publishableKey={publishableKey || undefined}
             appearance={{
               variables: {
-                colorPrimary: "#0a0a0a",
+                colorPrimary: "#0d9488",
                 borderRadius: "0.75rem",
               },
               elements: {
