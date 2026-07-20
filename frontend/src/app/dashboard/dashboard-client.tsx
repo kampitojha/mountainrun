@@ -41,7 +41,31 @@ function badgeClass(status: string) {
   return m[status] ?? "badge";
 }
 
-function labelStatus(status: string) { return status.replaceAll("_", " ").toLowerCase(); }
+function labelStatus(status: string) {
+  const map: Record<string, string> = {
+    CONFIRMED: "Confirmed",
+    PENDING_PAYMENT: "Payment pending",
+    CANCELLED: "Cancelled",
+    COMPLETED: "Completed",
+    NOT_SUBMITTED: "Not submitted",
+    SUBMITTED: "Under review",
+    APPROVED: "Approved",
+    REJECTED: "Rejected",
+    CREATED: "Awaiting payment",
+    PAID: "Paid",
+    FAILED: "Payment failed",
+    REFUNDED: "Refunded",
+    QUEUED: "Processing",
+    GENERATED: "Ready",
+    SENT: "Sent",
+    PENDING: "Pending",
+    DISPATCHED: "Dispatched",
+    DELIVERED: "Delivered",
+    RETURNED: "Returned",
+    NOT_ELIGIBLE: "Not eligible",
+  };
+  return map[status] ?? status.replaceAll("_", " ").toLowerCase();
+}
 
 function isEligible(reg: Registration) { return reg.status === "CONFIRMED" || reg.status === "COMPLETED" || reg.payment?.status === "PAID"; }
 function canUpload(reg: Registration) { return isEligible(reg) && (reg.proofStatus === "NOT_SUBMITTED" || reg.proofStatus === "REJECTED"); }
@@ -220,7 +244,7 @@ export function DashboardClient() {
             </button>
           </div>
           <ol className="mt-4 flex gap-2 text-xs text-(--muted) flex-wrap">
-            {["Finish your run with GPS on", "Screenshot activity summary", "Upload here \u00B7 wait for approval"].map((s, i) => (
+            {["Finish your run with GPS on", "Screenshot activity summary", "Upload here · wait for approval"].map((s, i) => (
               <li key={i} className="flex items-center gap-1.5 rounded-lg bg-(--panel)/80 px-3 py-2"><span className="flex h-4 w-4 items-center justify-center rounded-full bg-(--sage) text-[0.55rem] font-bold text-white">{i + 1}</span>{s}</li>
             ))}
           </ol>
@@ -246,7 +270,7 @@ export function DashboardClient() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="text-sm font-bold text-(--foreground)">{reg.event.title}</p>
-                    <p className="text-xs text-(--muted)">{reg.distance} \u00B7 Bib {reg.bibNumber}</p>
+                    <p className="text-xs text-(--muted)">{reg.distance} · Bib {reg.bibNumber}</p>
                   </div>
                   <span className={badgeClass(reg.proofStatus) + " text-[0.6rem]"}>{labelStatus(reg.proofStatus)}</span>
                 </div>
@@ -301,10 +325,34 @@ export function DashboardClient() {
                   </div>
 
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    <span className={badgeClass(reg.proofStatus)}>Proof: {labelStatus(reg.proofStatus)}</span>
-                    {reg.payment ? <span className={badgeClass(reg.payment.status)}>{labelStatus(reg.payment.status)}{reg.payment.amountInPaise ? ` · ${formatMoney(reg.payment.amountInPaise)}` : ""}</span> : <span className="badge">No payment</span>}
-                    {reg.certificate ? <span className={badgeClass(reg.certificate.status)}>Certificate: {labelStatus(reg.certificate.status)}</span> : null}
-                    {reg.medalDelivery ? <span className={badgeClass(reg.medalDelivery.status)}>Medal: {labelStatus(reg.medalDelivery.status)}</span> : null}
+                    {/* Proof status */}
+                    {reg.proofStatus !== "NOT_SUBMITTED" && (
+                      <span className={badgeClass(reg.proofStatus)}>
+                        Proof: {labelStatus(reg.proofStatus)}
+                      </span>
+                    )}
+                    {/* Payment — only show if pending or failed */}
+                    {reg.payment && (reg.payment.status === "CREATED" || reg.payment.status === "FAILED") && (
+                      <span className={badgeClass(reg.payment.status)}>
+                        {labelStatus(reg.payment.status)}{reg.payment.amountInPaise ? ` · ${formatMoney(reg.payment.amountInPaise)}` : ""}
+                      </span>
+                    )}
+                    {/* Payment amount when paid */}
+                    {reg.payment?.status === "PAID" && reg.payment.amountInPaise > 0 && (
+                      <span className="badge badge-sage">{formatMoney(reg.payment.amountInPaise)} paid</span>
+                    )}
+                    {/* Certificate */}
+                    {reg.certificate && reg.certificate.status !== "QUEUED" && (
+                      <span className={badgeClass(reg.certificate.status)}>
+                        Certificate: {labelStatus(reg.certificate.status)}
+                      </span>
+                    )}
+                    {/* Medal */}
+                    {reg.medalDelivery && reg.medalDelivery.status !== "PENDING" && (
+                      <span className={badgeClass(reg.medalDelivery.status)}>
+                        Medal: {labelStatus(reg.medalDelivery.status)}
+                      </span>
+                    )}
                   </div>
 
                   {reg.proofStatus === "REJECTED" && reg.proofUpload?.reviewerNote ? (
