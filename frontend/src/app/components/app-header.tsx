@@ -236,28 +236,77 @@ function HamburgerButton({ open, onClick }: { open: boolean; onClick: () => void
     <button
       aria-expanded={open}
       aria-label={open ? "Close menu" : "Open menu"}
-      className="relative inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-(--line) bg-(--panel) text-foreground transition-colors hover:bg-(--panel-soft)"
+      className="relative inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-(--line) bg-(--panel) text-foreground transition-all duration-200 hover:border-(--line-strong) hover:bg-(--panel-soft) hover:shadow-sm active:scale-95"
       onClick={onClick}
       type="button"
     >
       <div className="relative flex h-4 w-4 flex-col items-center justify-center">
         <motion.span
-          className="absolute h-[1.5px] w-3.5 bg-current"
-          animate={{ y: open ? 0 : -4, rotate: open ? 45 : 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 22 }}
+          className="absolute block h-0.5 w-4 rounded-full bg-current"
+          animate={{ y: open ? 0 : -4.5, rotate: open ? 45 : 0, width: open ? 16 : 16 }}
+          transition={{ type: "spring", stiffness: 300, damping: 24 }}
         />
         <motion.span
-          className="absolute h-[1.5px] w-3.5 bg-current"
-          animate={{ opacity: open ? 0 : 1 }}
+          className="absolute block h-0.5 w-4 rounded-full bg-current"
+          animate={{ opacity: open ? 0 : 1, width: open ? 0 : 16 }}
           transition={{ duration: 0.15 }}
         />
         <motion.span
-          className="absolute h-[1.5px] w-3.5 bg-current"
-          animate={{ y: open ? 0 : 4, rotate: open ? -45 : 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 22 }}
+          className="absolute block h-0.5 w-4 rounded-full bg-current"
+          animate={{ y: open ? 0 : 4.5, rotate: open ? -45 : 0, width: open ? 16 : 16 }}
+          transition={{ type: "spring", stiffness: 300, damping: 24 }}
         />
       </div>
+      {open && (
+        <motion.span
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="absolute inset-0 rounded-xl bg-(--sage-soft)/50"
+          transition={{ duration: 0.2 }}
+        />
+      )}
     </button>
+  );
+}
+
+/* ─── Mobile user card ─── */
+function MobileUserCard({ onNavigate }: { onNavigate: () => void }) {
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const router = useRouter();
+
+  const name = user?.fullName ?? user?.firstName ?? "Runner";
+  const email = user?.primaryEmailAddress?.emailAddress ?? "";
+  const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+  const avatarUrl = user?.imageUrl;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.05, type: "spring", stiffness: 300, damping: 26 }}
+      className="mb-4 flex items-center gap-3 rounded-2xl border border-(--line) bg-(--panel-soft) p-3"
+    >
+      {avatarUrl ? (
+        <img src={avatarUrl} alt={name} className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-(--line)" />
+      ) : (
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-indigo-500 text-sm font-bold text-white ring-2 ring-(--line)">
+          {initials}
+        </span>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-bold tracking-tight text-(--foreground)">{name}</p>
+        <p className="truncate text-xs text-(--muted)">{email}</p>
+      </div>
+      <button
+        type="button"
+        onClick={() => { onNavigate(); void signOut(() => router.push("/")); }}
+        title="Sign out"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-(--line) bg-(--panel) text-(--muted) transition-colors hover:border-red-300 hover:text-red-500 active:scale-90"
+      >
+        <LogOut className="h-3.5 w-3.5" />
+      </button>
+    </motion.div>
   );
 }
 
@@ -323,7 +372,7 @@ export function AppHeader() {
         </div>
       </div>
 
-      {/* Mobile drawer */}
+      {/* Mobile drawer — slide-in from right */}
       <AnimatePresence>
         {open && (
           <>
@@ -331,76 +380,135 @@ export function AppHeader() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               onClick={() => setOpen(false)}
-              className="fixed inset-x-0 bottom-0 top-[56px] z-30 bg-(--overlay) backdrop-blur-xs sm:top-[64px] md:hidden"
+              className="fixed inset-0 z-40 bg-(--overlay) backdrop-blur-sm md:hidden"
             />
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ type: "spring", duration: 0.4, bounce: 0 }}
-              className="absolute left-0 right-0 top-full z-40 overflow-hidden border-b border-(--line) bg-(--panel) px-4 pb-6 pt-2 shadow-lg md:hidden"
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className="fixed inset-y-0 right-0 z-50 flex w-[300px] max-w-[85vw] flex-col border-l border-(--line) bg-(--panel) shadow-2xl md:hidden"
             >
-              <nav className="flex flex-col gap-1">
-                {publicNav.map(([label, href, Icon]) => {
-                  const active = isActive(href);
-                  return (
-                    <Link
-                      key={href}
-                      href={href}
-                      onClick={() => setOpen(false)}
-                      className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition active:scale-[0.98] ${
-                        active ? "bg-(--sage-soft) text-(--sage)" : "text-(--muted) hover:bg-(--panel-soft) hover:text-(--foreground)"
-                      }`}
-                    >
-                      <Icon className={`h-4 w-4 ${active ? "text-(--sage)" : "text-(--muted-soft)"}`} />
-                      {label}
-                    </Link>
-                  );
-                })}
+              {/* Drawer header */}
+              <div className="flex items-center justify-between border-b border-(--line) px-4 py-3">
+                <BrandLogo onNavigate={() => setOpen(false)} />
+                <button
+                  type="button"
+                  aria-label="Close menu"
+                  onClick={() => setOpen(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-(--line) bg-(--panel-soft) text-(--muted) transition-all duration-200 hover:border-(--line-strong) hover:text-(--foreground) active:scale-90"
+                >
+                  <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current" aria-hidden="true">
+                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                  </svg>
+                </button>
+              </div>
 
+              {/* Drawer body */}
+              <div className="flex-1 overflow-y-auto px-3 py-4">
+                {/* User card (signed in) */}
                 <Show when="signed-in">
-                  <div className="my-2 h-px bg-(--line)" />
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setOpen(false)}
-                    className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition ${
-                      isActive("/dashboard") ? "bg-(--sage-soft) text-(--sage)" : "text-(--muted) hover:bg-(--panel-soft) hover:text-(--foreground)"
-                    }`}
-                  >
-                    <LayoutDashboard className="h-4 w-4 text-(--muted-soft)" />
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/events"
-                    onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-(--muted) transition hover:bg-(--panel-soft) hover:text-(--foreground)"
-                  >
-                    <Award className="h-4 w-4 text-(--muted-soft)" />
-                    Browse events
-                  </Link>
+                  <MobileUserCard onNavigate={() => setOpen(false)} />
                 </Show>
 
-                <Show when="signed-out">
-                  <div className="mt-4 grid grid-cols-2 gap-2 border-t border-(--line) pt-4">
-                    <Link
-                      className="btn btn-secondary h-10 w-full text-xs font-bold"
-                      href="/sign-in"
-                      onClick={() => setOpen(false)}
+                {/* Nav links */}
+                <nav className="flex flex-col gap-0.5">
+                  {publicNav.map(([label, href, Icon], i) => {
+                    const active = isActive(href);
+                    return (
+                      <motion.div
+                        key={href}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.05 * i, type: "spring", stiffness: 300, damping: 26 }}
+                      >
+                        <Link
+                          href={href}
+                          onClick={() => setOpen(false)}
+                          className={`flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${
+                            active
+                              ? "bg-(--sage-soft) text-(--sage) shadow-sm"
+                              : "text-(--muted) hover:bg-(--panel-soft) hover:text-(--foreground)"
+                          }`}
+                        >
+                          <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                            active
+                              ? "bg-(--sage) text-white"
+                              : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
+                          }`}>
+                            <Icon className="h-4 w-4" />
+                          </span>
+                          <span className="flex-1">{label}</span>
+                          <svg className={`h-4 w-4 ${active ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="m6 4 4 4-4 4" />
+                          </svg>
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
+
+                  {/* Dashboard link (signed in) */}
+                  <Show when="signed-in">
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.05 * publicNav.length, type: "spring", stiffness: 300, damping: 26 }}
                     >
-                      <LogIn className="mr-1.5 h-3.5 w-3.5" />
-                      Sign in
-                    </Link>
+                      <div className="my-2 h-px bg-(--line)" />
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setOpen(false)}
+                        className={`flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${
+                          isActive("/dashboard")
+                            ? "bg-(--sage-soft) text-(--sage) shadow-sm"
+                            : "text-(--muted) hover:bg-(--panel-soft) hover:text-(--foreground)"
+                        }`}
+                      >
+                        <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                          isActive("/dashboard")
+                            ? "bg-(--sage) text-white"
+                            : "bg-(--panel-soft) text-(--muted-soft)"
+                        }`}>
+                          <LayoutDashboard className="h-4 w-4" />
+                        </span>
+                        <span className="flex-1">Dashboard</span>
+                        <svg className="h-4 w-4 text-(--muted-soft)" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="m6 4 4 4-4 4" />
+                        </svg>
+                      </Link>
+                    </motion.div>
+                  </Show>
+                </nav>
+              </div>
+
+              {/* Drawer footer */}
+              <div className="border-t border-(--line) px-4 py-3">
+                <Show when="signed-out">
+                  <div className="flex flex-col gap-2">
                     <Link
-                      className="btn btn-primary h-10 w-full text-xs font-bold"
+                      className="btn btn-primary h-10 w-full text-sm"
                       href="/events"
                       onClick={() => setOpen(false)}
                     >
                       Browse events
                     </Link>
+                    <Link
+                      className="btn btn-secondary h-10 w-full text-sm"
+                      href="/sign-in"
+                      onClick={() => setOpen(false)}
+                    >
+                      <LogIn className="h-4 w-4" />
+                      Sign in
+                    </Link>
                   </div>
                 </Show>
-              </nav>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-(--muted-soft)">Theme</p>
+                  <ThemeToggle size="sm" />
+                </div>
+              </div>
             </motion.div>
           </>
         )}
