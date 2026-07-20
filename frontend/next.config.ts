@@ -21,6 +21,16 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 64, 96, 128, 200, 256, 384],
     minimumCacheTTL: 31536000, // 1 year
     dangerouslyAllowSVG: false,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+      {
+        protocol: "https",
+        hostname: "**.cloudinary.com",
+      },
+    ],
   },
 
   // ── Compression ──────────────────────────────────────────
