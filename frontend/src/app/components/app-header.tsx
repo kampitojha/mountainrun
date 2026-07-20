@@ -240,7 +240,6 @@ function HamburgerButton({ open, onClick }: { open: boolean; onClick: () => void
       onClick={onClick}
       type="button"
     >
-      {/* Subtle sage glow when open */}
       {open && (
         <motion.span
           initial={{ scale: 0, opacity: 0 }}
@@ -250,23 +249,27 @@ function HamburgerButton({ open, onClick }: { open: boolean; onClick: () => void
           transition={{ duration: 0.2 }}
         />
       )}
-      <div className="relative flex h-4 w-4.5 flex-col items-center justify-center gap-[3.5px]">
+      <div className="relative h-4 w-4">
         <motion.span
-          className="block h-[2.5px] w-4 rounded-full bg-current"
-          animate={open ? { y: 3.5, rotate: 45, width: 18 } : { y: 0, rotate: 0, width: 16 }}
+          className="absolute left-0 block h-[2.5px] rounded-full bg-current"
+          animate={open
+            ? { top: 7, rotate: 45, width: 18, left: -1 }
+            : { top: 1.5, rotate: 0, width: 16, left: 0 }}
           transition={{ type: "spring", stiffness: 320, damping: 24 }}
-          style={{ transformOrigin: "center" }}
         />
         <motion.span
-          className="block h-[2.5px] rounded-full bg-current"
-          animate={open ? { width: 0, opacity: 0 } : { width: 12, opacity: 1 }}
+          className="absolute left-0 block h-[2.5px] rounded-full bg-current"
+          animate={open
+            ? { opacity: 0, width: 0, top: 7 }
+            : { opacity: 1, width: 12, top: 7 }}
           transition={{ duration: 0.15 }}
         />
         <motion.span
-          className="block h-[2.5px] rounded-full bg-current"
-          animate={open ? { y: -3.5, rotate: -45, width: 18 } : { y: 0, rotate: 0, width: 16 }}
+          className="absolute left-0 block h-[2.5px] rounded-full bg-current"
+          animate={open
+            ? { top: 7, rotate: -45, width: 18, left: -1 }
+            : { top: 12.5, rotate: 0, width: 16, left: 0 }}
           transition={{ type: "spring", stiffness: 320, damping: 24 }}
-          style={{ transformOrigin: "center" }}
         />
       </div>
     </button>
@@ -386,14 +389,14 @@ export function AppHeader() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.25 }}
               onClick={() => setOpen(false)}
-              className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
+              className="fixed inset-0 z-40 bg-(--overlay) backdrop-blur-sm md:hidden"
             />
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 320 }}
-              className="fixed inset-y-0 right-0 z-50 flex w-[280px] max-w-[80vw] flex-col bg-(--panel) shadow-2xl md:hidden"
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="fixed inset-y-0 right-0 z-50 flex w-[280px] max-w-[85vw] flex-col border-l border-(--line) bg-(--panel) shadow-2xl md:hidden"
             >
               {/* Drawer header with sage accent */}
               <div className="relative flex items-center justify-between px-4 py-4">
