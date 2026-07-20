@@ -3,6 +3,7 @@
 import { Show } from "@clerk/nextjs";
 import { ArrowUp, Mail, MapPin } from "lucide-react";
 import Link from "next/link";
+import { BrandText } from "./brand-text";
 
 function InstagramIcon() {
   return (
@@ -62,10 +63,7 @@ export function AppFooter() {
               className="h-7 w-7 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12"
             />
             <span className="text-base font-bold tracking-tight text-(--foreground)">
-              Mountain{" "}
-              <span className="bg-gradient-to-r from-emerald-500 to-indigo-500 bg-clip-text text-transparent">
-                Run
-              </span>
+              <BrandText />
             </span>
           </Link>
           <p className="text-xs text-(--muted-soft)">

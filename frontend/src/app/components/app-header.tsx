@@ -20,6 +20,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { BrandText } from "./brand-text";
 import { ThemeToggle } from "./theme-toggle";
 
 const publicNav = [
@@ -223,10 +224,7 @@ function BrandLogo({ onNavigate }: { onNavigate?: () => void }) {
         width={36}
       />
       <span className="text-base font-semibold tracking-tight text-(--foreground) sm:text-lg">
-        Mountain{" "}
-        <span className="bg-gradient-to-r from-emerald-500 to-indigo-600 bg-clip-text font-extrabold text-transparent">
-          Run
-        </span>
+        <BrandText />
       </span>
     </Link>
   );

@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { adminFetch } from "../../lib/admin-api";
 import { AdminThemeProvider, AdminThemeToggle, useAdminTheme } from "./admin-theme";
+import { BrandText } from "../components/brand-text";
 import "./admin.css";
 
 type NavItem = { label: string; href: string; icon: string };
@@ -203,7 +204,7 @@ function GateSignIn() {
             <BrandMark size={22} />
           </div>
           <span className="admin-gate-logo-text">
-            Mountain <em>Run</em>
+            <BrandText />
           </span>
         </div>
 
@@ -224,7 +225,7 @@ function GateSignIn() {
         </div>
 
         <div className="admin-gate-divider">
-          Mountain Run · Operations Console
+          <BrandText /> · Operations Console
         </div>
       </motion.div>
     </AdminThemed>
@@ -261,7 +262,7 @@ function GateRestricted({
             <BrandMark size={22} />
           </div>
           <span className="admin-gate-logo-text">
-            Mountain <em>Run</em>
+            <BrandText />
           </span>
         </div>
 
@@ -324,7 +325,7 @@ function GateLoading() {
             <BrandMark size={22} />
           </div>
           <span className="admin-gate-logo-text">
-            Mountain <em>Run</em>
+            <BrandText />
           </span>
         </div>
         <Spinner />
@@ -358,7 +359,7 @@ function SidebarNav({
         </div>
         <div className="admin-sidebar-brand-text">
           <strong>
-            Mountain <em>Run</em>
+            <BrandText />
           </strong>
           <span>Operations</span>
         </div>
@@ -489,7 +490,7 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
         <Link href="/" className="admin-mobile-bar-brand">
           <BrandMark size={22} />
           <strong>
-            Mountain <em>Run</em>
+            <BrandText />
           </strong>
         </Link>
         <div className="admin-mobile-bar-actions">
