@@ -6,30 +6,87 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Calendar,
-  Image as ImageIcon,
-  Info,
-  Trophy,
   LayoutDashboard,
-  Award,
   LogIn,
   Settings,
   LogOut,
   CalendarDays,
-  Menu,
-  X,
 } from "lucide-react";
 import { BrandText } from "./brand-text";
 import { ThemeToggle } from "./theme-toggle";
 
+/* ─── Nav items ─── */
 const publicNav = [
-  ["Events", "/events", Calendar],
-  ["Gallery", "/gallery", ImageIcon],
-  ["About", "/about", Info],
-  ["Leaderboard", "/leaderboard", Trophy],
+  ["Events", "/events"],
+  ["Gallery", "/gallery"],
+  ["Leaderboard", "/leaderboard"],
+  ["About", "/about"],
 ] as const;
 
-/* ─── Premium Profile Dropdown ─── */
+/* ─── Animated hamburger ─── */
+function Hamburger({ open, onClick }: { open: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={open ? "Close menu" : "Open menu"}
+      aria-expanded={open}
+      onClick={onClick}
+      className="relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--foreground) transition-all duration-200 hover:border-(--sage)/30 hover:bg-(--sage-soft) active:scale-90"
+    >
+      <span className="flex w-5 flex-col gap-[5px]">
+        <motion.span
+          animate={open ? { rotate: 45, y: 6.5, width: 20 } : { rotate: 0, y: 0, width: 20 }}
+          className="block h-[1.5px] origin-center rounded-full bg-current"
+          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+        />
+        <motion.span
+          animate={open ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
+          className="block h-[1.5px] origin-center rounded-full bg-current"
+          transition={{ duration: 0.2 }}
+        />
+        <motion.span
+          animate={open ? { rotate: -45, y: -6.5, width: 20 } : { rotate: 0, y: 0, width: 20 }}
+          className="block h-[1.5px] origin-center rounded-full bg-current"
+          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+        />
+      </span>
+    </button>
+  );
+}
+
+/* ─── Avatar with gradient ring ─── */
+function AvatarButton({ onClick }: { onClick: () => void }) {
+  const { user } = useUser();
+  if (!user) return null;
+  const name = user.fullName ?? user.firstName ?? "Account";
+  const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+  const avatarUrl = user.imageUrl;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Open profile menu"
+      className="group relative cursor-pointer rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--sage)/40"
+    >
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt={name}
+          className="h-8 w-8 rounded-full object-cover ring-2 ring-(--line) transition-all duration-300 group-hover:ring-(--sage)/50 group-hover:scale-105 sm:h-9 sm:w-9"
+        />
+      ) : (
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-indigo-500 text-[0.6rem] font-bold text-white ring-2 ring-(--line) transition-all duration-300 group-hover:ring-(--sage)/50 group-hover:scale-105 sm:h-9 sm:w-9">
+          {initials}
+        </span>
+      )}
+      {/* Online indicator */}
+      <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-(--panel) bg-emerald-500" />
+    </button>
+  );
+}
+
+/* ─── Profile dropdown ─── */
 function ProfileDropdown() {
   const { user } = useUser();
   const { signOut, openUserProfile } = useClerk();
@@ -59,29 +116,8 @@ function ProfileDropdown() {
 
   return (
     <div className="relative" ref={ref}>
-      {/* Trigger — just avatar, clean ring */}
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-haspopup="true"
-        onClick={() => setOpen((v) => !v)}
-        className="group cursor-pointer rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--sage)/40"
-      >
-        {avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={avatarUrl}
-            alt={name}
-            className="h-8 w-8 rounded-full object-cover ring-2 ring-(--line) transition-all duration-300 group-hover:ring-(--sage)/50 group-hover:shadow-[0_0_0_4px_rgba(13,148,136,0.08)] sm:h-9 sm:w-9"
-          />
-        ) : (
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-indigo-500 text-[0.65rem] font-bold text-white ring-2 ring-(--line) transition-all duration-300 group-hover:ring-(--sage)/50 group-hover:shadow-[0_0_0_4px_rgba(13,148,136,0.08)] sm:h-9 sm:w-9">
-            {initials}
-          </span>
-        )}
-      </button>
+      <AvatarButton onClick={() => setOpen((v) => !v)} />
 
-      {/* Dropdown */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -91,12 +127,8 @@ function ProfileDropdown() {
             transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
             className="absolute right-0 top-[calc(100%+10px)] z-50 w-56 origin-top-right overflow-hidden rounded-2xl border border-(--line-strong) bg-(--panel) shadow-[0_20px_40px_-8px_rgba(0,0,0,0.12),0_8px_16px_-4px_rgba(0,0,0,0.06)] dark:shadow-[0_20px_40px_-8px_rgba(0,0,0,0.5)]"
           >
-            {/* Gradient accent bar */}
             <div className="h-[3px] w-full bg-gradient-to-r from-(--sage) via-emerald-400 to-indigo-500" />
-
-            {/* Brand logo — icon only, no text */}
             <div className="flex justify-center pt-4 pb-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 alt="Mountain Run"
                 className="h-8 w-8 opacity-70"
@@ -105,15 +137,13 @@ function ProfileDropdown() {
                 width={32}
               />
             </div>
-
-            {/* Menu items */}
             <div className="px-2 pb-2">
               <Link
                 href="/dashboard"
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-(--foreground) transition-all duration-200 hover:bg-(--sage-soft) hover:text-(--sage)"
               >
-                <LayoutDashboard className="h-4 w-4 text-(--muted) group-hover:text-(--sage)" />
+                <LayoutDashboard className="h-4 w-4 text-(--muted)" />
                 My dashboard
               </Link>
               <Link
@@ -132,9 +162,7 @@ function ProfileDropdown() {
                 <Settings className="h-4 w-4 text-(--muted)" />
                 Manage account
               </button>
-
               <div className="my-1.5 mx-2 h-px bg-gradient-to-r from-transparent via-(--line) to-transparent" />
-
               <button
                 type="button"
                 onClick={() => { setOpen(false); void signOut(() => router.push("/")); }}
@@ -151,7 +179,7 @@ function ProfileDropdown() {
   );
 }
 
-/* ─── Nav link with active pill ─── */
+/* ─── Desktop nav link ─── */
 function NavLink({
   href,
   label,
@@ -165,104 +193,41 @@ function NavLink({
 }) {
   return (
     <Link
-      className={`relative rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors duration-200 ${
-        active ? "text-(--foreground)" : "text-(--muted) hover:text-(--foreground)"
-      }`}
       href={href}
       onClick={onClick}
+      className={`relative rounded-full px-4 py-1.5 text-sm font-medium tracking-tight transition-all duration-300 ${
+        active
+          ? "text-(--foreground)"
+          : "text-(--muted-soft) hover:text-(--foreground)"
+      }`}
     >
+      {label}
       {active && (
         <motion.span
-          layoutId="active-nav-pill"
-          className="absolute inset-0 -z-10 rounded-full border border-(--line) bg-(--panel) shadow-xs"
-          transition={{ type: "spring", stiffness: 380, damping: 28 }}
+          layoutId="nav-pill"
+          className="absolute inset-0 -z-10 rounded-full bg-(--panel) shadow-[0_1px_4px_-1px_rgba(0,0,0,0.04)]"
+          transition={{ type: "spring", stiffness: 400, damping: 30 }}
         />
       )}
-      {label}
     </Link>
-  );
-}
-
-/* ─── Brand logo ─── */
-function BrandLogo({ onNavigate }: { onNavigate?: () => void }) {
-  return (
-    <Link
-      aria-label="Mountain Run home"
-      className="group flex shrink-0 items-center gap-2 sm:gap-2.5"
-      href="/"
-      onClick={onNavigate}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        alt="Mountain Run logo"
-        className="block h-8 w-8 shrink-0 sm:h-9 sm:w-9 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110"
-        height={36}
-        src="/logo-mark.svg"
-        width={36}
-      />
-      <span className="text-base font-semibold tracking-tight text-(--foreground) sm:text-lg">
-        <BrandText />
-      </span>
-    </Link>
-  );
-}
-
-/* ─── Hamburger ─── */
-function HamburgerButton({ open, onClick }: { open: boolean; onClick: () => void }) {
-  return (
-    <button
-      aria-expanded={open}
-      aria-label={open ? "Close menu" : "Open menu"}
-      className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-2xl border border-(--line) bg-(--panel) text-(--foreground) transition-all duration-200 hover:border-(--sage)/40 hover:bg-(--sage-soft) active:scale-90"
-      onClick={onClick}
-      type="button"
-    >
-      {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-    </button>
-  );
-}
-
-/* ─── Mobile user badge ─── */
-function SignedInUserBadge({ onClose }: { onClose: () => void }) {
-  const { user } = useUser();
-  const { signOut } = useClerk();
-  const router = useRouter();
-  if (!user) return null;
-  const name = user.fullName ?? user.firstName ?? "Runner";
-  const email = user.primaryEmailAddress?.emailAddress ?? "";
-  const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
-  const avatarUrl = user.imageUrl;
-  return (
-    <>
-      {avatarUrl ? (
-        <img src={avatarUrl} alt={name} className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-(--line)" />
-      ) : (
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-indigo-500 text-sm font-bold text-white ring-2 ring-(--line)">
-          {initials}
-        </span>
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-bold tracking-tight text-(--foreground)">{name}</p>
-        <p className="truncate text-xs text-(--muted)">{email}</p>
-      </div>
-      <button
-        type="button"
-        onClick={() => { onClose(); void signOut(() => router.push("/")); }}
-        title="Sign out"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-(--line) bg-(--panel) text-(--muted) transition-colors hover:border-red-300 hover:text-red-500 active:scale-90"
-      >
-        <LogOut className="h-3.5 w-3.5" />
-      </button>
-    </>
   );
 }
 
 /* ─── Main header ─── */
 export function AppHeader() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+
   const isActive = (href: string) =>
     pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -272,170 +237,223 @@ export function AppHeader() {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-(--line) bg-(--header-bg) shadow-xs backdrop-blur-xl">
-      <div className="h-[2px] w-full bg-gradient-to-r from-(--sage) via-emerald-400 to-indigo-500" />
+    <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-3 sm:pt-4">
+      {/* ─── Desktop floating bar ─── */}
+      <div
+        className={`hidden w-full max-w-[1280px] transition-all duration-500 ease-out md:block ${
+          scrolled ? "-translate-y-0.5" : ""
+        }`}
+      >
+        <div
+          className={`flex items-center justify-between rounded-2xl border border-(--line) transition-all duration-500 ease-out ${
+            scrolled
+              ? "bg-(--header-bg) py-2 pl-4 pr-2 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.04)] backdrop-blur-2xl"
+              : "bg-(--header-bg)/70 py-2.5 pl-5 pr-2.5 shadow-none backdrop-blur-lg"
+          }`}
+        >
+          {/* Left — Logo */}
+          <Link
+            href="/"
+            aria-label="Mountain Run home"
+            className="group flex shrink-0 items-center gap-2.5"
+          >
+            <img
+              src="/logo-mark.svg"
+              alt="Mountain Run"
+              width={28}
+              height={28}
+              className={`shrink-0 transition-all duration-500 ease-out group-hover:scale-110 group-hover:rotate-3 ${
+                scrolled ? "h-6 w-6 sm:h-7 sm:w-7" : "h-7 w-7 sm:h-8 sm:w-8"
+              }`}
+            />
+            <span className={`font-bold tracking-tight text-(--foreground) transition-all duration-500 ease-out ${
+              scrolled ? "text-sm sm:text-base" : "text-base sm:text-lg"
+            }`}>
+              <BrandText />
+            </span>
+          </Link>
 
-      <div className="container-page">
-        <div className="flex h-14 items-center justify-between gap-2 sm:h-16 sm:gap-4">
-          <BrandLogo onNavigate={() => setOpen(false)} />
-
-          {/* Desktop nav */}
-          <nav className="hidden items-center gap-0.5 md:flex">
+          {/* Center — Nav pill */}
+          <nav className="flex items-center gap-0.5 rounded-full border border-(--line) bg-(--panel-soft)/60 px-1 py-1 shadow-sm" aria-label="Main navigation">
             {publicNav.map(([label, href]) => (
-              <NavLink active={isActive(href)} href={href} key={href} label={label} />
+              <NavLink
+                key={href}
+                active={isActive(href)}
+                href={href}
+                label={label}
+              />
             ))}
             <Show when="signed-in">
-              <NavLink active={isActive("/dashboard")} href="/dashboard" label="Dashboard" />
+              <NavLink
+                active={isActive("/dashboard")}
+                href="/dashboard"
+                label="Dashboard"
+              />
             </Show>
           </nav>
 
-          {/* Right side */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Right — Actions pill */}
+          <div className="flex items-center gap-1.5 rounded-full border border-(--line) bg-(--panel-soft)/60 px-2 py-1 shadow-sm">
             <ThemeToggle size="sm" />
-
-            {/* Desktop auth */}
-            <div className="hidden items-center gap-2 md:flex">
-              <Show when="signed-out">
-                <Link className="btn btn-ghost h-9 px-3 text-sm" href="/sign-in">
-                  Sign in
-                </Link>
-                <Link className="btn btn-primary h-9 px-4 text-sm" href="/events">
-                  Browse events
-                </Link>
-              </Show>
-              <Show when="signed-in">
-                <ProfileDropdown />
-              </Show>
-            </div>
-
-            {/* Mobile auth */}
-            <div className="flex items-center gap-1.5 md:hidden">
-              <Show when="signed-in">
-                <ProfileDropdown />
-              </Show>
-              <HamburgerButton open={open} onClick={() => setOpen((v) => !v)} />
-            </div>
+            <div className="h-5 w-px bg-(--line)" />
+            <Show when="signed-out">
+              <Link
+                className="btn btn-primary h-8 px-3.5 text-xs font-semibold sm:h-9 sm:px-4 sm:text-sm"
+                href="/events"
+              >
+                Browse events
+              </Link>
+            </Show>
+            <Show when="signed-in">
+              <ProfileDropdown />
+            </Show>
           </div>
         </div>
       </div>
 
-      {/* Mobile drawer — always in DOM, visible via CSS transform */}
-      <div className={`fixed inset-0 z-50 md:hidden transition-[opacity] duration-200 ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        <div className="absolute inset-0 bg-(--overlay) backdrop-blur-sm" onClick={() => setOpen(false)} />
-        <div className={`absolute right-0 inset-y-0 w-72 max-w-[85vw] flex flex-col border-l border-(--line) bg-(--panel) shadow-2xl transition-transform duration-200 ${open ? 'translate-x-0' : 'translate-x-full'}`}>
-          {/* Drawer header */}
-          <div className="flex items-center justify-between px-4 py-4 border-b border-(--line)">
-            <BrandLogo onNavigate={() => setOpen(false)} />
-            <button
-              type="button"
-              aria-label="Close menu"
-              onClick={() => setOpen(false)}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--muted) transition-all duration-200 hover:border-(--sage)/40 hover:bg-(--sage-soft) hover:text-(--sage) active:scale-90"
-            >
-              <X className="h-4 w-4" />
-            </button>
+      {/* ─── Mobile bar ─── */}
+      <div className="flex w-full items-center justify-between md:hidden">
+        <div className={`flex w-full items-center justify-between rounded-2xl border border-(--line) px-4 py-2 transition-all duration-500 ${
+          scrolled
+            ? "bg-(--header-bg) shadow-[0_4px_24px_-6px_rgba(0,0,0,0.04)] backdrop-blur-2xl"
+            : "bg-(--header-bg)/70 backdrop-blur-lg"
+        }`}>
+          <Link href="/" aria-label="Mountain Run home" className="group flex shrink-0 items-center gap-2">
+            <img
+              src="/logo-mark.svg"
+              alt="Mountain Run"
+              width={24}
+              height={24}
+              className="h-6 w-6 shrink-0 transition-transform duration-300 group-hover:scale-110"
+            />
+            <span className="text-sm font-bold tracking-tight text-(--foreground)">
+              <BrandText />
+            </span>
+          </Link>
+
+          <div className="flex items-center gap-1.5">
+            <ThemeToggle size="sm" />
+            <Show when="signed-in">
+              <ProfileDropdown />
+            </Show>
+            <Hamburger open={open} onClick={() => setOpen((v) => !v)} />
           </div>
+        </div>
+      </div>
 
-              {/* Drawer body */}
-              <div className="flex-1 overflow-y-auto px-3 py-3">
-                <Show when="signed-in">
-                  <div className="mb-4 flex items-center gap-3 rounded-2xl border border-(--line) bg-(--panel-soft) p-3">
-                    <SignedInUserBadge onClose={() => setOpen(false)} />
-                  </div>
-                </Show>
+      {/* ─── Mobile overlay menu ─── */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 flex items-center justify-center md:hidden"
+          >
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-(--overlay) backdrop-blur-md"
+              onClick={() => setOpen(false)}
+            />
 
-                {/* Nav links */}
-                <nav className="flex flex-col gap-1">
-                  {publicNav.map(([label, href, Icon]) => {
-                    const active = isActive(href);
-                    return (
-                      <Link
-                        key={href}
-                        href={href}
-                        onClick={() => setOpen(false)}
-                        className={`group relative flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${
-                          active
-                            ? "bg-(--sage-soft) text-(--sage)"
-                            : "text-(--muted) hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
-                        }`}
-                      >
-                        {active && (
-                          <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-(--sage)" />
-                        )}
-                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all ${
-                          active
-                            ? "bg-(--sage) text-white shadow-sm"
-                            : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
-                        }`}>
-                          <Icon className="h-4 w-4" strokeWidth={1.75} />
-                        </span>
-                        <span className="flex-1">{label}</span>
-                        <svg className={`h-4 w-4 transition-all group-hover:translate-x-0.5 ${active ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="m6 4 4 4-4 4" />
-                        </svg>
-                      </Link>
-                    );
-                  })}
-
-                  {/* Dashboard link (signed in) */}
-                  <Show when="signed-in">
-                    <div className="my-2 mx-3 h-px bg-gradient-to-r from-(--line) via-(--line) to-transparent" />
+            {/* Centered menu */}
+            <motion.nav
+              initial={{ opacity: 0, y: 24, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 24, scale: 0.96 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="relative z-10 flex w-[85vw] max-w-sm flex-col gap-1.5 rounded-3xl border border-(--line-strong) bg-(--panel) p-3 shadow-2xl"
+            >
+              {publicNav.map(([label, href], i) => {
+                const active = isActive(href);
+                return (
+                  <motion.div
+                    key={href}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05, duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                  >
                     <Link
-                      href="/dashboard"
+                      href={href}
                       onClick={() => setOpen(false)}
-                      className={`group relative flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${
-                        isActive("/dashboard")
+                      className={`group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-200 ${
+                        active
                           ? "bg-(--sage-soft) text-(--sage)"
                           : "text-(--muted) hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
                       }`}
                     >
-                      {isActive("/dashboard") && (
-                        <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-(--sage)" />
-                      )}
-                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
-                        isActive("/dashboard")
-                          ? "bg-(--sage) text-white shadow-sm"
-                          : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
-                      }`}>
-                        <LayoutDashboard className="h-4 w-4" strokeWidth={1.75} />
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line) text-xs font-bold uppercase tracking-wider">
+                        {label.slice(0, 2)}
                       </span>
-                      <span className="flex-1">Dashboard</span>
-                      <svg className={`h-4 w-4 transition-all group-hover:translate-x-0.5 ${isActive("/dashboard") ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <span className="flex-1">{label}</span>
+                      <svg className={`h-4 w-4 transition-all group-hover:translate-x-0.5 ${active ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="m6 4 4 4-4 4" />
                       </svg>
                     </Link>
-                  </Show>
-                </nav>
-              </div>
+                  </motion.div>
+                );
+              })}
 
-              {/* Drawer footer with sage accent */}
-              <div className="relative border-t border-(--line) px-4 py-4">
-                <Show when="signed-out">
-                  <div className="flex flex-col gap-2 pb-3">
-                    <Link
-                      className="btn btn-primary h-10 w-full text-sm justify-center"
-                      href="/events"
-                      onClick={() => setOpen(false)}
-                    >
-                      Browse events
-                    </Link>
-                    <Link
-                      className="btn btn-secondary h-10 w-full text-sm justify-center"
-                      href="/sign-in"
-                      onClick={() => setOpen(false)}
-                    >
-                      <LogIn className="h-4 w-4" />
-                      Sign in
-                    </Link>
-                  </div>
-                </Show>
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-(--muted-soft)">Theme</p>
-                  <ThemeToggle size="sm" />
-                </div>
-          </div>
-        </div>
-      </div>
+              {/* Dashboard */}
+              <Show when="signed-in">
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: publicNav.length * 0.05, duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <div className="mx-3 my-1.5 h-px bg-gradient-to-r from-(--line) via-(--line) to-transparent" />
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setOpen(false)}
+                    className={`group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-200 ${
+                      isActive("/dashboard")
+                        ? "bg-(--sage-soft) text-(--sage)"
+                        : "text-(--muted) hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
+                    }`}
+                  >
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all ${
+                      isActive("/dashboard")
+                        ? "bg-(--sage) text-white shadow-sm"
+                        : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
+                    }`}>
+                      <LayoutDashboard className="h-4 w-4" strokeWidth={1.75} />
+                    </span>
+                    <span className="flex-1">Dashboard</span>
+                    <svg className={`h-4 w-4 transition-all group-hover:translate-x-0.5 ${isActive("/dashboard") ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m6 4 4 4-4 4" />
+                    </svg>
+                  </Link>
+                </motion.div>
+              </Show>
+
+              {/* Sign in for signed-out */}
+              <Show when="signed-out">
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: publicNav.length * 0.05, duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <div className="mx-3 my-1.5 h-px bg-gradient-to-r from-(--line) via-(--line) to-transparent" />
+                  <Link
+                    href="/sign-in"
+                    onClick={() => setOpen(false)}
+                    className="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-(--muted) transition-all duration-200 hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)">
+                      <LogIn className="h-4 w-4" strokeWidth={1.75} />
+                    </span>
+                    <span className="flex-1">Sign in</span>
+                    <svg className="h-4 w-4 text-(--muted-soft) transition-all group-hover:translate-x-0.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m6 4 4 4-4 4" />
+                    </svg>
+                  </Link>
+                </motion.div>
+              </Show>
+            </motion.nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
