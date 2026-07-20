@@ -9,6 +9,7 @@ import {
   formatInrFromPaise,
   toDatetimeLocalValue,
 } from "../../../lib/admin-api";
+import { authHeaders, getApiUrl } from "../../../lib/api";
 import { AdminEmpty, AdminPageHeader } from "../ui";
 import {
   Star,
@@ -106,6 +107,7 @@ type EventRow = {
   verifiedResults?: number | null;
   cities?: number | null;
   resultNote?: string | null;
+  bannerImageUrl?: string | null;
   _count?: { registrations: number };
 };
 
@@ -116,6 +118,7 @@ const emptyForm = {
   maxCapacity: "", city: "Virtual", couponCode: "", showCouponOnCard: false,
   activityTypes: ["running", "cycling", "walking"], benefits: "",
   finishers: "", verifiedResults: "", cities: "", resultNote: "",
+  bannerImageUrl: "",
   status: "DRAFT",
 };
 
@@ -162,6 +165,7 @@ export default function AdminEventsPage() {
     setEditingId(event.id);
     setForm({
       title: event.title, slug: event.slug, description: "",
+      bannerImageUrl: "",
       startsAt: toDatetimeLocalValue(event.startsAt),
       endsAt: toDatetimeLocalValue(event.endsAt),
       proofClosesAt: "",
@@ -182,12 +186,13 @@ export default function AdminEventsPage() {
     });
     void (async () => {
       const token = await getToken().catch(() => null);
-      const json = await adminFetch<{ data: EventRow & { description: string; proofClosesAt: string } }>(
+      const json = await adminFetch<{ data: EventRow & { description: string; proofClosesAt: string; bannerImageUrl: string | null } }>(
         `/api/admin/events/${event.id}`, token);
       setForm((prev) => ({
         ...prev,
         description: json.data.description,
         proofClosesAt: toDatetimeLocalValue(json.data.proofClosesAt),
+        bannerImageUrl: json.data.bannerImageUrl ?? "",
       }));
     })();
     // Scroll form into view on mobile
@@ -220,6 +225,7 @@ export default function AdminEventsPage() {
         verifiedResults: form.verifiedResults ? Number(form.verifiedResults) : null,
         cities: form.cities ? Number(form.cities) : null,
         resultNote: form.resultNote || null,
+        bannerImageUrl: form.bannerImageUrl || null,
         medalIncluded: form.medalIncluded, featured: form.featured,
         maxCapacity: form.maxCapacity ? Number(form.maxCapacity) : null,
         city: form.city || "Virtual", status: form.status,
@@ -325,6 +331,51 @@ export default function AdminEventsPage() {
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 value={form.description} />
             </label>
+
+            <div className="space-y-1.5">
+              <span className="field-label text-sm">Banner image</span>
+              <input
+                accept="image/png,image/jpeg,image/webp,image/avif"
+                className="input cursor-pointer py-2 file:mr-3 file:rounded-full file:border-0 file:bg-(--sage) file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white block w-full"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (!file.type.startsWith("image/")) {
+                    toast("error", "Only image files are allowed (PNG, JPEG, WebP, AVIF).");
+                    return;
+                  }
+                  if (file.size > 10 * 1024 * 1024) {
+                    toast("error", "Image must be under 10 MB.");
+                    return;
+                  }
+                  try {
+                    const token = await getToken();
+                    const reader = new FileReader();
+                    reader.onload = async () => {
+                      const base64 = reader.result as string;
+                      const res = await fetch(getApiUrl("/api/uploads/image"), {
+                        method: "POST",
+                        headers: authHeaders(token),
+                        body: JSON.stringify({ file: base64, folder: "mountainrun/admin" }),
+                      });
+                      if (!res.ok) { toast("error", "Upload failed. Try again."); return; }
+                      const json = await res.json();
+                      setForm((f) => ({ ...f, bannerImageUrl: json.data.url }));
+                    };
+                    reader.readAsDataURL(file);
+                  } catch { toast("error", "Upload failed. Check connection."); }
+                }}
+                type="file"
+              />
+              <p className="text-[0.65rem] text-[var(--admin-muted)]">PNG, JPEG, WebP or AVIF · max 10 MB · or paste a URL below.</p>
+              <input className="input" placeholder="https://… or leave blank for default"
+                onChange={(e) => setForm((f) => ({ ...f, bannerImageUrl: e.target.value }))}
+                value={form.bannerImageUrl} />
+              {form.bannerImageUrl && (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img alt="Banner preview" src={form.bannerImageUrl} className="mt-1 h-24 w-full rounded-lg object-cover" />
+              )}
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
               <label className="block text-sm">

@@ -2,6 +2,7 @@
 
 import { useAuth } from "@clerk/nextjs";
 import { useCallback, useEffect, useState } from "react";
+import { authHeaders, getApiUrl } from "../../../lib/api";
 import { adminFetch } from "../../../lib/admin-api";
 import { AdminEmpty, AdminPageHeader, AdminPanel } from "../ui";
 
@@ -233,8 +234,46 @@ export default function AdminContentPage() {
 
       {tab === "media" ? (
         <>
-          <AdminPanel title="Add photo" subtitle="Use /images/… paths or full https URLs">
+          <AdminPanel title="Add photo" subtitle="Upload from device or paste a URL">
             <div className="admin-form-grid is-2">
+              {/* File upload for image */}
+              <label className="block col-span-full">
+                <span className="field-label">Upload photo</span>
+                <input
+                  accept="image/png,image/jpeg,image/webp,image/avif"
+                  className="input cursor-pointer py-2 file:mr-3 file:rounded-full file:border-0 file:bg-(--sage) file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white block w-full"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (!file.type.startsWith("image/")) {
+                      alert("Only image files are allowed (PNG, JPEG, WebP, AVIF).");
+                      return;
+                    }
+                    if (file.size > 10 * 1024 * 1024) {
+                      alert("Image must be under 10 MB.");
+                      return;
+                    }
+                    try {
+                      const token = await getToken();
+                      const reader = new FileReader();
+                      reader.onload = async () => {
+                        const base64 = reader.result as string;
+                        const res = await fetch(getApiUrl("/api/uploads/image"), {
+                          method: "POST",
+                          headers: authHeaders(token),
+                          body: JSON.stringify({ file: base64, folder: "mountainrun/admin" }),
+                        });
+                        if (!res.ok) { alert("Upload failed. Try again."); return; }
+                        const json = await res.json();
+                        setMediaForm((f) => ({ ...f, imageUrl: json.data.url }));
+                      };
+                      reader.readAsDataURL(file);
+                    } catch { alert("Upload failed. Check connection."); }
+                  }}
+                  type="file"
+                />
+                <p className="mt-1 text-[0.65rem] text-[var(--admin-muted)]">PNG, JPEG, WebP or AVIF · max 10 MB · or enter a URL below.</p>
+              </label>
               {(
                 [
                   ["title", "Title"],
