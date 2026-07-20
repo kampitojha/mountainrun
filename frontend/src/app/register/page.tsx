@@ -22,7 +22,7 @@ export default function RegisterPage() {
           ))}
         </div>
 
-        <div className="container-page py-10 sm:py-12 md:py-14">
+        <div className="container-page py-6 sm:py-8 md:py-10">
           <div className="mx-auto max-w-xl text-center">
             <p className="eyebrow">Registration</p>
             <h1 className="mt-3 text-4xl font-bold leading-[1.1] tracking-tight text-(--foreground) sm:text-5xl">
@@ -35,7 +35,7 @@ export default function RegisterPage() {
         </div>
       </section>
 
-      <section className="page-section">
+      <section className="pb-6 sm:pb-8 md:pb-10">
         <div className="container-page max-w-3xl">
           <PaymentRegistrationForm />
         </div>

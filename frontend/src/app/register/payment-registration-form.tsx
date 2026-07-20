@@ -317,9 +317,9 @@ function PaymentRegistrationFormInner() {
 
   if (!isLoaded) {
     return (
-      <div className="mt-6 flex items-center justify-center rounded-2xl border border-(--line) bg-(--panel) px-4 py-12 sm:mt-8">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--line-strong) border-t-(--sage)" />
+      <div className="flex items-center justify-center rounded-2xl border border-(--line) bg-(--panel) px-4 py-8">
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-(--line-strong) border-t-(--sage)" />
           <p className="text-sm text-(--muted)">Checking your session\u2026</p>
         </div>
       </div>
@@ -328,18 +328,18 @@ function PaymentRegistrationFormInner() {
 
   if (!isSignedIn) {
     return (
-      <div className="mt-6 overflow-hidden rounded-2xl border border-(--line) bg-(--panel) sm:mt-8">
-        <div className="bg-gradient-to-r from-(--sage)/10 to-(--sage)/5 px-5 py-4 sm:px-6 sm:py-5">
-          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-(--sage)">Account required</p>
+      <div className="overflow-hidden rounded-2xl border border-(--line) bg-(--panel)">
+        <div className="bg-gradient-to-r from-(--sage)/10 to-(--sage)/5 px-4 py-3 sm:px-5 sm:py-4">
+          <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-(--sage)">Account required</p>
         </div>
-        <div className="px-5 py-5 sm:px-6 sm:py-6">
+        <div className="px-4 py-4 sm:px-5 sm:py-5">
           <h2 className="text-xl font-semibold tracking-tight text-(--foreground) sm:text-2xl">
             Sign in to continue
           </h2>
-          <p className="mt-3 max-w-md text-sm leading-6 text-(--muted)">
+          <p className="mt-2 max-w-md text-sm leading-6 text-(--muted)">
             Create a free account with email and password. After sign-in you can register and pay with UPI.
           </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:mt-8">
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             <Link className="btn btn-primary" href="/sign-in">Sign in</Link>
             <Link className="btn btn-secondary" href="/sign-up">Create account</Link>
           </div>
@@ -554,10 +554,10 @@ function PaymentRegistrationFormInner() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-6 w-full min-w-0 overflow-hidden rounded-2xl border border-(--line) bg-(--panel) p-4 sm:mt-8 sm:p-6 md:p-8"
+      className="w-full min-w-0 overflow-hidden rounded-2xl border border-(--line) bg-(--panel) p-4 sm:p-5"
       noValidate
     >
-      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         <Field label="Full name" required>
           <input
             aria-invalid={Boolean(errors.name)}
@@ -746,27 +746,27 @@ function PaymentRegistrationFormInner() {
         </div>
       </div>
 
-      <div className="mt-6 flex min-w-0 flex-col gap-3 rounded-xl border border-(--line) bg-(--sage-soft) p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-5">
+      <div className="mt-4 flex min-w-0 flex-col gap-2 rounded-xl border border-(--line) bg-(--sage-soft) p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-4">
         <div className="min-w-0">
-          <p className="flex items-center gap-2 text-sm font-semibold text-(--foreground)">
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-(--foreground)">
             <Lock className="h-3.5 w-3.5 text-(--sage)" strokeWidth={2} />
             Secure checkout
           </p>
           <p
-            className={`mt-1 break-words text-sm leading-snug ${
+            className={`mt-0.5 text-xs leading-snug ${
               status === "error" ? "text-(--danger)" : "text-(--muted)"
             }`}
           >
             {message}
           </p>
         </div>
-        <p className="shrink-0 text-2xl font-bold tracking-tight text-(--foreground) sm:text-right">
+        <p className="shrink-0 text-xl font-bold tracking-tight text-(--foreground) sm:text-right">
           {selectedAmount}
         </p>
       </div>
 
       <button
-        className="btn btn-primary btn-full mt-4 min-h-[3rem] touch-manipulation text-base disabled:cursor-not-allowed disabled:opacity-50 sm:mt-5"
+        className="btn btn-primary btn-full mt-3 min-h-[2.75rem] touch-manipulation text-sm disabled:cursor-not-allowed disabled:opacity-50"
         disabled={
           status === "creating" ||
           status === "paying" ||
@@ -793,9 +793,9 @@ export function PaymentRegistrationForm() {
   return (
 <Suspense
       fallback={
-        <div className="mt-6 flex items-center justify-center rounded-2xl border border-(--line) bg-(--panel) px-4 py-12 sm:mt-8">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--line-strong) border-t-(--sage)" />
+        <div className="flex items-center justify-center rounded-2xl border border-(--line) bg-(--panel) px-4 py-8">
+          <div className="flex flex-col items-center gap-2">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-(--line-strong) border-t-(--sage)" />
             <p className="text-sm text-(--muted)">Loading form\u2026</p>
           </div>
         </div>
