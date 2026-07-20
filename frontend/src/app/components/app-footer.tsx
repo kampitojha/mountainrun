@@ -71,32 +71,7 @@ function NewsletterForm() {
   );
 }
 
-/* ─── Footer skyline image ─── */
 const SKYLINE_URL = "https://res.cloudinary.com/yppcqzt6/image/upload/v1/footer-skyline_r3mshw";
-
-function CitySketch() {
-  return (
-    <div
-      className="w-full overflow-hidden"
-      aria-hidden="true"
-      style={{ lineHeight: 0, marginBottom: -1, background: "var(--background)" }}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={SKYLINE_URL}
-        alt=""
-        style={{
-          width: "100%",
-          height: "auto",
-          maxHeight: "90px",
-          display: "block",
-          objectFit: "fill",
-        }}
-        loading="lazy"
-      />
-    </div>
-  );
-}
 
 /* ─── Footer link column ─── */
 function FooterCol({ title, links }: { title: string; links: [string, string][] }) {
@@ -134,8 +109,6 @@ export function AppFooter() {
 
   return (
     <footer className="relative mt-auto">
-      {/* City sketch illustration */}
-      <CitySketch />
 
       {/* CTA — signed-out only */}
       <Show when="signed-out">
@@ -159,7 +132,24 @@ export function AppFooter() {
 
       {/* Main footer */}
       <div className="bg-(--panel) border-t border-(--line)">
-        <div className="container-page pt-10 pb-6 sm:pt-12 sm:pb-8">
+        {/* Skyline image — inside footer, directly above content */}
+        <div className="w-full overflow-hidden" aria-hidden="true" style={{ lineHeight: 0 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={SKYLINE_URL}
+            alt=""
+            style={{
+              width: "100%",
+              height: "auto",
+              maxHeight: "100px",
+              display: "block",
+              objectFit: "fill",
+            }}
+            loading="lazy"
+          />
+        </div>
+
+        <div className="container-page pt-8 pb-6 sm:pt-10 sm:pb-8">
 
           {/* Grid */}
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-6 lg:gap-6">
