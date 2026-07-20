@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CalendarDays, MapPin, IndianRupee, Trophy, BadgeCheck, QrCode, Award, Shirt, MessageCircle, Sparkles, ArrowRight, Users, Timer, Target, Medal, Camera, Smartphone, ShieldCheck, Route } from "lucide-react";
+import { CalendarDays, MapPin, IndianRupee, Trophy, BadgeCheck, Sparkles, ArrowRight, Users, Timer, Target, ShieldCheck, Route, CheckCircle, ChevronRight } from "lucide-react";
 import { PageShell } from "../../components/app-shell";
 import { Breadcrumb } from "../../components/breadcrumb";
 import { allPublicEvents } from "../../data/events";
@@ -9,8 +9,6 @@ import { fetchEventBySlug } from "../../../lib/events-api";
 import { auth } from "@clerk/nextjs/server";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mountainrun.in";
-
-const iconPool = [Medal, BadgeCheck, QrCode, Trophy, MapPin, Award, Shirt, Camera, Smartphone, MessageCircle];
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -63,6 +61,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         }),
       }} />
 
+      {/* ─── Hero ─── */}
       <section className="relative overflow-hidden border-b border-(--line)">
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10"
           style={{
@@ -87,7 +86,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           ]} />
 
           <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_360px] lg:gap-12">
-            {/* Main content */}
+            {/* ─── Main ─── */}
             <div>
               <div className="flex flex-wrap items-center gap-3">
                 <span className="eyebrow">{isPast ? "Past Event" : "Open Event"}</span>
@@ -115,23 +114,25 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
               <p className="mt-5 text-sm leading-relaxed text-(--muted) max-w-2xl sm:text-base">{event.description}</p>
 
-              {/* Info cards */}
-              <div className="mt-6 grid grid-cols-3 gap-3 sm:gap-4">
+              {/* ─── Info cards ─── */}
+              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
                 {[
                   { label: "Date", value: event.date, icon: CalendarDays },
                   { label: "Distance", value: event.distance, icon: Target },
                   { label: "Entry fee", value: event.price, icon: IndianRupee },
                 ].map(({ label, value, icon: Icon }) => (
-                  <div key={label} className="rounded-xl border border-(--line) bg-(--panel) p-3.5 transition-all hover:border-(--sage)/30 hover:shadow-sm sm:p-4">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--sage-soft) text-(--sage)">
+                  <div key={label} className="group relative overflow-hidden rounded-2xl border border-(--line) bg-(--panel) p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-(--sage)/30 hover:shadow-lg sm:p-5">
+                    <div aria-hidden className="absolute -right-4 -top-4 h-12 w-12 rounded-full bg-(--sage) opacity-5 transition-all duration-300 group-hover:scale-[2] group-hover:opacity-8" />
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-(--sage) to-emerald-600 text-white shadow-sm">
                       <Icon className="h-4 w-4" />
                     </span>
-                    <p className="mt-2 text-[0.6rem] font-semibold uppercase tracking-wider text-(--muted-soft)">{label}</p>
-                    <p className="mt-0.5 text-sm font-bold tracking-tight text-(--foreground)">{value}</p>
+                    <p className="mt-3 text-[0.55rem] font-bold uppercase tracking-widest text-(--muted-soft)">{label}</p>
+                    <p className="mt-0.5 text-sm font-bold tracking-tight text-(--foreground) sm:text-base">{value}</p>
                   </div>
                 ))}
               </div>
 
+              {/* ─── Coupon ─── */}
               {event.couponCode && event.showCouponOnCard && !isPast ? (
                 <div className="mt-5 flex items-center gap-3 rounded-2xl border border-(--sage)/20 bg-(--sage-soft) px-4 py-3.5 sm:px-5">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--sage) text-white">
@@ -146,32 +147,36 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 </div>
               ) : null}
 
-              <p className="mt-6 text-sm leading-relaxed text-(--muted) italic border-l-2 border-(--sage) pl-4">{event.highlight}</p>
+              {/* ─── Highlight ─── */}
+              <div className="mt-6 flex items-start gap-3 rounded-2xl border border-(--line) bg-(--panel) px-4 py-3.5 sm:px-5 sm:py-4">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-(--sage-soft) text-(--sage)">
+                  <Sparkles className="h-4 w-4" />
+                </span>
+                <p className="text-sm leading-relaxed text-(--muted) italic">{event.highlight}</p>
+              </div>
 
-              {/* Benefits */}
+              {/* ─── Benefits ─── */}
               {event.benefits && event.benefits.length > 0 ? (
                 <div className="mt-10">
                   <h2 className="text-lg font-bold tracking-tight text-(--foreground) sm:text-xl">{isPast ? "What finishers received" : "What you get"}</h2>
                   <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
-                    {event.benefits.map((benefit, i) => {
-                      const Icon = iconPool[i % iconPool.length];
-                      return (
-                        <div key={benefit} className="flex items-center gap-3 rounded-xl border border-(--line) bg-(--panel) p-3.5 transition-all hover:border-(--sage)/30 hover:shadow-sm sm:p-4">
-                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-(--sage-soft) text-(--sage)">
-                            <Icon className="h-4 w-4" />
-                          </span>
-                          <div>
-                            <p className="text-sm font-semibold text-(--foreground)">{benefit}</p>
-                            <p className="mt-0.5 text-xs text-(--muted-soft)">Included with your registration</p>
-                          </div>
+                    {event.benefits.map((benefit) => (
+                      <div key={benefit} className="group relative flex items-center gap-3.5 rounded-2xl border border-(--line) bg-(--panel) p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-(--sage)/30 hover:shadow-lg sm:p-5">
+                        <div aria-hidden className="absolute -left-2 -top-2 h-6 w-6 rounded-full bg-(--sage) opacity-0 transition-all duration-300 group-hover:opacity-8" />
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-(--sage) to-emerald-600 text-white shadow-sm">
+                          <CheckCircle className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-(--foreground)">{benefit}</p>
+                          <p className="mt-0.5 text-xs text-(--muted-soft)">Included with your registration</p>
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                   </div>
                 </div>
               ) : null}
 
-              {/* How it works */}
+              {/* ─── How it works ─── */}
               {!isPast ? (
                 <div className="mt-10">
                   <h2 className="text-lg font-bold tracking-tight text-(--foreground) sm:text-xl">How it works</h2>
@@ -181,20 +186,22 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                       { step: "02", title: "Run anytime", desc: "Complete your distance anywhere during the event window. Track using any GPS app.", icon: Route },
                       { step: "03", title: "Upload proof", desc: "Submit your GPS activity from your dashboard. Get verified and claim your certificate + medal.", icon: Trophy },
                     ].map(({ step, title, desc, icon: Icon }) => (
-                      <div key={step} className="relative rounded-xl border border-(--line) bg-(--panel) p-4 transition-all hover:border-(--sage)/30 hover:shadow-sm">
-                        <span className="absolute top-3 right-3 text-[1.75rem] font-black leading-none text-(--sage) opacity-10">{step}</span>
-                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-(--sage-soft) text-(--sage)">
+                      <div key={step} className="group relative overflow-hidden rounded-2xl border border-(--line) bg-(--panel) p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-(--sage)/30 hover:shadow-lg">
+                        <span aria-hidden className="absolute -top-6 -right-6 text-[4rem] font-black leading-none text-(--sage) opacity-5 transition-all duration-300 group-hover:scale-110 group-hover:opacity-10 select-none">
+                          {step}
+                        </span>
+                        <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-(--sage) to-emerald-600 text-white shadow-sm">
                           <Icon className="h-4.5 w-4.5" />
                         </span>
-                        <h3 className="mt-3 text-sm font-bold text-(--foreground)">{title}</h3>
-                        <p className="mt-1 text-xs leading-relaxed text-(--muted)">{desc}</p>
+                        <h3 className="relative z-10 mt-4 text-sm font-bold text-(--foreground) transition-colors duration-300 group-hover:text-(--sage)">{title}</h3>
+                        <p className="relative z-10 mt-1.5 text-xs leading-relaxed text-(--muted)">{desc}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               ) : null}
 
-              {/* Past event recap */}
+              {/* ─── Past event recap ─── */}
               {isPast ? (
                 <div className="mt-10">
                   <h2 className="text-lg font-bold tracking-tight text-(--foreground) sm:text-xl">Event recap</h2>
@@ -207,19 +214,25 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                       { label: "Verified", value: event.verifiedResults, icon: BadgeCheck },
                       { label: "Cities", value: event.cities, icon: MapPin },
                     ].map(({ label, value, icon: Icon }) => (
-                      <div key={label} className="rounded-xl border border-(--line) bg-(--panel) p-3.5 text-center transition-all hover:border-(--sage)/30 hover:shadow-sm sm:p-4">
+                      <div key={label} className="group relative overflow-hidden rounded-2xl border border-(--line) bg-(--panel) p-4 text-center transition-all duration-300 hover:-translate-y-0.5 hover:border-(--sage)/30 hover:shadow-lg sm:p-5">
+                        <div aria-hidden className="absolute -left-3 -top-3 h-10 w-10 rounded-full bg-(--sage) opacity-0 transition-all duration-300 group-hover:opacity-8" />
                         <Icon className="mx-auto h-5 w-5 text-(--sage)" strokeWidth={1.75} />
                         <p className="mt-2 text-xl font-bold tracking-tight text-(--foreground) sm:text-2xl">{typeof value === "number" ? value.toLocaleString("en-IN") : "\u2014"}</p>
-                        <p className="mt-0.5 text-[0.6rem] font-semibold uppercase tracking-wider text-(--muted-soft)">{label}</p>
+                        <p className="mt-0.5 text-[0.55rem] font-bold uppercase tracking-widest text-(--muted-soft)">{label}</p>
                       </div>
                     ))}
                   </div>
-                  <p className="mt-4 text-sm leading-relaxed text-(--muted)">{event.highlight}</p>
+                  <div className="mt-4 flex items-start gap-3 rounded-2xl border border-(--line) bg-(--panel) px-4 py-3.5 sm:px-5 sm:py-4">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-(--sage-soft) text-(--sage)">
+                      <Sparkles className="h-4 w-4" />
+                    </span>
+                    <p className="text-sm leading-relaxed text-(--muted) italic">{event.highlight}</p>
+                  </div>
                 </div>
               ) : null}
             </div>
 
-            {/* Sidebar */}
+            {/* ─── Sidebar ─── */}
             <aside className="lg:sticky lg:top-24 lg:self-start">
               <div className="overflow-hidden rounded-2xl border border-(--line) bg-(--panel) shadow-sm">
                 <div className={`h-1.5 w-full ${isPast ? "bg-(--muted-soft)" : "bg-gradient-to-r from-(--sage) to-emerald-500"}`} />
@@ -246,10 +259,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                     <>
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="text-[0.6rem] font-bold uppercase tracking-wider text-(--muted-soft)">Entry fee</p>
+                          <p className="text-[0.55rem] font-bold uppercase tracking-widest text-(--muted-soft)">Entry fee</p>
                           <p className="text-2xl font-black tracking-tight text-(--foreground) sm:text-3xl">{event.price}</p>
                         </div>
-                        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-(--sage-soft) text-(--sage)">
+                        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-(--sage) to-emerald-600 text-white shadow-sm">
                           <IndianRupee className="h-5 w-5" />
                         </span>
                       </div>
@@ -264,26 +277,23 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                       ) : null}
 
                       <div className="mt-5 space-y-2.5">
-                        <Link className="btn btn-primary btn-full gap-2 text-sm" href={`/register?event=${encodeURIComponent(event.slug)}`}>
+                        <Link className="btn btn-primary btn-full gap-2 text-sm group" href={`/register?event=${encodeURIComponent(event.slug)}`}>
                           {isSignedIn ? "Register for this race" : "Register now"}
-                          <ArrowRight className="h-4 w-4" />
+                          <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
                         </Link>
                         <Link className="btn btn-secondary btn-full text-sm" href="/events">Browse other events</Link>
                       </div>
 
                       {event.benefits && event.benefits.length > 0 ? (
                         <div className="mt-5 border-t border-(--line) pt-4">
-                          <p className="mb-2.5 text-[0.6rem] font-bold uppercase tracking-widest text-(--muted-soft)">Includes</p>
-                          <div className="space-y-2">
-                            {event.benefits.map((benefit, i) => {
-                              const Icon = iconPool[i % iconPool.length];
-                              return (
-                                <div key={benefit} className="flex items-center gap-2.5 text-xs text-(--muted)">
-                                  <Icon className="h-3.5 w-3.5 shrink-0 text-(--sage)" />
-                                  <span>{benefit}</span>
-                                </div>
-                              );
-                            })}
+                          <p className="mb-3 text-[0.55rem] font-bold uppercase tracking-widest text-(--muted-soft)">Includes</p>
+                          <div className="space-y-2.5">
+                            {event.benefits.map((benefit) => (
+                              <div key={benefit} className="flex items-center gap-2.5 text-xs text-(--muted)">
+                                <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-(--sage)" />
+                                <span>{benefit}</span>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       ) : null}
