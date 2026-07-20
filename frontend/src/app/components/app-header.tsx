@@ -11,16 +11,20 @@ import {
   Settings,
   LogOut,
   CalendarDays,
+  ImageIcon,
+  Trophy,
+  Info,
+  Calendar,
 } from "lucide-react";
 import { BrandText } from "./brand-text";
 import { ThemeToggle } from "./theme-toggle";
 
-/* ─── Nav items ─── */
+/* ─── Nav items with icons ─── */
 const publicNav = [
-  ["Events", "/events"],
-  ["Gallery", "/gallery"],
-  ["Leaderboard", "/leaderboard"],
-  ["About", "/about"],
+  ["Events",      "/events",      Calendar     ],
+  ["Gallery",     "/gallery",     ImageIcon    ],
+  ["Leaderboard", "/leaderboard", Trophy       ],
+  ["About",       "/about",       Info         ],
 ] as const;
 
 /* ─── Animated hamburger ─── */
@@ -365,7 +369,7 @@ export function AppHeader() {
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               className="relative z-10 flex w-[85vw] max-w-sm flex-col gap-1.5 rounded-3xl border border-(--line-strong) bg-(--panel) p-3 shadow-2xl"
             >
-              {publicNav.map(([label, href], i) => {
+              {publicNav.map(([label, href, Icon], i) => {
                 const active = isActive(href);
                 return (
                   <motion.div
@@ -383,8 +387,12 @@ export function AppHeader() {
                           : "text-(--muted) hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
                       }`}
                     >
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line) text-xs font-bold uppercase tracking-wider">
-                        {label.slice(0, 2)}
+                      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all ${
+                        active
+                          ? "bg-(--sage) text-white shadow-sm"
+                          : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
+                      }`}>
+                        <Icon className="h-4 w-4" strokeWidth={1.75} />
                       </span>
                       <span className="flex-1">{label}</span>
                       <svg className={`h-4 w-4 transition-all group-hover:translate-x-0.5 ${active ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
