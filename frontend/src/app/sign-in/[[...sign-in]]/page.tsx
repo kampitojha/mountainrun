@@ -19,11 +19,7 @@ function ThemedSignIn() {
       appearance={{
         variables: {
           colorPrimary: dark ? "#2dd4bf" : "#0d9488",
-          colorText: dark ? "#f4f4f5" : "#0f172a",
-          colorTextSecondary: dark ? "#a1a1aa" : "#475569",
           colorBackground: dark ? "#121216" : "#ffffff",
-          colorInputBackground: dark ? "#18181f" : "#ffffff",
-          colorInputText: dark ? "#f4f4f5" : "#0f172a",
           colorNeutral: dark ? "#a1a1aa" : "#64748b",
           borderRadius: "10px",
         },
@@ -32,6 +28,14 @@ function ThemedSignIn() {
           cardBox: "w-full shadow-none",
           card: "w-full shadow-none rounded-2xl",
           footer: "hidden",
+          formButtonPrimary: dark
+            ? "bg-teal-500 hover:bg-teal-400 text-white normal-case"
+            : "bg-slate-900 hover:bg-slate-800 text-white normal-case",
+          formFieldInput: dark
+            ? "bg-[#18181f] border-white/10 text-zinc-100"
+            : "bg-white border-slate-200 text-slate-900",
+          headerTitle: dark ? "text-zinc-100" : "text-slate-900",
+          headerSubtitle: dark ? "text-zinc-400" : "text-slate-500",
         },
       }}
     />
