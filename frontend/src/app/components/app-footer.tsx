@@ -72,21 +72,23 @@ function NewsletterForm() {
 }
 
 /* ─── Footer skyline image ─── */
+const SKYLINE_URL = "https://res.cloudinary.com/yppcqzt6/image/upload/v1/footer-skyline_r3mshw";
+
 function CitySketch() {
   return (
     <div className="w-full overflow-hidden" aria-hidden="true" style={{ lineHeight: 0, marginBottom: -2 }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/footer-skyline.png"
+        src={SKYLINE_URL}
         alt=""
         style={{
           width: "100%",
           height: "auto",
-          maxHeight: "120px",
-          minHeight: "55px",
+          maxHeight: "130px",
+          minHeight: "60px",
           display: "block",
           objectFit: "cover",
-          objectPosition: "bottom",
+          objectPosition: "bottom center",
         }}
         loading="lazy"
       />
