@@ -71,73 +71,18 @@ function NewsletterForm() {
   );
 }
 
-/* ─── City sketch SVG (hand-drawn line art style) ─── */
+/* ─── Footer skyline image ─── */
 function CitySketch() {
   return (
     <div className="w-full overflow-hidden bg-(--background)" aria-hidden="true" style={{ lineHeight: 0 }}>
-      <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg"
-        fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
-        preserveAspectRatio="xMidYMax meet"
-        style={{ width: "100%", height: "clamp(55px,7vw,100px)", display: "block", opacity: 0.13, color: "var(--foreground)" }}>
-        {/* Ground */}
-        <line x1="0" y1="95" x2="1440" y2="95" strokeWidth="1.5"/>
-        {/* B1 */}
-        <rect x="20" y="55" width="44" height="40" strokeWidth="1.5"/>
-        <rect x="28" y="63" width="9" height="12" strokeWidth="1"/><rect x="44" y="63" width="9" height="12" strokeWidth="1"/>
-        <rect x="28" y="80" width="9" height="12" strokeWidth="1"/><rect x="44" y="80" width="9" height="12" strokeWidth="1"/>
-        <rect x="33" y="40" width="12" height="15" strokeWidth="1.5"/>
-        <polygon points="39,28 26,40 52,40" strokeWidth="1.5"/><line x1="39" y1="18" x2="39" y2="28" strokeWidth="1.5"/>
-        {/* B2 */}
-        <rect x="78" y="60" width="38" height="35" strokeWidth="1.5"/>
-        <rect x="85" y="68" width="8" height="10" strokeWidth="1"/><rect x="99" y="68" width="8" height="10" strokeWidth="1"/>
-        <rect x="85" y="83" width="8" height="10" strokeWidth="1"/><rect x="99" y="83" width="8" height="10" strokeWidth="1"/>
-        {/* B3 tall */}
-        <rect x="130" y="30" width="32" height="65" strokeWidth="1.5"/>
-        <line x1="146" y1="14" x2="146" y2="30" strokeWidth="1.5"/>
-        <rect x="137" y="38" width="7" height="9" strokeWidth="1"/><rect x="149" y="38" width="7" height="9" strokeWidth="1"/>
-        <rect x="137" y="52" width="7" height="9" strokeWidth="1"/><rect x="149" y="52" width="7" height="9" strokeWidth="1"/>
-        <rect x="137" y="66" width="7" height="9" strokeWidth="1"/><rect x="149" y="66" width="7" height="9" strokeWidth="1"/>
-        <rect x="137" y="80" width="7" height="9" strokeWidth="1"/><rect x="149" y="80" width="7" height="9" strokeWidth="1"/>
-        {/* B4 arch */}
-        <rect x="176" y="48" width="40" height="47" strokeWidth="1.5"/>
-        <path d="M176 48 Q196 30 216 48" strokeWidth="1.5"/>
-        <rect x="183" y="56" width="8" height="11" strokeWidth="1"/><rect x="197" y="56" width="8" height="11" strokeWidth="1"/>
-        <rect x="183" y="73" width="8" height="11" strokeWidth="1"/><rect x="197" y="73" width="8" height="11" strokeWidth="1"/>
-        {/* B5 */}
-        <rect x="230" y="62" width="28" height="33" strokeWidth="1.5"/>
-        <rect x="236" y="70" width="6" height="8" strokeWidth="1"/><rect x="246" y="70" width="6" height="8" strokeWidth="1"/>
-        <rect x="236" y="83" width="6" height="8" strokeWidth="1"/><rect x="246" y="83" width="6" height="8" strokeWidth="1"/>
-        <rect x="237" y="48" width="14" height="14" strokeWidth="1.5"/>
-        {/* B6 step */}
-        <rect x="272" y="42" width="48" height="53" strokeWidth="1.5"/>
-        <rect x="280" y="28" width="32" height="14" strokeWidth="1.5"/>
-        <rect x="288" y="16" width="16" height="12" strokeWidth="1.5"/>
-        <rect x="280" y="50" width="8" height="10" strokeWidth="1"/><rect x="294" y="50" width="8" height="10" strokeWidth="1"/><rect x="308" y="50" width="8" height="10" strokeWidth="1"/>
-        <rect x="280" y="65" width="8" height="10" strokeWidth="1"/><rect x="294" y="65" width="8" height="10" strokeWidth="1"/><rect x="308" y="65" width="8" height="10" strokeWidth="1"/>
-        <rect x="280" y="80" width="8" height="10" strokeWidth="1"/><rect x="308" y="80" width="8" height="10" strokeWidth="1"/>
-        {/* B7 */}
-        <rect x="334" y="55" width="36" height="40" strokeWidth="1.5"/>
-        <path d="M334 55 L352 38 L370 55" strokeWidth="1.5"/>
-        <rect x="341" y="63" width="8" height="10" strokeWidth="1"/><rect x="354" y="63" width="8" height="10" strokeWidth="1"/>
-        <rect x="341" y="78" width="8" height="10" strokeWidth="1"/><rect x="354" y="78" width="8" height="10" strokeWidth="1"/>
-        {/* B8 */}
-        <rect x="384" y="35" width="30" height="60" strokeWidth="1.5"/>
-        <line x1="399" y1="20" x2="399" y2="35" strokeWidth="1.5"/>
-        <rect x="390" y="43" width="6" height="8" strokeWidth="1"/><rect x="402" y="43" width="6" height="8" strokeWidth="1"/>
-        <rect x="390" y="56" width="6" height="8" strokeWidth="1"/><rect x="402" y="56" width="6" height="8" strokeWidth="1"/>
-        <rect x="390" y="69" width="6" height="8" strokeWidth="1"/><rect x="402" y="69" width="6" height="8" strokeWidth="1"/>
-        <rect x="390" y="82" width="6" height="8" strokeWidth="1"/><rect x="402" y="82" width="6" height="8" strokeWidth="1"/>
-        {/* B9 */}
-        <rect x="428" y="58" width="34" height="37" strokeWidth="1.5"/>
-        <rect x="435" y="66" width="7" height="9" strokeWidth="1"/><rect x="447" y="66" width="7" height="9" strokeWidth="1"/>
-        <rect x="435" y="80" width="7" height="9" strokeWidth="1"/><rect x="447" y="80" width="7" height="9" strokeWidth="1"/>
-        {/* B10 */}
-        <rect x="476" y="45" width="40" height="50" strokeWidth="1.5"/>
-        <path d="M476 45 Q496 27 516 45" strokeWidth="1.5"/>
-        <rect x="483" y="53" width="8" height="10" strokeWidth="1"/><rect x="497" y="53" width="8" height="10" strokeWidth="1"/>
-        <rect x="483" y="68" width="8" height="10" strokeWidth="1"/><rect x="497" y="68" width="8" height="10" strokeWidth="1"/>
-        <rect x="483" y="83" width="8" height="10" strokeWidth="1"/><rect x="497" y="83" width="8" height="10" strokeWidth="1"/>
-      </svg>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/footer-skyline.png"
+        alt=""
+        className="w-full object-cover object-bottom"
+        style={{ height: "clamp(60px, 8vw, 120px)", display: "block" }}
+        loading="lazy"
+      />
     </div>
   );
 }
