@@ -1,22 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Target, IndianRupee, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { PublicEvent } from "../data/events";
 import { publicEvents as staticUpcoming } from "../data/events";
 import { fetchOpenEvents } from "../../lib/events-api";
 
+const activityEmojis: Record<string, string> = {
+  running: "\u{1F3C3}",
+  cycling: "\u{1F6B4}",
+  walking: "\u{1F6B6}",
+};
+
 function EventCard({ event }: { event: PublicEvent }) {
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-(--line) bg-(--panel)">
-      {/* Dark banner — intentionally dark on both modes, white text always readable */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 px-5 py-5 text-white">
+    <article className="flex flex-col overflow-hidden rounded-2xl border border-(--line) bg-(--panel) shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+      {/* Banner */}
+      <div className="bg-(--sage) px-5 py-5 text-white">
         <div className="flex items-start justify-between gap-3">
-          <p className="min-w-0 flex-1 text-xs font-semibold uppercase tracking-widest text-teal-300 leading-snug">
+          <p className="min-w-0 flex-1 text-xs font-semibold uppercase tracking-widest text-white/70 leading-snug">
             {event.banner}
           </p>
-          <span className="shrink-0 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-emerald-300">
+          <span className="shrink-0 rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white">
             Active
           </span>
         </div>
@@ -26,10 +32,14 @@ function EventCard({ event }: { event: PublicEvent }) {
       {/* Card body */}
       <div className="flex flex-1 flex-col p-5">
         <div className="flex items-center justify-between gap-3">
-          <span className="rounded-full border border-(--line) bg-(--panel-soft) px-3 py-1 text-xs font-medium text-(--muted)">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-(--line) bg-(--panel-soft) px-3 py-1 text-xs font-medium text-(--muted)">
+            <CalendarDays className="h-3 w-3 text-(--muted-soft)" />
             {event.date}
           </span>
-          <span className="text-sm font-bold text-(--sage)">{event.price}</span>
+          <span className="inline-flex items-center gap-1 text-sm font-bold text-(--sage)">
+            <IndianRupee className="h-3.5 w-3.5" />
+            {event.price.replace(/^Rs\.\s*/, "").replace(/^₹/, "")}
+          </span>
         </div>
 
         <h3 className="mt-4 text-lg font-bold tracking-tight text-(--foreground)">
@@ -39,24 +49,28 @@ function EventCard({ event }: { event: PublicEvent }) {
           {event.distance}
         </p>
 
+        {/* Activity types */}
         {event.activityTypes && event.activityTypes.length > 0 ? (
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
             {event.activityTypes.map((type) => (
               <span key={type}
-                className="inline-flex items-center gap-1 rounded-md border border-(--line) bg-(--panel-soft) px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider text-(--muted)">
-                {type === "running" ? "\u{1F3C3}" : type === "cycling" ? "\u{1F6B4}" : "\u{1F6B6}"}
+                className="inline-flex items-center gap-1 rounded-md border border-(--line) bg-(--panel) px-2 py-0.5 text-[0.65rem] font-semibold capitalize text-(--muted)">
+                <span>{activityEmojis[type] ?? ""}</span>
                 {type}
               </span>
             ))}
           </div>
         ) : null}
 
+        {/* Coupon */}
         {event.couponCode && event.showCouponOnCard ? (
-          <div className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-300">
+          <div className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-(--line) bg-(--sage-soft) px-2.5 py-1.5 text-xs font-semibold text-(--sage)">
+            <Sparkles className="h-3 w-3" />
             <span>Coupon:</span>
             <code className="tracking-wider">{event.couponCode}</code>
           </div>
         ) : null}
+
         <p className="mt-3 flex-1 text-sm leading-relaxed text-(--muted)">
           {event.highlight}
         </p>
@@ -78,9 +92,7 @@ export function HomeEvents({ initial = staticUpcoming.slice(0, 3) }: { initial?:
     void fetchOpenEvents({ homeFeaturedFirst: true, limit: 3 }).then((list) => {
       if (!cancelled && list.length > 0) setEvents(list);
     });
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   return (

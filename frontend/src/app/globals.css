@@ -754,19 +754,6 @@ html[data-theme="dark"] .badge-danger {
   box-shadow: var(--shadow-hover);
 }
 
-.event-card-banner {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 55%),
-    #0f172a;
-}
-
-html.dark .event-card-banner,
-html[data-theme="dark"] .event-card-banner {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 55%),
-    #1e293b;
-}
-
 .gallery-card {
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -1059,10 +1046,6 @@ html[data-theme="dark"] .event-card-banner {
     font-size: 0.8rem;
   }
 
-  /* Event card banner */
-  .event-card-banner {
-    padding: 0.875rem 1rem;
-  }
 }
 
 /* Leaderboard table — always scrollable with clear indicator on mobile */
