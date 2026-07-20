@@ -247,24 +247,18 @@ function HamburgerButton({ open, onClick }: { open: boolean; onClick: () => void
   );
 }
 
-/* ─── Mobile user card ─── */
-function MobileUserCard({ onNavigate }: { onNavigate: () => void }) {
+/* ─── Mobile user badge ─── */
+function SignedInUserBadge({ onClose }: { onClose: () => void }) {
   const { user } = useUser();
   const { signOut } = useClerk();
   const router = useRouter();
-
-  const name = user?.fullName ?? user?.firstName ?? "Runner";
-  const email = user?.primaryEmailAddress?.emailAddress ?? "";
+  if (!user) return null;
+  const name = user.fullName ?? user.firstName ?? "Runner";
+  const email = user.primaryEmailAddress?.emailAddress ?? "";
   const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
-  const avatarUrl = user?.imageUrl;
-
+  const avatarUrl = user.imageUrl;
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.05, type: "spring", stiffness: 300, damping: 26 }}
-      className="mb-4 flex items-center gap-3 rounded-2xl border border-(--line) bg-(--panel-soft) p-3"
-    >
+    <>
       {avatarUrl ? (
         <img src={avatarUrl} alt={name} className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-(--line)" />
       ) : (
@@ -278,13 +272,13 @@ function MobileUserCard({ onNavigate }: { onNavigate: () => void }) {
       </div>
       <button
         type="button"
-        onClick={() => { onNavigate(); void signOut(() => router.push("/")); }}
+        onClick={() => { onClose(); void signOut(() => router.push("/")); }}
         title="Sign out"
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-(--line) bg-(--panel) text-(--muted) transition-colors hover:border-red-300 hover:text-red-500 active:scale-90"
       >
         <LogOut className="h-3.5 w-3.5" />
       </button>
-    </motion.div>
+    </>
   );
 }
 
@@ -350,106 +344,91 @@ export function AppHeader() {
         </div>
       </div>
 
-      {/* Mobile drawer */}
-      {open && (
-        <div className="fixed inset-0 z-50 flex md:hidden">
-          <div className="fixed inset-0 bg-(--overlay) backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="fixed right-0 inset-y-0 w-72 max-w-[85vw] flex flex-col border-l border-(--line) bg-(--panel) shadow-2xl">
-              {/* Drawer header with sage accent */}
-              <div className="relative flex items-center justify-between px-4 py-4">
-                <div aria-hidden className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-(--sage)/20 to-transparent" />
-                <BrandLogo onNavigate={() => setOpen(false)} />
-                <button
-                  type="button"
-                  aria-label="Close menu"
-                  onClick={() => setOpen(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--muted) transition-all duration-200 hover:border-(--sage)/40 hover:bg-(--sage-soft) hover:text-(--sage) active:scale-90"
-                >
-                  <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current" aria-hidden="true">
-                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
-                  </svg>
-                </button>
-              </div>
+      {/* Mobile drawer — always in DOM, visible via CSS transform */}
+      <div className={`fixed inset-0 z-50 md:hidden transition-[opacity] duration-200 ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <div className="absolute inset-0 bg-(--overlay) backdrop-blur-sm" onClick={() => setOpen(false)} />
+        <div className={`absolute right-0 inset-y-0 w-72 max-w-[85vw] flex flex-col border-l border-(--line) bg-(--panel) shadow-2xl transition-transform duration-200 ${open ? 'translate-x-0' : 'translate-x-full'}`}>
+          {/* Drawer header */}
+          <div className="flex items-center justify-between px-4 py-4 border-b border-(--line)">
+            <BrandLogo onNavigate={() => setOpen(false)} />
+            <button
+              type="button"
+              aria-label="Close menu"
+              onClick={() => setOpen(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--muted) transition-all duration-200 hover:border-(--sage)/40 hover:bg-(--sage-soft) hover:text-(--sage) active:scale-90"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
 
               {/* Drawer body */}
               <div className="flex-1 overflow-y-auto px-3 py-3">
-                {/* User card (signed in) */}
                 <Show when="signed-in">
-                  <MobileUserCard onNavigate={() => setOpen(false)} />
+                  <div className="mb-4 flex items-center gap-3 rounded-2xl border border-(--line) bg-(--panel-soft) p-3">
+                    <SignedInUserBadge onClose={() => setOpen(false)} />
+                  </div>
                 </Show>
 
                 {/* Nav links */}
                 <nav className="flex flex-col gap-1">
-                  {publicNav.map(([label, href, Icon], i) => {
+                  {publicNav.map(([label, href, Icon]) => {
                     const active = isActive(href);
                     return (
-                      <motion.div
+                      <Link
                         key={href}
-                        initial={{ opacity: 0, x: 16 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.04 * i, type: "spring", stiffness: 300, damping: 26 }}
+                        href={href}
+                        onClick={() => setOpen(false)}
+                        className={`group relative flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${
+                          active
+                            ? "bg-(--sage-soft) text-(--sage)"
+                            : "text-(--muted) hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
+                        }`}
                       >
-                        <Link
-                          href={href}
-                          onClick={() => setOpen(false)}
-                          className={`group relative flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${
-                            active
-                              ? "bg-(--sage-soft) text-(--sage)"
-                              : "text-(--muted) hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
-                          }`}
-                        >
-                          {active && (
-                            <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-(--sage)" />
-                          )}
-                          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all ${
-                            active
-                              ? "bg-(--sage) text-white shadow-sm"
-                              : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
-                          }`}>
-                            <Icon className="h-4 w-4" strokeWidth={1.75} />
-                          </span>
-                          <span className="flex-1">{label}</span>
-                          <svg className={`h-4 w-4 transition-all group-hover:translate-x-0.5 ${active ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="m6 4 4 4-4 4" />
-                          </svg>
-                        </Link>
-                      </motion.div>
+                        {active && (
+                          <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-(--sage)" />
+                        )}
+                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all ${
+                          active
+                            ? "bg-(--sage) text-white shadow-sm"
+                            : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
+                        }`}>
+                          <Icon className="h-4 w-4" strokeWidth={1.75} />
+                        </span>
+                        <span className="flex-1">{label}</span>
+                        <svg className={`h-4 w-4 transition-all group-hover:translate-x-0.5 ${active ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="m6 4 4 4-4 4" />
+                        </svg>
+                      </Link>
                     );
                   })}
 
                   {/* Dashboard link (signed in) */}
                   <Show when="signed-in">
-                    <motion.div
-                      initial={{ opacity: 0, x: 16 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.04 * (publicNav.length + 1), type: "spring", stiffness: 300, damping: 26 }}
+                    <div className="my-2 mx-3 h-px bg-gradient-to-r from-(--line) via-(--line) to-transparent" />
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setOpen(false)}
+                      className={`group relative flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${
+                        isActive("/dashboard")
+                          ? "bg-(--sage-soft) text-(--sage)"
+                          : "text-(--muted) hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
+                      }`}
                     >
-                      <div className="my-2 mx-3 h-px bg-gradient-to-r from-(--line) via-(--line) to-transparent" />
-                      <Link
-                        href="/dashboard"
-                        onClick={() => setOpen(false)}
-                        className={`group relative flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${
-                          isActive("/dashboard")
-                            ? "bg-(--sage-soft) text-(--sage)"
-                            : "text-(--muted) hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
-                        }`}
-                      >
-                        {isActive("/dashboard") && (
-                          <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-(--sage)" />
-                        )}
-                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
-                          isActive("/dashboard")
-                            ? "bg-(--sage) text-white shadow-sm"
-                            : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
-                        }`}>
-                          <LayoutDashboard className="h-4 w-4" strokeWidth={1.75} />
-                        </span>
-                        <span className="flex-1">Dashboard</span>
-                        <svg className={`h-4 w-4 transition-all group-hover:translate-x-0.5 ${isActive("/dashboard") ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="m6 4 4 4-4 4" />
-                        </svg>
-                      </Link>
-                    </motion.div>
+                      {isActive("/dashboard") && (
+                        <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-(--sage)" />
+                      )}
+                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
+                        isActive("/dashboard")
+                          ? "bg-(--sage) text-white shadow-sm"
+                          : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
+                      }`}>
+                        <LayoutDashboard className="h-4 w-4" strokeWidth={1.75} />
+                      </span>
+                      <span className="flex-1">Dashboard</span>
+                      <svg className={`h-4 w-4 transition-all group-hover:translate-x-0.5 ${isActive("/dashboard") ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="m6 4 4 4-4 4" />
+                      </svg>
+                    </Link>
                   </Show>
                 </nav>
               </div>
@@ -479,10 +458,9 @@ export function AppHeader() {
                   <p className="text-xs text-(--muted-soft)">Theme</p>
                   <ThemeToggle size="sm" />
                 </div>
-              </div>
           </div>
         </div>
-      )}
+      </div>
     </header>
   );
 }
