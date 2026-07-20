@@ -147,15 +147,20 @@ export function AboutClient() {
                   Run anywhere.
                 </span>
               </h1>
-              <p className="lede mt-5 max-w-lg">
-                Mountain Run is a virtual running platform for Indian runners. Register, run in your city, upload GPS proof, and earn a verified finish — certificate, leaderboard rank, and medal.
-              </p>
+              <div className="mt-5 space-y-4 text-sm leading-7 text-(--muted) sm:text-base sm:leading-8 max-w-lg">
+                <p>
+                  Mountain Run was built for people who love running but don't always have a race nearby.
+                </p>
+                <p>
+                  Choose an event, run wherever you are, upload your GPS activity, and earn a finish that actually means something. No complicated rules, no crowded start lines — just real effort, verified honestly.
+                </p>
+              </div>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link className="btn btn-primary" href="/events">Browse open events</Link>
+                <Link className="btn btn-primary w-full sm:w-auto" href="/events">Browse open events</Link>
                 {isSignedIn ? (
-                  <Link className="btn btn-secondary" href="/dashboard">My dashboard</Link>
+                  <Link className="btn btn-secondary w-full sm:w-auto" href="/dashboard">My dashboard</Link>
                 ) : (
-                  <Link className="btn btn-secondary" href="/sign-up">Create free account</Link>
+                  <Link className="btn btn-secondary w-full sm:w-auto" href="/sign-up">Create free account</Link>
                 )}
               </div>
             </motion.div>
