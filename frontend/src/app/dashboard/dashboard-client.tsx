@@ -395,7 +395,7 @@ export function DashboardClient() {
           ) : null}
           <Link
             className={`btn w-full shrink-0 sm:w-auto ${isAdmin ? "btn-secondary" : "btn-primary"}`}
-            href="/register"
+            href="/events"
           >
             Join an event
           </Link>
@@ -633,8 +633,8 @@ export function DashboardClient() {
             <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[var(--muted)]">
               Join an event to see bib number, payment, and proof status here.
             </p>
-            <Link className="btn btn-primary mt-6" href="/register">
-              Register for an event
+            <Link className="btn btn-primary mt-6" href="/events">
+              Browse events
             </Link>
           </div>
         ) : (

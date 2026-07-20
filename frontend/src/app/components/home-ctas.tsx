@@ -35,18 +35,18 @@ export function HomeCtas() {
   return (
     <div className="btn-row mt-8 justify-center sm:mt-10">
       <Show when="signed-out">
-        <MotionCta className="btn btn-primary min-w-[10rem]" href="/register">
-          Register now
-        </MotionCta>
-        <MotionCta className="btn btn-secondary min-w-[10rem]" href="/events">
+        <MotionCta className="btn btn-primary min-w-[10rem]" href="/events">
           Browse events
+        </MotionCta>
+        <MotionCta className="btn btn-secondary min-w-[10rem]" href="/sign-up">
+          Create account
         </MotionCta>
       </Show>
       <Show when="signed-in">
         <MotionCta className="btn btn-primary min-w-[10rem]" href="/dashboard">
           My dashboard
         </MotionCta>
-        <MotionCta className="btn btn-secondary min-w-[10rem]" href="/register">
+        <MotionCta className="btn btn-secondary min-w-[10rem]" href="/events">
           Join event
         </MotionCta>
       </Show>

@@ -27,7 +27,7 @@ function ProfileButton() {
     >
       <UserButton.MenuItems>
         <UserButton.Link label="My dashboard" href="/dashboard" labelIcon={<LayoutDashboard className="h-4 w-4" />} />
-        <UserButton.Link label="Register for event" href="/register" labelIcon={<Award className="h-4 w-4" />} />
+        <UserButton.Link label="Browse events" href="/events" labelIcon={<Award className="h-4 w-4" />} />
         <UserButton.Action label="manageAccount" />
         <UserButton.Action label="signOut" />
       </UserButton.MenuItems>
@@ -189,7 +189,7 @@ export function AppHeader() {
                   Sign in
                 </Link>
                 <Link className="btn btn-primary h-9 px-4" href="/events">
-                  Join a run
+                  Browse events
                 </Link>
               </Show>
               <Show when="signed-in">
@@ -264,12 +264,12 @@ export function AppHeader() {
                     <span>Dashboard</span>
                   </Link>
                   <Link
-                    href="/register"
+                    href="/events"
                     onClick={() => setOpen(false)}
                     className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-(--muted) hover:bg-(--panel-soft) hover:text-foreground transition"
                   >
                     <Award className="h-4 w-4 text-(--muted-soft)" />
-                    <span>Join event</span>
+                    <span>Browse events</span>
                   </Link>
                 </Show>
 
@@ -288,7 +288,7 @@ export function AppHeader() {
                       href="/events"
                       onClick={() => setOpen(false)}
                     >
-                      Join a run
+                      Browse events
                     </Link>
                   </div>
                 </Show>

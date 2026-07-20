@@ -356,7 +356,7 @@ export function LeaderboardClient() {
             <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] px-4 py-3 sm:mt-8">
               <p className="text-sm text-[var(--muted)]">
                 You&apos;re not on this board yet.{" "}
-                <Link className="font-medium text-[var(--foreground)] underline-offset-2 hover:underline" href="/register">
+                <Link className="font-medium text-[var(--foreground)] underline-offset-2 hover:underline" href="/events">
                   Register
                 </Link>
                 {" · "}

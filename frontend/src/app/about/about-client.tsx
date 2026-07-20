@@ -128,8 +128,8 @@ export function AboutClient() {
                 <Link className="btn btn-primary w-full sm:w-auto" href="/events">
                   Browse events
                 </Link>
-                <Link className="btn btn-secondary w-full sm:w-auto" href="/register">
-                  {isSignedIn ? "Join an event" : "Register"}
+                <Link className="btn btn-secondary w-full sm:w-auto" href="/events">
+                  {isSignedIn ? "Join an event" : "Browse events"}
                 </Link>
               </div>
             </motion.div>

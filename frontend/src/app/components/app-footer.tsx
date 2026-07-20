@@ -193,10 +193,10 @@ export function AppFooter() {
                 <li>
                   <Link
                     className="group inline-flex items-center gap-1 text-(--muted) transition-all duration-200 hover:text-foreground"
-                    href="/register"
+                    href="/events"
                   >
                     <span className="transition-transform duration-200 group-hover:translate-x-0.5">
-                      Join event
+                      Browse events
                     </span>
                   </Link>
                 </li>
