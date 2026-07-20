@@ -385,7 +385,7 @@ export default function AdminEventsPage() {
                 value={form.bannerImageUrl} />
               {form.bannerImageUrl && (
                 /* eslint-disable-next-line @next/next/no-img-element */
-                <img alt="Banner preview" src={form.bannerImageUrl} className="mt-1 h-24 w-full rounded-lg object-cover" />
+                <img alt="Banner preview" src={form.bannerImageUrl} className="mt-1 h-16 w-auto max-w-full rounded-lg object-cover" />
               )}
             </div>
 

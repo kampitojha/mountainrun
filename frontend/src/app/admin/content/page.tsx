@@ -287,7 +287,7 @@ export default function AdminContentPage() {
                 <p className="text-[0.65rem] text-[var(--admin-muted)]">PNG, JPEG, WebP or AVIF · max 10 MB · or enter a URL below.</p>
                 {mediaForm.imageUrl && (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img alt="Preview" src={mediaForm.imageUrl} className="mt-1 h-28 w-full rounded-lg object-cover" />
+                  <img alt="Preview" src={mediaForm.imageUrl} className="mt-1 h-16 w-auto max-w-full rounded-lg object-cover" />
                 )}
               </div>
               {(
