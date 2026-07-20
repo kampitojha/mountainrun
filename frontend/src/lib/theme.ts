@@ -8,7 +8,7 @@ export const SITE_THEME_EVENT = "mr-site-theme-change";
 export const ADMIN_THEME_KEY = "mr-admin-theme";
 export const ADMIN_THEME_EVENT = "mr-admin-theme-change";
 
-export const SITE_THEME_DEFAULT: Theme = "light";
+export const SITE_THEME_DEFAULT: Theme = "dark";
 export const ADMIN_THEME_DEFAULT: Theme = "dark";
 
 export function isTheme(value: unknown): value is Theme {

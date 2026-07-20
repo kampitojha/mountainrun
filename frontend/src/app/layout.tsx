@@ -108,7 +108,7 @@ const siteThemeInitScript = `
   try {
     var k = 'mr-site-theme';
     var t = localStorage.getItem(k);
-    if (t !== 'light' && t !== 'dark') t = 'light';
+    if (t !== 'light' && t !== 'dark') t = 'dark';
     var r = document.documentElement;
     r.dataset.theme = t;
     if (t === 'dark') r.classList.add('dark');
