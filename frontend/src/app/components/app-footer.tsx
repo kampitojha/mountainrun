@@ -74,13 +74,20 @@ function NewsletterForm() {
 /* ─── Footer skyline image ─── */
 function CitySketch() {
   return (
-    <div className="w-full overflow-hidden bg-(--background)" aria-hidden="true" style={{ lineHeight: 0 }}>
+    <div className="w-full overflow-hidden" aria-hidden="true" style={{ lineHeight: 0, marginBottom: -2 }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/footer-skyline.png"
         alt=""
-        className="w-full object-cover object-bottom"
-        style={{ height: "clamp(60px, 8vw, 120px)", display: "block" }}
+        style={{
+          width: "100%",
+          height: "auto",
+          maxHeight: "120px",
+          minHeight: "55px",
+          display: "block",
+          objectFit: "cover",
+          objectPosition: "bottom",
+        }}
         loading="lazy"
       />
     </div>
@@ -125,9 +132,6 @@ export function AppFooter() {
     <footer className="relative mt-auto">
       {/* City sketch illustration */}
       <CitySketch />
-
-      {/* Accent bar */}
-      <div className="h-[2px] w-full bg-gradient-to-r from-(--sage) via-emerald-400 to-indigo-500" />
 
       {/* CTA — signed-out only */}
       <Show when="signed-out">
