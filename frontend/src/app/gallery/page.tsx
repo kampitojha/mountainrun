@@ -7,9 +7,9 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mountainrun.in";
 
 export const metadata: Metadata = {
   title: "Running Gallery - Race Photos & Moments | Mountain Run",
- description:
+  description:
     "View race photos, finisher moments, and achievements from Mountain Run virtual events. See runners from across India completing their goals.",
- keywords: [
+  keywords: [
     "running gallery",
     "race photos",
     "virtual run photos",
@@ -17,9 +17,9 @@ export const metadata: Metadata = {
     "running moments",
     "finisher photos",
   ],
- openGraph: {
+  openGraph: {
     title: "Running Gallery - Race Photos & Moments",
- description:
+    description:
       "View race photos, finisher moments, and achievements from Mountain Run virtual events.",
     url: "/gallery",
     type: "website",
