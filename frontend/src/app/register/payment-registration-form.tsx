@@ -103,7 +103,7 @@ function FieldError({ message }: { message?: string }) {
     return null;
   }
 
-  return <p className="mt-1.5 text-xs font-medium text-[var(--danger)]">{message}</p>;
+  return <p className="mt-1.5 text-xs font-medium text-(--danger)">{message}</p>;
 }
 
 function deriveUsername(input: {
@@ -317,30 +317,32 @@ function PaymentRegistrationFormInner() {
 
   if (!isLoaded) {
     return (
-      <div className="card mt-6 p-8 text-center sm:mt-8 sm:p-10">
-        <p className="text-sm text-[var(--muted)]">Checking your session…</p>
+      <div className="mt-6 flex items-center justify-center rounded-2xl border border-(--line) bg-(--panel) px-4 py-12 sm:mt-8">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--line-strong) border-t-(--sage)" />
+          <p className="text-sm text-(--muted)">Checking your session\u2026</p>
+        </div>
       </div>
     );
   }
 
   if (!isSignedIn) {
     return (
-      <div className="card mt-6 p-5 sm:mt-8 sm:p-8">
-        <p className="eyebrow">Account required</p>
-        <h2 className="mt-3 text-xl font-semibold tracking-tight sm:text-2xl">
-          Sign in to continue
-        </h2>
-        <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">
-          Create a free account with email and password. After sign-in you can register and pay
-          with UPI.
-        </p>
-        <div className="btn-row mt-6 sm:mt-8">
-          <Link className="btn btn-primary w-full sm:w-auto" href="/sign-in">
-            Sign in
-          </Link>
-          <Link className="btn btn-secondary w-full sm:w-auto" href="/sign-up">
-            Create account
-          </Link>
+      <div className="mt-6 overflow-hidden rounded-2xl border border-(--line) bg-(--panel) sm:mt-8">
+        <div className="bg-gradient-to-r from-(--sage)/10 to-(--sage)/5 px-5 py-4 sm:px-6 sm:py-5">
+          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-(--sage)">Account required</p>
+        </div>
+        <div className="px-5 py-5 sm:px-6 sm:py-6">
+          <h2 className="text-xl font-semibold tracking-tight text-(--foreground) sm:text-2xl">
+            Sign in to continue
+          </h2>
+          <p className="mt-3 max-w-md text-sm leading-6 text-(--muted)">
+            Create a free account with email and password. After sign-in you can register and pay with UPI.
+          </p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:mt-8">
+            <Link className="btn btn-primary" href="/sign-in">Sign in</Link>
+            <Link className="btn btn-secondary" href="/sign-up">Create account</Link>
+          </div>
         </div>
       </div>
     );
@@ -552,7 +554,7 @@ function PaymentRegistrationFormInner() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="card mt-6 w-full min-w-0 overflow-hidden p-4 sm:mt-8 sm:p-6 md:p-8"
+      className="mt-6 w-full min-w-0 overflow-hidden rounded-2xl border border-(--line) bg-(--panel) p-4 sm:mt-8 sm:p-6 md:p-8"
       noValidate
     >
       <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
@@ -573,15 +575,15 @@ function PaymentRegistrationFormInner() {
         <div className="min-w-0">
           <span className="field-label">Username</span>
           <div
-            className={`${inputClass} flex min-w-0 items-center gap-2 bg-[var(--panel-soft)] text-[var(--muted)]`}
+            className={`${inputClass} flex min-w-0 items-center gap-2 bg-(--panel-soft) text-(--muted)`}
           >
             <Lock className="h-3.5 w-3.5 shrink-0 opacity-70" strokeWidth={1.75} />
-            <span className="min-w-0 truncate font-medium text-[var(--foreground)]">
+            <span className="min-w-0 truncate font-medium text-(--foreground)">
               @{username}
             </span>
           </div>
           <input name="username" type="hidden" value={username} />
-          <p className="mt-1.5 text-[0.7rem] leading-snug text-[var(--muted-soft)]">
+          <p className="mt-1.5 text-[0.7rem] leading-snug text-(--muted-soft)">
             From your account · not editable
           </p>
         </div>
@@ -590,7 +592,7 @@ function PaymentRegistrationFormInner() {
           <input
             aria-invalid={Boolean(errors.email)}
             autoComplete="email"
-            className={`${inputClass} min-w-0 bg-[var(--panel-soft)]`}
+            className={`${inputClass} min-w-0 bg-(--panel-soft)`}
             defaultValue={defaultEmail}
             key={`email-${defaultEmail}`}
             name="email"
@@ -646,11 +648,11 @@ function PaymentRegistrationFormInner() {
           </select>
           <FieldError message={errors.distance} />
           {distanceAlreadyTaken ? (
-            <p className="mt-1.5 text-xs leading-snug text-[var(--danger)]">
+            <p className="mt-1.5 text-xs leading-snug text-(--danger)">
               Already registered for this distance. Pick another distance or event.
             </p>
           ) : pendingSame ? (
-            <p className="mt-1.5 text-xs leading-snug text-[var(--sage)]">
+            <p className="mt-1.5 text-xs leading-snug text-(--sage)">
               Pending payment — submit to resume checkout.
             </p>
           ) : null}
@@ -744,24 +746,27 @@ function PaymentRegistrationFormInner() {
         </div>
       </div>
 
-      <div className="mt-5 flex min-w-0 flex-col gap-3 rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] p-4 sm:mt-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-5">
+      <div className="mt-6 flex min-w-0 flex-col gap-3 rounded-xl border border-(--line) bg-(--sage-soft) p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-5">
         <div className="min-w-0">
-          <p className="text-sm font-medium">Secure checkout</p>
+          <p className="flex items-center gap-2 text-sm font-semibold text-(--foreground)">
+            <Lock className="h-3.5 w-3.5 text-(--sage)" strokeWidth={2} />
+            Secure checkout
+          </p>
           <p
             className={`mt-1 break-words text-sm leading-snug ${
-              status === "error" ? "text-[var(--danger)]" : "text-[var(--muted)]"
+              status === "error" ? "text-(--danger)" : "text-(--muted)"
             }`}
           >
             {message}
           </p>
         </div>
-        <p className="shrink-0 text-2xl font-semibold tracking-tight sm:text-right">
+        <p className="shrink-0 text-2xl font-bold tracking-tight text-(--foreground) sm:text-right">
           {selectedAmount}
         </p>
       </div>
 
       <button
-        className="btn btn-primary btn-full mt-4 min-h-[3rem] touch-manipulation text-base disabled:cursor-not-allowed disabled:opacity-50 sm:mt-6"
+        className="btn btn-primary btn-full mt-4 min-h-[3rem] touch-manipulation text-base disabled:cursor-not-allowed disabled:opacity-50 sm:mt-5"
         disabled={
           status === "creating" ||
           status === "paying" ||
@@ -771,9 +776,9 @@ function PaymentRegistrationFormInner() {
         type="submit"
       >
         {status === "creating"
-          ? "Creating order…"
+          ? "Creating order\u2026"
           : status === "paying"
-            ? "Payment in progress…"
+            ? "Payment in progress\u2026"
             : status === "paid"
               ? "Paid"
               : pendingSame
@@ -786,10 +791,13 @@ function PaymentRegistrationFormInner() {
 
 export function PaymentRegistrationForm() {
   return (
-    <Suspense
+<Suspense
       fallback={
-        <div className="card mt-6 p-8 text-center sm:mt-8 sm:p-10">
-          <p className="text-sm text-[var(--muted)]">Loading form…</p>
+        <div className="mt-6 flex items-center justify-center rounded-2xl border border-(--line) bg-(--panel) px-4 py-12 sm:mt-8">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--line-strong) border-t-(--sage)" />
+            <p className="text-sm text-(--muted)">Loading form\u2026</p>
+          </div>
         </div>
       }
     >
