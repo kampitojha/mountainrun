@@ -156,38 +156,33 @@ export function AppFooter() {
         {/* Gradient divider */}
         <div className="h-px bg-gradient-to-r from-transparent via-(--sage)/40 to-transparent" />
 
-        {/* ─── CTA Section ─── */}
-        <div className="container-page py-10 sm:py-14 md:py-18">
-          <div className="relative overflow-hidden rounded-3xl border border-(--line) bg-gradient-to-br from-(--panel) via-(--panel) to-(--sage-soft) px-6 py-10 shadow-[0_8px_40px_-8px_rgba(13,148,136,0.06)] sm:px-10 sm:py-14 md:px-14 md:py-16">
-            {/* Decorative blobs */}
-            <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-(--sage) opacity-[0.03] blur-3xl" />
-            <div aria-hidden="true" className="pointer-events-none absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-indigo-500 opacity-[0.03] blur-3xl" />
+        {/* ─── CTA Section — only for logged-out users ─── */}
+        <Show when="signed-out">
+          <div className="container-page py-10 sm:py-14 md:py-18">
+            <div className="relative overflow-hidden rounded-3xl border border-(--line) bg-gradient-to-br from-(--panel) via-(--panel) to-(--sage-soft) px-6 py-10 shadow-[0_8px_40px_-8px_rgba(13,148,136,0.06)] sm:px-10 sm:py-14 md:px-14 md:py-16">
+              {/* Decorative blobs */}
+              <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-(--sage) opacity-[0.03] blur-3xl" />
+              <div aria-hidden="true" className="pointer-events-none absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-indigo-500 opacity-[0.03] blur-3xl" />
 
-            <div className="relative z-10 mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-(--foreground) sm:text-4xl md:text-5xl">
-                Ready for your next challenge?
-              </h2>
-              <p className="mt-4 text-sm leading-relaxed text-(--muted) sm:text-base md:text-lg">
-                Join thousands of runners completing verified virtual races across India.
-              </p>
-              <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-                <Link className="btn btn-primary min-w-[11rem] text-sm sm:text-base" href="/events">
-                  Browse Events
-                </Link>
-                <Show when="signed-out">
+              <div className="relative z-10 mx-auto max-w-2xl text-center">
+                <h2 className="text-3xl font-bold tracking-tight text-(--foreground) sm:text-4xl md:text-5xl">
+                  Ready for your next challenge?
+                </h2>
+                <p className="mt-4 text-sm leading-relaxed text-(--muted) sm:text-base md:text-lg">
+                  Join thousands of runners completing verified virtual races across India.
+                </p>
+                <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+                  <Link className="btn btn-primary min-w-[11rem] text-sm sm:text-base" href="/events">
+                    Browse Events
+                  </Link>
                   <Link className="btn btn-secondary min-w-[11rem] text-sm sm:text-base" href="/sign-up">
                     Create Account
                   </Link>
-                </Show>
-                <Show when="signed-in">
-                  <Link className="btn btn-secondary min-w-[11rem] text-sm sm:text-base" href="/dashboard">
-                    My Dashboard
-                  </Link>
-                </Show>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </Show>
 
         {/* ─── Main Footer ─── */}
         <div className="border-t border-(--line) bg-(--panel)">
