@@ -213,43 +213,42 @@ export default function AdminEventsPage() {
       {message ? <p className="admin-muted">{message}</p> : null}
 
       <div className="admin-layout-split is-form-list admin-fill">
-        <form className="admin-panel admin-panel-pad space-y-3" onSubmit={onSubmit}>
+        <form className="admin-panel admin-panel-pad space-y-4" onSubmit={onSubmit}>
           <h2 className="admin-panel-title">{editingId ? "Edit event" : "New event"}</h2>
+
+          {/* Title — slug auto-generated, shown read-only */}
           <label className="block text-sm">
-            <span className="field-label">Title</span>
+            <span className="field-label">Event title *</span>
             <input
               className="input"
+              placeholder="e.g. Monsoon Mountain Miles"
               onChange={(e) =>
                 setForm((f) => ({
                   ...f,
                   title: e.target.value,
-                  slug: f.slug || slugify(e.target.value),
+                  slug: slugify(e.target.value),
                 }))
               }
               required
               value={form.title}
             />
           </label>
-          <label className="block text-sm">
-            <span className="field-label">Slug</span>
-            <input
-              className="input"
-              onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
-              required
-              value={form.slug}
-            />
-          </label>
+
+          {/* Description */}
           <label className="block text-sm">
             <span className="field-label">Description</span>
             <textarea
-              className="input min-h-24 py-2"
+              className="input min-h-20 py-2"
+              placeholder="Briefly describe this event for runners…"
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               value={form.description}
             />
           </label>
+
+          {/* Date range */}
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm">
-              <span className="field-label">Starts</span>
+              <span className="field-label">Event starts *</span>
               <input
                 className="input"
                 onChange={(e) => setForm((f) => ({ ...f, startsAt: e.target.value }))}
@@ -259,7 +258,7 @@ export default function AdminEventsPage() {
               />
             </label>
             <label className="block text-sm">
-              <span className="field-label">Ends</span>
+              <span className="field-label">Event ends *</span>
               <input
                 className="input"
                 onChange={(e) => setForm((f) => ({ ...f, endsAt: e.target.value }))}
@@ -269,17 +268,10 @@ export default function AdminEventsPage() {
               />
             </label>
           </div>
+
+          {/* Distances */}
           <label className="block text-sm">
-            <span className="field-label">Proof closes</span>
-            <input
-              className="input"
-              onChange={(e) => setForm((f) => ({ ...f, proofClosesAt: e.target.value }))}
-              type="datetime-local"
-              value={form.proofClosesAt}
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="field-label">Distances (comma-separated)</span>
+            <span className="field-label">Distances (comma-separated) *</span>
             <input
               className="input"
               onChange={(e) => setForm((f) => ({ ...f, distances: e.target.value }))}
@@ -288,78 +280,76 @@ export default function AdminEventsPage() {
               value={form.distances}
             />
           </label>
+
+          {/* Price + Status */}
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm">
-              <span className="field-label">Price (INR)</span>
+              <span className="field-label">Entry fee (₹)</span>
               <input
                 className="input"
                 inputMode="numeric"
+                placeholder="499"
                 onChange={(e) => setForm((f) => ({ ...f, priceInr: e.target.value }))}
                 value={form.priceInr}
               />
             </label>
             <label className="block text-sm">
-              <span className="field-label">Max capacity</span>
-              <input
+              <span className="field-label">Status</span>
+              <select
                 className="input"
-                inputMode="numeric"
-                onChange={(e) => setForm((f) => ({ ...f, maxCapacity: e.target.value }))}
-                placeholder="Unlimited"
-                value={form.maxCapacity}
-              />
+                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
+                value={form.status}
+              >
+                {[
+                  ["DRAFT", "Draft (not visible)"],
+                  ["OPEN", "Open (accepting registrations)"],
+                  ["CLOSED", "Closed"],
+                  ["COMPLETED", "Completed"],
+                  ["CANCELLED", "Cancelled"],
+                ].map(([val, label]) => (
+                  <option key={val} value={val}>{label}</option>
+                ))}
+              </select>
             </label>
           </div>
-          <label className="block text-sm">
-            <span className="field-label">Status</span>
-            <select
-              className="input"
-              onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-              value={form.status}
-            >
-              {["DRAFT", "OPEN", "CLOSED", "COMPLETED", "CANCELLED"].map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm">
-            <span className="field-label">City</span>
-            <input
-              className="input"
-              onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-              value={form.city}
-            />
-          </label>
-          <div className="flex flex-col gap-2 text-sm">
-            <label className="flex items-center gap-2">
+
+          {/* Options */}
+          <div className="rounded-xl border border-(--admin-line) bg-(--admin-surface-2) p-3 space-y-2.5 text-sm">
+            <p className="text-xs font-semibold uppercase tracking-wider text-(--admin-muted) mb-1">Options</p>
+            <label className="flex items-center gap-2.5 cursor-pointer">
               <input
                 checked={form.paymentRequired}
                 onChange={(e) => setForm((f) => ({ ...f, paymentRequired: e.target.checked }))}
                 type="checkbox"
               />
-              Payment required
+              <span>Payment required <span className="text-xs text-(--admin-muted)">(uncheck for free events)</span></span>
             </label>
-            <label className="flex items-center gap-2">
+            <label className="flex items-center gap-2.5 cursor-pointer">
               <input
                 checked={form.medalIncluded}
                 onChange={(e) => setForm((f) => ({ ...f, medalIncluded: e.target.checked }))}
                 type="checkbox"
               />
-              Medal included
+              <span>Medal included in kit</span>
             </label>
-            <label className="flex items-center gap-2">
+            <label className="flex items-center gap-2.5 cursor-pointer">
               <input
                 checked={form.featured}
                 onChange={(e) => setForm((f) => ({ ...f, featured: e.target.checked }))}
                 type="checkbox"
               />
-              Featured
+              <span>Featured on homepage</span>
             </label>
           </div>
+
           <button className="btn btn-primary btn-full" disabled={saving} type="submit">
             {saving ? "Saving…" : editingId ? "Update event" : "Create event"}
           </button>
+
+          {/* Slug shown as read-only info */}
+          {form.slug ? (
+            <p className="text-xs text-(--admin-muted)">URL slug: <code className="bg-(--admin-surface-3) px-1 rounded text-[0.7rem]">{form.slug}</code></p>
+          ) : null}
         </form>
 
         <div className="admin-stack">
