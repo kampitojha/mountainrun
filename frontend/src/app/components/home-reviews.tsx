@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { ArrowUpRight, Star } from "lucide-react";
-import { useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { fetchHomeContent, type HomeTestimonial } from "../../lib/events-api";
 import { HomeSectionHeader } from "./home-section-header";
@@ -153,7 +152,6 @@ function DesktopMarquee({ reviews }: { reviews: HomeTestimonial[] }) {
 }
 
 export function HomeReviews() {
-  const reduce = useReducedMotion();
   const [reviews, setReviews] = useState<HomeTestimonial[]>(fallbackReviews);
 
   useEffect(() => {
@@ -216,15 +214,11 @@ export function HomeReviews() {
         </div>
 
         <div className="hidden md:block mt-10">
-          {reduce ? (
-            <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-              {reviews.map((review, i) => (
-                <ReviewCard key={review.id ?? review.name} review={review} index={i} />
-              ))}
-            </div>
-          ) : (
-            <DesktopMarquee reviews={reviews} />
-          )}
+          <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+            {reviews.map((review, i) => (
+              <ReviewCard key={review.id ?? review.name} review={review} index={i} />
+            ))}
+          </div>
         </div>
       </div>
     </section>

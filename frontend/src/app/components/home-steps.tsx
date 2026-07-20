@@ -43,7 +43,7 @@ export function HomeSteps() {
                   <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--sage)">
                     <Icon aria-hidden="true" className="h-5 w-5" strokeWidth={1.75} />
                   </span>
-                  <span className="font-mono text-2xl font-extrabold tabular-nums text-(--line-strong)">
+                  <span className="font-mono text-2xl font-bold tabular-nums text-(--line-strong)">
                     {item.step}
                   </span>
                 </div>
