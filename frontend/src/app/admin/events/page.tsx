@@ -23,9 +23,6 @@ import {
   X,
   ExternalLink,
   Users,
-  Trophy,
-  MapPin,
-  FileText,
 } from "lucide-react";
 
 /* ── Toast ─────────────────────────────────────────────── */
@@ -370,40 +367,7 @@ export default function AdminEventsPage() {
               </label>
             </div>
 
-            <div className="rounded-xl border border-[var(--admin-line)] bg-[var(--admin-surface)] p-3 space-y-2.5 text-sm">
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--admin-muted)]">Options</p>
-              {[
-                ["paymentRequired", "Payment required", "(uncheck for free events)"],
-                ["medalIncluded", "Medal included in kit", ""],
-                ["featured", "⭐ Featured on homepage", "shows in Open events section"],
-              ].map(([key, label, hint]) => (
-                <label key={key} className="flex items-center gap-2.5 cursor-pointer">
-                  <input type="checkbox"
-                    checked={form[key as keyof typeof form] as boolean}
-                    onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.checked }))} />
-                  <span>{label} {hint ? <span className="text-xs text-[var(--admin-muted)]">({hint})</span> : null}</span>
-                </label>
-              ))}
-
-              <hr className="border-[var(--admin-line)] my-1" />
-
-              <label className="block text-xs">
-                <span className="field-label">Coupon code</span>
-                <input className="input" placeholder="e.g. WELCOME10"
-                  onChange={(e) => setForm((f) => ({ ...f, couponCode: e.target.value.toUpperCase() }))}
-                  value={form.couponCode} />
-                <p className="mt-1 text-[0.65rem] text-[var(--admin-muted)]">Create coupons in <strong>Coupons</strong> section. Enter the code here to link it.</p>
-              </label>
-
-              <label className="flex items-center gap-2.5 cursor-pointer">
-                <input type="checkbox"
-                  checked={form.showCouponOnCard}
-                  onChange={(e) => setForm((f) => ({ ...f, showCouponOnCard: e.target.checked }))} />
-                <span>Show coupon on event card</span>
-              </label>
-
-              <hr className="border-[var(--admin-line)] my-1" />
-
+            <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-wider text-[var(--admin-muted)]">Activity types</p>
               <div className="flex flex-wrap gap-2">
                 {["running", "cycling", "walking"].map((type) => {
@@ -425,41 +389,50 @@ export default function AdminEventsPage() {
                   );
                 })}
               </div>
+            </div>
 
-              <hr className="border-[var(--admin-line)] my-1" />
+            <div className="space-y-1">
+              <span className="field-label">Benefits (one per line)</span>
+              <textarea className="input min-h-16 py-2 resize-none" placeholder="Verified race entry&#10;GPS proof verification&#10;Finisher medal delivery"
+                onChange={(e) => setForm((f) => ({ ...f, benefits: e.target.value }))}
+                value={form.benefits as string} />
+            </div>
 
-              <label className="block text-xs">
-                <span className="field-label">Benefits (one per line)</span>
-                <textarea className="input min-h-16 py-2 resize-none" placeholder="Verified race entry&#10;GPS proof verification&#10;Finisher medal delivery"
-                  onChange={(e) => setForm((f) => ({ ...f, benefits: e.target.value }))}
-                  value={form.benefits as string} />
-                <p className="mt-1 text-[0.65rem] text-[var(--admin-muted)]">Each line becomes a benefit card on the event page.</p>
-              </label>
+            <div className="space-y-1">
+              <span className="field-label">Coupon code</span>
+              <div className="flex items-center gap-2">
+                <input className="input flex-1" placeholder="e.g. WELCOME10"
+                  onChange={(e) => setForm((f) => ({ ...f, couponCode: e.target.value.toUpperCase() }))}
+                  value={form.couponCode} />
+                <label className="flex items-center gap-1.5 text-xs whitespace-nowrap cursor-pointer">
+                  <input type="checkbox"
+                    checked={form.showCouponOnCard}
+                    onChange={(e) => setForm((f) => ({ ...f, showCouponOnCard: e.target.checked }))} />
+                  Show on card
+                </label>
+              </div>
+            </div>
 
-              <hr className="border-[var(--admin-line)] my-1" />
-
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--admin-muted)]">Past-event recap stats</p>
-              <p className="text-[0.65rem] text-[var(--admin-muted)] mb-2">Only shown when event status is Completed or Cancelled.</p>
+            <div className="space-y-1">
+              <span className="field-label">Past-event stats</span>
+              <p className="text-[0.65rem] text-[var(--admin-muted)]">Only for Completed / Cancelled events.</p>
               <div className="grid grid-cols-3 gap-2">
                 {([
-                  ["finishers", "Finishers", Trophy],
-                  ["verifiedResults", "Verified", Users],
-                  ["cities", "Cities", MapPin],
-                ] as const).map(([field, label, Icon]) => (
+                  ["finishers", "Finishers"],
+                  ["verifiedResults", "Verified"],
+                  ["cities", "Cities"],
+                ] as const).map(([field, label]) => (
                   <label key={field} className="block text-xs">
-                    <span className="field-label flex items-center gap-1"><Icon className="h-3 w-3" />{label}</span>
+                    <span className="field-label">{label}</span>
                     <input className="input" inputMode="numeric" placeholder="0"
                       onChange={(e) => setForm((f) => ({ ...f, [field]: e.target.value }))}
                       value={(form as any)[field] ?? ""} />
                   </label>
                 ))}
               </div>
-              <label className="block text-xs mt-2">
-                <span className="field-label flex items-center gap-1"><FileText className="h-3 w-3" />Result note</span>
-                <input className="input" placeholder="e.g. Highest 21 km completion rate of the season."
-                  onChange={(e) => setForm((f) => ({ ...f, resultNote: e.target.value }))}
-                  value={form.resultNote as string} />
-              </label>
+              <input className="input mt-1" placeholder="Result note (optional)"
+                onChange={(e) => setForm((f) => ({ ...f, resultNote: e.target.value }))}
+                value={form.resultNote as string} />
             </div>
 
             <button className="btn btn-primary btn-full" disabled={saving} type="submit">
