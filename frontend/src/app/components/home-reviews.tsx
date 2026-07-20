@@ -31,30 +31,44 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
+function AvatarInitials({ name }: { name: string }) {
+  const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+  return (
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-indigo-500 text-[0.65rem] font-bold text-white shadow-sm ring-2 ring-white/20">
+      {initials}
+    </span>
+  );
+}
+
 function ReviewCard({ review, index, className = "" }: { review: HomeTestimonial; index: number; className?: string }) {
   return (
-    <article className={`relative flex w-[280px] shrink-0 flex-col rounded-2xl border border-(--line) bg-(--panel) p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-80 sm:p-6 ${className}`}>
-      {/* Left accent bar */}
-      <span aria-hidden="true" className="absolute left-0 top-4 bottom-4 w-0.5 rounded-r-full bg-(--sage) opacity-40" />
+    <article className={`relative flex w-[280px] shrink-0 flex-col rounded-2xl border border-(--line) bg-(--panel) p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-(--sage)/30 hover:shadow-lg sm:w-80 sm:p-6 ${className}`}>
+      {/* Gradient top bar */}
+      <span aria-hidden="true" className="absolute left-3 right-3 top-0 h-[2px] rounded-b-full bg-gradient-to-r from-(--sage) via-emerald-400 to-indigo-500 opacity-60" />
 
-      <div className="flex items-start justify-between gap-3">
-        <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--sage-soft) text-sm font-bold text-(--sage)">
-          {review.name.split(" ").map((p) => p[0]).join("").slice(0, 2)}
-        </span>
+      {/* Large decorative quote */}
+      <Quote aria-hidden="true" className="absolute top-4 right-4 h-12 w-12 text-(--sage) opacity-8" />
+
+      {/* Quote text */}
+      <blockquote className="relative z-10 mt-1 flex-1">
+        <p className="text-sm leading-relaxed text-(--muted) sm:text-base">
+          &ldquo;{review.quote}&rdquo;
+        </p>
+      </blockquote>
+
+      {/* Bottom section: avatar + details */}
+      <div className="relative z-10 mt-5 flex items-center gap-3 border-t border-(--line) pt-4">
+        <AvatarInitials name={review.name} />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-bold tracking-tight text-(--foreground)">
+            {review.name}
+          </p>
+          <p className="truncate text-xs text-(--muted-soft)">
+            {review.role}{review.city ? <span> &middot; {review.city}</span> : null}
+          </p>
+        </div>
         <StarRating rating={review.rating} />
       </div>
-
-      <h3 className="mt-4 text-sm font-bold tracking-tight text-(--foreground)">
-        {review.name}
-      </h3>
-      <p className="text-xs text-(--muted-soft)">
-        {review.role}{review.city ? <span className="text-(--muted-soft)"> &middot; {review.city}</span> : null}
-      </p>
-
-      <blockquote className="mt-4 text-sm leading-relaxed text-(--muted) relative">
-        <Quote aria-hidden="true" className="absolute -top-1 left-0 h-5 w-5 text-(--sage) opacity-20" />
-        <span className="relative z-10 block">&ldquo;{review.quote}&rdquo;</span>
-      </blockquote>
     </article>
   );
 }
@@ -85,10 +99,8 @@ function MobileScroll({ reviews }: { reviews: HomeTestimonial[] }) {
             <ReviewCard review={review} index={i} />
           </div>
         ))}
-        {/* Peek end spacer */}
         <div className="w-4 shrink-0" />
       </div>
-      {/* Dots */}
       {reviews.length > 1 && (
         <div className="flex items-center justify-center gap-1.5 mt-2">
           {reviews.map((_, i) => (
@@ -173,7 +185,6 @@ export function HomeReviews() {
 
   return (
     <section className="section overflow-hidden border-b border-(--line) relative">
-      {/* Background */}
       <div aria-hidden="true" className="absolute inset-0 pointer-events-none"
         style={{
           background: "radial-gradient(at 0% 0%, color-mix(in srgb, var(--sage) 4%, transparent) 0px, transparent 60%), radial-gradient(at 100% 100%, color-mix(in srgb, var(--sage) 3%, transparent) 0px, transparent 60%)",
@@ -193,10 +204,7 @@ export function HomeReviews() {
           title="Experiences from the community"
         />
 
-        {/* Mobile: horizontal scroll with dots */}
         <MobileScroll reviews={reviews} />
-
-        {/* Desktop: auto-scroll marquee */}
         <DesktopMarquee reviews={reviews} />
       </div>
     </section>
