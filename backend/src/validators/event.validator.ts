@@ -7,11 +7,12 @@ export const createEventSchema = z.object({
   slug: z
     .string()
     .min(3)
-    .regex(/^[a-z0-9-]+$/, "Slug can use lowercase letters, numbers, and hyphens only"),
-  description: z.string().min(20),
+    .regex(/^[a-z0-9-]+$/, "Slug can use lowercase letters, numbers, and hyphens only")
+    .optional(),
+  description: z.string().min(1).optional(),
   startsAt: z.coerce.date(),
   endsAt: z.coerce.date(),
-  proofClosesAt: z.coerce.date(),
+  proofClosesAt: z.coerce.date().optional(),
   distances: z.array(z.string().min(1)).min(1),
   priceInPaise: z.number().int().min(0),
   paymentRequired: z.boolean().optional(),

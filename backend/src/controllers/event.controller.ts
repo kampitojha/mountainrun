@@ -105,9 +105,24 @@ export async function getEvent(request: Request, response: Response) {
 
 export async function createEvent(request: Request, response: Response) {
   const payload = validateBody(createEventSchema, request);
+
+  // Auto-generate slug from title if not provided
+  const slug = payload.slug?.trim() ||
+    payload.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+
+  // Default description
+  const description = payload.description?.trim() ||
+    `${payload.title} virtual running event.`;
+
+  // Default proofClosesAt to endsAt if not provided
+  const proofClosesAt = payload.proofClosesAt ?? payload.endsAt;
+
   const event = await prisma.event.create({
     data: {
       ...payload,
+      slug,
+      description,
+      proofClosesAt,
       medalIncluded: payload.medalIncluded ?? true,
       status: payload.status ?? "OPEN",
     },
@@ -118,9 +133,16 @@ export async function createEvent(request: Request, response: Response) {
 
 export async function updateEvent(request: Request, response: Response) {
   const payload = validateBody(updateEventSchema, request);
+
+  // Auto-generate slug from title if slug is being cleared/not provided but title is changing
+  const updateData: typeof payload = { ...payload };
+  if (payload.title && !payload.slug) {
+    updateData.slug = payload.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+  }
+
   const event = await prisma.event.update({
     where: { id: routeParam(request, "id") },
-    data: payload,
+    data: updateData,
   });
 
   response.json({ data: withEventMeta(event) });
