@@ -81,17 +81,17 @@ function ReviewCard({ review, index }: { review: HomeTestimonial; index: number 
 
   return (
     <article
-      className="group relative flex h-full w-[85vw] shrink-0 snap-center flex-col rounded-3xl border border-(--line) bg-(--panel) p-7 shadow-[0_2px_20px_-4px_rgba(15,23,42,0.04)] transition-all duration-[400ms] ease-out hover:-translate-y-2 hover:border-(--sage)/20 hover:shadow-[0_20px_50px_-12px_rgba(15,23,42,0.08)] sm:w-[calc(50vw-2rem)] sm:p-8 lg:w-[calc(33.333vw-2.5rem)]"
+      className="group relative flex h-full w-[85vw] shrink-0 snap-center flex-col rounded-3xl border border-(--line) bg-(--panel) p-7 shadow-[0_2px_20px_-4px_rgba(15,23,42,0.04)] transition-transform duration-[400ms] ease-out hover:-translate-y-2 hover:border-(--sage)/20 hover:shadow-[0_20px_50px_-12px_rgba(15,23,42,0.08)] will-change-transform sm:w-[calc(50vw-2rem)] sm:p-8 lg:w-[calc(33.333vw-2.5rem)]"
     >
       {/* Decorative quotation mark */}
       <Quote
         aria-hidden="true"
-        className="absolute top-5 left-5 h-14 w-14 text-(--sage) opacity-[0.04] transition-all duration-[400ms] group-hover:opacity-[0.08] sm:h-16 sm:w-16"
+        className="absolute top-5 left-5 h-14 w-14 text-(--sage) opacity-[0.04] transition-opacity duration-[400ms] group-hover:opacity-[0.08] sm:h-16 sm:w-16"
       />
 
       {/* Badge */}
-      <span className="relative inline-flex w-fit items-center gap-1.5 rounded-full border border-(--line) bg-(--background) px-3 py-1 text-[0.55rem] font-bold uppercase tracking-[0.12em] text-(--muted) transition-all duration-[400ms] group-hover:border-(--sage)/20 group-hover:text-(--sage) sm:text-[0.6rem]">
-        <BadgeCheck className="h-3 w-3 text-(--sage) transition-all duration-[400ms] group-hover:scale-110" />
+      <span className="relative inline-flex w-fit items-center gap-1.5 rounded-full border border-(--line) bg-(--background) px-3 py-1 text-[0.55rem] font-bold uppercase tracking-[0.12em] text-(--muted) transition-colors duration-[400ms] group-hover:border-(--sage)/20 group-hover:text-(--sage) sm:text-[0.6rem]">
+        <BadgeCheck className="h-3 w-3 text-(--sage) transition-transform duration-[400ms] group-hover:scale-110" />
         {badge}
       </span>
 
@@ -103,7 +103,7 @@ function ReviewCard({ review, index }: { review: HomeTestimonial; index: number 
       </blockquote>
 
       {/* Divider */}
-      <div className="mt-6 h-px bg-gradient-to-r from-(--line) via-(--line) to-transparent transition-all duration-[400ms] group-hover:via-(--sage)/20" />
+      <div className="mt-6 h-px bg-gradient-to-r from-(--line) via-(--line) to-transparent" />
 
       {/* Bottom section */}
       <div className="mt-5 flex items-center gap-4">
@@ -116,7 +116,7 @@ function ReviewCard({ review, index }: { review: HomeTestimonial; index: number 
             <span className="truncate text-sm font-bold tracking-tight text-(--foreground) sm:text-base">
               {review.name}
             </span>
-            <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-(--sage) transition-all duration-[400ms] group-hover:scale-110 group-hover:drop-shadow-[0_0_4px_rgba(13,148,136,0.3)]" />
+            <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-(--sage) transition-transform duration-[400ms] group-hover:scale-110" />
           </div>
           <p className="truncate text-xs text-(--muted-soft) sm:text-sm">
             {achievement}{review.city ? <span className="text-(--muted-soft)"> &middot; {review.city}</span> : null}
@@ -126,7 +126,7 @@ function ReviewCard({ review, index }: { review: HomeTestimonial; index: number 
 
       {/* Stars */}
       <div className="mt-4 flex items-center gap-2 text-xs sm:text-sm">
-        <span className="tracking-[0.08em] text-amber-400 transition-all duration-[400ms] group-hover:tracking-[0.12em]">
+        <span className="tracking-[0.08em] text-amber-400">
           {"\u2605".repeat(5)}
         </span>
         <span className="font-bold tabular-nums text-(--foreground)">{review.rating}.0</span>
@@ -140,12 +140,15 @@ function ReviewCard({ review, index }: { review: HomeTestimonial; index: number 
 function ReviewCarousel({ reviews }: { reviews: HomeTestimonial[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
 
-  /* Mouse wheel → horizontal scroll */
+  /* Mouse wheel → horizontal scroll (only when track has room) */
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
+      const atStart = el.scrollLeft <= 0 && e.deltaY < 0;
+      const atEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 1 && e.deltaY > 0;
+      if (atStart || atEnd) return;
       e.preventDefault();
       el.scrollBy({ left: e.deltaY, behavior: "auto" });
     };
@@ -162,7 +165,7 @@ function ReviewCarousel({ reviews }: { reviews: HomeTestimonial[] }) {
       {/* Scroll track */}
       <div
         ref={trackRef}
-        className="-mx-4 flex gap-5 overflow-x-auto px-4 pb-4 snap-x snap-mandatory no-scrollbar sm:-mx-6 sm:px-6 md:gap-6"
+        className="-mx-4 flex gap-5 overflow-x-auto px-4 pb-4 snap-x snap-proximity no-scrollbar scroll-smooth sm:-mx-6 sm:px-6 md:gap-6"
         role="list"
         aria-label="Runner testimonials"
       >
