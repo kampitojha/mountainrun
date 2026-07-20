@@ -351,24 +351,10 @@ export function AppHeader() {
       </div>
 
       {/* Mobile drawer */}
-      <AnimatePresence>
-        {open && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              onClick={() => setOpen(false)}
-              className="fixed inset-0 z-40 bg-(--overlay) backdrop-blur-sm md:hidden"
-            />
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="fixed inset-y-0 right-0 z-50 flex w-72 max-w-[85vw] flex-col border-l border-(--line) bg-(--panel) shadow-2xl md:hidden"
-            >
+      {open && (
+        <div className="fixed inset-0 z-50 flex md:hidden">
+          <div className="fixed inset-0 bg-(--overlay) backdrop-blur-sm" onClick={() => setOpen(false)} />
+          <div className="fixed right-0 inset-y-0 w-72 max-w-[85vw] flex flex-col border-l border-(--line) bg-(--panel) shadow-2xl">
               {/* Drawer header with sage accent */}
               <div className="relative flex items-center justify-between px-4 py-4">
                 <div aria-hidden className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-(--sage)/20 to-transparent" />
@@ -494,10 +480,9 @@ export function AppHeader() {
                   <ThemeToggle size="sm" />
                 </div>
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
