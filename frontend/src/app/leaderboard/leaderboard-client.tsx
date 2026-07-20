@@ -2,7 +2,7 @@
 
 import { useAuth, useUser } from "@clerk/nextjs";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Ruler, Trophy, Users } from "lucide-react";
+import { Calendar, Ruler, Trophy, Users } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getApiUrl } from "../../lib/api";
@@ -263,32 +263,40 @@ export function LeaderboardClient() {
       <section className="section">
         <div className="container-page">
           <motion.div
-            className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5"
+            className="overflow-hidden rounded-2xl border border-(--line) bg-(--panel) p-4 sm:p-5"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            <label className="block min-w-0 flex-1 text-sm">
-              <span className="field-label">Event</span>
-              <select
-                className="input"
-                onChange={(e) => { setSelectedSlug(e.target.value); setDistance("all"); }}
-                value={selectedSlug}
-              >
-                {events.map((event) => (
-                  <option key={event.slug} value={event.slug}>{event.name}</option>
-                ))}
-              </select>
-            </label>
-            <label className="block min-w-0 sm:w-40 text-sm">
-              <span className="field-label">Distance</span>
-              <select className="input" onChange={(e) => setDistance(e.target.value)} value={distance}>
-                <option value="all">All</option>
-                {distanceOptions.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-            </label>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5">
+              <label className="block min-w-0 flex-1 text-sm">
+                <span className="mb-1.5 flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-wider text-(--muted)">
+                  <Calendar className="h-3.5 w-3.5 text-(--muted-soft)" strokeWidth={1.75} />
+                  Event
+                </span>
+                <select
+                  className="input"
+                  onChange={(e) => { setSelectedSlug(e.target.value); setDistance("all"); }}
+                  value={selectedSlug}
+                >
+                  {events.map((event) => (
+                    <option key={event.slug} value={event.slug}>{event.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block min-w-0 sm:w-44 text-sm">
+                <span className="mb-1.5 flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-wider text-(--muted)">
+                  <Ruler className="h-3.5 w-3.5 text-(--muted-soft)" strokeWidth={1.75} />
+                  Distance
+                </span>
+                <select className="input" onChange={(e) => setDistance(e.target.value)} value={distance}>
+                  <option value="all">All</option>
+                  {distanceOptions.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
           </motion.div>
 
           {/* ── INFO BANNERS ──────────────────────────────────── */}
