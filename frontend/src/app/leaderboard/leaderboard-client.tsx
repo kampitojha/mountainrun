@@ -57,13 +57,13 @@ function rankEmoji(rank: number) {
 
 function StatCard({ icon: Icon, label, value }: { icon: typeof Trophy; label: string; value: string | number }) {
   return (
-    <div className="group flex items-center gap-3 rounded-2xl border border-(--line) bg-(--panel) px-4 py-3 transition-shadow hover:shadow-sm sm:px-5 sm:py-4">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--sage) transition-all group-hover:border-(--sage)/30 group-hover:bg-(--sage)/10">
-        <Icon className="h-5 w-5" strokeWidth={1.75} />
+    <div className="group flex flex-col items-center gap-1.5 rounded-2xl border border-(--line) bg-(--panel) px-3 py-3 text-center transition-shadow hover:shadow-sm sm:flex-row sm:items-center sm:gap-3 sm:px-5 sm:py-4 sm:text-left">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--sage) transition-all group-hover:border-(--sage)/30 group-hover:bg-(--sage)/10 sm:h-10 sm:w-10">
+        <Icon className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.75} />
       </span>
       <div className="min-w-0">
-        <p className="text-lg font-bold tracking-tight tabular-nums text-(--foreground) sm:text-xl">{value}</p>
-        <p className="text-[0.65rem] font-semibold uppercase tracking-wider text-(--muted) sm:text-xs">{label}</p>
+        <p className="text-base font-bold tracking-tight tabular-nums text-(--foreground) sm:text-xl">{value}</p>
+        <p className="text-[0.6rem] font-semibold uppercase tracking-wider text-(--muted) sm:text-xs">{label}</p>
       </div>
     </div>
   );
