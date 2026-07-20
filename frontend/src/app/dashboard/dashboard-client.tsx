@@ -260,35 +260,66 @@ export function DashboardClient() {
 
       {proofMessage ? <div className="rounded-xl border border-(--sage)/30 bg-(--sage-soft) px-4 py-3 text-sm text-(--sage)">{proofMessage}</div> : null}
 
-      {/* Rewards tracking */}
       {registrations.some((r) => r.proofStatus === "SUBMITTED" || r.proofStatus === "APPROVED") ? (
         <div>
           <h2 className="text-lg font-bold tracking-tight text-(--foreground)">Rewards</h2>
+          <p className="mt-1 text-sm text-(--muted)">Your earned certificates and medal delivery status.</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {registrations.filter((r) => r.proofStatus === "SUBMITTED" || r.proofStatus === "APPROVED").map((reg) => (
               <div key={reg.id} className="rounded-xl border border-(--line) bg-(--panel) p-4 sm:p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-sm font-bold text-(--foreground)">{reg.event.title}</p>
-                    <p className="text-xs text-(--muted)">{reg.distance} · Bib {reg.bibNumber}</p>
+                {/* Title + proof status */}
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-(--foreground)">{reg.event.title}</p>
+                    <p className="mt-0.5 text-xs text-(--muted)">{reg.distance} &middot; Bib {reg.bibNumber}</p>
                   </div>
-                  <span className={badgeClass(reg.proofStatus) + " text-[0.6rem]"}>{labelStatus(reg.proofStatus)}</span>
+                  <span className={`shrink-0 ${badgeClass(reg.proofStatus)} text-[0.65rem]`}>
+                    {reg.proofStatus === "APPROVED" ? "Verified ✓" : "Under review"}
+                  </span>
                 </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {reg.certificate ? <span className={badgeClass(reg.certificate.status) + " text-[0.6rem]"}>Certificate {labelStatus(reg.certificate.status)}</span> : null}
-                  {reg.medalDelivery ? <span className={badgeClass(reg.medalDelivery.status) + " text-[0.6rem]"}>Medal {labelStatus(reg.medalDelivery.status)}</span> : <span className="badge text-[0.6rem]">Medal pending</span>}
+
+                {/* Certificate + Medal status — stacked, no overlap */}
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center justify-between rounded-lg bg-(--panel-soft) px-3 py-2">
+                    <span className="text-xs font-medium text-(--muted)">Certificate</span>
+                    <span className={`${reg.certificate && reg.certificate.status !== "QUEUED" ? badgeClass(reg.certificate.status) : "badge"} text-[0.65rem]`}>
+                      {reg.certificate
+                        ? reg.certificate.status === "SENT" ? "Emailed to you"
+                          : reg.certificate.status === "GENERATED" ? "Ready"
+                          : "Being processed"
+                        : "After verification"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg bg-(--panel-soft) px-3 py-2">
+                    <span className="text-xs font-medium text-(--muted)">Medal</span>
+                    <span className={`${reg.medalDelivery ? badgeClass(reg.medalDelivery.status) : "badge"} text-[0.65rem]`}>
+                      {reg.medalDelivery
+                        ? reg.medalDelivery.status === "DELIVERED" ? "Delivered"
+                          : reg.medalDelivery.status === "DISPATCHED" ? "On the way"
+                          : "Being prepared"
+                        : "After verification"}
+                    </span>
+                  </div>
                 </div>
+
+                {/* Tracking info */}
                 {reg.medalDelivery?.trackingNumber ? (
-                  <div className="mt-3 rounded-lg bg-(--panel-soft) px-3 py-2 text-xs text-(--muted)">
-                    {reg.medalDelivery.courier ? <p>Courier: <span className="font-medium text-(--foreground)">{reg.medalDelivery.courier}</span></p> : null}
-                    <p className="mt-0.5">Tracking: <span className="font-mono font-medium text-(--foreground)">{reg.medalDelivery.trackingNumber}</span></p>
-                    {reg.medalDelivery.trackingUrl ? <a className="mt-1 inline-flex text-(--sage) underline-offset-2 hover:underline" href={reg.medalDelivery.trackingUrl} rel="noopener noreferrer" target="_blank">Track package <ArrowUpRight className="ml-0.5 h-3 w-3" /></a> : null}
+                  <div className="mt-3 rounded-lg bg-(--panel-soft) px-3 py-2.5 text-xs text-(--muted) space-y-1">
+                    {reg.medalDelivery.courier && <p>Courier: <span className="font-medium text-(--foreground)">{reg.medalDelivery.courier}</span></p>}
+                    <p>Tracking: <span className="font-mono font-medium text-(--foreground)">{reg.medalDelivery.trackingNumber}</span></p>
+                    {reg.medalDelivery.trackingUrl && (
+                      <a className="inline-flex items-center gap-1 text-(--sage) underline-offset-2 hover:underline" href={reg.medalDelivery.trackingUrl} rel="noopener noreferrer" target="_blank">
+                        Track your package <ArrowUpRight className="h-3 w-3" />
+                      </a>
+                    )}
                   </div>
-                ) : reg.medalDelivery ? (
-                  <p className="mt-3 text-xs text-(--muted-soft)">Tracking details appear once dispatched.</p>
                 ) : null}
-                {reg.certificate && reg.certificate.status !== "QUEUED" ? (
-                  <Link className="btn btn-secondary mt-3 h-8 w-full text-xs" href={`/certificates/${reg.certificate.certificateNumber}`}>View certificate <ArrowUpRight className="h-3 w-3" /></Link>
+
+                {/* View certificate button */}
+                {reg.certificate && (reg.certificate.status === "SENT" || reg.certificate.status === "GENERATED") ? (
+                  <Link className="btn btn-secondary mt-3 h-9 w-full text-xs" href={`/certificates/${reg.certificate.certificateNumber}`}>
+                    View certificate <ArrowUpRight className="h-3.5 w-3.5" />
+                  </Link>
                 ) : null}
               </div>
             ))}
@@ -299,7 +330,7 @@ export function DashboardClient() {
       {/* Registrations */}
       <div>
         <h2 className="text-lg font-bold tracking-tight text-(--foreground)">My registrations</h2>
-        <p className="mt-1 text-sm text-(--muted)">Join → run → upload proof → get certificate + medal.</p>
+        <p className="mt-1 text-sm text-(--muted)">All your events in one place. Complete payment, upload your run, download your certificate.</p>
 
         {registrations.length === 0 ? (
           <div className="mt-4 rounded-2xl border border-dashed border-(--line) bg-(--panel-soft)/50 p-8 text-center">
@@ -325,33 +356,35 @@ export function DashboardClient() {
                   </div>
 
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    {/* Proof status */}
-                    {reg.proofStatus !== "NOT_SUBMITTED" && (
-                      <span className={badgeClass(reg.proofStatus)}>
-                        Proof: {labelStatus(reg.proofStatus)}
+                    {/* Proof status — only show when meaningful */}
+                    {reg.proofStatus === "SUBMITTED" && (
+                      <span className="badge badge-warn">Run under review</span>
+                    )}
+                    {reg.proofStatus === "APPROVED" && (
+                      <span className="badge badge-sage">Run verified ✓</span>
+                    )}
+                    {reg.proofStatus === "REJECTED" && (
+                      <span className="badge badge-danger">Proof rejected</span>
+                    )}
+                    {/* Payment */}
+                    {reg.payment?.status === "CREATED" && (
+                      <span className="badge">
+                        Payment pending{reg.payment.amountInPaise ? ` — ${formatMoney(reg.payment.amountInPaise)}` : ""}
                       </span>
                     )}
-                    {/* Payment — only show if pending or failed */}
-                    {reg.payment && (reg.payment.status === "CREATED" || reg.payment.status === "FAILED") && (
-                      <span className={badgeClass(reg.payment.status)}>
-                        {labelStatus(reg.payment.status)}{reg.payment.amountInPaise ? ` · ${formatMoney(reg.payment.amountInPaise)}` : ""}
-                      </span>
-                    )}
-                    {/* Payment amount when paid */}
                     {reg.payment?.status === "PAID" && reg.payment.amountInPaise > 0 && (
                       <span className="badge badge-sage">{formatMoney(reg.payment.amountInPaise)} paid</span>
                     )}
                     {/* Certificate */}
-                    {reg.certificate && reg.certificate.status !== "QUEUED" && (
-                      <span className={badgeClass(reg.certificate.status)}>
-                        Certificate: {labelStatus(reg.certificate.status)}
-                      </span>
+                    {reg.certificate?.status === "SENT" && (
+                      <span className="badge badge-sage">Certificate emailed</span>
                     )}
                     {/* Medal */}
-                    {reg.medalDelivery && reg.medalDelivery.status !== "PENDING" && (
-                      <span className={badgeClass(reg.medalDelivery.status)}>
-                        Medal: {labelStatus(reg.medalDelivery.status)}
-                      </span>
+                    {reg.medalDelivery?.status === "DISPATCHED" && (
+                      <span className="badge badge-sage">Medal on the way</span>
+                    )}
+                    {reg.medalDelivery?.status === "DELIVERED" && (
+                      <span className="badge badge-solid">Medal delivered</span>
                     )}
                   </div>
 
