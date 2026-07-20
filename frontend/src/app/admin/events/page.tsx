@@ -40,7 +40,7 @@ function ToastContainer({ toasts, dismiss }: { toasts: Toast[]; dismiss: (id: nu
               ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/40 dark:bg-emerald-950/60 dark:text-emerald-300"
               : t.type === "error"
               ? "border-red-200 bg-red-50 text-red-800 dark:border-red-800/40 dark:bg-red-950/60 dark:text-red-300"
-              : "border-[var(--admin-line)] bg-[var(--admin-surface)] text-[var(--admin-ink-soft)]"
+              : "border-[var(--line)] bg-[var(--panel)] text-[var(--foreground)]"
           }`}
         >
           <span className="mt-0.5 shrink-0">
@@ -78,9 +78,9 @@ function ConfirmModal({ title, message, confirmLabel = "Confirm", danger = false
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative w-full max-w-sm rounded-2xl border border-[var(--admin-line)] bg-[var(--admin-surface)] p-6 shadow-2xl">
-        <h3 className="text-base font-bold text-[var(--admin-ink)]">{title}</h3>
-        <p className="mt-2 text-sm text-[var(--admin-muted)]">{message}</p>
+      <div className="relative w-full max-w-sm rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-2xl">
+        <h3 className="text-base font-bold text-[var(--foreground)]">{title}</h3>
+        <p className="mt-2 text-sm text-[var(--muted)]">{message}</p>
         <div className="mt-5 flex justify-end gap-2">
           <button type="button" onClick={onCancel} className="btn btn-secondary h-9">Cancel</button>
           <button type="button" onClick={onConfirm}
@@ -379,7 +379,7 @@ export default function AdminEventsPage() {
                   </button>
                 )}
               </div>
-              <p className="text-[0.65rem] text-[var(--admin-muted)]">PNG, JPEG, WebP or AVIF · max 10 MB · or paste a URL below.</p>
+              <p className="text-[0.65rem] text-[var(--muted)]">PNG, JPEG, WebP or AVIF · max 10 MB · or paste a URL below.</p>
               <input className="input" placeholder="https://… or leave blank for default"
                 onChange={(e) => setForm((f) => ({ ...f, bannerImageUrl: e.target.value }))}
                 value={form.bannerImageUrl} />
@@ -431,12 +431,12 @@ export default function AdminEventsPage() {
             </div>
 
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--admin-muted)]">Activity types</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Activity types</p>
               <div className="flex flex-wrap gap-2">
                 {["running", "cycling", "walking"].map((type) => {
                   const checked = form.activityTypes.includes(type);
                   return (
-                    <label key={type} className="flex items-center gap-1.5 cursor-pointer rounded-lg border border-[var(--admin-line)] bg-[var(--admin-surface)] px-2.5 py-1.5 text-xs font-medium has-[:checked]:border-(--sage) has-[:checked]:bg-(--sage-soft) has-[:checked]:text-(--sage) transition-colors">
+                    <label key={type} className="flex items-center gap-1.5 cursor-pointer rounded-lg border border-[var(--line)] bg-[var(--panel)] px-2.5 py-1.5 text-xs font-medium has-[:checked]:border-(--sage) has-[:checked]:bg-(--sage-soft) has-[:checked]:text-(--sage) transition-colors">
                       <input type="checkbox" className="sr-only"
                         checked={checked}
                         onChange={() => {
@@ -478,7 +478,7 @@ export default function AdminEventsPage() {
 
             <div className="space-y-1">
               <span className="field-label">Past-event stats</span>
-              <p className="text-[0.65rem] text-[var(--admin-muted)]">Only for Completed / Cancelled events.</p>
+              <p className="text-[0.65rem] text-[var(--muted)]">Only for Completed / Cancelled events.</p>
               <div className="grid grid-cols-3 gap-2">
                 {([
                   ["finishers", "Finishers"],
@@ -503,8 +503,8 @@ export default function AdminEventsPage() {
             </button>
 
             {form.slug ? (
-              <p className="text-xs text-[var(--admin-muted)]">
-                Slug: <code className="rounded bg-[var(--admin-surface-2)] px-1 text-[0.68rem]">{form.slug}</code>
+              <p className="text-xs text-[var(--muted)]">
+                Slug: <code className="rounded bg-[var(--panel-soft)] px-1 text-[0.68rem]">{form.slug}</code>
               </p>
             ) : null}
           </form>
@@ -573,12 +573,12 @@ function EventCard({ event, onEdit, onDelete, onToggleFeatured, onSetStatus, isP
         {/* Info */}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-sm font-semibold tracking-tight text-[var(--admin-ink)]">{event.title}</h2>
+            <h2 className="text-sm font-semibold tracking-tight text-[var(--foreground)]">{event.title}</h2>
             <span className={STATUS_BADGE[event.status] ?? "badge"}>{STATUS_LABELS[event.status] ?? event.status}</span>
             {event.featured && <span className="badge badge-sage">⭐ Featured</span>}
             {(!event.paymentRequired || event.priceInPaise === 0) && <span className="badge badge-sage">Free</span>}
           </div>
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[var(--admin-muted)]">
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[var(--muted)]">
             <span>{event.distances.join(" · ")}</span>
             <span>{formatInrFromPaise(event.priceInPaise)}</span>
             <span className="flex items-center gap-1">
@@ -586,7 +586,7 @@ function EventCard({ event, onEdit, onDelete, onToggleFeatured, onSetStatus, isP
               {event._count?.registrations ?? 0} regs
             </span>
           </div>
-          <p className="mt-1 text-xs text-[var(--admin-muted-2)]">
+          <p className="mt-1 text-xs text-[var(--muted-soft)]">
             {formatDateTime(event.startsAt)} → {formatDateTime(event.endsAt)}
           </p>
         </div>
@@ -601,7 +601,7 @@ function EventCard({ event, onEdit, onDelete, onToggleFeatured, onSetStatus, isP
             className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-colors cursor-pointer ${
               event.featured
                 ? "border-amber-300 bg-amber-50 text-amber-600 hover:bg-amber-100 dark:border-amber-700/50 dark:bg-amber-950/40 dark:text-amber-400"
-                : "border-[var(--admin-line)] bg-[var(--admin-surface)] text-[var(--admin-muted)] hover:text-amber-500 hover:border-amber-300"
+                : "border-[var(--line)] bg-[var(--panel)] text-[var(--muted)] hover:text-amber-500 hover:border-amber-300"
             }`}
           >
             {event.featured ? <Star className="h-3.5 w-3.5 fill-current" /> : <StarOff className="h-3.5 w-3.5" />}
@@ -611,35 +611,35 @@ function EventCard({ event, onEdit, onDelete, onToggleFeatured, onSetStatus, isP
           {event.status === "OPEN" ? (
             <button type="button" onClick={() => onSetStatus("CLOSED")}
               title="Close registrations"
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--admin-line)] bg-[var(--admin-surface)] px-2.5 text-xs font-medium text-[var(--admin-muted)] hover:border-red-300 hover:text-red-600 transition-colors cursor-pointer">
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--line)] bg-[var(--panel)] px-2.5 text-xs font-medium text-[var(--muted)] hover:border-red-300 hover:text-red-600 transition-colors cursor-pointer">
               <GlobeLock className="h-3.5 w-3.5" /> Close
             </button>
           ) : event.status === "DRAFT" || event.status === "CLOSED" ? (
             <button type="button" onClick={() => onSetStatus("OPEN")}
               title="Open registrations"
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--admin-line)] bg-[var(--admin-surface)] px-2.5 text-xs font-medium text-[var(--admin-muted)] hover:border-emerald-400 hover:text-emerald-600 transition-colors cursor-pointer">
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--line)] bg-[var(--panel)] px-2.5 text-xs font-medium text-[var(--muted)] hover:border-emerald-400 hover:text-emerald-600 transition-colors cursor-pointer">
               <Globe className="h-3.5 w-3.5" /> Open
             </button>
           ) : isPast ? (
             <button type="button" onClick={() => onSetStatus("OPEN")}
               title="Reopen this event"
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--admin-line)] bg-[var(--admin-surface)] px-2.5 text-xs font-medium text-[var(--admin-muted)] hover:border-emerald-400 hover:text-emerald-600 transition-colors cursor-pointer">
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--line)] bg-[var(--panel)] px-2.5 text-xs font-medium text-[var(--muted)] hover:border-emerald-400 hover:text-emerald-600 transition-colors cursor-pointer">
               <Globe className="h-3.5 w-3.5" /> Reopen
             </button>
           ) : null}
 
           <button type="button" onClick={onEdit}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--admin-line)] bg-[var(--admin-surface)] text-[var(--admin-muted)] hover:text-[var(--admin-ink)] transition-colors cursor-pointer">
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--line)] bg-[var(--panel)] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors cursor-pointer">
             <Pencil className="h-3.5 w-3.5" />
           </button>
 
           <Link href={`/events/${event.slug}`} target="_blank"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--admin-line)] bg-[var(--admin-surface)] text-[var(--admin-muted)] hover:text-[var(--admin-ink)] transition-colors">
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--line)] bg-[var(--panel)] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
             <ExternalLink className="h-3.5 w-3.5" />
           </Link>
 
           <button type="button" onClick={onDelete}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--admin-line)] bg-[var(--admin-surface)] text-[var(--admin-muted)] hover:border-red-300 hover:text-red-500 transition-colors cursor-pointer">
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--line)] bg-[var(--panel)] text-[var(--muted)] hover:border-red-300 hover:text-red-500 transition-colors cursor-pointer">
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>

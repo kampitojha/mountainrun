@@ -146,7 +146,7 @@ export default function AdminRegistrationDetailPage() {
               {data.user.email}
               {data.user.phone ? ` · ${data.user.phone}` : ""}
             </p>
-            <p style={{ color: "var(--admin-ink)" }}>
+            <p style={{ color: "var(--foreground)" }}>
               {data.shippingName}
               <br />
               {data.shippingLine1}
@@ -168,7 +168,7 @@ export default function AdminRegistrationDetailPage() {
         <AdminPanel title="Payment">
           {data.payment ? (
             <div className="space-y-2 text-sm admin-muted">
-              <p style={{ color: "var(--admin-ink)" }}>
+              <p style={{ color: "var(--foreground)" }}>
                 {data.payment.status} · {formatInrFromPaise(data.payment.amountInPaise)}
               </p>
               <p className="font-mono text-xs">order: {data.payment.razorpayOrderId}</p>

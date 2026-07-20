@@ -95,7 +95,7 @@ export default function AdminCouponsPage() {
         description="Create and manage discount codes for checkout."
       />
 
-      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)" }}>{error}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--danger)" }}>{error}</p> : null}
       {message ? <p className="admin-muted">{message}</p> : null}
 
       <div className="admin-layout-split is-form-list admin-fill">
@@ -162,7 +162,7 @@ export default function AdminCouponsPage() {
                 <button
                   className="btn btn-ghost"
                   onClick={() => void remove(coupon.id)}
-                  style={{ color: "var(--admin-danger)" }}
+                  style={{ color: "var(--danger)" }}
                   type="button"
                 >
                   Delete

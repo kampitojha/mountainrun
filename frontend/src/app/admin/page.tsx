@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -67,7 +68,7 @@ export default function AdminOverviewPage() {
       <div>
         <AdminPageHeader title="Overview" description="Could not load live metrics." />
         <div className="admin-panel admin-panel-pad">
-          <p className="admin-muted" style={{ color: "var(--admin-danger)", margin: 0 }}>
+          <p className="admin-danger" style={{ margin: 0 }}>
             {error}
           </p>
           <button className="btn btn-secondary" onClick={() => void load()} style={{ marginTop: "0.85rem" }} type="button">

@@ -70,7 +70,7 @@ export default function AdminUsersPage() {
         </button>
       </div>
 
-      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)" }}>{error}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--danger)" }}>{error}</p> : null}
 
       <div className="table-wrap table-scroll admin-fill">
         <table className="table-clean min-w-[720px]">

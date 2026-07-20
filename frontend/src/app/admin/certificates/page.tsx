@@ -29,7 +29,7 @@ function ToastContainer({ toasts, dismiss }: { toasts: Toast[]; dismiss: (id: nu
           className={`pointer-events-auto flex items-start gap-3 rounded-xl border px-4 py-3 shadow-lg text-sm font-medium min-w-[260px] max-w-sm ${
             t.type === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/40 dark:bg-emerald-950/60 dark:text-emerald-300"
             : t.type === "error" ? "border-red-200 bg-red-50 text-red-800 dark:border-red-800/40 dark:bg-red-950/60 dark:text-red-300"
-            : "border-[var(--admin-line)] bg-[var(--admin-surface)] text-[var(--admin-ink-soft)]"
+            : "border-[var(--line)] bg-[var(--panel)] text-[var(--foreground)]"
           }`}>
           <span className="mt-0.5 shrink-0">
             {t.type === "success" ? <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
@@ -161,15 +161,15 @@ export default function AdminCertificatesPage() {
         />
 
         {/* ── How it works banner ── */}
-        <div className="rounded-xl border border-[var(--admin-teal-dim,rgba(20,184,166,0.15))] bg-[var(--admin-teal-dim,rgba(20,184,166,0.08))] px-4 py-3">
+        <div className="rounded-xl border border-[var(--sage-soft)] bg-[var(--sage-soft)] px-4 py-3">
           <div className="flex items-start gap-2.5">
-            <Info className="h-4 w-4 mt-0.5 shrink-0 text-[var(--admin-teal)]" />
-            <div className="text-xs text-[var(--admin-ink-soft)] space-y-0.5">
-              <p><strong className="text-[var(--admin-ink)]">How certificates work:</strong></p>
+            <Info className="h-4 w-4 mt-0.5 shrink-0 text-[var(--sage)]" />
+            <div className="text-xs text-[var(--foreground)] space-y-0.5">
+              <p><strong className="text-[var(--foreground)]">How certificates work:</strong></p>
               <p><strong>Pending</strong> → Proof approved, certificate number assigned, runner has nothing yet.</p>
               <p><strong>Ready</strong> → Verify link generated, certificate is viewable online, but email not sent.</p>
               <p><strong>Emailed</strong> → Runner received the certificate in their inbox. ✓ Done.</p>
-              <p className="pt-1 text-[var(--admin-muted)]">Tip: Use <em>"Send email"</em> per row, or <em>"Email all ready"</em> to send in bulk.</p>
+              <p className="pt-1 text-[var(--muted)]">Tip: Use <em>"Send email"</em> per row, or <em>"Email all ready"</em> to send in bulk.</p>
             </div>
           </div>
         </div>
@@ -194,8 +194,8 @@ export default function AdminCertificatesPage() {
         </div>
 
         {/* ── Bulk action bar ── */}
-        <div className="rounded-xl border border-[var(--admin-line)] bg-[var(--admin-surface)] p-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--admin-muted)] mb-3">Bulk actions</p>
+        <div className="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-3">Bulk actions</p>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -205,7 +205,7 @@ export default function AdminCertificatesPage() {
             >
               <FileCheck className="h-4 w-4" />
               Generate pending ({queued})
-              <span className="text-xs text-[var(--admin-muted)]">— creates verify links</span>
+              <span className="text-xs text-[var(--muted)]">— creates verify links</span>
             </button>
 
             <button
@@ -282,7 +282,7 @@ export default function AdminCertificatesPage() {
                           {statusInfo.label}
                         </span>
                       </td>
-                      <td className="text-xs text-[var(--admin-muted)]">
+                      <td className="text-xs text-[var(--muted)]">
                         {row.issuedAt ? formatDateTime(row.issuedAt) : "—"}
                       </td>
                       <td>

@@ -20,7 +20,7 @@ function ToastContainer({ toasts, dismiss }: { toasts: Toast[]; dismiss: (id: nu
               ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/40 dark:bg-emerald-950/60 dark:text-emerald-300"
               : t.type === "error"
               ? "border-red-200 bg-red-50 text-red-800 dark:border-red-800/40 dark:bg-red-950/60 dark:text-red-300"
-              : "border-[var(--admin-line)] bg-[var(--admin-surface)] text-[var(--admin-ink-soft)]"
+              : "border-[var(--line)] bg-[var(--panel)] text-[var(--foreground)]"
           }`}
         >
           <span className="mt-0.5 shrink-0">
@@ -91,9 +91,9 @@ function RejectModal({
         onClick={onCancel}
       />
       {/* Modal */}
-      <div className="relative w-full max-w-md rounded-2xl border border-[var(--admin-line)] bg-[var(--admin-surface)] p-6 shadow-2xl">
-        <h3 className="text-base font-bold text-[var(--admin-ink)]">Reject proof</h3>
-        <p className="mt-1 text-sm text-[var(--admin-muted)]">
+      <div className="relative w-full max-w-md rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-2xl">
+        <h3 className="text-base font-bold text-[var(--foreground)]">Reject proof</h3>
+        <p className="mt-1 text-sm text-[var(--muted)]">
           Optionally add a note to help the runner fix their submission.
         </p>
         <textarea
@@ -233,7 +233,7 @@ export default function AdminProofsPage() {
         />
 
         {error ? (
-          <p className="admin-muted" style={{ color: "var(--admin-danger)" }}>{error}</p>
+          <p className="admin-muted" style={{ color: "var(--danger)" }}>{error}</p>
         ) : null}
 
         <div className="admin-stack admin-fill">

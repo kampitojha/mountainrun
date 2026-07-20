@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -73,7 +74,14 @@ export function AdminStat({
   return (
     <div className="admin-stat">
       <div className="label">{label}</div>
-      <div className="value">{value}</div>
+      <motion.div
+        className="value"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      >
+        {value}
+      </motion.div>
       {hint ? <div className="hint">{hint}</div> : null}
       {trend ? (
         <div className={`trend ${trendDir ?? ""}`}>

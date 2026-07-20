@@ -226,7 +226,7 @@ export default function AdminContentPage() {
       </div>
 
       {error ? (
-        <p className="admin-muted" style={{ color: "var(--admin-danger)" }}>
+        <p className="admin-muted" style={{ color: "var(--danger)" }}>
           {error}
         </p>
       ) : null}
@@ -284,7 +284,7 @@ export default function AdminContentPage() {
                     </button>
                   )}
                 </div>
-                <p className="text-[0.65rem] text-[var(--admin-muted)]">PNG, JPEG, WebP or AVIF · max 10 MB · or enter a URL below.</p>
+                <p className="text-[0.65rem] text-[var(--muted)]">PNG, JPEG, WebP or AVIF · max 10 MB · or enter a URL below.</p>
                 {mediaForm.imageUrl && !mediaForm.imageUrl.startsWith("/images/") && (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img alt="Preview" src={mediaForm.imageUrl} className="mt-1 h-12 w-auto max-w-full rounded-lg object-cover" />

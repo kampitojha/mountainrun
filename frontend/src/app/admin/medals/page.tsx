@@ -82,7 +82,7 @@ export default function AdminMedalsPage() {
         </button>
       </div>
 
-      {error ? <p className="admin-muted" style={{ color: "var(--admin-danger)" }}>{error}</p> : null}
+      {error ? <p className="admin-muted" style={{ color: "var(--danger)" }}>{error}</p> : null}
 
       <div className="admin-stack admin-fill">
         {items.map((row) => (
