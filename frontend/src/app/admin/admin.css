@@ -434,7 +434,7 @@
   min-width: 0;
   width: 100%;
   background: var(--background);
-  padding: 0.875rem 0.75rem 2rem;
+  padding: 0.75rem 0.6rem 2rem;
 }
 
 @media (min-width: 480px) { .admin-main { padding: 1rem 0.9rem 2rem; } }
@@ -527,7 +527,12 @@
   display: grid;
   gap: 1rem;
   width: 100%;
+  min-width: 0;
   align-items: start;
+}
+
+@media (max-width: 480px) {
+  .admin-layout-split { gap: 0.75rem; }
 }
 
 @media (min-width: 960px) {
@@ -546,6 +551,7 @@
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   width: 100%;
+  min-width: 0;
   transition: all 200ms ease;
 }
 
@@ -673,6 +679,10 @@
   gap: 0.65rem;
   width: 100%;
   margin: 0;
+}
+
+@media (max-width: 480px) {
+  .admin-toolbar { gap: 0.5rem; }
 }
 
 @media (min-width: 720px) {
@@ -805,10 +815,25 @@
   border-radius: var(--radius);
   background: var(--panel);
   box-shadow: var(--shadow);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .admin-app .table-wrap.table-scroll { min-height: 18rem; }
+
+@media (max-width: 640px) {
+  .admin-app .table-clean th,
+  .admin-app .table-clean td {
+    padding: 0.55rem 0.6rem;
+    white-space: nowrap;
+  }
+  .admin-app .table-clean th { font-size: 0.58rem; }
+  .admin-app .table-clean td { font-size: 0.75rem; }
+  .admin-app .table-clean td:first-child,
+  .admin-app .table-clean th:first-child { padding-left: 0.75rem; }
+  .admin-app .table-clean td:last-child,
+  .admin-app .table-clean th:last-child { padding-right: 0.75rem; }
+}
 
 .admin-app .table-clean {
   width: 100%;
@@ -953,6 +978,7 @@
   display: grid;
   gap: 0.75rem;
   width: 100%;
+  min-width: 0;
 }
 
 @media (min-width: 480px) { .admin-split { gap: 1rem; } }
@@ -986,6 +1012,11 @@
 .admin-form-grid {
   display: grid;
   gap: 0.75rem;
+  min-width: 0;
+}
+
+@media (max-width: 480px) {
+  .admin-form-grid { gap: 0.5rem; }
 }
 
 @media (min-width: 640px) {
