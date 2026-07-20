@@ -76,7 +76,11 @@ const SKYLINE_URL = "https://res.cloudinary.com/yppcqzt6/image/upload/v1/footer-
 
 function CitySketch() {
   return (
-    <div className="w-full overflow-hidden" aria-hidden="true" style={{ lineHeight: 0, marginBottom: -2 }}>
+    <div
+      className="w-full overflow-hidden"
+      aria-hidden="true"
+      style={{ lineHeight: 0, marginBottom: -1, background: "var(--background)" }}
+    >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={SKYLINE_URL}
@@ -84,11 +88,9 @@ function CitySketch() {
         style={{
           width: "100%",
           height: "auto",
-          maxHeight: "130px",
-          minHeight: "60px",
+          maxHeight: "90px",
           display: "block",
-          objectFit: "cover",
-          objectPosition: "bottom center",
+          objectFit: "fill",
         }}
         loading="lazy"
       />
