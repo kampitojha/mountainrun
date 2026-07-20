@@ -40,7 +40,7 @@ function XIcon() {
 
 const socials = [
   { label: "Instagram", href: "https://instagram.com/mountainrunofficial", icon: <InstagramIcon />, color: "hover:text-pink-500 hover:border-pink-500/50 hover:bg-pink-500/8" },
-  { label: "WhatsApp", href: "https://wa.me/919999999999", icon: <WhatsAppIcon />, color: "hover:text-emerald-500 hover:border-emerald-500/50 hover:bg-emerald-500/8" },
+  { label: "WhatsApp", href: "https://wa.me/916006755787", icon: <WhatsAppIcon />, color: "hover:text-emerald-500 hover:border-emerald-500/50 hover:bg-emerald-500/8" },
   { label: "Facebook", href: "https://facebook.com/mountainrunofficial", icon: <FacebookIcon />, color: "hover:text-blue-500 hover:border-blue-500/50 hover:bg-blue-500/8" },
   { label: "X", href: "https://twitter.com/mountainrun", icon: <XIcon />, color: "hover:text-(--foreground) hover:border-(--line-strong) hover:bg-(--panel-soft)" },
 ];
