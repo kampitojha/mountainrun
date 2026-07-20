@@ -38,6 +38,8 @@ model Event {
   maxCapacity      Int?
   city             String?
   bannerImageUrl   String?
+  couponCode       String?
+  showCouponOnCard Boolean      @default(false)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   registrations    Registration[]

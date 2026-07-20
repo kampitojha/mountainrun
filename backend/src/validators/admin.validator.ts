@@ -36,6 +36,8 @@ export const adminEventSchema = z.object({
   maxCapacity: z.number().int().positive().nullable().optional(),
   city: z.string().optional().nullable(),
   bannerImageUrl: z.string().url().optional().nullable().or(z.literal("")),
+  couponCode: z.string().max(40).optional().nullable(),
+  showCouponOnCard: z.boolean().optional(),
   status: eventStatusEnum.optional(),
 });
 

@@ -227,6 +227,8 @@ export async function adminCreateEvent(request: AuthenticatedRequest, response: 
       maxCapacity: payload.maxCapacity ?? null,
       city: payload.city ?? "Virtual",
       bannerImageUrl: payload.bannerImageUrl || null,
+      couponCode: payload.couponCode ?? null,
+      showCouponOnCard: payload.showCouponOnCard ?? false,
       status: payload.status ?? "DRAFT",
     },
   });

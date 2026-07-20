@@ -18,6 +18,8 @@ export type ApiEvent = {
   phase?: "upcoming" | "live" | "past";
   registrationOpen?: boolean;
   city?: string | null;
+  couponCode?: string | null;
+  showCouponOnCard?: boolean;
   _count?: { registrations: number };
   stats?: {
     registrations?: number;
@@ -84,6 +86,8 @@ export function mapApiEventToPublic(
         : "Open for registration · Choose distance and join."),
     banner: staticMatch?.banner ?? (isPast ? "Past race" : "Open event"),
     reward: staticMatch?.reward ?? (isPast ? "Medal + certificate" : "Register now"),
+    couponCode: event.couponCode ?? undefined,
+    showCouponOnCard: event.showCouponOnCard ?? undefined,
     status: isPast ? "past" : "upcoming",
     finishers:
       apiFinishers && apiFinishers > 0 ? apiFinishers : staticMatch?.finishers ?? apiFinishers,

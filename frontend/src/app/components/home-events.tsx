@@ -38,6 +38,13 @@ function EventCard({ event }: { event: PublicEvent }) {
         <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-(--muted-soft)">
           {event.distance}
         </p>
+
+        {event.couponCode && event.showCouponOnCard ? (
+          <div className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-300">
+            <span>Coupon:</span>
+            <code className="tracking-wider">{event.couponCode}</code>
+          </div>
+        ) : null}
         <p className="mt-3 flex-1 text-sm leading-relaxed text-(--muted)">
           {event.highlight}
         </p>

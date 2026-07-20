@@ -223,6 +223,13 @@ export default async function EventDetailPage({
                 <>
                   <p className="eyebrow">Register</p>
                   <h2 className="mt-3 text-2xl font-semibold tracking-tight">Join this event</h2>
+
+                  {event.couponCode && event.showCouponOnCard ? (
+                    <div className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-300">
+                      <span>Use coupon:</span>
+                      <code className="tracking-wider">{event.couponCode}</code>
+                    </div>
+                  ) : null}
                   <p className="mt-3 text-sm leading-6 text-(--muted)">
                     {isSignedIn
                       ? "Choose your distance, add delivery details, and pay with UPI to secure your spot. Run within the event window, then upload GPS proof from your dashboard."

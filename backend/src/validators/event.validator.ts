@@ -20,6 +20,8 @@ export const createEventSchema = z.object({
   maxCapacity: z.number().int().positive().nullable().optional(),
   city: z.string().optional(),
   bannerImageUrl: z.string().url().optional(),
+  couponCode: z.string().max(40).optional().nullable(),
+  showCouponOnCard: z.boolean().optional(),
   status: eventStatusEnum.optional(),
 });
 

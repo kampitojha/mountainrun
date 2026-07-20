@@ -99,6 +99,7 @@ type EventRow = {
   priceInPaise: number; paymentRequired: boolean;
   medalIncluded: boolean; featured: boolean;
   maxCapacity: number | null; city: string | null;
+  couponCode?: string | null; showCouponOnCard?: boolean;
   _count?: { registrations: number };
 };
 
@@ -106,7 +107,7 @@ const emptyForm = {
   title: "", slug: "", description: "", startsAt: "", endsAt: "",
   proofClosesAt: "", distances: "5 km, 10 km", priceInr: "499",
   paymentRequired: true, medalIncluded: true, featured: false,
-  maxCapacity: "", city: "Virtual", status: "DRAFT",
+  maxCapacity: "", city: "Virtual", couponCode: "", showCouponOnCard: false, status: "DRAFT",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -159,6 +160,8 @@ export default function AdminEventsPage() {
       priceInr: String(Math.round(event.priceInPaise / 100)),
       paymentRequired: event.paymentRequired, medalIncluded: event.medalIncluded,
       featured: event.featured,
+      couponCode: event.couponCode ?? "",
+      showCouponOnCard: event.showCouponOnCard ?? false,
       maxCapacity: event.maxCapacity != null ? String(event.maxCapacity) : "",
       city: event.city ?? "Virtual", status: event.status,
     });
@@ -194,6 +197,8 @@ export default function AdminEventsPage() {
         distances: form.distances.split(",").map((d) => d.trim()).filter(Boolean),
         priceInPaise,
         paymentRequired: form.paymentRequired && priceInPaise > 0,
+        couponCode: form.couponCode.trim() || null,
+        showCouponOnCard: form.showCouponOnCard,
         medalIncluded: form.medalIncluded, featured: form.featured,
         maxCapacity: form.maxCapacity ? Number(form.maxCapacity) : null,
         city: form.city || "Virtual", status: form.status,
@@ -355,6 +360,23 @@ export default function AdminEventsPage() {
                   <span>{label} {hint ? <span className="text-xs text-[var(--admin-muted)]">({hint})</span> : null}</span>
                 </label>
               ))}
+
+              <hr className="border-[var(--admin-line)] my-1" />
+
+              <label className="block text-xs">
+                <span className="field-label">Coupon code</span>
+                <input className="input" placeholder="e.g. WELCOME10"
+                  onChange={(e) => setForm((f) => ({ ...f, couponCode: e.target.value.toUpperCase() }))}
+                  value={form.couponCode} />
+                <p className="mt-1 text-[0.65rem] text-[var(--admin-muted)]">Create coupons in <strong>Coupons</strong> section. Enter the code here to link it.</p>
+              </label>
+
+              <label className="flex items-center gap-2.5 cursor-pointer">
+                <input type="checkbox"
+                  checked={form.showCouponOnCard}
+                  onChange={(e) => setForm((f) => ({ ...f, showCouponOnCard: e.target.checked }))} />
+                <span>Show coupon on event card</span>
+              </label>
             </div>
 
             <button className="btn btn-primary btn-full" disabled={saving} type="submit">
