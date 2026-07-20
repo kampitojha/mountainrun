@@ -21,6 +21,11 @@ export type ApiEvent = {
   couponCode?: string | null;
   showCouponOnCard?: boolean;
   activityTypes?: string[];
+  benefits?: string[];
+  finishers?: number | null;
+  verifiedResults?: number | null;
+  cities?: number | null;
+  resultNote?: string | null;
   _count?: { registrations: number };
   stats?: {
     registrations?: number;
@@ -90,15 +95,18 @@ export function mapApiEventToPublic(
     couponCode: event.couponCode ?? undefined,
     showCouponOnCard: event.showCouponOnCard ?? undefined,
     activityTypes: event.activityTypes ?? ["running"],
+    benefits: event.benefits ?? staticMatch?.benefits ?? [],
     status: isPast ? "past" : "upcoming",
     finishers:
-      apiFinishers && apiFinishers > 0 ? apiFinishers : staticMatch?.finishers ?? apiFinishers,
+      event.finishers != null ? event.finishers
+        : apiFinishers && apiFinishers > 0 ? apiFinishers
+        : (staticMatch?.finishers ?? undefined),
     verifiedResults:
-      apiVerified && apiVerified > 0
-        ? apiVerified
-        : staticMatch?.verifiedResults ?? apiVerified,
-    cities: staticMatch?.cities,
-    resultNote: staticMatch?.resultNote,
+      event.verifiedResults != null ? event.verifiedResults
+        : apiVerified && apiVerified > 0 ? apiVerified
+        : (staticMatch?.verifiedResults ?? undefined),
+    cities: event.cities != null ? event.cities : (staticMatch?.cities ?? undefined),
+    resultNote: event.resultNote ?? staticMatch?.resultNote ?? undefined,
   };
 }
 

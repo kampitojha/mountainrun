@@ -230,6 +230,11 @@ export async function adminCreateEvent(request: AuthenticatedRequest, response: 
       couponCode: payload.couponCode ?? null,
       showCouponOnCard: payload.showCouponOnCard ?? false,
       activityTypes: payload.activityTypes ?? ["running"],
+      benefits: payload.benefits ?? [],
+      finishers: payload.finishers ?? null,
+      verifiedResults: payload.verifiedResults ?? null,
+      cities: payload.cities ?? null,
+      resultNote: payload.resultNote ?? null,
       status: payload.status ?? "DRAFT",
     },
   });

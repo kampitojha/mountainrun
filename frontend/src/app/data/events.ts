@@ -22,6 +22,7 @@ export type PublicEvent = {
   couponCode?: string;
   showCouponOnCard?: boolean;
   activityTypes?: string[];
+  benefits?: string[];
   /** Past-event recap stats */
   finishers?: number;
   verifiedResults?: number;

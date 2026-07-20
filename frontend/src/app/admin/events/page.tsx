@@ -23,6 +23,9 @@ import {
   X,
   ExternalLink,
   Users,
+  Trophy,
+  MapPin,
+  FileText,
 } from "lucide-react";
 
 /* ── Toast ─────────────────────────────────────────────── */
@@ -101,6 +104,11 @@ type EventRow = {
   maxCapacity: number | null; city: string | null;
   couponCode?: string | null; showCouponOnCard?: boolean;
   activityTypes?: string[];
+  benefits?: string[];
+  finishers?: number | null;
+  verifiedResults?: number | null;
+  cities?: number | null;
+  resultNote?: string | null;
   _count?: { registrations: number };
 };
 
@@ -109,7 +117,9 @@ const emptyForm = {
   proofClosesAt: "", distances: "5 km, 10 km", priceInr: "499",
   paymentRequired: true, medalIncluded: true, featured: false,
   maxCapacity: "", city: "Virtual", couponCode: "", showCouponOnCard: false,
-  activityTypes: ["running", "cycling", "walking"], status: "DRAFT",
+  activityTypes: ["running", "cycling", "walking"], benefits: "",
+  finishers: "", verifiedResults: "", cities: "", resultNote: "",
+  status: "DRAFT",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -165,6 +175,11 @@ export default function AdminEventsPage() {
       couponCode: event.couponCode ?? "",
       showCouponOnCard: event.showCouponOnCard ?? false,
       activityTypes: event.activityTypes ?? ["running"],
+      benefits: (event.benefits ?? []).join("\n"),
+      finishers: event.finishers != null ? String(event.finishers) : "",
+      verifiedResults: event.verifiedResults != null ? String(event.verifiedResults) : "",
+      cities: event.cities != null ? String(event.cities) : "",
+      resultNote: event.resultNote ?? "",
       maxCapacity: event.maxCapacity != null ? String(event.maxCapacity) : "",
       city: event.city ?? "Virtual", status: event.status,
     });
@@ -203,6 +218,11 @@ export default function AdminEventsPage() {
         couponCode: form.couponCode.trim() || null,
         showCouponOnCard: form.showCouponOnCard,
         activityTypes: form.activityTypes,
+        benefits: form.benefits.split("\n").map((s: string) => s.trim()).filter(Boolean),
+        finishers: form.finishers ? Number(form.finishers) : null,
+        verifiedResults: form.verifiedResults ? Number(form.verifiedResults) : null,
+        cities: form.cities ? Number(form.cities) : null,
+        resultNote: form.resultNote || null,
         medalIncluded: form.medalIncluded, featured: form.featured,
         maxCapacity: form.maxCapacity ? Number(form.maxCapacity) : null,
         city: form.city || "Virtual", status: form.status,
@@ -405,6 +425,41 @@ export default function AdminEventsPage() {
                   );
                 })}
               </div>
+
+              <hr className="border-[var(--admin-line)] my-1" />
+
+              <label className="block text-xs">
+                <span className="field-label">Benefits (one per line)</span>
+                <textarea className="input min-h-16 py-2 resize-none" placeholder="Verified race entry&#10;GPS proof verification&#10;Finisher medal delivery"
+                  onChange={(e) => setForm((f) => ({ ...f, benefits: e.target.value }))}
+                  value={form.benefits as string} />
+                <p className="mt-1 text-[0.65rem] text-[var(--admin-muted)]">Each line becomes a benefit card on the event page.</p>
+              </label>
+
+              <hr className="border-[var(--admin-line)] my-1" />
+
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--admin-muted)]">Past-event recap stats</p>
+              <p className="text-[0.65rem] text-[var(--admin-muted)] mb-2">Only shown when event status is Completed or Cancelled.</p>
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  ["finishers", "Finishers", Trophy],
+                  ["verifiedResults", "Verified", Users],
+                  ["cities", "Cities", MapPin],
+                ] as const).map(([field, label, Icon]) => (
+                  <label key={field} className="block text-xs">
+                    <span className="field-label flex items-center gap-1"><Icon className="h-3 w-3" />{label}</span>
+                    <input className="input" inputMode="numeric" placeholder="0"
+                      onChange={(e) => setForm((f) => ({ ...f, [field]: e.target.value }))}
+                      value={(form as any)[field] ?? ""} />
+                  </label>
+                ))}
+              </div>
+              <label className="block text-xs mt-2">
+                <span className="field-label flex items-center gap-1"><FileText className="h-3 w-3" />Result note</span>
+                <input className="input" placeholder="e.g. Highest 21 km completion rate of the season."
+                  onChange={(e) => setForm((f) => ({ ...f, resultNote: e.target.value }))}
+                  value={form.resultNote as string} />
+              </label>
             </div>
 
             <button className="btn btn-primary btn-full" disabled={saving} type="submit">

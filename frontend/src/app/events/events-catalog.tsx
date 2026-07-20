@@ -27,16 +27,16 @@ function EventCard({
   const isPast = variant === "past" || event.status === "past";
 
   return (
-    <article className={`card card-hover flex flex-col overflow-hidden ${isPast ? "opacity-90" : ""}`}>
+    <article className="card card-hover flex flex-col overflow-hidden">
       {/* Banner */}
-      <div className={`relative px-5 py-5 text-white ${isPast ? "bg-(--panel-soft)" : "bg-(--sage)"}`}>
+      <div className={`relative px-5 py-5 ${isPast ? "bg-(--panel-soft) text-(--foreground)" : "bg-(--sage) text-white"}`}>
         <div className="flex items-start justify-between gap-3">
-          <p className={`text-xs font-semibold uppercase tracking-widest ${isPast ? "text-(--muted-soft)" : "text-white/70"}`}>
+          <p className={`text-xs font-semibold uppercase tracking-widest ${isPast ? "text-(--muted)" : "text-white/70"}`}>
             {event.banner}
           </p>
           <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider ${
             isPast
-              ? "border border-(--line) bg-(--panel) text-(--muted)"
+              ? "bg-(--sage-soft) text-(--sage)"
               : "bg-white/20 text-white"
           }`}>
             {isPast ? "Completed" : "Open"}

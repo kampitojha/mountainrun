@@ -17,17 +17,6 @@ const fallbackReviews: HomeTestimonial[] = [
   { name: "Deepika Joshi", role: "Walking 10 km", city: "Dehradun", rating: 4, quote: "As a walker I finally found an event that welcomes non-runners. The pace didn't matter — just finishing felt rewarding." },
 ];
 
-const avatarGradients = [
-  "from-teal-500 to-emerald-400",
-  "from-indigo-500 to-blue-400",
-  "from-rose-500 to-orange-400",
-  "from-violet-500 to-purple-400",
-  "from-amber-500 to-yellow-400",
-  "from-cyan-500 to-teal-400",
-  "from-pink-500 to-rose-400",
-  "from-emerald-500 to-teal-400",
-];
-
 function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
@@ -35,7 +24,7 @@ function StarRating({ rating }: { rating: number }) {
         <Star
           key={i}
           aria-hidden="true"
-          className={`h-3 w-3 ${i < rating ? "fill-amber-400 text-amber-400" : "fill-(--line-strong) text-(--line-strong)"}`}
+          className={`h-3 w-3 ${i < rating ? "fill-(--sage) text-(--sage)" : "fill-(--line-strong) text-(--line-strong)"}`}
         />
       ))}
     </div>
@@ -44,12 +33,12 @@ function StarRating({ rating }: { rating: number }) {
 
 function ReviewCard({ review, index, className = "" }: { review: HomeTestimonial; index: number; className?: string }) {
   return (
-    <article className={`relative flex w-[280px] shrink-0 flex-col justify-between rounded-2xl border border-(--line) bg-(--panel) p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md sm:w-80 sm:p-6 ${className}`}>
-      {/* Decorative gradient line at top */}
-      <span aria-hidden="true" className={`absolute inset-x-4 -top-px h-px bg-gradient-to-r ${avatarGradients[index % avatarGradients.length]} opacity-60`} />
+    <article className={`relative flex w-[280px] shrink-0 flex-col rounded-2xl border border-(--line) bg-(--panel) p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-80 sm:p-6 ${className}`}>
+      {/* Left accent bar */}
+      <span aria-hidden="true" className="absolute left-0 top-4 bottom-4 w-0.5 rounded-r-full bg-(--sage) opacity-40" />
 
       <div className="flex items-start justify-between gap-3">
-        <span aria-hidden="true" className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${avatarGradients[index % avatarGradients.length]} text-sm font-bold text-white shadow-sm`}>
+        <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--sage-soft) text-sm font-bold text-(--sage)">
           {review.name.split(" ").map((p) => p[0]).join("").slice(0, 2)}
         </span>
         <StarRating rating={review.rating} />
@@ -63,8 +52,8 @@ function ReviewCard({ review, index, className = "" }: { review: HomeTestimonial
       </p>
 
       <blockquote className="mt-4 text-sm leading-relaxed text-(--muted) relative">
-        <Quote aria-hidden="true" className="absolute -top-1 -left-0.5 h-4 w-4 text-(--sage) opacity-30 rotate-180" />
-        <span className="relative z-10 ml-3">&ldquo;{review.quote}&rdquo;</span>
+        <Quote aria-hidden="true" className="absolute -top-1 left-0 h-5 w-5 text-(--sage) opacity-20" />
+        <span className="relative z-10 block">&ldquo;{review.quote}&rdquo;</span>
       </blockquote>
     </article>
   );
@@ -187,11 +176,9 @@ export function HomeReviews() {
       {/* Background */}
       <div aria-hidden="true" className="absolute inset-0 pointer-events-none"
         style={{
-          background: "radial-gradient(at 0% 0%, rgba(13, 148, 136, 0.04) 0px, transparent 60%), radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.03) 0px, transparent 60%)",
+          background: "radial-gradient(at 0% 0%, color-mix(in srgb, var(--sage) 4%, transparent) 0px, transparent 60%), radial-gradient(at 100% 100%, color-mix(in srgb, var(--sage) 3%, transparent) 0px, transparent 60%)",
         }}
       />
-      <div aria-hidden="true" className="absolute top-1/4 left-10 h-72 w-72 rounded-full bg-teal-500/3 blur-3xl pointer-events-none" />
-      <div aria-hidden="true" className="absolute bottom-1/4 right-10 h-72 w-72 rounded-full bg-indigo-500/4 blur-3xl pointer-events-none" />
 
       <div className="container-page relative z-10">
         <HomeSectionHeader

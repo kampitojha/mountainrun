@@ -1,18 +1,16 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CalendarDays, MapPin, IndianRupee, Trophy, BadgeCheck, QrCode, Award, Shirt, MessageCircle, Sparkles, ArrowRight, Users, Timer, Target } from "lucide-react";
+import { CalendarDays, MapPin, IndianRupee, Trophy, BadgeCheck, QrCode, Award, Shirt, MessageCircle, Sparkles, ArrowRight, Users, Timer, Target, Medal, Camera, Smartphone } from "lucide-react";
 import { PageShell } from "../../components/app-shell";
 import { Breadcrumb } from "../../components/breadcrumb";
-import { allPublicEvents, eventBenefits } from "../../data/events";
+import { allPublicEvents } from "../../data/events";
 import { fetchEventBySlug } from "../../../lib/events-api";
 import { auth } from "@clerk/nextjs/server";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mountainrun.in";
 
-const benefitIcons = [
-  BadgeCheck, MapPin, Trophy, QrCode, Award, Shirt, MessageCircle,
-];
+const iconPool = [Medal, BadgeCheck, QrCode, Trophy, MapPin, Award, Shirt, Camera, Smartphone, MessageCircle];
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -142,25 +140,27 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
               <p className="mt-8 text-sm leading-relaxed text-(--muted) italic border-l-2 border-(--sage) pl-4">{event.highlight}</p>
 
-              <div className="mt-14">
-                <h2 className="text-xl font-bold tracking-tight text-(--foreground) sm:text-2xl">{isPast ? "What finishers received" : "What you get"}</h2>
-                <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                  {eventBenefits.map((benefit, i) => {
-                    const Icon = benefitIcons[i % benefitIcons.length];
-                    return (
-                      <div key={benefit} className="flex items-start gap-3 rounded-xl border border-(--line) bg-(--panel) p-4 transition-all duration-200 hover:border-(--line-strong) hover:shadow-sm">
-                        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-(--sage-soft) text-(--sage)">
-                          <Icon className="h-4 w-4" />
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold text-(--foreground)">{benefit}</p>
-                          <p className="mt-0.5 text-xs text-(--muted-soft)">Included with your registration</p>
+              {event.benefits && event.benefits.length > 0 ? (
+                <div className="mt-14">
+                  <h2 className="text-xl font-bold tracking-tight text-(--foreground) sm:text-2xl">{isPast ? "What finishers received" : "What you get"}</h2>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    {event.benefits.map((benefit, i) => {
+                      const Icon = iconPool[i % iconPool.length];
+                      return (
+                        <div key={benefit} className="flex items-start gap-3 rounded-xl border border-(--line) bg-(--panel) p-4 transition-all duration-200 hover:border-(--line-strong) hover:shadow-sm">
+                          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-(--sage-soft) text-(--sage)">
+                            <Icon className="h-4 w-4" />
+                          </span>
+                          <div>
+                            <p className="text-sm font-semibold text-(--foreground)">{benefit}</p>
+                            <p className="mt-0.5 text-xs text-(--muted-soft)">Included with your registration</p>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              ) : null}
 
               {!isPast ? (
                 <div className="mt-14">
@@ -260,18 +260,20 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                       <Link className="btn btn-secondary btn-full text-sm" href="/events">Browse other events</Link>
                     </div>
 
-                    <div className="mt-6 space-y-2.5 border-t border-(--line) pt-5">
-                      {[
-                        { icon: BadgeCheck, text: "GPS verified results" },
-                        { icon: Award, text: "Finisher medal & certificate" },
-                        { icon: Users, text: `${event.activityTypes?.length ?? 1} activity types` },
-                      ].map(({ icon: Icon, text }) => (
-                        <div key={text} className="flex items-center gap-2.5 text-xs text-(--muted)">
-                          <Icon className="h-3.5 w-3.5 shrink-0 text-(--sage)" />
-                          <span>{text}</span>
-                        </div>
-                      ))}
-                    </div>
+                    {event.benefits && event.benefits.length > 0 ? (
+                      <div className="mt-6 space-y-2.5 border-t border-(--line) pt-5">
+                        <p className="text-[0.6rem] font-bold uppercase tracking-widest text-(--muted-soft)">Includes</p>
+                        {event.benefits.map((benefit, i) => {
+                          const Icon = iconPool[i % iconPool.length];
+                          return (
+                            <div key={benefit} className="flex items-center gap-2.5 text-xs text-(--muted)">
+                              <Icon className="h-3.5 w-3.5 shrink-0 text-(--sage)" />
+                              <span>{benefit}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : null}
 
                     {!isSignedIn ? (
                       <div className="mt-4 rounded-xl bg-(--panel-soft) px-4 py-3 text-center text-xs text-(--muted)">

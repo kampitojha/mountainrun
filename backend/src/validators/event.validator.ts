@@ -25,6 +25,10 @@ export const createEventSchema = z.object({
   showCouponOnCard: z.boolean().optional(),
   activityTypes: z.array(z.enum(["running", "cycling", "walking"])).optional(),
   benefits: z.array(z.string().min(1)).optional(),
+  finishers: z.number().int().positive().nullable().optional(),
+  verifiedResults: z.number().int().positive().nullable().optional(),
+  cities: z.number().int().positive().nullable().optional(),
+  resultNote: z.string().max(2000).nullable().optional(),
   status: eventStatusEnum.optional(),
 });
 
