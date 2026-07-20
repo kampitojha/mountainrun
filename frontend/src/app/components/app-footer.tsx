@@ -39,10 +39,10 @@ function XIcon() {
 }
 
 const socials = [
-  { label: "Instagram", href: "https://instagram.com/mountainrunofficial", icon: <InstagramIcon />, color: "hover:text-pink-500 hover:border-pink-500/50 hover:bg-pink-500/8" },
-  { label: "WhatsApp", href: "https://wa.me/916006755787", icon: <WhatsAppIcon />, color: "hover:text-emerald-500 hover:border-emerald-500/50 hover:bg-emerald-500/8" },
-  { label: "Facebook", href: "https://facebook.com/mountainrunofficial", icon: <FacebookIcon />, color: "hover:text-blue-500 hover:border-blue-500/50 hover:bg-blue-500/8" },
-  { label: "X", href: "https://twitter.com/mountainrun", icon: <XIcon />, color: "hover:text-(--foreground) hover:border-(--line-strong) hover:bg-(--panel-soft)" },
+  { label: "Instagram", href: "https://instagram.com/mountainrunofficial", icon: <InstagramIcon />, hover: "hover:text-pink-500 hover:border-pink-500/40 hover:bg-pink-500/10 hover:shadow-pink-500/20" },
+  { label: "WhatsApp", href: "https://wa.me/916006755787", icon: <WhatsAppIcon />, hover: "hover:text-emerald-500 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:shadow-emerald-500/20" },
+  { label: "Facebook", href: "https://facebook.com/mountainrunofficial", icon: <FacebookIcon />, hover: "hover:text-blue-600 hover:border-blue-600/40 hover:bg-blue-600/10 hover:shadow-blue-600/20" },
+  { label: "X", href: "https://twitter.com/mountainrun", icon: <XIcon />, hover: "hover:text-(--foreground) hover:border-(--line-strong) hover:bg-(--panel-soft)" },
 ];
 
 const exploreLinks = [
@@ -55,50 +55,44 @@ const exploreLinks = [
 export function AppFooter() {
   return (
     <footer className="mt-auto border-t border-(--line) bg-(--panel)">
-      {/* Teal accent bar */}
-      <div className="h-[2px] w-full bg-gradient-to-r from-(--sage) via-emerald-400 to-indigo-500" />
+      <div className="h-[3px] w-full bg-gradient-to-r from-(--sage) via-emerald-400 to-indigo-500" />
 
-      <div className="container-page py-10 sm:py-12">
+      <div className="container-page py-12 sm:py-14 md:py-16">
 
-        {/* ── Top row: brand + tagline ── */}
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-          <Link href="/" aria-label="Mountain Run home" className="inline-flex items-center gap-2 group">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <Link href="/" aria-label="Mountain Run home" className="inline-flex items-center gap-2.5 group">
             <img
               src="/logo-mark.svg"
               alt="Mountain Run"
-              width={28} height={28}
-              className="h-7 w-7 shrink-0 transition-transform duration-300 group-hover:rotate-12"
+              width={32} height={32}
+              className="h-8 w-8 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12"
             />
-            <span className="text-sm font-bold tracking-tight text-(--foreground)">
+            <span className="text-base font-bold tracking-tight text-(--foreground)">
               Mountain{" "}
               <span className="bg-gradient-to-r from-emerald-500 to-indigo-500 bg-clip-text text-transparent">
                 Run
               </span>
             </span>
           </Link>
-          <p className="text-xs text-(--muted-soft)">
-            Virtual running events · GPS verified · India-wide
+          <p className="text-xs sm:text-sm text-(--muted-soft)">
+            Virtual running events &middot; GPS verified &middot; India-wide
           </p>
         </div>
 
-        {/* ── Divider ── */}
-        <div className="my-6 h-px bg-(--line)" />
+        <div className="my-8 h-px bg-gradient-to-r from-(--line) via-(--line) to-transparent" />
 
-        {/* ── Main columns ── */}
-        <div className="grid grid-cols-2 gap-6 sm:grid-cols-4 sm:gap-8">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4 md:gap-10 lg:gap-12">
 
-          {/* Col 1 — Explore */}
           <div>
-            <p className="mb-3 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-(--muted)">
+            <p className="mb-4 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-(--muted)">
               Explore
             </p>
-            <ul className="space-y-2.5">
+            <ul className="space-y-3">
               {exploreLinks.map(([label, href]) => (
                 <li key={label}>
                   <Link
                     href={href}
-                    className="text-xs text-(--muted) transition-colors hover:text-(--foreground)"
+                    className="relative inline-block text-sm text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--foreground)"
                   >
                     {label}
                   </Link>
@@ -107,32 +101,31 @@ export function AppFooter() {
             </ul>
           </div>
 
-          {/* Col 2 — Account */}
           <div>
-            <p className="mb-3 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-(--muted)">
+            <p className="mb-4 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-(--muted)">
               Account
             </p>
-            <ul className="space-y-2.5 text-xs">
+            <ul className="space-y-3 text-sm">
               <Show when="signed-out">
                 <li>
-                  <Link href="/sign-in" className="text-(--muted) hover:text-(--foreground) transition-colors">
+                  <Link href="/sign-in" className="relative inline-block text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--foreground)">
                     Sign in
                   </Link>
                 </li>
                 <li>
-                  <Link href="/events" className="text-(--muted) hover:text-(--foreground) transition-colors">
+                  <Link href="/events" className="relative inline-block text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--foreground)">
                     Browse events
                   </Link>
                 </li>
               </Show>
               <Show when="signed-in">
                 <li>
-                  <Link href="/dashboard" className="text-(--muted) hover:text-(--foreground) transition-colors">
+                  <Link href="/dashboard" className="relative inline-block text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--foreground)">
                     Dashboard
                   </Link>
                 </li>
                 <li>
-                  <Link href="/events" className="text-(--muted) hover:text-(--foreground) transition-colors">
+                  <Link href="/events" className="relative inline-block text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--foreground)">
                     Browse events
                   </Link>
                 </li>
@@ -140,62 +133,68 @@ export function AppFooter() {
             </ul>
           </div>
 
-          {/* Col 3+4 — Connect (spans 2 cols on mobile) */}
-          <div className="col-span-2 sm:col-span-2">
-            <p className="mb-3 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-(--muted)">
+          <div>
+            <p className="mb-4 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-(--muted)">
+              Support
+            </p>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <a
+                  href="mailto:mountainrunofficial@gmail.com"
+                  className="group flex items-center gap-2 text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--sage)"
+                >
+                  <Mail className="h-3.5 w-3.5 shrink-0 text-(--muted-soft) transition-colors group-hover:text-(--sage)" />
+                  <span className="footer-email">mountainrunofficial@gmail.com</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://instagram.com/mountainrunofficial"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-pink-500"
+                >
+                  <InstagramIcon />
+                  <span>@mountainrunofficial</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="mb-4 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-(--muted)">
               Connect
             </p>
-            <div className="space-y-2.5">
-              {/* Email — single line with truncate on very small screens */}
-              <a
-                href="mailto:mountainrunofficial@gmail.com"
-                className="group flex min-w-0 items-center gap-2 text-xs text-(--muted) hover:text-(--sage) transition-colors"
-              >
-                <Mail className="h-3.5 w-3.5 shrink-0 text-(--muted-soft) group-hover:text-(--sage)" />
-                <span className="truncate">mountainrunofficial@gmail.com</span>
-              </a>
-              {/* Instagram handle */}
-              <a
-                href="https://instagram.com/mountainrunofficial"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-xs text-(--muted) hover:text-pink-500 transition-colors"
-              >
-                <InstagramIcon />
-                <span>@mountainrunofficial</span>
-              </a>
-              {/* Social icon row */}
-              <div className="flex items-center gap-2 pt-1">
-                {socials.map(({ label, href, icon, color }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={label}
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg border border-(--line) bg-(--panel-soft) text-(--muted) transition-all duration-200 ${color}`}
-                  >
-                    {icon}
-                  </a>
-                ))}
-              </div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              {socials.map(({ label, href, icon, hover }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className={`flex h-9 w-9 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--muted) transition-all duration-200 hover:scale-110 hover:shadow-lg ${hover}`}
+                >
+                  {icon}
+                </a>
+              ))}
             </div>
           </div>
 
         </div>
 
-        {/* ── Bottom bar ── */}
-        <div className="mt-8 flex items-center justify-between gap-4 border-t border-(--line) pt-4">
-          <p className="text-xs text-(--muted-soft)">
-            © {new Date().getFullYear()} Mountain Run. All rights reserved.
+        <div className="mt-10 flex flex-col gap-3 border-t border-(--line) pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="order-2 text-center text-xs text-(--muted-soft) sm:order-1 sm:text-left">
+            &copy; {new Date().getFullYear()} Mountain Run. All rights reserved.
           </p>
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             type="button"
             aria-label="Scroll to top"
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-(--line) bg-(--panel-soft) text-(--muted) hover:text-(--foreground) hover:border-(--line-strong) transition-all cursor-pointer"
+            className="group order-1 flex cursor-pointer items-center gap-1.5 self-center text-xs text-(--muted-soft) transition-colors hover:text-(--foreground) sm:order-2"
           >
-            <ArrowUp className="h-3.5 w-3.5" />
+            Back to top
+            <ArrowUp className="h-3.5 w-3.5 transition-transform duration-200 group-hover:-translate-y-0.5" />
           </button>
         </div>
 
