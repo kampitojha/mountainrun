@@ -128,7 +128,7 @@ export function DashboardClient() {
     finally { setProofBusy(false); }
   }
 
-  if (!isLoaded || loading) return <div className="card p-10 text-center"><p className="text-sm text-(--muted)">Loading your dashboard\u2026</p></div>;
+  if (!isLoaded || loading) return <div className="card p-10 text-center"><p className="text-sm text-(--muted)">Loading your dashboard...</p></div>;
 
   if (!isSignedIn) return (
     <div className="card p-8 text-center sm:p-10">
@@ -251,8 +251,8 @@ export function DashboardClient() {
                   <span className={badgeClass(reg.proofStatus) + " text-[0.6rem]"}>{labelStatus(reg.proofStatus)}</span>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {reg.certificate ? <span className={badgeClass(reg.certificate.status) + " text-[0.6rem]"}>cert: {labelStatus(reg.certificate.status)}</span> : null}
-                  {reg.medalDelivery ? <span className={badgeClass(reg.medalDelivery.status) + " text-[0.6rem]"}>medal: {labelStatus(reg.medalDelivery.status)}</span> : <span className="badge text-[0.6rem]">medal: pending</span>}
+                  {reg.certificate ? <span className={badgeClass(reg.certificate.status) + " text-[0.6rem]"}>Certificate {labelStatus(reg.certificate.status)}</span> : null}
+                  {reg.medalDelivery ? <span className={badgeClass(reg.medalDelivery.status) + " text-[0.6rem]"}>Medal {labelStatus(reg.medalDelivery.status)}</span> : <span className="badge text-[0.6rem]">Medal pending</span>}
                 </div>
                 {reg.medalDelivery?.trackingNumber ? (
                   <div className="mt-3 rounded-lg bg-(--panel-soft) px-3 py-2 text-xs text-(--muted)">
@@ -275,7 +275,7 @@ export function DashboardClient() {
       {/* Registrations */}
       <div>
         <h2 className="text-lg font-bold tracking-tight text-(--foreground)">My registrations</h2>
-        <p className="mt-1 text-sm text-(--muted)">Join \u2192 run \u2192 upload proof \u2192 get certificate + medal.</p>
+        <p className="mt-1 text-sm text-(--muted)">Join → run → upload proof → get certificate + medal.</p>
 
         {registrations.length === 0 ? (
           <div className="mt-4 rounded-2xl border border-dashed border-(--line) bg-(--panel-soft)/50 p-8 text-center">
@@ -295,17 +295,16 @@ export function DashboardClient() {
                         <p className="text-base font-bold tracking-tight text-(--foreground) truncate">{reg.event.title}</p>
                         <span className={`shrink-0 ${badgeClass(reg.status)}`}>{labelStatus(reg.status)}</span>
                       </div>
-                      <p className="mt-1 text-sm text-(--muted)">{reg.distance} \u00B7 Bib {reg.bibNumber}</p>
+                      <p className="mt-1 text-sm text-(--muted)">{reg.distance} · Bib {reg.bibNumber}</p>
                       <p className="text-xs text-(--muted-soft)">Joined {new Date(reg.registeredAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
                     </div>
                   </div>
 
-                  {/* Status badges row */}
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    <span className={badgeClass(reg.proofStatus)}>proof: {labelStatus(reg.proofStatus)}</span>
-                    {reg.payment ? <span className={badgeClass(reg.payment.status)}>{labelStatus(reg.payment.status)}{reg.payment.amountInPaise ? ` \u00B7 ${formatMoney(reg.payment.amountInPaise)}` : ""}</span> : <span className="badge">no payment</span>}
-                    {reg.certificate ? <span className={badgeClass(reg.certificate.status)}>cert: {labelStatus(reg.certificate.status)}</span> : null}
-                    {reg.medalDelivery ? <span className={badgeClass(reg.medalDelivery.status)}>medal: {labelStatus(reg.medalDelivery.status)}</span> : null}
+                    <span className={badgeClass(reg.proofStatus)}>Proof: {labelStatus(reg.proofStatus)}</span>
+                    {reg.payment ? <span className={badgeClass(reg.payment.status)}>{labelStatus(reg.payment.status)}{reg.payment.amountInPaise ? ` · ${formatMoney(reg.payment.amountInPaise)}` : ""}</span> : <span className="badge">No payment</span>}
+                    {reg.certificate ? <span className={badgeClass(reg.certificate.status)}>Certificate: {labelStatus(reg.certificate.status)}</span> : null}
+                    {reg.medalDelivery ? <span className={badgeClass(reg.medalDelivery.status)}>Medal: {labelStatus(reg.medalDelivery.status)}</span> : null}
                   </div>
 
                   {reg.proofStatus === "REJECTED" && reg.proofUpload?.reviewerNote ? (
@@ -337,7 +336,7 @@ export function DashboardClient() {
                       </label>
                       <label className="block">
                         <span className="field-label">Or image URL</span>
-                        <input className="input" disabled={proofBusy || Boolean(proofFileName)} onChange={(e) => { setProofUrl(e.target.value); setProofFileName(null); }} placeholder="https://\u2026 (public image)" type="url" value={proofFileName ? "" : proofUrl.startsWith("data:") ? "" : proofUrl} />
+                        <input className="input" disabled={proofBusy || Boolean(proofFileName)} onChange={(e) => { setProofUrl(e.target.value); setProofFileName(null); }} placeholder="https://... (public image URL)" type="url" value={proofFileName ? "" : proofUrl.startsWith("data:") ? "" : proofUrl} />
                       </label>
                       {proofUrl && (proofUrl.startsWith("data:") || /\.(png|jpe?g|webp)/i.test(proofUrl)) ? (
                         <div className="overflow-hidden rounded-lg border border-(--line) bg-(--panel)">
@@ -358,7 +357,7 @@ export function DashboardClient() {
                         </label>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <button className="btn btn-primary h-9 cursor-pointer" disabled={proofBusy} type="submit">{proofBusy ? "Submitting\u2026" : "Submit proof"}</button>
+                        <button className="btn btn-primary h-9 cursor-pointer" disabled={proofBusy} type="submit">{proofBusy ? "Submitting..." : "Submit proof"}</button>
                         <button className="btn btn-ghost h-9 cursor-pointer" onClick={() => { setProofRegId(null); setProofUrl(""); setProofFileName(null); setProofError(null); }} type="button">Cancel</button>
                       </div>
                     </form>
