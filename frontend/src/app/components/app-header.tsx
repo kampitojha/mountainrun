@@ -236,35 +236,39 @@ function HamburgerButton({ open, onClick }: { open: boolean; onClick: () => void
     <button
       aria-expanded={open}
       aria-label={open ? "Close menu" : "Open menu"}
-      className="relative inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-(--line) bg-(--panel) text-foreground transition-all duration-200 hover:border-(--line-strong) hover:bg-(--panel-soft) hover:shadow-sm active:scale-95"
+      className="relative inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-2xl border border-(--line) bg-(--panel) text-(--foreground) transition-all duration-200 hover:border-(--sage)/40 hover:bg-(--sage-soft) hover:shadow-sm active:scale-90"
       onClick={onClick}
       type="button"
     >
-      <div className="relative flex h-4 w-4 flex-col items-center justify-center">
-        <motion.span
-          className="absolute block h-0.5 w-4 rounded-full bg-current"
-          animate={{ y: open ? 0 : -4.5, rotate: open ? 45 : 0, width: open ? 16 : 16 }}
-          transition={{ type: "spring", stiffness: 300, damping: 24 }}
-        />
-        <motion.span
-          className="absolute block h-0.5 w-4 rounded-full bg-current"
-          animate={{ opacity: open ? 0 : 1, width: open ? 0 : 16 }}
-          transition={{ duration: 0.15 }}
-        />
-        <motion.span
-          className="absolute block h-0.5 w-4 rounded-full bg-current"
-          animate={{ y: open ? 0 : 4.5, rotate: open ? -45 : 0, width: open ? 16 : 16 }}
-          transition={{ type: "spring", stiffness: 300, damping: 24 }}
-        />
-      </div>
+      {/* Subtle sage glow when open */}
       {open && (
         <motion.span
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="absolute inset-0 rounded-xl bg-(--sage-soft)/50"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0, opacity: 0 }}
+          className="absolute inset-0 rounded-2xl bg-(--sage-soft)"
           transition={{ duration: 0.2 }}
         />
       )}
+      <div className="relative flex h-4 w-4.5 flex-col items-center justify-center gap-[3.5px]">
+        <motion.span
+          className="block h-[2.5px] w-4 rounded-full bg-current"
+          animate={open ? { y: 3.5, rotate: 45, width: 18 } : { y: 0, rotate: 0, width: 16 }}
+          transition={{ type: "spring", stiffness: 320, damping: 24 }}
+          style={{ transformOrigin: "center" }}
+        />
+        <motion.span
+          className="block h-[2.5px] rounded-full bg-current"
+          animate={open ? { width: 0, opacity: 0 } : { width: 12, opacity: 1 }}
+          transition={{ duration: 0.15 }}
+        />
+        <motion.span
+          className="block h-[2.5px] rounded-full bg-current"
+          animate={open ? { y: -3.5, rotate: -45, width: 18 } : { y: 0, rotate: 0, width: 16 }}
+          transition={{ type: "spring", stiffness: 320, damping: 24 }}
+          style={{ transformOrigin: "center" }}
+        />
+      </div>
     </button>
   );
 }
@@ -380,25 +384,26 @@ export function AppHeader() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.25 }}
               onClick={() => setOpen(false)}
-              className="fixed inset-0 z-40 bg-(--overlay) backdrop-blur-sm md:hidden"
+              className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
             />
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="fixed inset-y-0 right-0 z-50 flex w-[300px] max-w-[85vw] flex-col border-l border-(--line) bg-(--panel) shadow-2xl md:hidden"
+              transition={{ type: "spring", damping: 30, stiffness: 320 }}
+              className="fixed inset-y-0 right-0 z-50 flex w-[280px] max-w-[80vw] flex-col bg-(--panel) shadow-2xl md:hidden"
             >
-              {/* Drawer header */}
-              <div className="flex items-center justify-between border-b border-(--line) px-4 py-3">
+              {/* Drawer header with sage accent */}
+              <div className="relative flex items-center justify-between px-4 py-4">
+                <div aria-hidden className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-(--sage)/20 to-transparent" />
                 <BrandLogo onNavigate={() => setOpen(false)} />
                 <button
                   type="button"
                   aria-label="Close menu"
                   onClick={() => setOpen(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-(--line) bg-(--panel-soft) text-(--muted) transition-all duration-200 hover:border-(--line-strong) hover:text-(--foreground) active:scale-90"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--muted) transition-all duration-200 hover:border-(--sage)/40 hover:bg-(--sage-soft) hover:text-(--sage) active:scale-90"
                 >
                   <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current" aria-hidden="true">
                     <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
@@ -407,41 +412,44 @@ export function AppHeader() {
               </div>
 
               {/* Drawer body */}
-              <div className="flex-1 overflow-y-auto px-3 py-4">
+              <div className="flex-1 overflow-y-auto px-3 py-3">
                 {/* User card (signed in) */}
                 <Show when="signed-in">
                   <MobileUserCard onNavigate={() => setOpen(false)} />
                 </Show>
 
                 {/* Nav links */}
-                <nav className="flex flex-col gap-0.5">
+                <nav className="flex flex-col gap-1">
                   {publicNav.map(([label, href, Icon], i) => {
                     const active = isActive(href);
                     return (
                       <motion.div
                         key={href}
-                        initial={{ opacity: 0, x: 20 }}
+                        initial={{ opacity: 0, x: 16 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.05 * i, type: "spring", stiffness: 300, damping: 26 }}
+                        transition={{ delay: 0.04 * i, type: "spring", stiffness: 300, damping: 26 }}
                       >
                         <Link
                           href={href}
                           onClick={() => setOpen(false)}
-                          className={`flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${
+                          className={`group relative flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${
                             active
-                              ? "bg-(--sage-soft) text-(--sage) shadow-sm"
-                              : "text-(--muted) hover:bg-(--panel-soft) hover:text-(--foreground)"
+                              ? "bg-(--sage-soft) text-(--sage)"
+                              : "text-(--muted) hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
                           }`}
                         >
-                          <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                          {active && (
+                            <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-(--sage)" />
+                          )}
+                          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all ${
                             active
-                              ? "bg-(--sage) text-white"
+                              ? "bg-(--sage) text-white shadow-sm"
                               : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
                           }`}>
-                            <Icon className="h-4 w-4" />
+                            <Icon className="h-4 w-4" strokeWidth={1.75} />
                           </span>
                           <span className="flex-1">{label}</span>
-                          <svg className={`h-4 w-4 ${active ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <svg className={`h-4 w-4 transition-all group-hover:translate-x-0.5 ${active ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                             <path d="m6 4 4 4-4 4" />
                           </svg>
                         </Link>
@@ -452,29 +460,32 @@ export function AppHeader() {
                   {/* Dashboard link (signed in) */}
                   <Show when="signed-in">
                     <motion.div
-                      initial={{ opacity: 0, x: 20 }}
+                      initial={{ opacity: 0, x: 16 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.05 * publicNav.length, type: "spring", stiffness: 300, damping: 26 }}
+                      transition={{ delay: 0.04 * (publicNav.length + 1), type: "spring", stiffness: 300, damping: 26 }}
                     >
-                      <div className="my-2 h-px bg-(--line)" />
+                      <div className="my-2 mx-3 h-px bg-gradient-to-r from-(--line) via-(--line) to-transparent" />
                       <Link
                         href="/dashboard"
                         onClick={() => setOpen(false)}
-                        className={`flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${
+                        className={`group relative flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${
                           isActive("/dashboard")
-                            ? "bg-(--sage-soft) text-(--sage) shadow-sm"
-                            : "text-(--muted) hover:bg-(--panel-soft) hover:text-(--foreground)"
+                            ? "bg-(--sage-soft) text-(--sage)"
+                            : "text-(--muted) hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
                         }`}
                       >
-                        <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                        {isActive("/dashboard") && (
+                          <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-(--sage)" />
+                        )}
+                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
                           isActive("/dashboard")
-                            ? "bg-(--sage) text-white"
-                            : "bg-(--panel-soft) text-(--muted-soft)"
+                            ? "bg-(--sage) text-white shadow-sm"
+                            : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
                         }`}>
-                          <LayoutDashboard className="h-4 w-4" />
+                          <LayoutDashboard className="h-4 w-4" strokeWidth={1.75} />
                         </span>
                         <span className="flex-1">Dashboard</span>
-                        <svg className="h-4 w-4 text-(--muted-soft)" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <svg className={`h-4 w-4 transition-all group-hover:translate-x-0.5 ${isActive("/dashboard") ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                           <path d="m6 4 4 4-4 4" />
                         </svg>
                       </Link>
@@ -483,19 +494,19 @@ export function AppHeader() {
                 </nav>
               </div>
 
-              {/* Drawer footer */}
-              <div className="border-t border-(--line) px-4 py-3">
+              {/* Drawer footer with sage accent */}
+              <div className="relative border-t border-(--line) px-4 py-4">
                 <Show when="signed-out">
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2 pb-3">
                     <Link
-                      className="btn btn-primary h-10 w-full text-sm"
+                      className="btn btn-primary h-10 w-full text-sm justify-center"
                       href="/events"
                       onClick={() => setOpen(false)}
                     >
                       Browse events
                     </Link>
                     <Link
-                      className="btn btn-secondary h-10 w-full text-sm"
+                      className="btn btn-secondary h-10 w-full text-sm justify-center"
                       href="/sign-in"
                       onClick={() => setOpen(false)}
                     >
