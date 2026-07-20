@@ -39,10 +39,9 @@ function EventCard({ event, variant = "upcoming" }: { event: PublicEvent; varian
   const isPast = variant === "past" || event.status === "past";
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-(--line) bg-(--panel) transition-all duration-300 hover:border-(--sage)/30 hover:shadow-lg">
-      {/* Banner */}
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-(--line) bg-(--panel) transition-all duration-300 hover:border-(--sage)/30 hover:shadow-lg">
       <div className={`relative overflow-hidden ${isPast ? "bg-(--panel-soft)" : "bg-gradient-to-br from-(--sage) to-emerald-600"}`}>
-        <div className="relative z-10 px-4 py-3.5 sm:px-5 sm:py-4">
+        <div className="relative z-10 px-4 py-3 sm:px-5 sm:py-3.5">
           <div className="flex items-start justify-between gap-2">
             <p className={`text-[0.6rem] font-semibold uppercase tracking-widest ${isPast ? "text-(--muted)" : "text-white/70"}`}>
               {event.banner}
@@ -55,12 +54,11 @@ function EventCard({ event, variant = "upcoming" }: { event: PublicEvent; varian
               {isPast ? "Completed" : "Open"}
             </span>
           </div>
-          <p className={`mt-1.5 text-xs font-medium ${isPast ? "text-(--muted)" : "text-white/80"}`}>{event.reward}</p>
+          <p className={`mt-1 text-xs font-medium ${isPast ? "text-(--muted)" : "text-white/80"}`}>{event.reward}</p>
         </div>
         {!isPast && <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />}
       </div>
 
-      {/* Body */}
       <div className="flex flex-1 flex-col p-4 sm:p-5">
         <div className="flex items-center justify-between gap-2">
           <span className="inline-flex items-center gap-1 rounded-md border border-(--line) bg-(--panel-soft) px-2 py-1 text-[0.6rem] font-medium text-(--muted)">
@@ -74,10 +72,10 @@ function EventCard({ event, variant = "upcoming" }: { event: PublicEvent; varian
         </div>
 
         <h3 className="mt-3 text-base font-bold tracking-tight text-(--foreground) group-hover:text-(--sage) transition-colors sm:text-lg">{event.name}</h3>
-        <p className="mt-0.5 text-[0.65rem] font-semibold uppercase tracking-wider text-(--muted-soft)">{event.distance}</p>
+        <p className="mt-0.5 text-[0.6rem] font-semibold uppercase tracking-wider text-(--muted-soft)">{event.distance}</p>
 
         {event.activityTypes && event.activityTypes.length > 0 && (
-          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+          <div className="mt-2 flex flex-wrap gap-1.5">
             {event.activityTypes.map((type) => (
               <span key={type}
                 className="inline-flex items-center gap-1 rounded-md border border-(--line) bg-(--panel) px-2 py-0.5 text-[0.6rem] font-semibold capitalize text-(--muted)">
@@ -88,18 +86,10 @@ function EventCard({ event, variant = "upcoming" }: { event: PublicEvent; varian
           </div>
         )}
 
-        {event.couponCode && event.showCouponOnCard && (
-          <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg border border-(--sage)/20 bg-(--sage-soft) px-2.5 py-1.5 text-[0.65rem] font-semibold text-(--sage)">
-            <Sparkles className="h-3 w-3" />
-            <span>Coupon:</span>
-            <code className="tracking-wider">{event.couponCode}</code>
-          </div>
-        )}
-
-        <p className="mt-2.5 flex-1 text-xs leading-relaxed text-(--muted) sm:text-sm">{event.highlight}</p>
+        <p className="mt-2 flex-1 text-xs leading-relaxed text-(--muted) sm:text-sm">{event.highlight}</p>
 
         {isPast && (event.finishers || event.cities) && (
-          <div className="mt-3 grid grid-cols-3 gap-2 rounded-xl border border-(--line) bg-(--panel-soft) p-2.5 sm:p-3">
+          <div className="mt-3 grid grid-cols-3 gap-2 rounded-xl border border-(--line) bg-(--panel-soft) p-2.5">
             {[
               { label: "Finishers", value: event.finishers, icon: Users },
               { label: "Verified", value: event.verifiedResults, icon: BadgeCheck },

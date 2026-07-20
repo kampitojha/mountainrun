@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { PageShell } from "../components/app-shell";
 import { Breadcrumb } from "../components/breadcrumb";
 import { EventsCatalog } from "./events-catalog";
@@ -51,7 +50,7 @@ export default function EventsPage() {
           ))}
         </div>
 
-        <div className="container-page py-8 sm:py-10">
+        <div className="container-page py-6 sm:py-8">
           <Breadcrumb
             items={[
               { name: "Home", href: "/" },
@@ -59,46 +58,26 @@ export default function EventsPage() {
             ]}
           />
 
-          <div className="mt-6 overflow-hidden rounded-2xl border border-(--line) bg-(--panel) sm:mt-8">
-            <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-              <div className="p-6 sm:p-8 lg:p-10">
-                <p className="eyebrow">Events</p>
-                <h1 className="mt-3 text-3xl font-bold leading-[1.1] tracking-tight text-(--foreground) sm:text-4xl">
-                  Upcoming virtual races
-                </h1>
-                <p className="lede mt-4 max-w-lg">
-                  Choose a run, register once, upload GPS proof, and appear on the verified leaderboard.
-                </p>
-                <div className="mt-6 flex flex-wrap gap-2">
-                  {[
-                    { label: "Medals", icon: "🏅" },
-                    { label: "T-shirts", icon: "👕" },
-                    { label: "Certificates", icon: "📜" },
-                    { label: "Leaderboard", icon: "🏆" },
-                  ].map(({ label, icon }) => (
-                    <span key={label} className="inline-flex items-center gap-1.5 rounded-full border border-(--line) bg-(--sage-soft) px-3 py-1 text-xs font-semibold text-(--sage) transition-colors hover:border-(--sage)/30">
-                      <span>{icon}</span>
-                      {label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="relative min-h-72 bg-[#0a0a0c] sm:min-h-80 lg:min-h-full overflow-hidden">
-                <Image
-                  alt="Mountain Run virtual running event"
-                  src="/images/mountain-run-hero.png"
-                  fill
-                  className="object-cover opacity-70 transition-opacity hover:opacity-80"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  quality={80}
-                  priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                <div className="absolute bottom-0 inset-x-0 p-6 sm:p-8">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-white/60">Run anywhere</p>
-                  <p className="mt-1.5 text-lg font-bold text-white sm:text-xl">Finish with proof. Celebrate with rewards.</p>
-                </div>
-              </div>
+          <div className="mx-auto mt-6 max-w-xl text-center sm:mt-8">
+            <p className="eyebrow">Events</p>
+            <h1 className="mt-3 text-4xl font-bold leading-[1.1] tracking-tight text-(--foreground) sm:text-5xl">
+              Upcoming virtual races
+            </h1>
+            <p className="lede mx-auto mt-4 max-w-lg">
+              Choose a run, register once, upload GPS proof, and appear on the verified leaderboard.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              {[
+                { label: "Medals", icon: "\uD83C\uDFC5" },
+                { label: "T-shirts", icon: "\uD83D\uDC55" },
+                { label: "Certificates", icon: "\uD83D\uDCDC" },
+                { label: "Leaderboard", icon: "\uD83C\uDFC6" },
+              ].map(({ label, icon }) => (
+                <span key={label} className="inline-flex items-center gap-1.5 rounded-full border border-(--line) bg-(--sage-soft) px-3 py-1 text-xs font-semibold text-(--sage)">
+                  <span>{icon}</span>
+                  {label}
+                </span>
+              ))}
             </div>
           </div>
         </div>
