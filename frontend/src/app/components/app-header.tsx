@@ -240,36 +240,15 @@ function HamburgerButton({ open, onClick }: { open: boolean; onClick: () => void
       onClick={onClick}
       type="button"
     >
-      {open && (
-        <motion.span
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0, opacity: 0 }}
-          className="absolute inset-0 rounded-2xl bg-(--sage-soft)"
-          transition={{ duration: 0.2 }}
-        />
-      )}
       <div className="relative h-4 w-4">
-        <motion.span
-          className="absolute left-0 block h-[2.5px] rounded-full bg-current"
-          animate={open
-            ? { top: 7, rotate: 45, width: 18, left: -1 }
-            : { top: 1.5, rotate: 0, width: 16, left: 0 }}
-          transition={{ type: "spring", stiffness: 320, damping: 24 }}
+        <span
+          className={`absolute left-0 block h-[2.5px] rounded-full bg-current transition-all duration-300 ease-out ${open ? "top-[7px] left-[-1px] w-[18px] rotate-45" : "top-[1.5px] w-4 rotate-0"}`}
         />
-        <motion.span
-          className="absolute left-0 block h-[2.5px] rounded-full bg-current"
-          animate={open
-            ? { opacity: 0, width: 0, top: 7 }
-            : { opacity: 1, width: 12, top: 7 }}
-          transition={{ duration: 0.15 }}
+        <span
+          className={`absolute left-0 top-[7px] block h-[2.5px] rounded-full bg-current transition-all duration-200 ease-out ${open ? "w-0 opacity-0" : "w-3 opacity-100"}`}
         />
-        <motion.span
-          className="absolute left-0 block h-[2.5px] rounded-full bg-current"
-          animate={open
-            ? { top: 7, rotate: -45, width: 18, left: -1 }
-            : { top: 12.5, rotate: 0, width: 16, left: 0 }}
-          transition={{ type: "spring", stiffness: 320, damping: 24 }}
+        <span
+          className={`absolute left-0 block h-[2.5px] rounded-full bg-current transition-all duration-300 ease-out ${open ? "top-[7px] left-[-1px] w-[18px] -rotate-45" : "top-[12.5px] w-4 rotate-0"}`}
         />
       </div>
     </button>
@@ -380,24 +359,17 @@ export function AppHeader() {
       </div>
 
       {/* Mobile drawer — slide-in from right */}
-      <AnimatePresence>
-        {open && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              onClick={() => setOpen(false)}
-              className="fixed inset-0 z-40 bg-(--overlay) backdrop-blur-sm md:hidden"
-            />
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="fixed inset-y-0 right-0 z-50 flex w-[280px] max-w-[85vw] flex-col border-l border-(--line) bg-(--panel) shadow-2xl md:hidden"
-            >
+      <>
+        {/* Overlay */}
+        <div
+          aria-hidden
+          onClick={() => setOpen(false)}
+          className={`fixed inset-0 z-40 bg-(--overlay) backdrop-blur-sm transition-opacity duration-300 md:hidden ${open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
+        />
+        {/* Drawer */}
+        <div
+          className={`fixed inset-y-0 right-0 z-50 flex w-[280px] max-w-[85vw] flex-col border-l border-(--line) bg-(--panel) shadow-2xl transition-transform duration-300 ease-out md:hidden ${open ? "translate-x-0" : "translate-x-full"}`}
+        >
               {/* Drawer header with sage accent */}
               <div className="relative flex items-center justify-between px-4 py-4">
                 <div aria-hidden className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-(--sage)/20 to-transparent" />
@@ -523,10 +495,8 @@ export function AppHeader() {
                   <ThemeToggle size="sm" />
                 </div>
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+        </div>
+      </>
     </header>
   );
 }
