@@ -17,6 +17,8 @@ import {
   Settings,
   LogOut,
   CalendarDays,
+  Menu,
+  X,
 } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -236,21 +238,11 @@ function HamburgerButton({ open, onClick }: { open: boolean; onClick: () => void
     <button
       aria-expanded={open}
       aria-label={open ? "Close menu" : "Open menu"}
-      className="relative inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-2xl border border-(--line) bg-(--panel) text-(--foreground) transition-all duration-200 hover:border-(--sage)/40 hover:bg-(--sage-soft) hover:shadow-sm active:scale-90"
+      className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-2xl border border-(--line) bg-(--panel) text-(--foreground) transition-all duration-200 hover:border-(--sage)/40 hover:bg-(--sage-soft) active:scale-90"
       onClick={onClick}
       type="button"
     >
-      <div className="relative h-4 w-4">
-        <span
-          className={`absolute left-0 block h-[2.5px] rounded-full bg-current transition-all duration-300 ease-out ${open ? "top-[7px] left-[-1px] w-[18px] rotate-45" : "top-[1.5px] w-4 rotate-0"}`}
-        />
-        <span
-          className={`absolute left-0 top-[7px] block h-[2.5px] rounded-full bg-current transition-all duration-200 ease-out ${open ? "w-0 opacity-0" : "w-3 opacity-100"}`}
-        />
-        <span
-          className={`absolute left-0 block h-[2.5px] rounded-full bg-current transition-all duration-300 ease-out ${open ? "top-[7px] left-[-1px] w-[18px] -rotate-45" : "top-[12.5px] w-4 rotate-0"}`}
-        />
-      </div>
+      {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
     </button>
   );
 }
@@ -358,18 +350,25 @@ export function AppHeader() {
         </div>
       </div>
 
-      {/* Mobile drawer — slide-in from right */}
-      <>
-        {/* Overlay */}
-        <div
-          aria-hidden
-          onClick={() => setOpen(false)}
-          className={`fixed inset-0 z-40 bg-(--overlay) backdrop-blur-sm transition-opacity duration-300 md:hidden ${open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
-        />
-        {/* Drawer */}
-        <div
-          className={`fixed inset-y-0 right-0 z-50 flex w-[280px] max-w-[85vw] flex-col border-l border-(--line) bg-(--panel) shadow-2xl transition-transform duration-300 ease-out md:hidden ${open ? "translate-x-0" : "translate-x-full"}`}
-        >
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {open && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setOpen(false)}
+              className="fixed inset-0 z-40 bg-(--overlay) backdrop-blur-sm md:hidden"
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className="fixed inset-y-0 right-0 z-50 flex w-72 max-w-[85vw] flex-col border-l border-(--line) bg-(--panel) shadow-2xl md:hidden"
+            >
               {/* Drawer header with sage accent */}
               <div className="relative flex items-center justify-between px-4 py-4">
                 <div aria-hidden className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-(--sage)/20 to-transparent" />
@@ -495,8 +494,10 @@ export function AppHeader() {
                   <ThemeToggle size="sm" />
                 </div>
               </div>
-        </div>
-      </>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
