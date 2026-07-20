@@ -1,8 +1,8 @@
 "use client";
 
 import { Show } from "@clerk/nextjs";
+import { ArrowUp, Mail, MapPin } from "lucide-react";
 import Link from "next/link";
-import { ArrowUp, Mail } from "lucide-react";
 
 function InstagramIcon() {
   return (
@@ -39,33 +39,27 @@ function XIcon() {
 }
 
 const socials = [
-  { label: "Instagram", href: "https://instagram.com/mountainrunofficial", icon: <InstagramIcon />, hover: "hover:text-pink-500 hover:border-pink-500/40 hover:bg-pink-500/10 hover:shadow-pink-500/20" },
-  { label: "WhatsApp", href: "https://wa.me/916006755787", icon: <WhatsAppIcon />, hover: "hover:text-emerald-500 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:shadow-emerald-500/20" },
-  { label: "Facebook", href: "https://facebook.com/mountainrunofficial", icon: <FacebookIcon />, hover: "hover:text-blue-600 hover:border-blue-600/40 hover:bg-blue-600/10 hover:shadow-blue-600/20" },
-  { label: "X", href: "https://twitter.com/mountainrun", icon: <XIcon />, hover: "hover:text-(--foreground) hover:border-(--line-strong) hover:bg-(--panel-soft)" },
-];
-
-const exploreLinks = [
-  ["Events", "/events"],
-  ["Gallery", "/gallery"],
-  ["Leaderboard", "/leaderboard"],
-  ["About", "/about"],
+  { label: "Instagram", href: "https://instagram.com/mountainrunofficial", icon: <InstagramIcon />, hoverColor: "hover:text-pink-500 hover:border-pink-500/40 hover:bg-pink-500/10" },
+  { label: "WhatsApp", href: "https://wa.me/916006755787", icon: <WhatsAppIcon />, hoverColor: "hover:text-emerald-500 hover:border-emerald-500/40 hover:bg-emerald-500/10" },
+  { label: "Facebook", href: "https://facebook.com/mountainrunofficial", icon: <FacebookIcon />, hoverColor: "hover:text-blue-600 hover:border-blue-600/40 hover:bg-blue-600/10" },
+  { label: "X", href: "https://twitter.com/mountainrun", icon: <XIcon />, hoverColor: "hover:text-(--foreground) hover:border-(--line-strong) hover:bg-(--panel-soft)" },
 ];
 
 export function AppFooter() {
   return (
     <footer className="mt-auto border-t border-(--line) bg-(--panel)">
-      <div className="h-[3px] w-full bg-gradient-to-r from-(--sage) via-emerald-400 to-indigo-500" />
+      <div className="h-1 w-full bg-gradient-to-r from-(--sage) via-emerald-400 to-indigo-500" />
 
-      <div className="container-page py-12 sm:py-14 md:py-16">
+      <div className="container-page py-8 sm:py-10 md:py-12">
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <Link href="/" aria-label="Mountain Run home" className="inline-flex items-center gap-2.5 group">
+        {/* Logo + tagline */}
+        <div className="flex flex-col gap-2 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
+          <Link href="/" aria-label="Mountain Run home" className="inline-flex items-center justify-center gap-2.5 group sm:justify-start">
             <img
               src="/logo-mark.svg"
               alt="Mountain Run"
-              width={32} height={32}
-              className="h-8 w-8 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12"
+              width={28} height={28}
+              className="h-7 w-7 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12"
             />
             <span className="text-base font-bold tracking-tight text-(--foreground)">
               Mountain{" "}
@@ -74,26 +68,23 @@ export function AppFooter() {
               </span>
             </span>
           </Link>
-          <p className="text-xs sm:text-sm text-(--muted-soft)">
+          <p className="text-xs text-(--muted-soft)">
             Virtual running events &middot; GPS verified &middot; India-wide
           </p>
         </div>
 
-        <div className="my-8 h-px bg-gradient-to-r from-(--line) via-(--line) to-transparent" />
+        <div className="my-6 h-px bg-gradient-to-r from-transparent via-(--line) to-transparent" />
 
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4 md:gap-10 lg:gap-12">
+        {/* Grid */}
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-4 sm:gap-8">
 
+          {/* Explore */}
           <div>
-            <p className="mb-4 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-(--muted)">
-              Explore
-            </p>
-            <ul className="space-y-3">
-              {exploreLinks.map(([label, href]) => (
+            <p className="mb-3 text-[0.6rem] font-bold uppercase tracking-[0.15em] text-(--muted)">Explore</p>
+            <ul className="space-y-2">
+              {[["Events", "/events"], ["Gallery", "/gallery"], ["Leaderboard", "/leaderboard"], ["About", "/about"]].map(([label, href]) => (
                 <li key={label}>
-                  <Link
-                    href={href}
-                    className="relative inline-block text-sm text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--foreground)"
-                  >
+                  <Link href={href} className="inline-block text-sm text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--sage)">
                     {label}
                   </Link>
                 </li>
@@ -101,79 +92,56 @@ export function AppFooter() {
             </ul>
           </div>
 
+          {/* Account */}
           <div>
-            <p className="mb-4 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-(--muted)">
-              Account
-            </p>
-            <ul className="space-y-3 text-sm">
+            <p className="mb-3 text-[0.6rem] font-bold uppercase tracking-[0.15em] text-(--muted)">Account</p>
+            <ul className="space-y-2 text-sm">
               <Show when="signed-out">
-                <li>
-                  <Link href="/sign-in" className="relative inline-block text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--foreground)">
-                    Sign in
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/events" className="relative inline-block text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--foreground)">
-                    Browse events
-                  </Link>
-                </li>
+                <li><Link href="/sign-in" className="inline-block text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--sage)">Sign in</Link></li>
+                <li><Link href="/events" className="inline-block text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--sage)">Browse events</Link></li>
               </Show>
               <Show when="signed-in">
-                <li>
-                  <Link href="/dashboard" className="relative inline-block text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--foreground)">
-                    Dashboard
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/events" className="relative inline-block text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--foreground)">
-                    Browse events
-                  </Link>
-                </li>
+                <li><Link href="/dashboard" className="inline-block text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--sage)">Dashboard</Link></li>
+                <li><Link href="/events" className="inline-block text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--sage)">Browse events</Link></li>
               </Show>
             </ul>
           </div>
 
+          {/* Support */}
           <div>
-            <p className="mb-4 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-(--muted)">
-              Support
-            </p>
-            <ul className="space-y-3 text-sm">
+            <p className="mb-3 text-[0.6rem] font-bold uppercase tracking-[0.15em] text-(--muted)">Support</p>
+            <ul className="space-y-2 text-sm">
               <li>
-                <a
-                  href="mailto:mountainrunofficial@gmail.com"
-                  className="group flex items-center gap-2 text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--sage)"
-                >
+                <a href="mailto:mountainrunofficial@gmail.com" className="group flex items-center gap-2 text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-(--sage)">
                   <Mail className="h-3.5 w-3.5 shrink-0 text-(--muted-soft) transition-colors group-hover:text-(--sage)" />
-                  <span className="footer-email">mountainrunofficial@gmail.com</span>
+                  <span className="truncate text-xs sm:text-sm">mountainrunofficial@gmail.com</span>
                 </a>
               </li>
               <li>
-                <a
-                  href="https://instagram.com/mountainrunofficial"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-pink-500"
-                >
+                <a href="https://instagram.com/mountainrunofficial" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-(--muted) transition-all duration-200 hover:translate-x-0.5 hover:text-pink-500">
                   <InstagramIcon />
-                  <span>@mountainrunofficial</span>
+                  <span className="text-xs sm:text-sm">@mountainrunofficial</span>
                 </a>
+              </li>
+              <li className="flex items-center gap-2 text-(--muted-soft)">
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-xs sm:text-sm">India</span>
               </li>
             </ul>
           </div>
 
+          {/* Connect */}
           <div>
-            <p className="mb-4 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-(--muted)">
-              Connect
-            </p>
-            <div className="flex flex-wrap items-center gap-2.5">
-              {socials.map(({ label, href, icon, hover }) => (
+            <p className="mb-3 text-[0.6rem] font-bold uppercase tracking-[0.15em] text-(--muted)">Connect</p>
+            <div className="flex flex-wrap gap-2">
+              {socials.map(({ label, href, icon, hoverColor }) => (
                 <a
                   key={label}
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className={`flex h-9 w-9 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--muted) transition-all duration-200 hover:scale-110 hover:shadow-lg ${hover}`}
+                  className={`flex h-9 w-9 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--muted) transition-all duration-200 hover:scale-110 hover:shadow-lg ${hoverColor}`}
                 >
                   {icon}
                 </a>
@@ -183,15 +151,16 @@ export function AppFooter() {
 
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-(--line) pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="order-2 text-center text-xs text-(--muted-soft) sm:order-1 sm:text-left">
+        {/* Bottom bar */}
+        <div className="mt-8 flex flex-col items-center gap-3 border-t border-(--line) pt-5 sm:flex-row sm:justify-between">
+          <p className="order-2 text-center text-xs text-(--muted-soft) sm:order-1">
             &copy; {new Date().getFullYear()} Mountain Run. All rights reserved.
           </p>
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             type="button"
             aria-label="Scroll to top"
-            className="group order-1 flex cursor-pointer items-center gap-1.5 self-center text-xs text-(--muted-soft) transition-colors hover:text-(--foreground) sm:order-2"
+            className="group order-1 flex cursor-pointer items-center gap-1.5 text-xs text-(--muted-soft) transition-colors hover:text-(--foreground) sm:order-2"
           >
             Back to top
             <ArrowUp className="h-3.5 w-3.5 transition-transform duration-200 group-hover:-translate-y-0.5" />
