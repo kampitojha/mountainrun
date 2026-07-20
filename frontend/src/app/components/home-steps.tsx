@@ -37,17 +37,17 @@ export function HomeSteps() {
             return (
               <article
                 key={item.step}
-                className="flex flex-col rounded-2xl border border-(--line) bg-(--panel) p-5 sm:p-6"
+                className="group flex flex-col rounded-2xl border border-(--line) bg-(--panel) p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-(--sage)/30 hover:shadow-lg sm:p-6"
               >
                 <div className="flex items-center justify-between">
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--sage)">
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--sage) transition-colors duration-300 group-hover:bg-(--sage-soft) group-hover:text-(--sage)">
                     <Icon aria-hidden="true" className="h-5 w-5" strokeWidth={1.75} />
                   </span>
-                  <span className="font-mono text-2xl font-bold tabular-nums text-(--line-strong)">
+                  <span className="font-mono text-2xl font-bold tabular-nums text-(--line-strong) transition-colors duration-300 group-hover:text-(--sage)/40">
                     {item.step}
                   </span>
                 </div>
-                <h3 className="mt-5 text-lg font-bold tracking-tight text-(--foreground)">
+                <h3 className="mt-5 text-lg font-bold tracking-tight text-(--foreground) transition-colors duration-300 group-hover:text-(--sage)">
                   {item.title}
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-(--muted) sm:text-base">
