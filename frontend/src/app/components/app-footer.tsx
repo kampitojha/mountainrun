@@ -1,5 +1,6 @@
 "use client";
 
+import { Show } from "@clerk/nextjs";
 import { ArrowUp, Check, Mail, Send } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -173,9 +174,16 @@ export function AppFooter() {
                 <Link className="btn btn-primary min-w-[11rem] text-sm sm:text-base" href="/events">
                   Browse Events
                 </Link>
-                <Link className="btn btn-secondary min-w-[11rem] text-sm sm:text-base" href="/sign-up">
-                  Create Account
-                </Link>
+                <Show when="signed-out">
+                  <Link className="btn btn-secondary min-w-[11rem] text-sm sm:text-base" href="/sign-up">
+                    Create Account
+                  </Link>
+                </Show>
+                <Show when="signed-in">
+                  <Link className="btn btn-secondary min-w-[11rem] text-sm sm:text-base" href="/dashboard">
+                    My Dashboard
+                  </Link>
+                </Show>
               </div>
             </div>
           </div>
