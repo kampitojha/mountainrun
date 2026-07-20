@@ -72,30 +72,20 @@ export function AppFooter() {
   };
 
   return (
-    <footer className="relative mt-auto bg-(--panel) border-t border-(--line) shadow-xs">
-      {/* Top accent line matching the header exactly */}
+    <footer className="relative mt-auto bg-(--panel) border-t border-(--line)">
+      {/* Top accent line */}
       <div className="h-[2px] w-full bg-linear-to-r from-(--sage) via-emerald-400 to-indigo-500" />
 
-      <div className="container-page py-14 sm:py-16">
+      <div className="container-page py-8 sm:py-10">
         {/* ── Main grid ── */}
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-12">
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-4 sm:gap-8">
 
           {/* Col 1 — Brand */}
-          <div className="sm:col-span-2 lg:col-span-1 space-y-5">
-            <Link
-              aria-label="Mountain Run home"
-              className="group inline-flex items-center gap-2.5"
-              href="/"
-            >
+          <div className="col-span-2 sm:col-span-1 space-y-3">
+            <Link aria-label="Mountain Run home" className="inline-flex items-center gap-2" href="/">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                alt="Mountain Run logo - virtual running events platform"
-                className="block h-8 w-8 shrink-0 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12"
-                height={32}
-                src="/logo-mark.svg"
-                width={32}
-              />
-              <span className="text-base font-semibold tracking-tight text-(--foreground) transition-colors duration-300">
+              <img alt="Mountain Run" className="h-7 w-7 shrink-0" height={28} src="/logo-mark.svg" width={28} />
+              <span className="text-sm font-semibold tracking-tight text-(--foreground)">
                 Mountain{" "}
                 <span className="font-extrabold text-transparent bg-clip-text bg-linear-to-r from-emerald-500 to-indigo-600">
                   Run
@@ -103,13 +93,12 @@ export function AppFooter() {
               </span>
             </Link>
 
-            <p className="text-sm leading-relaxed text-(--muted) max-w-xs">
-              Virtual running events with GPS-verified finishes, digital
-              medals, and leaderboards — run anywhere across India.
+            <p className="text-xs leading-relaxed text-(--muted)">
+              Virtual running events with GPS-verified finishes and leaderboards — run anywhere across India.
             </p>
 
             {/* Social icons */}
-            <div className="flex items-center gap-2.5 pt-1">
+            <div className="flex items-center gap-2 pt-0.5">
               {socialLinks.map(({ label, href, icon, hoverClass }) => (
                 <a
                   key={label}
@@ -117,7 +106,7 @@ export function AppFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className={`flex h-9 w-9 items-center justify-center rounded-full border border-(--line) bg-(--panel) text-(--muted) transition-all duration-300 hover:-translate-y-1 shadow-xs ${hoverClass}`}
+                  className={`flex h-8 w-8 items-center justify-center rounded-full border border-(--line) bg-(--panel) text-(--muted) transition-all duration-200 ${hoverClass}`}
                 >
                   {icon}
                 </a>
@@ -126,25 +115,13 @@ export function AppFooter() {
           </div>
 
           {/* Col 2 — Explore */}
-          <div className="space-y-4">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-foreground">
-              Explore
-            </p>
-            <ul className="space-y-3 text-sm">
-              {[
-                ["Events", "/events"],
-                ["Gallery", "/gallery"],
-                ["Leaderboard", "/leaderboard"],
-                ["About", "/about"],
-              ].map(([label, href]) => (
+          <div className="space-y-2.5">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-(--foreground)">Explore</p>
+            <ul className="space-y-2 text-xs">
+              {[["Events", "/events"], ["Gallery", "/gallery"], ["Leaderboard", "/leaderboard"], ["About", "/about"]].map(([label, href]) => (
                 <li key={label}>
-                  <Link
-                    className="group inline-flex items-center gap-1 text-(--muted) transition-all duration-200 hover:text-foreground"
-                    href={href}
-                  >
-                    <span className="transition-transform duration-200 group-hover:translate-x-0.5">
-                      {label}
-                    </span>
+                  <Link className="text-(--muted) hover:text-(--foreground) transition-colors" href={href}>
+                    {label}
                   </Link>
                 </li>
               ))}
@@ -152,114 +129,52 @@ export function AppFooter() {
           </div>
 
           {/* Col 3 — Account */}
-          <div className="space-y-4">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-foreground">
-              Account
-            </p>
-            <ul className="space-y-3 text-sm">
+          <div className="space-y-2.5">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-(--foreground)">Account</p>
+            <ul className="space-y-2 text-xs">
               <Show when="signed-out">
-                <li>
-                  <Link
-                    className="group inline-flex items-center gap-1 text-(--muted) transition-all duration-200 hover:text-foreground"
-                    href="/sign-in"
-                  >
-                    <span className="transition-transform duration-200 group-hover:translate-x-0.5">
-                      Sign in
-                    </span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    className="group inline-flex items-center gap-1 text-(--muted) transition-all duration-200 hover:text-foreground"
-                    href="/events"
-                  >
-                    <span className="transition-transform duration-200 group-hover:translate-x-0.5">
-                      Join a run
-                    </span>
-                  </Link>
-                </li>
+                <li><Link className="text-(--muted) hover:text-(--foreground) transition-colors" href="/sign-in">Sign in</Link></li>
+                <li><Link className="text-(--muted) hover:text-(--foreground) transition-colors" href="/events">Browse events</Link></li>
               </Show>
               <Show when="signed-in">
-                <li>
-                  <Link
-                    className="group inline-flex items-center gap-1 text-(--muted) transition-all duration-200 hover:text-foreground"
-                    href="/dashboard"
-                  >
-                    <span className="transition-transform duration-200 group-hover:translate-x-0.5">
-                      Dashboard
-                    </span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    className="group inline-flex items-center gap-1 text-(--muted) transition-all duration-200 hover:text-foreground"
-                    href="/events"
-                  >
-                    <span className="transition-transform duration-200 group-hover:translate-x-0.5">
-                      Browse events
-                    </span>
-                  </Link>
-                </li>
+                <li><Link className="text-(--muted) hover:text-(--foreground) transition-colors" href="/dashboard">Dashboard</Link></li>
+                <li><Link className="text-(--muted) hover:text-(--foreground) transition-colors" href="/events">Browse events</Link></li>
               </Show>
             </ul>
           </div>
 
           {/* Col 4 — Connect */}
-          <div className="space-y-4">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-foreground">
-              Connect
-            </p>
-            <ul className="space-y-3 text-sm">
+          <div className="space-y-2.5">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-(--foreground)">Connect</p>
+            <ul className="space-y-2 text-xs">
               <li>
-                <a
-                  href="mailto:mountainrunofficial@gmail.com"
-                  className="group inline-flex items-start gap-2 text-(--muted) transition-all duration-200 hover:text-foreground"
-                >
-                  <Mail className="h-3.5 w-3.5 shrink-0 text-(--muted-soft) group-hover:text-(--sage) transition-colors mt-0.5" />
-                  <span className="footer-email transition-transform duration-200 group-hover:translate-x-0.5 break-all">
-                    mountainrunofficial@gmail.com
-                  </span>
+                <a href="mailto:mountainrunofficial@gmail.com" className="flex items-start gap-1.5 text-(--muted) hover:text-(--foreground) transition-colors break-all">
+                  <Mail className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  mountainrunofficial@gmail.com
                 </a>
               </li>
               <li>
-                <a
-                  href="https://instagram.com/mountainrunofficial"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-2 text-(--muted) transition-all duration-200 hover:text-pink-500"
-                >
-                  <span className="text-(--muted-soft) group-hover:text-pink-500 transition-colors">@</span>
-                  <span className="transition-transform duration-200 group-hover:translate-x-0.5">
-                    mountainrunofficial
-                  </span>
+                <a href="https://instagram.com/mountainrunofficial" target="_blank" rel="noopener noreferrer" className="text-(--muted) hover:text-pink-500 transition-colors">
+                  @mountainrunofficial
                 </a>
-              </li>
-              <li className="text-(--muted-soft) text-xs leading-relaxed pt-1">
-                India-wide virtual events.<br />
-                Run anywhere. Finish officially.
               </li>
             </ul>
           </div>
         </div>
 
         {/* ── Bottom bar ── */}
-        <div className="mt-10 flex flex-col gap-3 border-t border-(--line) pt-5 sm:mt-14 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-6 flex items-center justify-between gap-4 border-t border-(--line) pt-4">
           <p className="text-xs text-(--muted-soft)">
             © {new Date().getFullYear()} Mountain Run. All rights reserved.
           </p>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-(--muted-soft)">
-              Made with ♥ for Indian runners
-            </span>
-            <button
-              onClick={scrollToTop}
-              type="button"
-              aria-label="Scroll to top"
-              className="ml-auto flex h-9 w-9 items-center justify-center rounded-full border border-(--line) bg-(--panel) text-(--muted) transition-all duration-300 hover:text-foreground hover:border-(--line-strong) hover:-translate-y-1 active:scale-95 cursor-pointer shadow-xs sm:ml-0"
-            >
-              <ArrowUp className="h-4 w-4" />
-            </button>
-          </div>
+          <button
+            onClick={scrollToTop}
+            type="button"
+            aria-label="Scroll to top"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-(--line) bg-(--panel) text-(--muted) hover:text-(--foreground) hover:border-(--line-strong) transition-all cursor-pointer"
+          >
+            <ArrowUp className="h-3.5 w-3.5" />
+          </button>
         </div>
       </div>
     </footer>
