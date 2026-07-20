@@ -21,6 +21,7 @@ export type PublicEvent = {
   status: "upcoming" | "past";
   couponCode?: string;
   showCouponOnCard?: boolean;
+  activityTypes?: string[];
   /** Past-event recap stats */
   finishers?: number;
   verifiedResults?: number;

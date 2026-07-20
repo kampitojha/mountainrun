@@ -41,6 +41,7 @@ type RegisterEventOption = {
   value: string;
   amount: string;
   distances: string[];
+  activityTypes?: string[];
 };
 
 type ExistingReg = {
@@ -57,18 +58,21 @@ const fallbackEvents: RegisterEventOption[] = [
     value: "monsoon-mountain-miles",
     amount: "₹499",
     distances: ["3 km", "5 km", "10 km", "21 km"],
+    activityTypes: ["running", "cycling", "walking"],
   },
   {
     label: "Independence Endurance Run",
     value: "independence-endurance-run",
     amount: "₹649",
     distances: ["5 km", "10 km", "25 km"],
+    activityTypes: ["running", "cycling", "walking"],
   },
   {
     label: "Himalayan Winter Sprint",
     value: "himalayan-winter-sprint",
     amount: "₹399",
     distances: ["2 km", "5 km", "10 km"],
+    activityTypes: ["running", "cycling", "walking"],
   },
 ];
 
@@ -145,6 +149,7 @@ function PaymentRegistrationFormInner() {
     eventFromQuery || fallbackEvents[0].value,
   );
   const [selectedDistance, setSelectedDistance] = useState(distanceFromQuery || "");
+  const [selectedActivity, setSelectedActivity] = useState("running");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [existingRegs, setExistingRegs] = useState<ExistingReg[]>([]);
   const [dbUsername, setDbUsername] = useState<string | null>(null);
@@ -171,10 +176,11 @@ function PaymentRegistrationFormInner() {
         const open = rows
           .filter((row) => row.registrationOpen !== false)
           .map((row) => ({
-            label: row.title,
-            value: row.slug,
-            amount: `₹${Math.round(row.priceInPaise / 100)}`,
-            distances: row.distances?.length ? row.distances : ["5 km"],
+    label: row.title,
+    value: row.slug,
+    amount: `₹${Math.round(row.priceInPaise / 100)}`,
+    distances: row.distances?.length ? row.distances : ["5 km"],
+    activityTypes: (row as { activityTypes?: string[] }).activityTypes ?? ["running"],
           }));
 
         if (cancelled || open.length === 0) {
@@ -258,6 +264,7 @@ function PaymentRegistrationFormInner() {
   );
 
   const distanceOptions = activeEvent?.distances ?? ["5 km"];
+  const activityOptions = activeEvent?.activityTypes ?? ["running"];
 
   useEffect(() => {
     if (distanceFromQuery && distanceOptions.includes(distanceFromQuery)) {
@@ -267,7 +274,10 @@ function PaymentRegistrationFormInner() {
     if (!distanceOptions.includes(selectedDistance)) {
       setSelectedDistance(distanceOptions[0] ?? "");
     }
-  }, [distanceOptions, distanceFromQuery, selectedDistance]);
+    if (!activityOptions.includes(selectedActivity)) {
+      setSelectedActivity(activityOptions[0] ?? "running");
+    }
+  }, [distanceOptions, distanceFromQuery, selectedDistance, activityOptions, selectedActivity]);
 
   const selectedAmount = activeEvent?.amount ?? "₹499";
   const defaultName = profileName || user?.fullName || user?.firstName || "";
@@ -341,9 +351,10 @@ function PaymentRegistrationFormInner() {
 
     const form = event.currentTarget;
     const formData = new FormData(form);
-    formData.set("username", username);
-    formData.set("eventSlug", selectedEvent);
-    formData.set("distance", selectedDistance);
+  formData.set("username", username);
+  formData.set("eventSlug", selectedEvent);
+  formData.set("distance", selectedDistance);
+  formData.set("activityType", selectedActivity);
 
     const fieldErrors = validateRegistrationForm(formData);
     setErrors(fieldErrors);
@@ -388,6 +399,7 @@ function PaymentRegistrationFormInner() {
           phone: formData.get("phone"),
           eventSlug: selectedEvent,
           distance: selectedDistance,
+          activityType: selectedActivity,
           shippingName: formData.get("name"),
           shippingPhone: formData.get("phone"),
           shippingLine1: formData.get("address"),
@@ -643,6 +655,29 @@ function PaymentRegistrationFormInner() {
             </p>
           ) : null}
         </Field>
+
+        {activityOptions.length > 1 ? (
+          <Field label="Activity type">
+            <div className="flex flex-wrap gap-2">
+              {activityOptions.map((type) => (
+                <label key={type}
+                  className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
+                    selectedActivity === type
+                      ? "border-(--sage) bg-(--sage-soft) text-(--sage) shadow-sm"
+                      : "border-(--line) bg-(--panel) text-(--muted) hover:border-(--line-strong) hover:text-(--foreground)"
+                  }`}>
+                  <input type="radio" className="sr-only" name="activityType" value={type}
+                    checked={selectedActivity === type}
+                    onChange={(e) => setSelectedActivity(e.target.value)} />
+                  <span>{type === "running" ? "\u{1F3C3}" : type === "cycling" ? "\u{1F6B4}" : "\u{1F6B6}"}</span>
+                  <span className="capitalize">{type}</span>
+                </label>
+              ))}
+            </div>
+          </Field>
+        ) : (
+          <input type="hidden" name="activityType" value="running" />
+        )}
 
         <Field label="City" required>
           <input

@@ -38,6 +38,7 @@ export const adminEventSchema = z.object({
   bannerImageUrl: z.string().url().optional().nullable().or(z.literal("")),
   couponCode: z.string().max(40).optional().nullable(),
   showCouponOnCard: z.boolean().optional(),
+  activityTypes: z.array(z.enum(["running", "cycling", "walking"])).min(1).optional(),
   status: eventStatusEnum.optional(),
 });
 

@@ -54,6 +54,12 @@ export async function createRegistration(request: AuthenticatedRequest, response
     throw new ApiError(422, "Selected distance is not available for this event");
   }
 
+  const availableTypes = event.activityTypes.length > 0 ? event.activityTypes : ["running"];
+  const selectedType = payload.activityType ?? "running";
+  if (!availableTypes.includes(selectedType)) {
+    throw new ApiError(422, "Selected activity type is not available for this event");
+  }
+
   if (event.maxCapacity != null) {
     const filled = await prisma.registration.count({
       where: {
@@ -146,6 +152,7 @@ export async function createRegistration(request: AuthenticatedRequest, response
         userId: user.id,
         eventId: event.id,
         distance: payload.distance,
+        activityType: selectedType,
         status: freeEntry ? "CONFIRMED" : "PENDING_PAYMENT",
         shippingName: payload.shippingName,
         shippingPhone: payload.shippingPhone,

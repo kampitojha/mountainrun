@@ -100,6 +100,7 @@ type EventRow = {
   medalIncluded: boolean; featured: boolean;
   maxCapacity: number | null; city: string | null;
   couponCode?: string | null; showCouponOnCard?: boolean;
+  activityTypes?: string[];
   _count?: { registrations: number };
 };
 
@@ -107,7 +108,8 @@ const emptyForm = {
   title: "", slug: "", description: "", startsAt: "", endsAt: "",
   proofClosesAt: "", distances: "5 km, 10 km", priceInr: "499",
   paymentRequired: true, medalIncluded: true, featured: false,
-  maxCapacity: "", city: "Virtual", couponCode: "", showCouponOnCard: false, status: "DRAFT",
+  maxCapacity: "", city: "Virtual", couponCode: "", showCouponOnCard: false,
+  activityTypes: ["running", "cycling", "walking"], status: "DRAFT",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -162,6 +164,7 @@ export default function AdminEventsPage() {
       featured: event.featured,
       couponCode: event.couponCode ?? "",
       showCouponOnCard: event.showCouponOnCard ?? false,
+      activityTypes: event.activityTypes ?? ["running"],
       maxCapacity: event.maxCapacity != null ? String(event.maxCapacity) : "",
       city: event.city ?? "Virtual", status: event.status,
     });
@@ -199,6 +202,7 @@ export default function AdminEventsPage() {
         paymentRequired: form.paymentRequired && priceInPaise > 0,
         couponCode: form.couponCode.trim() || null,
         showCouponOnCard: form.showCouponOnCard,
+        activityTypes: form.activityTypes,
         medalIncluded: form.medalIncluded, featured: form.featured,
         maxCapacity: form.maxCapacity ? Number(form.maxCapacity) : null,
         city: form.city || "Virtual", status: form.status,
@@ -377,6 +381,30 @@ export default function AdminEventsPage() {
                   onChange={(e) => setForm((f) => ({ ...f, showCouponOnCard: e.target.checked }))} />
                 <span>Show coupon on event card</span>
               </label>
+
+              <hr className="border-[var(--admin-line)] my-1" />
+
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--admin-muted)]">Activity types</p>
+              <div className="flex flex-wrap gap-2">
+                {["running", "cycling", "walking"].map((type) => {
+                  const checked = form.activityTypes.includes(type);
+                  return (
+                    <label key={type} className="flex items-center gap-1.5 cursor-pointer rounded-lg border border-[var(--admin-line)] bg-[var(--admin-surface)] px-2.5 py-1.5 text-xs font-medium has-[:checked]:border-(--sage) has-[:checked]:bg-(--sage-soft) has-[:checked]:text-(--sage) transition-colors">
+                      <input type="checkbox" className="sr-only"
+                        checked={checked}
+                        onChange={() => {
+                          setForm((f) => ({
+                            ...f,
+                            activityTypes: checked
+                              ? f.activityTypes.filter((t: string) => t !== type)
+                              : [...f.activityTypes, type],
+                          }));
+                        }} />
+                      <span className="capitalize">{type}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
 
             <button className="btn btn-primary btn-full" disabled={saving} type="submit">

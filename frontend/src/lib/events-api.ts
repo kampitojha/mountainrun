@@ -20,6 +20,7 @@ export type ApiEvent = {
   city?: string | null;
   couponCode?: string | null;
   showCouponOnCard?: boolean;
+  activityTypes?: string[];
   _count?: { registrations: number };
   stats?: {
     registrations?: number;
@@ -88,6 +89,7 @@ export function mapApiEventToPublic(
     reward: staticMatch?.reward ?? (isPast ? "Medal + certificate" : "Register now"),
     couponCode: event.couponCode ?? undefined,
     showCouponOnCard: event.showCouponOnCard ?? undefined,
+    activityTypes: event.activityTypes ?? ["running"],
     status: isPast ? "past" : "upcoming",
     finishers:
       apiFinishers && apiFinishers > 0 ? apiFinishers : staticMatch?.finishers ?? apiFinishers,

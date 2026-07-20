@@ -229,6 +229,7 @@ export async function adminCreateEvent(request: AuthenticatedRequest, response: 
       bannerImageUrl: payload.bannerImageUrl || null,
       couponCode: payload.couponCode ?? null,
       showCouponOnCard: payload.showCouponOnCard ?? false,
+      activityTypes: payload.activityTypes ?? ["running"],
       status: payload.status ?? "DRAFT",
     },
   });

@@ -139,6 +139,19 @@ export default async function EventDetailPage({
                 </span>
               </div>
               <h1 className="display mt-4 max-w-3xl">{event.name}</h1>
+
+              {event.activityTypes && event.activityTypes.length > 0 ? (
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  {event.activityTypes.map((type) => (
+                    <span key={type}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-(--line) bg-(--panel-soft) px-3 py-1 text-xs font-semibold capitalize text-(--muted)">
+                      {type === "running" ? "\u{1F3C3}" : type === "cycling" ? "\u{1F6B4}" : "\u{1F6B6}"}
+                      {type}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+
               <p className="lede mt-6 max-w-2xl">{event.description}</p>
 
               <div className="mt-8 grid grid-cols-3 gap-3">
