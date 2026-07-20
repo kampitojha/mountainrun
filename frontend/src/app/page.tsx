@@ -49,7 +49,7 @@ export default function Home() {
     <div className="page-shell flex min-h-screen flex-col">
       <AppHeader />
 
-      <main className="flex-1">
+      <main className="flex-1 pt-[4.5rem] sm:pt-[5rem] md:pt-[5.5rem]">
         <HomeHero />
         <HomeSteps />
 

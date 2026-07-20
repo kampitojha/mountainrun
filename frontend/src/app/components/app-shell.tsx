@@ -5,7 +5,8 @@ export function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="page-shell flex min-h-screen flex-col">
       <AppHeader />
-      <main className="flex-1">{children}</main>
+      {/* pt compensates for fixed navbar height (~56px mobile, ~64px desktop + 12px top offset) */}
+      <main className="flex-1 pt-[4.5rem] sm:pt-[5rem] md:pt-[5.5rem]">{children}</main>
       <AppFooter />
     </div>
   );
