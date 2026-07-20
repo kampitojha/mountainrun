@@ -334,7 +334,7 @@ function SidebarNav({
 }) {
   return (
     <>
-      <div className="admin-sidebar-brand">
+      <Link href="/" className="admin-sidebar-brand" aria-label="Go to Mountain Run homepage">
         <div className="admin-sidebar-brand-icon">
           <BrandMark size={20} />
         </div>
@@ -344,7 +344,7 @@ function SidebarNav({
           </strong>
           <span>Operations</span>
         </div>
-      </div>
+      </Link>
 
       <nav aria-label="Admin" className="admin-nav">
         {navGroups.map((group) => (
@@ -380,7 +380,9 @@ function SidebarNav({
           <AdminThemeToggle className="is-icon-only" />
         </div>
         <div className="admin-sidebar-links">
-          <Link href="/">View site</Link>
+          <Link href="/" className="admin-sidebar-site-btn">
+            ← View site
+          </Link>
           <Link href="/dashboard">My dashboard</Link>
         </div>
       </div>

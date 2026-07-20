@@ -160,6 +160,13 @@
   padding: 1.2rem 1.1rem 1.05rem;
   border-bottom: 1px solid var(--admin-sidebar-border);
   flex-shrink: 0;
+  text-decoration: none;
+  transition: background-color 120ms ease;
+  cursor: pointer;
+}
+
+.admin-sidebar-brand:hover {
+  background: var(--admin-sidebar-hover);
 }
 
 .admin-sidebar-brand-icon {
@@ -362,10 +369,31 @@
   font-size: 0.725rem;
   color: var(--admin-sidebar-muted);
   transition: color 120ms;
+  text-decoration: none;
 }
 
 .admin-sidebar-links a:hover {
   color: var(--admin-nav-idle);
+}
+
+.admin-sidebar-site-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  background: var(--admin-teal-dim);
+  color: var(--admin-teal) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  border: 1px solid rgba(20, 184, 166, 0.25);
+  transition: background-color 120ms, border-color 120ms;
+}
+
+.admin-sidebar-site-btn:hover {
+  background: rgba(20, 184, 166, 0.2) !important;
+  border-color: rgba(20, 184, 166, 0.4);
+  color: var(--admin-teal) !important;
 }
 
 /* ── Mobile bar ──────────────────────────────────────────── */
