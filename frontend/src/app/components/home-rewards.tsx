@@ -32,13 +32,11 @@ export function HomeRewards() {
       <div className="container-page">
         {/* Header */}
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-(--sage)">
-            What you receive
-          </p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-(--foreground) sm:text-3xl md:text-4xl">
+          <p className="eyebrow">What you receive</p>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-(--foreground) sm:text-4xl">
             Rewards that make the finish feel real
           </h2>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-(--muted) sm:text-base">
+          <p className="lede mt-4 max-w-2xl">
             Every verified runner gets a digital finish record, with physical rewards
             available based on the selected event kit.
           </p>

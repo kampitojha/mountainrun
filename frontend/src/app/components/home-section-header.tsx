@@ -19,16 +19,12 @@ export function HomeSectionHeader({
     return (
       <div className="flex flex-col gap-4 sm:gap-5 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-(--sage)">
-            {eyebrow}
-          </p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-(--foreground) sm:text-3xl md:text-4xl">
+          <p className="eyebrow">{eyebrow}</p>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-(--foreground) sm:text-4xl">
             {title}
           </h2>
           {lead ? (
-            <p className="mt-2 max-w-xl text-sm leading-relaxed text-(--muted) sm:text-base">
-              {lead}
-            </p>
+            <p className="lede mt-3 max-w-xl">{lead}</p>
           ) : null}
         </div>
         {action ? (
@@ -40,16 +36,12 @@ export function HomeSectionHeader({
 
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-(--sage)">
-        {eyebrow}
-      </p>
-      <h2 className="mt-2 text-2xl font-bold tracking-tight text-(--foreground) sm:text-3xl md:text-4xl">
+      <p className="eyebrow">{eyebrow}</p>
+      <h2 className="mt-3 text-3xl font-bold tracking-tight text-(--foreground) sm:text-4xl">
         {title}
       </h2>
       {lead ? (
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-(--muted) sm:text-base">
-          {lead}
-        </p>
+        <p className="lede mt-4 max-w-2xl">{lead}</p>
       ) : null}
     </div>
   );
