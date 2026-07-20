@@ -33,7 +33,6 @@ const nextConfig: NextConfig = {
       "framer-motion",
       "@clerk/nextjs",
     ],
-    optimizeCss: true,
   },
 };
 
