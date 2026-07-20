@@ -619,7 +619,7 @@ function PaymentRegistrationFormInner() {
           >
             {events.map((event) => (
               <option key={event.value} value={event.value}>
-                {event.label} · {event.amount}
+                {event.label}
               </option>
             ))}
           </select>
