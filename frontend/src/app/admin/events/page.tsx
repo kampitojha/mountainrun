@@ -334,39 +334,51 @@ export default function AdminEventsPage() {
 
             <div className="space-y-1.5">
               <span className="field-label text-sm">Banner image</span>
-              <input
-                accept="image/png,image/jpeg,image/webp,image/avif"
-                className="input cursor-pointer py-2 file:mr-3 file:rounded-full file:border-0 file:bg-(--sage) file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white block w-full"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  if (!file.type.startsWith("image/")) {
-                    toast("error", "Only image files are allowed (PNG, JPEG, WebP, AVIF).");
-                    return;
-                  }
-                  if (file.size > 10 * 1024 * 1024) {
-                    toast("error", "Image must be under 10 MB.");
-                    return;
-                  }
-                  try {
-                    const token = await getToken();
-                    const reader = new FileReader();
-                    reader.onload = async () => {
-                      const base64 = reader.result as string;
-                      const res = await fetch(getApiUrl("/api/uploads/image"), {
-                        method: "POST",
-                        headers: authHeaders(token),
-                        body: JSON.stringify({ file: base64, folder: "mountainrun/admin" }),
-                      });
-                      if (!res.ok) { toast("error", "Upload failed. Try again."); return; }
-                      const json = await res.json();
-                      setForm((f) => ({ ...f, bannerImageUrl: json.data.url }));
-                    };
-                    reader.readAsDataURL(file);
-                  } catch { toast("error", "Upload failed. Check connection."); }
-                }}
-                type="file"
-              />
+              <div className="flex items-start gap-3">
+                <input
+                  accept="image/png,image/jpeg,image/webp,image/avif"
+                  className="input cursor-pointer py-2 file:mr-3 file:rounded-full file:border-0 file:bg-(--sage) file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white block w-full"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (!file.type.startsWith("image/")) {
+                      toast("error", "Only image files are allowed (PNG, JPEG, WebP, AVIF).");
+                      return;
+                    }
+                    if (file.size > 10 * 1024 * 1024) {
+                      toast("error", "Image must be under 10 MB.");
+                      return;
+                    }
+                    try {
+                      const token = await getToken();
+                      const reader = new FileReader();
+                      reader.onload = async () => {
+                        const base64 = reader.result as string;
+                        const res = await fetch(getApiUrl("/api/uploads/image"), {
+                          method: "POST",
+                          headers: authHeaders(token),
+                          body: JSON.stringify({ file: base64, folder: "mountainrun/admin" }),
+                        });
+                        if (!res.ok) { toast("error", "Upload failed. Try again."); return; }
+                        const json = await res.json();
+                        setForm((f) => ({ ...f, bannerImageUrl: json.data.url }));
+                      };
+                      reader.readAsDataURL(file);
+                    } catch { toast("error", "Upload failed. Check connection."); }
+                  }}
+                  type="file"
+                />
+                {form.bannerImageUrl && (
+                  <button
+                    className="btn btn-secondary h-9 w-9 shrink-0 flex items-center justify-center p-0 text-sm"
+                    onClick={() => setForm((f) => ({ ...f, bannerImageUrl: "" }))}
+                    title="Remove banner"
+                    type="button"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
               <p className="text-[0.65rem] text-[var(--admin-muted)]">PNG, JPEG, WebP or AVIF · max 10 MB · or paste a URL below.</p>
               <input className="input" placeholder="https://… or leave blank for default"
                 onChange={(e) => setForm((f) => ({ ...f, bannerImageUrl: e.target.value }))}
