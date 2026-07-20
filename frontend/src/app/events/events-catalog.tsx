@@ -12,12 +12,6 @@ import {
   type PublicEvent,
 } from "../data/events";
 
-const activityEmojis: Record<string, string> = {
-  running: "\u{1F3C3}",
-  cycling: "\u{1F6B4}",
-  walking: "\u{1F6B6}",
-};
-
 function FadeIn({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-10%" });
@@ -78,8 +72,7 @@ function EventCard({ event, variant = "upcoming" }: { event: PublicEvent; varian
           <div className="mt-2 flex flex-wrap gap-1.5">
             {event.activityTypes.map((type) => (
               <span key={type}
-                className="inline-flex items-center gap-1 rounded-md border border-(--line) bg-(--panel) px-2 py-0.5 text-[0.6rem] font-semibold capitalize text-(--muted)">
-                <span>{activityEmojis[type] ?? ""}</span>
+                className="rounded-md border border-(--line) bg-(--panel) px-2 py-0.5 text-[0.6rem] font-semibold capitalize text-(--muted)">
                 {type}
               </span>
             ))}

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { FileText, Medal, Shirt, Trophy } from "lucide-react";
 import { PageShell } from "../components/app-shell";
 import { Breadcrumb } from "../components/breadcrumb";
 import { EventsCatalog } from "./events-catalog";
@@ -68,13 +69,13 @@ export default function EventsPage() {
             </p>
             <div className="mt-5 flex flex-wrap justify-center gap-2">
               {[
-                { label: "Medals", icon: "\uD83C\uDFC5" },
-                { label: "T-shirts", icon: "\uD83D\uDC55" },
-                { label: "Certificates", icon: "\uD83D\uDCDC" },
-                { label: "Leaderboard", icon: "\uD83C\uDFC6" },
-              ].map(({ label, icon }) => (
+                { label: "Medals", icon: Medal },
+                { label: "T-shirts", icon: Shirt },
+                { label: "Certificates", icon: FileText },
+                { label: "Leaderboard", icon: Trophy },
+              ].map(({ label, icon: Icon }) => (
                 <span key={label} className="inline-flex items-center gap-1.5 rounded-full border border-(--line) bg-(--sage-soft) px-3 py-1 text-xs font-semibold text-(--sage)">
-                  <span>{icon}</span>
+                  <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
                   {label}
                 </span>
               ))}
