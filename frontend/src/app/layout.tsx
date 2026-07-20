@@ -135,6 +135,11 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        {/* Preconnect to external origins to reduce latency */}
+        <link rel="preconnect" href="https://clerk.mountainrun.in" />
+        <link rel="preconnect" href="https://api.mountainrun.in" />
+        <link rel="dns-prefetch" href="https://clerk.mountainrun.in" />
+        <link rel="dns-prefetch" href="https://api.mountainrun.in" />
         <script dangerouslySetInnerHTML={{ __html: siteThemeInitScript }} />
         <StructuredData />
       </head>

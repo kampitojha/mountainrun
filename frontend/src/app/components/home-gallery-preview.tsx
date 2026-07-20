@@ -92,10 +92,11 @@ export function HomeGalleryPreview({
                 >
                   <Image
                     alt={moment.title}
-                    className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-108"
+                    className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                     src={moment.image}
-                    width={400}
-                    height={300}
+                    width={200}
+                    height={150}
+                    sizes="(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 18vw"
                     loading="lazy"
                   />
                   <span className="absolute left-3.5 bottom-3.5 z-10 rounded-full border border-white/20 bg-(--panel-glass-strong) px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-(--foreground) backdrop-blur-md shadow-xs">

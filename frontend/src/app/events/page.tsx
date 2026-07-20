@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { PageHeader, PageShell } from "../components/app-shell";
 import { Breadcrumb } from "../components/breadcrumb";
 import { EventsCatalog } from "./events-catalog";
@@ -58,12 +59,15 @@ export default function EventsPage() {
                   ))}
                 </div>
               </div>
-              <div className="relative min-h-72 bg-[#0f172a] sm:min-h-80 lg:min-h-full">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+              <div className="relative min-h-72 bg-[#0f172a] sm:min-h-80 lg:min-h-full overflow-hidden">
+                <Image
                   alt="Mountain Run virtual running event - runners completing GPS verified races"
-                  className="absolute inset-0 h-full w-full object-cover opacity-80"
                   src="/images/mountain-run-hero.png"
+                  fill
+                  className="object-cover opacity-80"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  quality={75}
+                  priority={false}
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-6 text-white sm:p-8">
                   <p className="text-xs font-medium uppercase tracking-[0.14em] text-white/65">
