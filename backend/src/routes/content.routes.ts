@@ -6,6 +6,7 @@ import {
   adminDeleteTestimonial,
   adminListMedia,
   adminListTestimonials,
+  adminReviewMediaSubmission,
   adminUpdateMedia,
   adminUpdateTestimonial,
   getGalleryContent,
@@ -29,6 +30,7 @@ adminContentRouter.get("/media", asyncHandler(adminListMedia));
 adminContentRouter.post("/media", asyncHandler(adminCreateMedia));
 adminContentRouter.patch("/media/:id", asyncHandler(adminUpdateMedia));
 adminContentRouter.delete("/media/:id", asyncHandler(adminDeleteMedia));
+adminContentRouter.post("/media/:id/review", asyncHandler(adminReviewMediaSubmission));
 
 adminContentRouter.get("/testimonials", asyncHandler(adminListTestimonials));
 adminContentRouter.post("/testimonials", asyncHandler(adminCreateTestimonial));

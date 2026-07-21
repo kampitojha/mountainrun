@@ -6,6 +6,7 @@ import { authHeaders, getApiUrl } from "../../../lib/api";
 import { adminFetch } from "../../../lib/admin-api";
 import { AdminEmpty, AdminPageHeader, AdminPanel } from "../ui";
 import { validateMediaForm, validateReviewForm } from "../../../lib/validation";
+import { Check, X, Loader2, Clock, Image as ImageIcon } from "lucide-react";
 
 type MediaRow = {
   id: string;
@@ -63,7 +64,7 @@ const emptyTestimonial = {
 
 export default function AdminContentPage() {
   const { getToken } = useAuth();
-  const [tab, setTab] = useState<"media" | "reviews">("media");
+  const [tab, setTab] = useState<"submissions" | "media" | "reviews">("submissions");
   const [media, setMedia] = useState<MediaRow[]>([]);
   const [testimonials, setTestimonials] = useState<TestimonialRow[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +72,8 @@ export default function AdminContentPage() {
   const [mediaForm, setMediaForm] = useState(emptyMedia);
   const [reviewForm, setReviewForm] = useState(emptyTestimonial);
   const [busy, setBusy] = useState(false);
+  const [rejectNote, setRejectNote] = useState<Record<string, string>>({});
+  const [reviewBusyId, setReviewBusyId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -199,6 +202,28 @@ export default function AdminContentPage() {
     }
   }
 
+  async function reviewSubmission(id: string, approved: boolean) {
+    setReviewBusyId(id);
+    setError(null);
+    try {
+      const token = await getToken().catch(() => null);
+      await adminFetch(`/api/admin/content/media/${id}/review`, token, {
+        method: "POST",
+        body: JSON.stringify({
+          approved,
+          note: approved ? null : (rejectNote[id] || null),
+        }),
+      });
+      setRejectNote((f) => ({ ...f, [id]: "" }));
+      setInfo(approved ? "Photo approved and now visible in gallery." : "Photo rejected.");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Review failed");
+    } finally {
+      setReviewBusyId(null);
+    }
+  }
+
   async function removeReview(id: string) {
     if (!window.confirm("Delete this review?")) return;
     setBusy(true);
@@ -223,13 +248,25 @@ export default function AdminContentPage() {
         description="Control Moments of glory photos, full gallery, and community reviews. Featured open events are set on Events (Featured checkbox)."
       />
 
-      <div className="admin-actions">
+      <div className="admin-actions flex-wrap gap-2">
+        <button
+          className={`btn ${tab === "submissions" ? "btn-primary" : "btn-secondary"}`}
+          onClick={() => setTab("submissions")}
+          type="button"
+        >
+          Submissions
+          {media.filter((m) => m.submittedBy && !m.published && !m.meta).length > 0 ? (
+            <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-(--sage) px-1.5 text-[0.6rem] font-bold text-white">
+              {media.filter((m) => m.submittedBy && !m.published && !m.meta).length}
+            </span>
+          ) : null}
+        </button>
         <button
           className={`btn ${tab === "media" ? "btn-primary" : "btn-secondary"}`}
           onClick={() => setTab("media")}
           type="button"
         >
-          Photos
+          All photos
         </button>
         <button
           className={`btn ${tab === "reviews" ? "btn-primary" : "btn-secondary"}`}
@@ -247,7 +284,82 @@ export default function AdminContentPage() {
       ) : null}
       {info ? <p className="admin-success">{info}</p> : null}
 
-      {tab === "media" ? (
+      {tab === "submissions" ? (
+        <>
+          <AdminPanel
+            title="Gallery submissions"
+            subtitle="Public photo submissions waiting for review"
+          >
+            {media.filter((m) => m.submittedBy).length === 0 ? (
+              <AdminEmpty>No public submissions yet.</AdminEmpty>
+            ) : (
+              <div className="space-y-3">
+                {media.filter((m) => m.submittedBy).map((item) => {
+                  const isPending = !item.published && !item.meta;
+                  const isRejected = !item.published && item.meta;
+                  const isApproved = item.published;
+                  return (
+                    <div key={item.id} className="flex flex-col gap-3 rounded-xl border border-(--line) bg-(--panel) p-4 sm:flex-row sm:items-start">
+                      <div className="h-20 w-full shrink-0 overflow-hidden rounded-lg bg-(--panel-soft) sm:h-24 sm:w-28">
+                        {item.imageUrl.startsWith("http") || item.imageUrl.startsWith("/images/") ? (
+                          <img alt={item.title} src={item.imageUrl} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-(--muted-soft)">
+                            <ImageIcon className="h-6 w-6" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-bold text-(--foreground)">{item.title}</p>
+                            <p className="mt-0.5 text-xs text-(--muted)">by {item.submittedBy}</p>
+                          </div>
+                          <span className={`shrink-0 text-[0.65rem] ${isApproved ? "badge badge-sage" : isRejected ? "badge badge-danger" : "badge badge-warn"}`}>
+                            {isApproved ? "Approved" : isRejected ? "Rejected" : "Pending"}
+                          </span>
+                        </div>
+                        {isPending ? (
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <button
+                              className="btn btn-primary h-8 px-3 text-xs cursor-pointer"
+                              disabled={reviewBusyId === item.id}
+                              onClick={() => void reviewSubmission(item.id, true)}
+                              type="button"
+                            >
+                              {reviewBusyId === item.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                              Approve
+                            </button>
+                            <div className="flex flex-1 flex-wrap items-center gap-2 sm:flex-nowrap">
+                              <input
+                                className="input h-8 min-w-[160px] flex-1 text-xs"
+                                onChange={(e) => setRejectNote((f) => ({ ...f, [item.id]: e.target.value }))}
+                                placeholder="Rejection reason (optional)"
+                                value={rejectNote[item.id] ?? ""}
+                              />
+                              <button
+                                className="btn btn-secondary h-8 px-3 text-xs cursor-pointer"
+                                disabled={reviewBusyId === item.id}
+                                onClick={() => void reviewSubmission(item.id, false)}
+                                type="button"
+                              >
+                                {reviewBusyId === item.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
+                                Reject
+                              </button>
+                            </div>
+                          </div>
+                        ) : isRejected && item.meta ? (
+                          <p className="mt-2 text-xs text-(--danger)">Note: {item.meta}</p>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </AdminPanel>
+        </>
+      ) : tab === "media" ? (
         <>
           <AdminPanel title="Add photo" subtitle="Upload from device or paste a URL">
             <div className="admin-form-grid is-2">

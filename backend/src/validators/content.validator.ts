@@ -36,3 +36,8 @@ export const publicGallerySubmissionSchema = z.object({
   eventLabel: z.string().trim().max(120).optional().nullable(),
   location: z.string().trim().max(80).optional().nullable(),
 });
+
+export const reviewMediaSchema = z.object({
+  approved: z.boolean(),
+  note: z.string().trim().max(500).optional().nullable(),
+});
