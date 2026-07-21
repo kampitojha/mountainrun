@@ -614,26 +614,30 @@ export function GalleryClient() {
       <motion.button
         type="button"
         onClick={() => setShowSubmit(true)}
-        initial={{ opacity: 0, y: 24, scale: 0.9 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
+        initial={{ opacity: 0, y: 32 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        whileHover={{ y: -2 }}
-        whileTap={{ scale: 0.96 }}
+        whileHover={{ y: -3 }}
+        whileTap={{ scale: 0.97 }}
         className={cn(
-          "fixed bottom-5 left-1/2 z-40 -translate-x-1/2",
-          "flex items-center gap-2.5 rounded-full",
-          "bg-gradient-to-r from-(--sage) to-emerald-500",
-          "px-5 py-3 shadow-lg shadow-(--sage)/25",
-          "text-sm font-semibold text-white",
-          "transition-shadow hover:shadow-xl hover:shadow-(--sage)/30",
+          "fixed bottom-6 left-1/2 z-40 -translate-x-1/2",
+          "flex items-center gap-2.5 rounded-2xl",
+          "bg-(--panel) ring-1 ring-(--line) shadow-[0_8px_32px_-8px_rgba(0,0,0,0.12)]",
+          "px-5 py-3",
+          "text-sm font-semibold text-(--foreground)",
+          "transition-all hover:shadow-[0_8px_32px_-6px_rgba(0,0,0,0.18)] hover:ring-(--sage)/30",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--sage)/40",
-          "sm:bottom-8 sm:px-6 sm:py-3.5 sm:text-base",
-          "md:left-auto md:right-8 md:-translate-x-0",
+          "backdrop-blur-xl bg-(--header-bg)/80",
+          "sm:bottom-8 sm:gap-3 sm:px-6 sm:py-3.5 sm:text-base sm:rounded-2xl",
         )}
       >
-        <Upload className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.5} />
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-(--sage) to-emerald-500 shadow-sm">
+          <Upload className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
+        </span>
         <span>Submit your photo</span>
-        <span className="hidden h-2 w-2 rounded-full bg-white/40 animate-pulse sm:block" />
+        <svg className="h-4 w-4 text-(--muted-soft) transition-transform group-hover:translate-x-0.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m6 4 4 4-4 4" />
+        </svg>
       </motion.button>
 
       <AnimatePresence>
