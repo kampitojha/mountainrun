@@ -23,7 +23,7 @@ import { ThemeToggle } from "./theme-toggle";
 /* ─── Nav items with icons ─── */
 const publicNav = [
   ["Events",      "/events",      Calendar     ],
-  ["Refer",       "/refer",       Gift         ],
+  ["Refer & Earn","/refer",       Gift         ],
   ["Gallery",     "/gallery",     ImageIcon    ],
   ["Leaderboard", "/leaderboard", Trophy       ],
   ["About",       "/about",       Info         ],
@@ -197,23 +197,36 @@ function NavLink({
   active: boolean;
   onClick?: () => void;
 }) {
+  const isRefer = href === "/refer";
+
   return (
     <Link
       href={href}
       onClick={onClick}
       className={`relative rounded-full px-4 py-1.5 text-sm font-medium tracking-tight transition-all duration-300 ${
-        active
-          ? "text-(--foreground)"
-          : "text-(--muted-soft) hover:text-(--foreground)"
+        isRefer
+          ? active
+            ? "text-white"
+            : "text-(--sage) hover:text-(--sage)"
+          : active
+            ? "text-(--foreground)"
+            : "text-(--muted-soft) hover:text-(--foreground)"
       }`}
     >
       {label}
-      {active && (
+      {active && !isRefer && (
         <motion.span
           layoutId="nav-pill"
           className="absolute inset-0 -z-10 rounded-full bg-(--panel) shadow-[0_1px_4px_-1px_rgba(0,0,0,0.04)]"
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
         />
+      )}
+      {isRefer && (
+        <span className={`absolute inset-0 -z-10 rounded-full ${
+          active
+            ? "bg-(--sage) shadow-[0_0_12px_-2px_var(--sage)]"
+            : "bg-(--sage)/10 ring-1 ring-inset ring-(--sage)/25"
+        }`} />
       )}
     </Link>
   );
@@ -373,6 +386,7 @@ export function AppHeader() {
             >
               {publicNav.map(([label, href, Icon], i) => {
                 const active = isActive(href);
+                const isRefer = href === "/refer";
                 return (
                   <motion.div
                     key={href}
@@ -385,19 +399,23 @@ export function AppHeader() {
                       onClick={() => setOpen(false)}
                       className={`group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-200 ${
                         active
-                          ? "bg-(--sage-soft) text-(--sage)"
-                          : "text-(--muted) hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
+                          ? isRefer ? "bg-(--sage)/10 text-(--sage)" : "bg-(--sage-soft) text-(--sage)"
+                          : isRefer
+                            ? "text-(--sage) hover:bg-(--sage)/10"
+                            : "text-(--muted) hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
                       }`}
                     >
                       <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all ${
                         active
                           ? "bg-(--sage) text-white shadow-sm"
-                          : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
+                          : isRefer
+                            ? "bg-(--sage)/10 text-(--sage) group-hover:bg-(--sage)/20"
+                            : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
                       }`}>
                         <Icon className="h-4 w-4" strokeWidth={1.75} />
                       </span>
                       <span className="flex-1">{label}</span>
-                      <svg className={`h-4 w-4 transition-all group-hover:translate-x-0.5 ${active ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <svg className={`h-4 w-4 transition-all group-hover:translate-x-0.5 ${active ? "text-(--sage)" : isRefer ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="m6 4 4 4-4 4" />
                       </svg>
                     </Link>
