@@ -86,9 +86,9 @@ function ReferSignedIn() {
 
           <div>
             <p className="text-xs text-(--muted) mb-2">Share your link</p>
-            <div className="flex gap-2">
-              <input readOnly value={data.link} className="input flex-1 min-w-0 text-xs truncate bg-(--panel-soft)" onClick={(e) => (e.target as HTMLInputElement).select()} />
-              <a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer" className="btn btn-secondary shrink-0 text-xs gap-1.5">
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input readOnly value={data.link} className="input w-full min-w-0 text-xs truncate bg-(--panel-soft) sm:flex-1" onClick={(e) => (e.target as HTMLInputElement).select()} />
+              <a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer" className="btn btn-secondary w-full shrink-0 text-xs gap-1.5 sm:w-auto">
                 <Share2 className="h-3.5 w-3.5" /> WhatsApp
               </a>
             </div>
