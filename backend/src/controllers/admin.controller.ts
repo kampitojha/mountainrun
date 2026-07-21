@@ -1240,7 +1240,8 @@ export async function adminSendNewsletter(request: AuthenticatedRequest, respons
         from,
         to: sub.email,
         subject: `Mountain Run — ${subject}`,
-        html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#151512;padding:24px;"><div style="background:linear-gradient(135deg,#0d9488,#059669);border-radius:12px;padding:24px;margin-bottom:24px;"><h1 style="color:#fff;margin:0;font-size:20px;">Mountain Run</h1></div>${body}<hr style="border:none;border-top:1px solid #eee;margin:24px 0;"><p style="color:#999;font-size:12px;">You received this email because you subscribed to Mountain Run updates. If you no longer wish to hear from us, <a href="${process.env.FRONTEND_URL ?? "https://mountainrun.in"}/unsubscribe?email=${encodeURIComponent(sub.email)}" style="color:#0d9488;">unsubscribe here</a>.</p></div>`,
+        html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#151512;padding:24px;"><div style="background:linear-gradient(135deg,#0d9488,#059669);border-radius:12px;padding:24px;margin-bottom:24px;"><h1 style="color:#fff;margin:0;font-size:20px;">Mountain Run</h1></div>${body}<hr style="border:none;border-top:1px solid #eee;margin:24px 0;"><p style="color:#999;font-size:12px;">You received this email because you subscribed to Mountain Run updates. If you no longer wish to hear from us, <a href="${env.frontendUrl}/unsubscribe?email=${encodeURIComponent(sub.email)}" style="color:#0d9488;">unsubscribe here</a>.</p></div>`,
+        text: body.replace(/<[^>]+>/g, ""),
       });
       if (result.error) {
         errors.push(`${sub.email}: ${result.error.message}`);

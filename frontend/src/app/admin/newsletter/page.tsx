@@ -3,13 +3,20 @@
 import { useAuth } from "@clerk/nextjs";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { adminFetch, formatDateTime } from "../../../lib/admin-api";
-import { AdminEmpty, AdminPageHeader, AdminPanel, AdminStat } from "../ui";
+import { AdminEmpty, AdminPageHeader, AdminPanel } from "../ui";
 
 type Subscriber = {
   id: string;
   email: string;
   subscribed: boolean;
   createdAt: string;
+};
+
+type SendResult = {
+  sent: number;
+  total: number;
+  message: string;
+  errors?: string[];
 };
 
 export default function AdminNewsletterPage() {
@@ -19,8 +26,8 @@ export default function AdminNewsletterPage() {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<SendResult | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -28,9 +35,8 @@ export default function AdminNewsletterPage() {
       const json = await adminFetch<{ data: Subscriber[]; meta: { total: number } }>("/api/admin/subscribers", token);
       setSubscribers(json.data);
       setTotal(json.meta.total);
-      setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load");
+      setSendError(err instanceof Error ? err.message : "Failed to load");
     }
   }, [getToken]);
 
@@ -43,10 +49,10 @@ export default function AdminNewsletterPage() {
     if (!subject.trim() || !body.trim()) return;
     setSending(true);
     setResult(null);
-    setError(null);
+    setSendError(null);
     try {
       const token = await getToken().catch(() => null);
-      const json = await adminFetch<{ data: { sent: number; total: number; message: string } }>(
+      const json = await adminFetch<{ data: SendResult }>(
         "/api/admin/newsletter/send",
         token,
         {
@@ -54,11 +60,13 @@ export default function AdminNewsletterPage() {
           body: JSON.stringify({ subject, body }),
         },
       );
-      setResult(json.data.message);
-      setSubject("");
-      setBody("");
+      setResult(json.data);
+      if (json.data.sent > 0) {
+        setSubject("");
+        setBody("");
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Send failed");
+      setSendError(err instanceof Error ? err.message : "Send failed");
     } finally {
       setSending(false);
     }
@@ -72,9 +80,9 @@ export default function AdminNewsletterPage() {
         description="View subscribers and send broadcast emails."
       />
 
-      {error ? <p className="admin-muted" style={{ color: "var(--danger)" }}>{error}</p> : null}
+      {sendError ? <p className="admin-muted" style={{ color: "var(--danger)" }}>{sendError}</p> : null}
 
-      <div className="admin-layout-split is-form-list admin-fill">
+      <div className="admin-layout-split is-form-list admin-fill" style={{ alignItems: "start" }}>
         {/* Compose */}
         <form className="admin-panel admin-panel-pad admin-form-grid" onSubmit={onSend}>
           <h2 className="admin-panel-title span-2">Compose newsletter</h2>
@@ -92,27 +100,41 @@ export default function AdminNewsletterPage() {
           </label>
 
           <label className="block text-sm span-2">
-            <span className="field-label">Body (HTML)</span>
+            <span className="field-label">Body</span>
+            <p className="text-xs text-(--muted-soft) mb-1">HTML ya plain text dono kaam karega. Jaise: <code className="text-(--sage)">&lt;h2&gt;Hello!&lt;/h2&gt;</code> ya direct likho <code className="text-(--sage)">Hello runners!</code></p>
             <textarea
               className="input"
               onChange={(e) => setBody(e.target.value)}
-              placeholder="<h2>Hello runners!</h2><p>Your newsletter content here...</p>"
+              placeholder="Hello runners!&#10;&#10;New event is now live..."
               required
               value={body}
               rows={12}
               maxLength={10000}
-              style={{ fontFamily: "var(--font-mono, monospace)", fontSize: "0.8rem" }}
             />
           </label>
 
-          <div className="span-2 flex items-center gap-3">
+          <div className="span-2 flex flex-wrap items-center gap-3">
             <button className="btn btn-primary" disabled={sending || total === 0} type="submit">
               {sending ? "Sending…" : `Send to ${total} subscriber${total !== 1 ? "s" : ""}`}
             </button>
             {total === 0 ? <span className="text-xs text-(--muted)">No active subscribers</span> : null}
           </div>
 
-          {result ? <p className="span-2 text-sm text-(--sage)">{result}</p> : null}
+          {result ? (
+            <div className="span-2 space-y-2">
+              <p className={`text-sm ${result.sent === result.total ? "text-(--sage)" : "text-(--warn)"}`}>
+                {result.message}
+              </p>
+              {result.errors && result.errors.length > 0 ? (
+                <details className="text-xs text-(--danger) bg-(--danger-soft) rounded-lg p-3">
+                  <summary className="cursor-pointer font-medium">Failed: {result.errors.length} email{result.errors.length !== 1 ? "s" : ""}</summary>
+                  <ul className="mt-2 space-y-1 list-disc pl-4">
+                    {result.errors.map((e, i) => <li key={i}>{e}</li>)}
+                  </ul>
+                </details>
+              ) : null}
+            </div>
+          ) : null}
         </form>
 
         {/* Subscriber list */}
