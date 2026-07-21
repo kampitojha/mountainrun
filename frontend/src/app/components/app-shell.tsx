@@ -1,6 +1,5 @@
 import { AppFooter } from "./app-footer";
 import { AppHeader } from "./app-header";
-import { FloatingContact } from "./floating-contact";
 
 export function PageShell({ children }: { children: React.ReactNode }) {
   return (
@@ -9,7 +8,6 @@ export function PageShell({ children }: { children: React.ReactNode }) {
       {/* pt compensates for fixed navbar height (~56px mobile, ~64px desktop + 12px offset) */}
       <main className="flex-1 pt-[4.5rem] sm:pt-[5rem] md:pt-[5.5rem]">{children}</main>
       <AppFooter />
-      <FloatingContact />
     </div>
   );
 }

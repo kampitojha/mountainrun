@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkUserSync } from "../components/clerk-user-sync";
 import { ThemeProvider } from "./components/theme-provider";
+import { FloatingContact } from "./components/floating-contact";
 import { Analytics } from "@vercel/analytics/next";
 import { StructuredData } from "./components/structured-data";
 import "./globals.css";
@@ -166,6 +167,7 @@ export default function RootLayout({
           >
             <ClerkUserSync />
             {children}
+            <FloatingContact />
           </ClerkProvider>
         </ThemeProvider>
         <Analytics />
