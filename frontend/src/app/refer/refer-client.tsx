@@ -5,6 +5,7 @@ import { Check, Copy, Gift, Share2, Sparkles, Users, IndianRupee, ArrowUpRight, 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { authHeaders, getApiUrl } from "../../lib/api";
+import { Breadcrumb } from "../components/breadcrumb";
 
 type ReferralData = {
   code: string;
@@ -121,6 +122,16 @@ export function ReferClient() {
 
   return (
     <>
+      {/* Breadcrumb */}
+      <div className="container-page pt-6 sm:pt-8">
+        <Breadcrumb
+          items={[
+            { name: "Home", href: "/" },
+            { name: "Refer & Earn", href: "/refer" },
+          ]}
+        />
+      </div>
+
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-(--line)">
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10"
