@@ -41,7 +41,7 @@ export async function getMyReferralCode(request: AuthenticatedRequest, response:
   response.json({
     data: {
       code: user.referralCode,
-      link: `${process.env.FRONTEND_URL ?? "http://localhost:3000"}/register?ref=${user.referralCode}`,
+      link: `${process.env.FRONTEND_URL ?? "https://mountainrun.in"}/register?ref=${user.referralCode}`,
       totalReferrals: referrals.length,
       converted,
       referrals,
