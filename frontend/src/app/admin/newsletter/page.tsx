@@ -101,7 +101,7 @@ export default function AdminNewsletterPage() {
 
           <label className="block text-sm span-2">
             <span className="field-label">Body</span>
-            <p className="text-xs text-(--muted-soft) mb-1">HTML ya plain text dono kaam karega. Jaise: <code className="text-(--sage)">&lt;h2&gt;Hello!&lt;/h2&gt;</code> ya direct likho <code className="text-(--sage)">Hello runners!</code></p>
+            <p className="text-xs text-(--muted-soft) mb-1">Accepts both HTML and plain text. Example: <code className="text-(--sage)">&lt;h2&gt;Hello!&lt;/h2&gt;</code> or just type <code className="text-(--sage)">Hello runners!</code></p>
             <textarea
               className="input"
               onChange={(e) => setBody(e.target.value)}
@@ -144,18 +144,18 @@ export default function AdminNewsletterPage() {
               <AdminEmpty>No subscribers yet.</AdminEmpty>
             ) : (
               <div className="admin-table-wrap">
-                <table className="admin-table">
+                <table className="admin-table" style={{ tableLayout: "fixed", width: "100%" }}>
                   <thead>
                     <tr>
-                      <th>Email</th>
-                      <th>Subscribed</th>
+                      <th style={{ width: "65%" }}>Email</th>
+                      <th style={{ width: "35%" }}>Subscribed</th>
                     </tr>
                   </thead>
                   <tbody>
                     {subscribers.map((sub) => (
                       <tr key={sub.id}>
-                        <td className="font-mono text-sm">{sub.email}</td>
-                        <td className="text-xs text-(--muted)">{formatDateTime(sub.createdAt)}</td>
+                        <td className="font-mono text-sm" style={{ wordBreak: "break-word", overflowWrap: "break-word", paddingRight: "0.75rem" }}>{sub.email}</td>
+                        <td className="text-xs text-(--muted)" style={{ whiteSpace: "nowrap" }}>{formatDateTime(sub.createdAt)}</td>
                       </tr>
                     ))}
                   </tbody>
