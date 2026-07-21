@@ -44,10 +44,10 @@ function ReferSignedIn() {
     } catch { /* ignore */ }
   };
 
-  const shareWhatsApp = () => {
-    if (!data) return;
+  const getWhatsAppUrl = () => {
+    if (!data) return "#";
     const text = encodeURIComponent(`Join me on Mountain Run — virtual running events across India! Sign up using my referral link: ${data.link}`);
-    window.open(`https://wa.me/?text=${text}`, "_blank");
+    return `https://wa.me/?text=${text}`;
   };
 
   if (loading) {
@@ -88,9 +88,9 @@ function ReferSignedIn() {
             <p className="text-xs text-(--muted) mb-2">Share your link</p>
             <div className="flex gap-2">
               <input readOnly value={data.link} className="input flex-1 min-w-0 text-xs truncate bg-(--panel-soft)" onClick={(e) => (e.target as HTMLInputElement).select()} />
-              <button onClick={shareWhatsApp} className="btn btn-secondary shrink-0 text-xs gap-1.5" type="button">
+              <a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer" className="btn btn-secondary shrink-0 text-xs gap-1.5">
                 <Share2 className="h-3.5 w-3.5" /> WhatsApp
-              </button>
+              </a>
             </div>
           </div>
         </div>

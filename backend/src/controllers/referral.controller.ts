@@ -1,4 +1,5 @@
 import type { Response } from "express";
+import { env } from "../config/env.js";
 import { prisma } from "../lib/prisma.js";
 import type { AuthenticatedRequest } from "../middleware/clerk-auth.js";
 import { ApiError } from "../utils/api-error.js";
@@ -41,7 +42,7 @@ export async function getMyReferralCode(request: AuthenticatedRequest, response:
   response.json({
     data: {
       code: user.referralCode,
-      link: `${process.env.FRONTEND_URL ?? "https://mountainrun.in"}/register?ref=${user.referralCode}`,
+      link: `${env.frontendUrl}/register?ref=${user.referralCode}`,
       totalReferrals: referrals.length,
       converted,
       referrals,
