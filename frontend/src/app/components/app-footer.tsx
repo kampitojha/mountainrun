@@ -110,25 +110,25 @@ export function AppFooter() {
       </Show>
 
       {/* Main footer */}
-      <div className="border-t border-(--line) bg-(--panel)">
-        {/* Skyline image — seamlessly attached, exactly like Townscript */}
-        <div className="w-full overflow-hidden" aria-hidden="true" style={{ lineHeight: 0 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://res.cloudinary.com/yppcqzt6/image/upload/v1784582800/footer-skyline_r3mshw.png"
-            alt=""
-            style={{
-              width: "100%",
-              height: "auto",
-              maxHeight: "100px",
-              display: "block",
-              objectFit: "fill",
-            }}
-            loading="lazy"
-          />
+      <div className="bg-(--panel)">
+        {/* Mountain skyline — scales perfectly, no pixelation */}
+        <div aria-hidden="true" className="w-full overflow-hidden" style={{ lineHeight: 0 }}>
+          <svg viewBox="0 0 1440 100" preserveAspectRatio="xMidYMax meet"
+            xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
+            style={{ width: "100%", height: "auto", display: "block", maxHeight: "100px" }}>
+            {/* Deep background peaks */}
+            <path d="M0 100 L0 50 L60 38 L130 52 L220 28 L310 48 L410 22 L500 40 L610 12 L700 35 L800 20 L890 42 L1000 18 L1100 40 L1190 26 L1280 48 L1380 35 L1440 45 L1440 100 Z"
+              fill="var(--sage)" opacity="0.06" />
+            {/* Mid mountains */}
+            <path d="M0 100 L0 62 L90 44 L180 58 L280 32 L380 50 L500 25 L590 42 L700 15 L790 34 L890 22 L990 42 L1080 30 L1180 48 L1280 34 L1380 52 L1440 48 L1440 100 Z"
+              fill="var(--sage)" opacity="0.15" />
+            {/* Foreground hills */}
+            <path d="M0 100 L0 74 L120 58 L240 68 L360 50 L480 62 L600 44 L720 56 L840 42 L960 56 L1080 48 L1200 60 L1320 52 L1440 58 L1440 100 Z"
+              fill="var(--sage)" opacity="0.3" />
+          </svg>
         </div>
 
-        <div className="container-page py-8 sm:py-10">
+        <div className="border-t border-(--line) container-page py-8 sm:py-10">
 
         {/* Grid — 2 cols mobile, 4 cols tablet, 5 cols desktop */}
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:grid-cols-5">
