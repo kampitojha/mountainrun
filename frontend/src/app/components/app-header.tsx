@@ -186,24 +186,6 @@ function ProfileDropdown() {
 }
 
 /* ─── Desktop nav link ─── */
-/* ─── Refer badge ─── */
-function ReferBadge() {
-  return (
-    <motion.span
-      aria-hidden="true"
-      className="relative ml-1.5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-emerald-500 to-indigo-500 px-1.5 py-0.5 text-[0.55rem] font-bold uppercase tracking-wider text-white shadow-[0_0_8px_-2px_rgba(99,102,241,0.4)]"
-      animate={{ opacity: [0.85, 1, 0.85] }}
-      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-    >
-      <span className="relative flex h-1.5 w-1.5">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/80 opacity-60" />
-        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
-      </span>
-      LIMITED
-    </motion.span>
-  );
-}
-
 function NavLink({
   href,
   label,
@@ -215,36 +197,25 @@ function NavLink({
   active: boolean;
   onClick?: () => void;
 }) {
-  const isRefer = href === "/refer";
-
   return (
-    <motion.div
-      whileHover={isRefer ? { scale: 1.05 } : undefined}
-      transition={{ type: "spring", stiffness: 400, damping: 20 }}
-      className="inline-flex"
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`relative rounded-full px-4 py-1.5 text-sm font-medium tracking-tight transition-all duration-300 ${
+        active
+          ? "text-(--foreground)"
+          : "text-(--muted-soft) hover:text-(--foreground)"
+      }`}
     >
-      <Link
-        href={href}
-        onClick={onClick}
-        className={`relative rounded-full px-4 py-1.5 text-sm font-medium tracking-tight transition-all duration-300 ${
-          active
-            ? "text-(--foreground)"
-            : isRefer
-              ? "text-(--sage) hover:text-(--sage)"
-              : "text-(--muted-soft) hover:text-(--foreground)"
-        }`}
-      >
-        {label}
-        {isRefer && <ReferBadge />}
-        {active && (
-          <motion.span
-            layoutId="nav-pill"
-            className="absolute inset-0 -z-10 rounded-full bg-(--panel) shadow-[0_1px_4px_-1px_rgba(0,0,0,0.04)]"
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-          />
-        )}
-      </Link>
-    </motion.div>
+      {label}
+      {active && (
+        <motion.span
+          layoutId="nav-pill"
+          className="absolute inset-0 -z-10 rounded-full bg-(--panel) shadow-[0_1px_4px_-1px_rgba(0,0,0,0.04)]"
+          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+        />
+      )}
+    </Link>
   );
 }
 
@@ -402,7 +373,6 @@ export function AppHeader() {
             >
               {publicNav.map(([label, href, Icon], i) => {
                 const active = isActive(href);
-                const isRefer = href === "/refer";
                 return (
                   <motion.div
                     key={href}
@@ -416,24 +386,17 @@ export function AppHeader() {
                       className={`group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-200 ${
                         active
                           ? "bg-(--sage-soft) text-(--sage)"
-                          : isRefer
-                            ? "text-(--sage) ring-1 ring-inset ring-(--sage)/20 bg-(--sage-soft)/40"
-                            : "text-(--muted) hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
+                          : "text-(--muted) hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
                       }`}
                     >
                       <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all ${
                         active
                           ? "bg-(--sage) text-white shadow-sm"
-                          : isRefer
-                            ? "bg-gradient-to-br from-emerald-500/20 to-indigo-500/20 text-(--sage)"
-                            : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
+                          : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
                       }`}>
                         <Icon className="h-4 w-4" strokeWidth={1.75} />
                       </span>
-                      <span className="flex items-center gap-2 flex-1">
-                        {label}
-                        {isRefer && <ReferBadge />}
-                      </span>
+                      <span className="flex-1">{label}</span>
                       <svg className={`h-4 w-4 transition-all group-hover:translate-x-0.5 ${active ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="m6 4 4 4-4 4" />
                       </svg>
