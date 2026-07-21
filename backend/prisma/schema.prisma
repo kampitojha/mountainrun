@@ -15,10 +15,12 @@ model User {
   phone         String?
   role          UserRole       @default(RUNNER)
   avatarUrl     String?
+  referralCode  String?        @unique
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   clerkId       String?        @unique
   registrations Registration[]
+  referralsMade Referral[]     @relation("referrals_made")
 }
 
 model Event {
@@ -130,6 +132,22 @@ model MedalDelivery {
   dispatchedAt   DateTime?
   deliveredAt    DateTime?
   registration   Registration @relation(fields: [registrationId], references: [id])
+}
+
+model Referral {
+  id         String   @id @default(cuid())
+  referrerId String
+  refereeId  String   @unique
+  code       String
+  status     String   @default("pending")
+  rewardGiven Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  referrer User @relation("referrals_made", fields: [referrerId], references: [id])
+
+  @@index([referrerId])
+  @@index([code])
+  @@map("referrals")
 }
 
 model Coupon {

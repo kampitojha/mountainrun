@@ -207,6 +207,22 @@ export function DashboardClient() {
         ))}
       </div>
 
+      {/* Referral card */}
+      <Link href="/refer" className="group block rounded-xl border border-(--line) bg-(--panel) p-4 transition-all hover:border-(--sage)/30 hover:shadow-sm sm:p-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-(--sage-soft) text-(--sage)">
+              <Users className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="text-sm font-bold text-(--foreground)">Refer & earn</p>
+              <p className="mt-0.5 text-xs text-(--muted)">Invite friends, earn rewards</p>
+            </div>
+          </div>
+          <ArrowUpRight className="h-4 w-4 text-(--muted-soft) transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        </div>
+      </Link>
+
       {/* How it works - shown when user has no eligible registrations */}
       {registeredCount === 0 ? (
         <div className="rounded-2xl border border-(--line) bg-(--panel) p-6 sm:p-8">

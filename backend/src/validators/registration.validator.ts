@@ -45,6 +45,7 @@ export const createRegistrationSchema = z
     shippingCity: z.string().trim().min(2, "City is required"),
     shippingState: indianStateSchema,
     shippingPincode: pincodeSchema,
+    referralCode: z.string().min(4).max(12).optional(),
   })
   .superRefine((value, context) => {
     if (!value.userId && !value.clerkId && (!value.name || !value.email)) {

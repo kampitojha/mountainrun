@@ -15,6 +15,7 @@ import {
   Trophy,
   Info,
   Calendar,
+  Gift,
 } from "lucide-react";
 import { BrandText } from "./brand-text";
 import { ThemeToggle } from "./theme-toggle";
@@ -22,6 +23,7 @@ import { ThemeToggle } from "./theme-toggle";
 /* ─── Nav items with icons ─── */
 const publicNav = [
   ["Events",      "/events",      Calendar     ],
+  ["Refer",       "/refer",       Gift         ],
   ["Gallery",     "/gallery",     ImageIcon    ],
   ["Leaderboard", "/leaderboard", Trophy       ],
   ["About",       "/about",       Info         ],

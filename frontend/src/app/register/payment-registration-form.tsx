@@ -154,6 +154,7 @@ function PaymentRegistrationFormInner() {
   const [existingRegs, setExistingRegs] = useState<ExistingReg[]>([]);
   const [dbUsername, setDbUsername] = useState<string | null>(null);
   const [profileName, setProfileName] = useState("");
+  const referralCodeFromUrl = searchParams.get("ref")?.trim().toUpperCase() ?? "";
 
   useEffect(() => {
     let cancelled = false;
@@ -409,6 +410,7 @@ function PaymentRegistrationFormInner() {
           shippingCity: formData.get("city"),
           shippingState: formData.get("state"),
           shippingPincode: formData.get("pincode"),
+          referralCode: referralCodeFromUrl || undefined,
         }),
       });
 

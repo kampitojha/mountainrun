@@ -197,6 +197,24 @@ export async function createRegistration(request: AuthenticatedRequest, response
     throw error;
   }
 
+  // Apply referral code if provided
+  if (payload.referralCode && user.clerkId) {
+    const referrer = await prisma.user.findUnique({ where: { referralCode: payload.referralCode.toUpperCase() } });
+    if (referrer && referrer.id !== user.id) {
+      const existingRef = await prisma.referral.findUnique({ where: { refereeId: user.id } });
+      if (!existingRef) {
+        await prisma.referral.create({
+          data: {
+            referrerId: referrer.id,
+            refereeId: user.id,
+            code: payload.referralCode.toUpperCase(),
+            status: freeEntry ? "converted" : "pending",
+          },
+        });
+      }
+    }
+  }
+
   response.status(201).json({ data: registration, meta: { freeEntry } });
 }
 

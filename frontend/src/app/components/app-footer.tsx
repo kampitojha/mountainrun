@@ -163,6 +163,7 @@ export function AppFooter() {
           <FooterCol title="Events" links={[
             ["Upcoming Events", "/events"],
             ["Past Races", "/events"],
+            ["Refer & Earn", "/refer"],
             ["Event Gallery", "/gallery"],
             ["Leaderboard", "/leaderboard"],
           ]} />
