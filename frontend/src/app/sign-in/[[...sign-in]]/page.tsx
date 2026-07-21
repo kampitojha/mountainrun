@@ -2,12 +2,25 @@
 
 import { ClerkLoaded, ClerkLoading, SignIn } from "@clerk/nextjs";
 import Link from "next/link";
+import { useEffect } from "react";
 import { PageShell } from "../../components/app-shell";
 import { useTheme } from "../../components/theme-provider";
 
 function ThemedSignIn() {
   const { theme } = useTheme();
   const dark = theme === "dark";
+
+  useEffect(() => {
+    const apply = () => {
+      document.querySelectorAll("form").forEach((f) => {
+        if (f.closest("[class*='cl-']")) f.noValidate = true;
+      });
+    };
+    apply();
+    const observer = new MutationObserver(apply);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <SignIn
