@@ -287,7 +287,7 @@ export function DashboardClient() {
                 <div className="flex min-w-0 items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-(--foreground)">{reg.event.title}</p>
-                    <p className="mt-0.5 text-xs text-(--muted)">{reg.distance} &middot; Bib {reg.bibNumber}</p>
+                    <p className="mt-0.5 text-xs text-(--muted)">{reg.distance}</p>
                   </div>
                   <span className={`shrink-0 ${badgeClass(reg.proofStatus)} text-[0.65rem]`}>
                     {reg.proofStatus === "APPROVED" ? "Verified ✓" : "Under review"}
@@ -366,7 +366,7 @@ export function DashboardClient() {
                         <p className="text-base font-bold tracking-tight text-(--foreground) truncate">{reg.event.title}</p>
                         <span className={`shrink-0 ${badgeClass(reg.status)}`}>{labelStatus(reg.status)}</span>
                       </div>
-                      <p className="mt-1 text-sm text-(--muted)">{reg.distance} · Bib {reg.bibNumber}</p>
+                      <p className="mt-1 text-sm text-(--muted)">{reg.distance}</p>
                       <p className="text-xs text-(--muted-soft)">Joined {new Date(reg.registeredAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
                     </div>
                   </div>

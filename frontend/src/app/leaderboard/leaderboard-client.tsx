@@ -14,7 +14,6 @@ export type LeaderboardEntry = {
   runnerName: string;
   distance: string;
   finishTimeSeconds: number | null;
-  bibNumber: string;
   userId?: string;
   clerkId?: string | null;
   status: string;
@@ -28,14 +27,14 @@ type EventOption = {
 };
 
 const DEMO_ENTRIES: LeaderboardEntry[] = [
-  { rank: 1, runnerName: "Aarav Sharma", distance: "21 km", finishTimeSeconds: 6138, bibNumber: "MR-2101", status: "Verified" },
-  { rank: 2, runnerName: "Nisha Rawat", distance: "10 km", finishTimeSeconds: 2942, bibNumber: "MR-1044", status: "Verified" },
-  { rank: 3, runnerName: "Kabir Sethi", distance: "10 km", finishTimeSeconds: 3104, bibNumber: "MR-1088", status: "Verified" },
-  { rank: 4, runnerName: "Meera Joshi", distance: "5 km", finishTimeSeconds: 1459, bibNumber: "MR-0521", status: "Verified" },
-  { rank: 5, runnerName: "Rohan Kapoor", distance: "21 km", finishTimeSeconds: 6535, bibNumber: "MR-2112", status: "Verified" },
-  { rank: 6, runnerName: "Ananya Iyer", distance: "5 km", finishTimeSeconds: 1571, bibNumber: "MR-0533", status: "Verified" },
-  { rank: 7, runnerName: "Dev Malhotra", distance: "10 km", finishTimeSeconds: 3288, bibNumber: "MR-1099", status: "Verified" },
-  { rank: 8, runnerName: "Isha Verma", distance: "21 km", finishTimeSeconds: 7020, bibNumber: "MR-2140", status: "Verified" },
+  { rank: 1, runnerName: "Aarav Sharma", distance: "21 km", finishTimeSeconds: 6138, status: "Verified" },
+  { rank: 2, runnerName: "Nisha Rawat", distance: "10 km", finishTimeSeconds: 2942, status: "Verified" },
+  { rank: 3, runnerName: "Kabir Sethi", distance: "10 km", finishTimeSeconds: 3104, status: "Verified" },
+  { rank: 4, runnerName: "Meera Joshi", distance: "5 km", finishTimeSeconds: 1459, status: "Verified" },
+  { rank: 5, runnerName: "Rohan Kapoor", distance: "21 km", finishTimeSeconds: 6535, status: "Verified" },
+  { rank: 6, runnerName: "Ananya Iyer", distance: "5 km", finishTimeSeconds: 1571, status: "Verified" },
+  { rank: 7, runnerName: "Dev Malhotra", distance: "10 km", finishTimeSeconds: 3288, status: "Verified" },
+  { rank: 8, runnerName: "Isha Verma", distance: "21 km", finishTimeSeconds: 7020, status: "Verified" },
 ];
 
 function formatTime(seconds: number | null | undefined) {
@@ -90,8 +89,6 @@ function YourRankCard({ entry, total }: { entry: LeaderboardEntry; total: number
           <span className="font-medium text-(--foreground)">{entry.distance}</span>
           <span className="mx-1.5 text-(--muted-soft)">&middot;</span>
           <span className="font-mono text-xs tracking-wide text-(--foreground)">{formatTime(entry.finishTimeSeconds)}</span>
-          <span className="mx-1.5 text-(--muted-soft)">·</span>
-          Bib {entry.bibNumber}
         </p>
         <a
           className="text-xs font-medium text-(--sage) underline-offset-2 hover:underline sm:ml-auto"
@@ -135,7 +132,7 @@ export function LeaderboardClient() {
   }, [events, selectedSlug]);
 
   const stats = useMemo(() => {
-    const uniqueRunners = new Set(entries.map((e) => e.bibNumber)).size;
+    const uniqueRunners = new Set(entries.map((e) => e.runnerName)).size;
     const verified = entries.filter((e) => e.status === "Verified").length;
     const distances = new Set(entries.map((e) => e.distance)).size;
     return { total: entries.length, runners: uniqueRunners, verified, distances };
@@ -178,7 +175,6 @@ export function LeaderboardClient() {
               runnerName: youName,
               distance: distance !== "all" ? distance : "10 km",
               finishTimeSeconds: 3400,
-              bibNumber: "MR-YOU",
               clerkId: currentClerkId,
               status: "Verified",
             },
@@ -377,7 +373,7 @@ export function LeaderboardClient() {
                   <table className="w-full min-w-[36rem] text-left text-sm">
                     <thead>
                       <tr className="border-b border-(--line) bg-(--panel-soft)/70">
-                        {["Rank", "Runner", "Distance", "Time", "Bib", "Status"].map((head) => (
+                        {["Rank", "Runner", "Distance", "Time", "Status"].map((head) => (
                           <th key={head} className="px-3 py-3 text-[0.65rem] font-semibold uppercase tracking-widest text-(--muted) sm:px-4 sm:py-3.5">{head}</th>
                         ))}
                       </tr>
@@ -388,7 +384,7 @@ export function LeaderboardClient() {
                         return (
                           <motion.tr
                             id={isYou ? "your-rank" : undefined}
-                            key={`${row.rank}-${row.bibNumber}`}
+                            key={`${row.rank}-${row.runnerName}`}
                             className={cn(
                               "border-b border-(--line) last:border-b-0 transition-colors",
                               "hover:bg-(--panel-soft)/50",
@@ -416,7 +412,6 @@ export function LeaderboardClient() {
                             </td>
                             <td className="px-3 py-3 text-(--muted) sm:px-4 sm:py-3.5">{row.distance}</td>
                             <td className="px-3 py-3 font-mono text-xs tracking-wide text-(--foreground) sm:px-4 sm:py-3.5">{formatTime(row.finishTimeSeconds)}</td>
-                            <td className="px-3 py-3 font-mono text-xs text-(--muted-soft) sm:px-4 sm:py-3.5">{row.bibNumber}</td>
                             <td className="px-3 py-3 sm:px-4 sm:py-3.5">
                               <span className="badge badge-sage">{row.status}</span>
                             </td>
