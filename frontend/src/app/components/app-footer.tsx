@@ -93,7 +93,7 @@ function FooterCol({ title, links }: { title: string; links: [string, string][] 
 /* ─── Main ─── */
 export function AppFooter() {
   return (
-    <footer className="relative mt-auto border-t border-(--line) bg-(--panel)">
+    <footer className="relative mt-auto">
 
       {/* CTA — signed-out only, clean minimal */}
       <Show when="signed-out">
@@ -109,21 +109,26 @@ export function AppFooter() {
         </div>
       </Show>
 
-      {/* Skyline image — seamlessly attached to footer like Townscript */}
-      <div className="w-full overflow-hidden leading-none bg-white">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="https://res.cloudinary.com/yppcqzt6/image/upload/v1784582800/footer-skyline_r3mshw.png"
-          alt=""
-          aria-hidden="true"
-          className="w-full h-auto object-cover block"
-          style={{ maxHeight: 80 }}
-          loading="lazy"
-        />
-      </div>
-
       {/* Main footer */}
-      <div className="container-page py-8 sm:py-10">
+      <div className="border-t border-(--line) bg-(--panel)">
+        {/* Skyline image — seamlessly attached, exactly like Townscript */}
+        <div className="w-full overflow-hidden" aria-hidden="true" style={{ lineHeight: 0 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://res.cloudinary.com/yppcqzt6/image/upload/v1784582800/footer-skyline_r3mshw.png"
+            alt=""
+            style={{
+              width: "100%",
+              height: "auto",
+              maxHeight: "100px",
+              display: "block",
+              objectFit: "fill",
+            }}
+            loading="lazy"
+          />
+        </div>
+
+        <div className="container-page py-8 sm:py-10">
 
         {/* Grid — 2 cols mobile, 4 cols tablet, 5 cols desktop */}
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:grid-cols-5">
@@ -213,6 +218,7 @@ export function AppFooter() {
           </button>
         </div>
 
+      </div>
       </div>
     </footer>
   );
