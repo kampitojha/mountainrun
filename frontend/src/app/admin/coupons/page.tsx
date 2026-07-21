@@ -104,7 +104,7 @@ export default function AdminCouponsPage() {
       {message ? <p className="admin-muted">{message}</p> : null}
 
       <div className="admin-layout-split is-form-list admin-fill">
-        <form className="admin-panel admin-panel-pad admin-form-grid is-2" onSubmit={onCreate}>
+        <form className="admin-panel admin-panel-pad admin-form-grid is-2" onSubmit={onCreate} noValidate>
           <h2 className="admin-panel-title span-2">New coupon</h2>
           <label className="block text-sm span-2">
             <span className="field-label">Code</span>

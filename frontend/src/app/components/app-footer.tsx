@@ -54,7 +54,10 @@ function NewsletterForm() {
   const onSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = email.trim();
-    if (!trimmed) return;
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -81,9 +84,9 @@ function NewsletterForm() {
     </div>
   );
   return (
-    <form onSubmit={onSubmit} className="flex gap-2">
+    <form onSubmit={onSubmit} noValidate className="flex gap-2">
       <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-        placeholder="your@email.com" required aria-label="Newsletter email"
+        placeholder="your@email.com" aria-label="Newsletter email"
         className="h-9 min-w-0 flex-1 rounded-lg border border-(--line) bg-(--panel) px-3 text-xs text-(--foreground) placeholder:text-(--muted-soft) focus:border-(--sage)/40 focus:outline-none focus:ring-2 focus:ring-(--sage)/10" />
       <button type="submit" disabled={busy} aria-label="Subscribe"
         className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-(--sage) text-white transition-all hover:bg-emerald-600 active:scale-95 disabled:opacity-60">

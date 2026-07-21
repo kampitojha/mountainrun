@@ -508,7 +508,7 @@ export function DashboardClient() {
 
                   {/* Proof form */}
                   {formOpen ? (
-                    <form className="border-t border-(--line) bg-(--panel-soft) p-4 sm:p-5" onSubmit={submitProof}>
+                    <form className="border-t border-(--line) bg-(--panel-soft) p-4 sm:p-5" onSubmit={submitProof} noValidate>
                       <div className="space-y-4">
                         <p className="text-sm font-bold text-(--foreground)">Upload GPS proof</p>
 

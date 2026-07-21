@@ -243,8 +243,18 @@ function SubmitPhotoModal({ onClose }: { onClose: () => void }) {
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    const trimmedName = name.trim();
+    const trimmedTitle = title.trim();
+    if (!trimmedName || trimmedName.length < 2) {
+      setError("Please enter your name (at least 2 characters).");
+      return;
+    }
+    if (!trimmedTitle || trimmedTitle.length < 2) {
+      setError("Please enter a title or caption for your photo.");
+      return;
+    }
     if (!file || !preview) {
-      setError("Please select an image");
+      setError("Please select an image to upload.");
       return;
     }
     setSubmitting(true);
@@ -254,8 +264,8 @@ function SubmitPhotoModal({ onClose }: { onClose: () => void }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           file: preview,
-          name: name.trim(),
-          title: title.trim(),
+          name: trimmedName,
+          title: trimmedTitle,
           eventLabel: eventLabel.trim() || null,
           location: location.trim() || null,
         }),
@@ -341,7 +351,7 @@ function SubmitPhotoModal({ onClose }: { onClose: () => void }) {
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4 overflow-y-auto px-5 py-5">
+          <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4 overflow-y-auto px-5 py-5">
             {error ? (
               <p className="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-600 dark:bg-red-900/20 dark:text-red-400">
                 {error}
@@ -354,7 +364,6 @@ function SubmitPhotoModal({ onClose }: { onClose: () => void }) {
               </label>
               <input
                 type="text"
-                required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Arjun Singh"
@@ -368,7 +377,6 @@ function SubmitPhotoModal({ onClose }: { onClose: () => void }) {
               </label>
               <input
                 type="text"
-                required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Conquered the 10K in Bangalore"

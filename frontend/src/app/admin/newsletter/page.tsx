@@ -88,7 +88,7 @@ export default function AdminNewsletterPage() {
 
       <div className="admin-layout-split is-form-list admin-fill" style={{ alignItems: "start" }}>
         {/* Compose */}
-        <form className="admin-panel admin-panel-pad admin-form-grid" onSubmit={onSend}>
+        <form className="admin-panel admin-panel-pad admin-form-grid" onSubmit={onSend} noValidate>
           <h2 className="admin-panel-title span-2">Compose newsletter</h2>
 
           <label className="block text-sm span-2">

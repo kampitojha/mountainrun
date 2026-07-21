@@ -325,7 +325,7 @@ export default function AdminEventsPage() {
 
         <div className="admin-layout-split is-form-list admin-fill">
           {/* ── Form ── */}
-          <form id="event-form" className="admin-panel admin-panel-pad space-y-4" onSubmit={onSubmit}>
+          <form id="event-form" className="admin-panel admin-panel-pad space-y-4" onSubmit={onSubmit} noValidate>
             <h2 className="admin-panel-title">{editingId ? "✏️ Edit event" : "New event"}</h2>
 
             <label className="block text-sm">

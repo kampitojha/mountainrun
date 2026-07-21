@@ -70,13 +70,12 @@ function UnsubscribeForm() {
       <p className="mt-1 text-center text-sm text-(--muted)">
         Enter your email to unsubscribe from Mountain Run updates.
       </p>
-      <form onSubmit={onSubmit} className="mt-6">
+      <form onSubmit={onSubmit} noValidate className="mt-6">
         <input
           type="email"
           value={email}
           onChange={e => setEmail(e.target.value)}
           placeholder="your@email.com"
-          required
           className="h-10 w-full rounded-lg border border-(--line) bg-(--panel) px-3 text-sm text-(--foreground) placeholder:text-(--muted-soft) focus:border-(--sage)/40 focus:outline-none focus:ring-2 focus:ring-(--sage)/10"
         />
         {error ? <p className="mt-2 text-xs text-red-500">{error}</p> : null}
