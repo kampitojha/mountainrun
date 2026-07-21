@@ -6,12 +6,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
+  Camera,
   LayoutDashboard,
   LogIn,
   Settings,
   LogOut,
   CalendarDays,
-  ImageIcon,
   Trophy,
   Info,
   Calendar,
@@ -24,18 +24,10 @@ import { ThemeToggle } from "./theme-toggle";
 const publicNav = [
   ["Events",      "/events",      Calendar     ],
   ["Refer & Earn","/refer",       Gift         ],
-  ["Gallery",     "/gallery",     ImageIcon    ],
+  ["Gallery",     "/gallery",     Camera       ],
   ["Leaderboard", "/leaderboard", Trophy       ],
   ["About",       "/about",       Info         ],
 ] as const;
-
-const navEmojis: Record<string, string> = {
-  "/events":      "🏃",
-  "/refer":       "🎁",
-  "/gallery":     "📸",
-  "/leaderboard": "👑",
-  "/about":       "📖",
-};
 
 /* ─── Animated hamburger ─── */
 function Hamburger({ open, onClick }: { open: boolean; onClick: () => void }) {
@@ -390,7 +382,7 @@ export function AppHeader() {
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               className="relative z-10 flex w-[85vw] max-w-sm flex-col gap-1.5 rounded-3xl border border-(--line-strong) bg-(--panel) p-3 shadow-2xl"
             >
-              {publicNav.map(([label, href], i) => {
+              {publicNav.map(([label, href, Icon], i) => {
                 const active = isActive(href);
                 const isRefer = href === "/refer";
                 return (
@@ -413,8 +405,14 @@ export function AppHeader() {
                             : "text-(--muted) hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
                       }`}
                     >
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg leading-none">
-                        {navEmojis[href]}
+                      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all ${
+                        active
+                          ? "bg-white/20 text-white shadow-sm"
+                          : isRefer
+                            ? "bg-(--sage)/10 text-(--sage) group-hover:bg-(--sage)/20"
+                            : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
+                      }`}>
+                        <Icon className="h-4 w-4" strokeWidth={1.75} />
                       </span>
                       <span className="flex-1">{label}</span>
                       <svg className={`h-4 w-4 transition-all group-hover:translate-x-0.5 ${active ? (isRefer ? "text-white" : "text-(--sage)") : isRefer ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
