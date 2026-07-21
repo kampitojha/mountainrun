@@ -28,3 +28,11 @@ export const siteTestimonialSchema = z.object({
 });
 
 export const siteTestimonialUpdateSchema = siteTestimonialSchema.partial();
+
+export const publicGallerySubmissionSchema = z.object({
+  file: z.string().min(20, "Image data is required"),
+  name: z.string().trim().min(2, "Name is required").max(80),
+  title: z.string().trim().min(2, "Title is required").max(120),
+  eventLabel: z.string().trim().max(120).optional().nullable(),
+  location: z.string().trim().max(80).optional().nullable(),
+});

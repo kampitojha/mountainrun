@@ -10,6 +10,7 @@ import {
   adminUpdateTestimonial,
   getGalleryContent,
   getHomeContent,
+  submitGalleryPhoto,
 } from "../controllers/content.controller.js";
 import { requireAdmin, requireClerkAuth } from "../middleware/clerk-auth.js";
 import { asyncHandler } from "../utils/async-handler.js";
@@ -18,6 +19,7 @@ export const contentRouter = Router();
 
 contentRouter.get("/home", asyncHandler(getHomeContent));
 contentRouter.get("/gallery", asyncHandler(getGalleryContent));
+contentRouter.post("/gallery/submit", asyncHandler(submitGalleryPhoto));
 
 export const adminContentRouter = Router();
 
