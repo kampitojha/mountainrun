@@ -134,6 +134,13 @@ model MedalDelivery {
   registration   Registration @relation(fields: [registrationId], references: [id])
 }
 
+model Subscriber {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  subscribed Boolean  @default(true)
+  createdAt  DateTime @default(now())
+}
+
 model Referral {
   id         String   @id @default(cuid())
   referrerId String

@@ -1,9 +1,10 @@
 "use client";
 
 import { Show } from "@clerk/nextjs";
-import { ArrowUp, Check, Mail, Send } from "lucide-react";
+import { ArrowUp, Check, Loader2, Mail, Send } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useState } from "react";
+import { getApiUrl } from "../../lib/api";
 
 /* ─── Social SVGs ─── */
 function InstagramIcon() {
@@ -48,10 +49,31 @@ const socials = [
 function NewsletterForm() {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
-  const onSubmit = useCallback((e: React.FormEvent) => {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const onSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
-    setDone(true); setEmail("");
+    const trimmed = email.trim();
+    if (!trimmed) return;
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch(getApiUrl("/api/subscribers"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmed }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error?.message ?? "Subscription failed");
+      }
+      setDone(true);
+      setEmail("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setBusy(false);
+    }
   }, [email]);
   if (done) return (
     <div className="flex items-center gap-2 rounded-lg border border-(--sage)/20 bg-(--sage-soft) px-3 py-2 text-xs font-medium text-(--sage)">
@@ -63,10 +85,11 @@ function NewsletterForm() {
       <input type="email" value={email} onChange={e => setEmail(e.target.value)}
         placeholder="your@email.com" required aria-label="Newsletter email"
         className="h-9 min-w-0 flex-1 rounded-lg border border-(--line) bg-(--panel) px-3 text-xs text-(--foreground) placeholder:text-(--muted-soft) focus:border-(--sage)/40 focus:outline-none focus:ring-2 focus:ring-(--sage)/10" />
-      <button type="submit" aria-label="Subscribe"
-        className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-(--sage) text-white transition-all hover:bg-emerald-600 active:scale-95">
-        <Send className="h-3.5 w-3.5" />
+      <button type="submit" disabled={busy} aria-label="Subscribe"
+        className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-(--sage) text-white transition-all hover:bg-emerald-600 active:scale-95 disabled:opacity-60">
+        {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
       </button>
+      {error ? <p className="text-xs text-red-500">{error}</p> : null}
     </form>
   );
 }
