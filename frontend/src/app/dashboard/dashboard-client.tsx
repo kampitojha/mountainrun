@@ -4,7 +4,8 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { authHeaders, getApiUrl, readApiError } from "../../lib/api";
-import { CalendarDays, Target, ArrowUpRight, Users, Medal, FileBadge, Eye, Clock, Ruler } from "lucide-react";
+import { CalendarDays, Target, ArrowUpRight, Users, Medal, FileBadge, Eye, Clock } from "lucide-react";
+import { validateProofForm } from "../../lib/validation";
 
 type Registration = {
   id: string;
@@ -148,7 +149,11 @@ export function DashboardClient() {
     setProofBusy(true); setProofMessage(null); setProofError(null);
     try {
       const token = await getToken(); if (!token) throw new Error("Sign in again.");
-      let url = proofUrl.trim(); if (!url) throw new Error("Upload a screenshot or paste an image URL.");
+      let url = proofUrl.trim();
+      const errors = validateProofForm({ proofUrl: url, sourceApp, finishMinutes });
+      if (errors.proofUrl || errors.sourceApp || errors.finishMinutes) {
+        throw new Error(errors.proofUrl || errors.sourceApp || errors.finishMinutes || "Please fix the highlighted fields.");
+      }
       if (url.startsWith("data:") || url.startsWith("https://")) {
         const up = await fetch(getApiUrl("/api/uploads/image"), { method: "POST", headers: authHeaders(token), body: JSON.stringify({ file: url, folder: "mountainrun/proofs" }) });
         if (!up.ok) { if (!url.startsWith("https://")) throw new Error(await readApiError(up, "Image upload failed")); }

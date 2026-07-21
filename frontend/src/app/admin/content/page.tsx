@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { authHeaders, getApiUrl } from "../../../lib/api";
 import { adminFetch } from "../../../lib/admin-api";
 import { AdminEmpty, AdminPageHeader, AdminPanel } from "../ui";
+import { validateMediaForm, validateReviewForm } from "../../../lib/validation";
 
 type MediaRow = {
   id: string;
@@ -94,6 +95,12 @@ export default function AdminContentPage() {
     setBusy(true);
     setInfo(null);
     setError(null);
+    const mErrors = validateMediaForm({ title: mediaForm.title, imageUrl: mediaForm.imageUrl, category: mediaForm.category, location: mediaForm.location });
+    if (Object.keys(mErrors).length > 0) {
+      setError(Object.values(mErrors)[0]);
+      setBusy(false);
+      return;
+    }
     try {
       const token = await getToken().catch(() => null);
       await adminFetch("/api/admin/content/media", token, {
@@ -151,6 +158,12 @@ export default function AdminContentPage() {
     setBusy(true);
     setInfo(null);
     setError(null);
+    const rErrors = validateReviewForm({ name: reviewForm.name, role: reviewForm.role, quote: reviewForm.quote, rating: reviewForm.rating });
+    if (Object.keys(rErrors).length > 0) {
+      setError(Object.values(rErrors)[0]);
+      setBusy(false);
+      return;
+    }
     try {
       const token = await getToken().catch(() => null);
       await adminFetch("/api/admin/content/testimonials", token, {

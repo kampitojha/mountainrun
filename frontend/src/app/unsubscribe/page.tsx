@@ -6,6 +6,7 @@ import { PageShell } from "../components/app-shell";
 import { getApiUrl } from "../../lib/api";
 import { Check, Loader2, Mail } from "lucide-react";
 import Link from "next/link";
+import { validateEmail } from "../../lib/validation";
 
 function UnsubscribeForm() {
   const searchParams = useSearchParams();
@@ -19,7 +20,8 @@ function UnsubscribeForm() {
   const onSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = email.trim();
-    if (!trimmed) return;
+    const emailErr = validateEmail(trimmed);
+    if (emailErr) { setError(emailErr); return; }
     setBusy(true);
     setError("");
     try {

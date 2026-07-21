@@ -347,7 +347,7 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
   const eventKey = routeParam(request, "eventId");
   const distance =
     typeof request.query.distance === "string" && request.query.distance.trim()
-      ? request.query.distance.trim()
+      ? request.query.distance.trim().slice(0, 50)
       : undefined;
 
   await ensureDefaultEvents();

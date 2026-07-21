@@ -1,8 +1,10 @@
 import type { Response } from "express";
+import { z } from "zod";
 import { env } from "../config/env.js";
 import { prisma } from "../lib/prisma.js";
 import type { AuthenticatedRequest } from "../middleware/clerk-auth.js";
 import { ApiError } from "../utils/api-error.js";
+import { validateBody } from "../utils/validate.js";
 
 function generateCode(length = 8) {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -50,11 +52,16 @@ export async function getMyReferralCode(request: AuthenticatedRequest, response:
   });
 }
 
+const referralCodeParamSchema = z.object({
+  code: z.string().min(4).max(12).regex(/^[A-Z0-9]+$/),
+});
+
+const applyReferralBodySchema = z.object({
+  code: z.string().min(4).max(12),
+});
+
 export async function checkReferralCode(request: AuthenticatedRequest, response: Response) {
-  const code = request.params.code;
-  if (!code || typeof code !== "string" || code.length < 4) {
-    throw new ApiError(400, "Invalid referral code");
-  }
+  const { code } = referralCodeParamSchema.parse(request.params);
 
   const referrer = await prisma.user.findUnique({ where: { referralCode: code.toUpperCase() } });
   if (!referrer) {
@@ -66,10 +73,7 @@ export async function checkReferralCode(request: AuthenticatedRequest, response:
 
 export async function applyReferralCode(request: AuthenticatedRequest, response: Response) {
   const clerkId = request.auth!.userId;
-  const { code } = request.body as { code?: string };
-  if (!code || typeof code !== "string") {
-    throw new ApiError(400, "Referral code is required");
-  }
+  const { code } = applyReferralBodySchema.parse(request.body);
 
   const referee = await prisma.user.findFirst({ where: { clerkId } });
   if (!referee) throw new ApiError(404, "User not found");

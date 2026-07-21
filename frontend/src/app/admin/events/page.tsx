@@ -11,6 +11,7 @@ import {
 } from "../../../lib/admin-api";
 import { authHeaders, getApiUrl } from "../../../lib/api";
 import { AdminEmpty, AdminPageHeader } from "../ui";
+import { validateMinLength, validatePositiveInt } from "../../../lib/validation";
 import {
   Star,
   StarOff,
@@ -203,6 +204,15 @@ export default function AdminEventsPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    const titleErr = validateMinLength(form.title, 3, "Event title");
+    const distanceList = form.distances.split(",").map((d) => d.trim()).filter(Boolean);
+    if (titleErr) { toast("error", titleErr); return; }
+    if (distanceList.length === 0) { toast("error", "Add at least one distance (e.g. 5 km, 10 km)."); return; }
+    if (!form.startsAt || !form.endsAt) { toast("error", "Start and end dates are required."); return; }
+    if (form.priceInr && (Number.isNaN(Number(form.priceInr)) || Number(form.priceInr) < 0)) {
+      toast("error", "Enter a valid price.");
+      return;
+    }
     setSaving(true);
     try {
       const token = await getToken().catch(() => null);

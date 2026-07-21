@@ -4,6 +4,7 @@ import { useAuth } from "@clerk/nextjs";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { adminFetch, formatDateTime, formatInrFromPaise } from "../../../lib/admin-api";
 import { AdminEmpty, AdminPageHeader, AdminPanel } from "../ui";
+import { validateAdminCouponForm } from "../../../lib/validation";
 
 type Coupon = {
   id: string;
@@ -24,6 +25,7 @@ export default function AdminCouponsPage() {
   const [maxRedemptions, setMaxRedemptions] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     try {
@@ -42,6 +44,9 @@ export default function AdminCouponsPage() {
 
   async function onCreate(e: FormEvent) {
     e.preventDefault();
+    const errors = validateAdminCouponForm(code, discountInr);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
     try {
       const token = await getToken().catch(() => null);
       await adminFetch("/api/admin/coupons", token, {
@@ -104,22 +109,24 @@ export default function AdminCouponsPage() {
           <label className="block text-sm span-2">
             <span className="field-label">Code</span>
             <input
-              className="input"
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              className={fieldErrors.code ? "input !border-red-400" : "input"}
+              onChange={(e) => { setCode(e.target.value.toUpperCase()); setFieldErrors((f) => ({ ...f, code: "" })); }}
               placeholder="MONSOON100"
               required
               value={code}
             />
+            {fieldErrors.code ? <p className="mt-1 text-xs text-red-500">{fieldErrors.code}</p> : null}
           </label>
           <label className="block text-sm">
             <span className="field-label">Discount (INR)</span>
             <input
-              className="input"
+              className={fieldErrors.discountInr ? "input !border-red-400" : "input"}
               inputMode="numeric"
-              onChange={(e) => setDiscountInr(e.target.value)}
+              onChange={(e) => { setDiscountInr(e.target.value); setFieldErrors((f) => ({ ...f, discountInr: "" })); }}
               required
               value={discountInr}
             />
+            {fieldErrors.discountInr ? <p className="mt-1 text-xs text-red-500">{fieldErrors.discountInr}</p> : null}
           </label>
           <label className="block text-sm">
             <span className="field-label">Max redemptions</span>

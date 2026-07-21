@@ -2,6 +2,8 @@ import type { Response } from "express";
 import type { AuthenticatedRequest } from "../middleware/clerk-auth.js";
 import { upsertUserFromClerk } from "../services/user.service.js";
 import { ApiError } from "../utils/api-error.js";
+import { validateBody } from "../utils/validate.js";
+import { syncUserSchema } from "../validators/common.validator.js";
 import { prisma } from "../lib/prisma.js";
 
 /**
@@ -9,14 +11,7 @@ import { prisma } from "../lib/prisma.js";
  * Called automatically by the frontend after login / page load.
  */
 export async function syncCurrentUser(request: AuthenticatedRequest, response: Response) {
-  const body = (request.body ?? {}) as {
-    clerkId?: string;
-    email?: string;
-    name?: string;
-    username?: string | null;
-    phone?: string | null;
-    avatarUrl?: string | null;
-  };
+  const body = validateBody(syncUserSchema, request);
 
   const clerkId = request.auth?.userId ?? body.clerkId;
   if (!clerkId) {

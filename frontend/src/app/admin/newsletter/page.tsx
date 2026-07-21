@@ -4,6 +4,7 @@ import { useAuth } from "@clerk/nextjs";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { adminFetch, formatDateTime } from "../../../lib/admin-api";
 import { AdminEmpty, AdminPageHeader, AdminPanel } from "../ui";
+import { validateNewsletterForm } from "../../../lib/validation";
 
 type Subscriber = {
   id: string;
@@ -28,6 +29,7 @@ export default function AdminNewsletterPage() {
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<SendResult | null>(null);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     try {
@@ -46,7 +48,9 @@ export default function AdminNewsletterPage() {
 
   async function onSend(e: FormEvent) {
     e.preventDefault();
-    if (!subject.trim() || !body.trim()) return;
+    const errors = validateNewsletterForm(subject, body);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
     setSending(true);
     setResult(null);
     setSendError(null);
@@ -90,27 +94,29 @@ export default function AdminNewsletterPage() {
           <label className="block text-sm span-2">
             <span className="field-label">Subject</span>
             <input
-              className="input"
-              onChange={(e) => setSubject(e.target.value)}
+              className={fieldErrors.subject ? "input !border-red-400" : "input"}
+              onChange={(e) => { setSubject(e.target.value); setFieldErrors((f) => ({ ...f, subject: "" })); }}
               placeholder="New event announcement"
               required
               value={subject}
               maxLength={200}
             />
+            {fieldErrors.subject ? <p className="mt-1 text-xs text-red-500">{fieldErrors.subject}</p> : null}
           </label>
 
           <label className="block text-sm span-2">
             <span className="field-label">Body</span>
             <p className="text-xs text-(--muted-soft) mb-1">Accepts both HTML and plain text. Example: <code className="text-(--sage)">&lt;h2&gt;Hello!&lt;/h2&gt;</code> or just type <code className="text-(--sage)">Hello runners!</code></p>
             <textarea
-              className="input"
-              onChange={(e) => setBody(e.target.value)}
+              className={fieldErrors.body ? "input !border-red-400" : "input"}
+              onChange={(e) => { setBody(e.target.value); setFieldErrors((f) => ({ ...f, body: "" })); }}
               placeholder="Hello runners!&#10;&#10;New event is now live..."
               required
               value={body}
               rows={12}
               maxLength={10000}
             />
+            {fieldErrors.body ? <p className="mt-1 text-xs text-red-500">{fieldErrors.body}</p> : null}
           </label>
 
           <div className="span-2 flex flex-wrap items-center gap-3">
