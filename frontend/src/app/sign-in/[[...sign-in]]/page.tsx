@@ -11,10 +11,18 @@ function ThemedSignIn() {
   const dark = theme === "dark";
 
   useEffect(() => {
+    let cleared = false;
     const apply = () => {
       document.querySelectorAll("form").forEach((f) => {
-        if (f.closest("[class*='cl-']")) f.noValidate = true;
+        if (!f.closest("[class*='cl-']")) return;
+        f.noValidate = true;
+        f.querySelectorAll("input").forEach((input) => {
+          if (input.type === "hidden") return;
+          input.setAttribute("autocomplete", "off");
+          if (!cleared && input.value) input.value = "";
+        });
       });
+      cleared = true;
     };
     apply();
     const observer = new MutationObserver(apply);
