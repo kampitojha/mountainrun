@@ -34,8 +34,23 @@ function ThemedSignUp() {
           formFieldInput: dark
             ? "bg-[#18181f] border-white/10 text-zinc-100"
             : "bg-white border-slate-200 text-slate-900",
+          formFieldError: "text-red-500 text-xs mt-1",
+          formFieldErrorText: dark ? "text-red-400" : "text-red-600",
+          formFieldLabel: dark ? "text-zinc-300" : "text-slate-700",
           headerTitle: dark ? "text-zinc-100" : "text-slate-900",
           headerSubtitle: dark ? "text-zinc-400" : "text-slate-500",
+          socialButtonsBlockButton: dark
+            ? "border-white/10 bg-[#18181f] text-zinc-100 hover:bg-[#22222a]"
+            : "border-slate-200 bg-white text-slate-900 hover:bg-slate-50",
+          socialButtonsBlockButtonText: dark ? "text-zinc-300" : "text-slate-700",
+          dividerLine: dark ? "bg-white/10" : "bg-slate-200",
+          dividerText: dark ? "text-zinc-500" : "text-slate-400",
+          formFieldAction: "text-teal-600 dark:text-teal-400",
+          footerActionLink: "text-teal-600 dark:text-teal-400",
+          formResendCodeLink: "text-teal-600 dark:text-teal-400",
+          alert: dark
+            ? "bg-red-900/20 border-red-800/30 text-red-300"
+            : "bg-red-50 border-red-200 text-red-700",
         },
       }}
     />
