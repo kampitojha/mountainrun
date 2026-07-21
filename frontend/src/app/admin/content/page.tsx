@@ -15,6 +15,7 @@ type MediaRow = {
   eventLabel: string | null;
   dateLabel: string | null;
   meta: string | null;
+  submittedBy: string | null;
   sortOrder: number;
   published: boolean;
   showInGallery: boolean;
@@ -41,6 +42,7 @@ const emptyMedia = {
   eventLabel: "",
   dateLabel: "",
   meta: "",
+  submittedBy: "",
   sortOrder: 0,
   published: true,
   showInGallery: true,
@@ -365,7 +367,7 @@ export default function AdminContentPage() {
               <table className="table-clean min-w-[900px]">
                 <thead>
                   <tr>
-                    {["Preview", "Title", "Gallery", "Home", "Published", "Actions"].map((h) => (
+                    {["Preview", "Title", "Submitted by", "Gallery", "Home", "Published", "Actions"].map((h) => (
                       <th key={h}>{h}</th>
                     ))}
                   </tr>
@@ -384,6 +386,9 @@ export default function AdminContentPage() {
                       <td className="strong">
                         <div>{row.title}</div>
                         <div className="admin-muted text-xs">{row.category}</div>
+                      </td>
+                      <td className="text-xs text-[var(--muted)]">
+                        {row.submittedBy ?? <span className="italic opacity-40">Admin</span>}
                       </td>
                       <td>
                         <button

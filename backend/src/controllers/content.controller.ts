@@ -106,7 +106,7 @@ export async function submitGalleryPhoto(request: Request, response: Response) {
       category: "Community",
       eventLabel: payload.eventLabel ?? null,
       location: payload.location ?? null,
-      meta: payload.name,
+      submittedBy: payload.name,
       published: false,
       showInGallery: true,
       showOnHomeMoments: false,

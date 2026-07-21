@@ -195,6 +195,7 @@ model SiteMedia {
   eventLabel        String?
   dateLabel         String?
   meta              String?
+  submittedBy       String?
   sortOrder         Int      @default(0)
   published         Boolean  @default(true)
   showInGallery     Boolean  @default(true)
