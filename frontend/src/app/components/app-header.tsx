@@ -16,6 +16,7 @@ import {
   Info,
   Calendar,
   Gift,
+  UserPlus,
 } from "lucide-react";
 import { BrandText } from "./brand-text";
 import { ThemeToggle } from "./theme-toggle";
@@ -315,10 +316,18 @@ export function AppHeader() {
             <div className="h-5 w-px bg-(--line)" />
             <Show when="signed-out">
               <Link
-                className="btn btn-primary h-8 px-3.5 text-xs font-semibold sm:h-9 sm:px-4 sm:text-sm"
-                href="/events"
+                className="btn btn-ghost h-8 px-3 text-xs font-semibold sm:h-9 sm:px-3.5 sm:text-sm"
+                href="/sign-in"
               >
-                Browse events
+                <LogIn className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Sign in</span>
+              </Link>
+              <Link
+                className="btn btn-primary h-8 px-3 text-xs font-semibold sm:h-9 sm:px-4 sm:text-sm"
+                href="/sign-up"
+              >
+                <UserPlus className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+                <span>Create account</span>
               </Link>
             </Show>
             <Show when="signed-in">
@@ -455,7 +464,7 @@ export function AppHeader() {
                 </motion.div>
               </Show>
 
-              {/* Sign in for signed-out */}
+              {/* Auth actions for signed-out */}
               <Show when="signed-out">
                 <motion.div
                   initial={{ opacity: 0, y: 12 }}
@@ -463,6 +472,19 @@ export function AppHeader() {
                   transition={{ delay: publicNav.length * 0.05, duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                 >
                   <div className="mx-3 my-1.5 h-px bg-gradient-to-r from-(--line) via-(--line) to-transparent" />
+                  <Link
+                    href="/sign-up"
+                    onClick={() => setOpen(false)}
+                    className="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-(--muted) transition-all duration-200 hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)">
+                      <UserPlus className="h-4 w-4" strokeWidth={1.75} />
+                    </span>
+                    <span className="flex-1">Create account</span>
+                    <svg className="h-4 w-4 text-(--muted-soft) transition-all group-hover:translate-x-0.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m6 4 4 4-4 4" />
+                    </svg>
+                  </Link>
                   <Link
                     href="/sign-in"
                     onClick={() => setOpen(false)}
