@@ -109,6 +109,19 @@ export function AppFooter() {
         </div>
       </Show>
 
+      {/* Skyline image — seamlessly attached to footer like Townscript */}
+      <div className="w-full overflow-hidden leading-none bg-white">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="https://res.cloudinary.com/yppcqzt6/image/upload/v1784582800/footer-skyline_r3mshw.png"
+          alt=""
+          aria-hidden="true"
+          className="w-full h-auto object-cover block"
+          style={{ maxHeight: 80 }}
+          loading="lazy"
+        />
+      </div>
+
       {/* Main footer */}
       <div className="container-page py-8 sm:py-10">
 
