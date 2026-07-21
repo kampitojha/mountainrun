@@ -143,8 +143,8 @@ export default function AdminNewsletterPage() {
             {subscribers.length === 0 ? (
               <AdminEmpty>No subscribers yet.</AdminEmpty>
             ) : (
-              <div className="admin-table-wrap">
-                <table className="admin-table" style={{ tableLayout: "fixed", width: "100%" }}>
+              <div className="table-wrap table-scroll">
+                <table className="table-clean min-w-[500px]" style={{ tableLayout: "fixed", width: "100%" }}>
                   <thead>
                     <tr>
                       <th style={{ width: "65%" }}>Email</th>
