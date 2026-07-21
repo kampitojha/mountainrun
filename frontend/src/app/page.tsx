@@ -6,7 +6,6 @@ import { AppHeader } from "./components/app-header";
 import { HomeEvents } from "./components/home-events";
 import { HomeGalleryPreview } from "./components/home-gallery-preview";
 import { HomeHero } from "./components/home-hero";
-import { HomeReviews } from "./components/home-reviews";
 import { HomeRewards } from "./components/home-rewards";
 import { HomeSectionHeader } from "./components/home-section-header";
 import { HomeSteps } from "./components/home-steps";
@@ -91,9 +90,7 @@ export default function Home() {
         </section>
 
         <HomeRewards />
-        {/* Moments + reviews are admin-managed via /admin/content (with static fallbacks). */}
         <HomeGalleryPreview />
-        <HomeReviews />
       </main>
 
       <AppFooter />

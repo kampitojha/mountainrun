@@ -1,6 +1,5 @@
 "use client";
 
-import { Show } from "@clerk/nextjs";
 import { ArrowUp, Check, Loader2, Mail, Send } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useState } from "react";
@@ -121,19 +120,7 @@ export function AppFooter() {
   return (
     <footer className="relative mt-auto">
 
-      {/* CTA — signed-out only, clean minimal */}
-      <Show when="signed-out">
-        <div className="border-b border-(--line) bg-(--panel-soft)/60">
-          <div className="container-page py-8 text-center">
-            <h3 className="text-base font-semibold text-(--foreground)">Ready for your next challenge?</h3>
-            <p className="mt-1 text-xs text-(--muted)">Join thousands of runners across India.</p>
-            <div className="mt-4 flex justify-center gap-3">
-              <Link className="rounded-lg bg-(--sage) px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-emerald-600" href="/events">Browse Events</Link>
-              <Link className="rounded-lg border border-(--line) bg-(--panel) px-4 py-2 text-xs font-semibold text-(--foreground) transition-all hover:bg-(--panel-soft)" href="/sign-up">Create Free Account</Link>
-            </div>
-          </div>
-        </div>
-      </Show>
+
 
       {/* Main footer */}
       <div className="bg-(--panel)">
