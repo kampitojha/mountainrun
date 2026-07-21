@@ -10,6 +10,7 @@ export type DefaultEvent = {
   status: "DRAFT" | "OPEN" | "CLOSED" | "COMPLETED" | "CANCELLED";
   city: string;
   medalIncluded?: boolean;
+  benefits?: string[];
 };
 
 export const defaultEvents: DefaultEvent[] = [
