@@ -565,35 +565,25 @@ export function GalleryClient() {
       {/* ── FILTERS + GRID ────────────────────────────────────── */}
       <section className="section pt-8 sm:pt-10">
         <div className="container-page">
-          <div className="flex items-center gap-2">
-            <div className="no-scrollbar -mx-1 flex flex-1 gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible">
-              {galleryCategories.map((cat) => {
-                const on = category === cat;
-                return (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setCategory(cat)}
-                    className={cn(
-                      "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-all",
-                      on
-                        ? "border-(--sage) bg-(--sage) text-(--on-accent) shadow-xs"
-                        : "border-(--line) bg-(--panel) text-(--muted) hover:border-(--line-strong) hover:text-(--foreground)",
-                    )}
-                  >
-                    {cat}
-                  </button>
-                );
-              })}
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowSubmit(true)}
-              className="shrink-0 rounded-full border border-(--sage) bg-(--sage)/10 px-4 py-2 text-sm font-medium text-(--sage) transition-all hover:bg-(--sage)/20"
-            >
-              <Upload className="mr-1.5 inline-block h-4 w-4" strokeWidth={2} />
-              Submit your photo
-            </button>
+          <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible">
+            {galleryCategories.map((cat) => {
+              const on = category === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setCategory(cat)}
+                  className={cn(
+                    "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-all",
+                    on
+                      ? "border-(--sage) bg-(--sage) text-(--on-accent) shadow-xs"
+                      : "border-(--line) bg-(--panel) text-(--muted) hover:border-(--line-strong) hover:text-(--foreground)",
+                  )}
+                >
+                  {cat}
+                </button>
+              );
+            })}
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
@@ -619,6 +609,32 @@ export function GalleryClient() {
           ) : null}
         </div>
       </section>
+
+      {/* ── Floating submit button ───────────────────────────── */}
+      <motion.button
+        type="button"
+        onClick={() => setShowSubmit(true)}
+        initial={{ opacity: 0, y: 24, scale: 0.9 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ delay: 0.6, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        whileHover={{ y: -2 }}
+        whileTap={{ scale: 0.96 }}
+        className={cn(
+          "fixed bottom-5 left-1/2 z-40 -translate-x-1/2",
+          "flex items-center gap-2.5 rounded-full",
+          "bg-gradient-to-r from-(--sage) to-emerald-500",
+          "px-5 py-3 shadow-lg shadow-(--sage)/25",
+          "text-sm font-semibold text-white",
+          "transition-shadow hover:shadow-xl hover:shadow-(--sage)/30",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--sage)/40",
+          "sm:bottom-8 sm:px-6 sm:py-3.5 sm:text-base",
+          "md:left-auto md:right-8 md:-translate-x-0",
+        )}
+      >
+        <Upload className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.5} />
+        <span>Submit your photo</span>
+        <span className="hidden h-2 w-2 rounded-full bg-white/40 animate-pulse sm:block" />
+      </motion.button>
 
       <AnimatePresence>
         {active ? <Lightbox item={active} onClose={() => setActive(null)} /> : null}
