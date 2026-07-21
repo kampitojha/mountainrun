@@ -4,7 +4,7 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { authHeaders, getApiUrl, readApiError } from "../../lib/api";
-import { CalendarDays, Target, IndianRupee, ArrowUpRight, Users, Medal, FileBadge, Sparkles, Eye, Clock, ChevronRight } from "lucide-react";
+import { CalendarDays, Target, ArrowUpRight, Users, Medal, FileBadge, Eye, Clock, Ruler } from "lucide-react";
 
 type Registration = {
   id: string;
@@ -81,6 +81,20 @@ async function fileToPayload(file: File): Promise<string> {
   return c.toDataURL("image/jpeg", 0.82);
 }
 
+function StatCard({ icon: Icon, label, value }: { icon: typeof CalendarDays; label: string; value: string | number }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-(--line) bg-(--panel) px-4 py-4 transition-shadow hover:shadow-sm sm:gap-4 sm:px-5 sm:py-5">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--sage)">
+        <Icon className="h-5 w-5" strokeWidth={1.75} />
+      </span>
+      <div className="min-w-0">
+        <p className="text-2xl font-bold tracking-tight tabular-nums text-(--foreground) sm:text-3xl">{value}</p>
+        <p className="text-xs text-(--muted-soft)">{label}</p>
+      </div>
+    </div>
+  );
+}
+
 export function DashboardClient() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
@@ -120,7 +134,6 @@ export function DashboardClient() {
   const isAdmin = dbUser?.role === "ADMIN" || dbUser?.role === "SUPER_ADMIN";
   const needsProof = useMemo(() => registrations.filter(canUpload), [registrations]);
   const waitingReview = useMemo(() => registrations.filter((r) => r.proofStatus === "SUBMITTED"), [registrations]);
-  const paidCount = registrations.filter(isEligible).length;
 
   async function onPickFile(file: File | null) {
     setProofError(null); setProofFileName(null); setProofUrl("");
@@ -152,13 +165,24 @@ export function DashboardClient() {
     finally { setProofBusy(false); }
   }
 
-  if (!isLoaded || loading) return <div className="card p-10 text-center"><p className="text-sm text-(--muted)">Loading your dashboard...</p></div>;
+  if (!isLoaded || loading) return (
+    <div className="flex items-center justify-center rounded-2xl border border-(--line) bg-(--panel) px-4 py-16">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--line-strong) border-t-(--sage)" />
+        <p className="text-sm text-(--muted)">Loading your dashboard...</p>
+      </div>
+    </div>
+  );
 
   if (!isSignedIn) return (
-    <div className="card p-8 text-center sm:p-10">
-      <p className="eyebrow">Account</p>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight">Sign in required</h1>
-      <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-(--muted)">Your dashboard shows registrations, payments, and proof status. Sign in to continue.</p>
+    <div className="rounded-2xl border border-(--line) bg-(--panel) px-6 py-10 text-center sm:px-10 sm:py-14">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-(--sage-soft) text-(--sage)">
+        <Users className="h-6 w-6" />
+      </div>
+      <h1 className="mt-5 text-2xl font-bold tracking-tight text-(--foreground) sm:text-3xl">Sign in required</h1>
+      <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-(--muted)">
+        Your dashboard shows registrations, payments, and proof status. Sign in to continue.
+      </p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Link className="btn btn-primary" href="/sign-in">Sign in</Link>
         <Link className="btn btn-secondary" href="/sign-up">Create account</Link>
@@ -167,171 +191,202 @@ export function DashboardClient() {
   );
 
   const name = dbUser?.name || user?.fullName || user?.firstName || "Runner";
-  const email = dbUser?.email || user?.primaryEmailAddress?.emailAddress || "\u2014";
   const registeredCount = registrations.filter((r) => r.status !== "CANCELLED").length;
   const proofedCount = registrations.filter((r) => r.proofStatus === "SUBMITTED" || r.proofStatus === "APPROVED").length;
   const certCount = registrations.filter((r) => r.certificate && r.certificate.status !== "QUEUED").length;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 sm:space-y-10">
 
-      {/* Header */}
+      {/* ── HEADER ─────────────────────────────────────────── */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p className="eyebrow">{isAdmin ? "Admin account" : "Dashboard"}</p>
-          <h1 className="display mt-2">Hi, {name.split(" ")[0]}</h1>
-          <p className="lede mt-2 max-w-xl">
-            {isAdmin ? "You have ops access. Manage proofs, certificates, medals from the admin console." : "Track races, upload GPS proof after your run, and download certificates."}
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-(--foreground) sm:text-3xl">
+            Hi, {name.split(" ")[0]}
+          </h1>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-(--muted)">
+            {isAdmin
+              ? "You have ops access. Manage proofs, certificates, medals from the admin console."
+              : "Track your races, upload GPS proof, and download certificates."}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {isAdmin ? <Link className="btn btn-primary" href="/admin">Admin console</Link> : null}
-          <Link className="btn btn-primary" href="/events">Join an event</Link>
+          <Link className="btn btn-secondary" href="/events">Join an event</Link>
         </div>
       </div>
 
-      {error ? <div className="rounded-xl border border-(--danger)/20 bg-(--danger)/8 px-4 py-3 text-sm text-(--danger)">{error} <button className="underline cursor-pointer" onClick={() => void load()} type="button">Retry</button></div> : null}
+      {error ? (
+        <div className="flex items-center gap-2 rounded-xl border border-(--danger)/20 bg-(--danger)/8 px-4 py-3 text-sm text-(--danger)">
+          <span>{error}</span>
+          <button className="ml-auto cursor-pointer font-medium underline" onClick={() => void load()} type="button">Retry</button>
+        </div>
+      ) : null}
 
-      {/* Stats bar */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
-        {[
-          { label: "Registrations", value: registeredCount, icon: CalendarDays },
-          { label: "Proofs submitted", value: proofedCount, icon: Eye },
-          { label: "Certificates", value: certCount, icon: FileBadge },
-        ].map(({ label, value, icon: Icon }) => (
-          <div key={label} className="rounded-xl border border-(--line) bg-(--panel) p-4 text-center sm:p-5">
-            <Icon className="mx-auto h-4 w-4 text-(--muted-soft)" />
-            <p className="mt-2 text-2xl font-bold tracking-tight text-(--foreground) sm:text-3xl">{value}</p>
-            <p className="mt-0.5 text-xs text-(--muted-soft)">{label}</p>
-          </div>
-        ))}
+      {/* ── STATS ──────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+        <StatCard icon={CalendarDays} label="Registrations" value={registeredCount} />
+        <StatCard icon={Eye} label="Proofs submitted" value={proofedCount} />
+        <StatCard icon={FileBadge} label="Certificates" value={certCount} />
       </div>
 
-      {/* Referral card */}
-      <Link href="/refer" className="group block rounded-xl border border-(--line) bg-(--panel) p-4 transition-all hover:border-(--sage)/30 hover:shadow-sm sm:p-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-(--sage-soft) text-(--sage)">
-              <Users className="h-4 w-4" />
-            </span>
-            <div>
-              <p className="text-sm font-bold text-(--foreground)">Refer & earn</p>
-              <p className="mt-0.5 text-xs text-(--muted)">Invite friends, earn rewards</p>
-            </div>
+      {/* ── REFERRAL ───────────────────────────────────────── */}
+      <Link
+        href="/refer"
+        className="group flex items-center justify-between gap-4 rounded-xl border border-(--line) bg-(--panel) px-5 py-4 transition-all hover:border-(--sage)/30 hover:shadow-sm sm:px-6"
+      >
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-(--sage-soft) text-(--sage)">
+            <Users className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-sm font-bold text-(--foreground)">Refer & earn</p>
+            <p className="mt-0.5 text-xs text-(--muted)">Invite friends, earn rewards on every registration</p>
           </div>
-          <ArrowUpRight className="h-4 w-4 text-(--muted-soft) transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </div>
+        <ArrowUpRight className="h-4 w-4 shrink-0 text-(--muted-soft) transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
       </Link>
 
-      {/* How it works - shown when user has no eligible registrations */}
+      {/* ── HOW IT WORKS (empty state) ─────────────────────── */}
       {registeredCount === 0 ? (
         <div className="rounded-2xl border border-(--line) bg-(--panel) p-6 sm:p-8">
           <h2 className="text-lg font-bold tracking-tight text-(--foreground)">How it works</h2>
-          <div className="mt-5 grid gap-4 sm:grid-cols-4">
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
             {[
-              { step: "1", title: "Join an event", desc: "Choose a distance, pay, and get your bib number instantly.", icon: CalendarDays },
+              { step: "1", title: "Join an event", desc: "Choose a distance, pay, and get your bib instantly.", icon: CalendarDays },
               { step: "2", title: "Run anywhere", desc: "Complete your distance during the event window using any GPS app.", icon: Target },
-              { step: "3", title: "Upload proof", desc: "Submit your GPS screenshot. Admin verifies it within 24\u201348 hours.", icon: ArrowUpRight },
+              { step: "3", title: "Upload proof", desc: "Submit your GPS screenshot. Admin verifies it within 24-48 hours.", icon: Eye },
               { step: "4", title: "Get rewards", desc: "Receive your e-certificate and medal once approved.", icon: Medal },
             ].map(({ step, title, desc, icon: Icon }) => (
-              <div key={step} className="text-center">
-                <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-(--sage-soft) text-(--sage)"><Icon className="h-5 w-5" /></span>
+              <div key={step} className="flex flex-col items-center text-center">
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-(--sage-soft) text-(--sage)">
+                  <Icon className="h-6 w-6" strokeWidth={1.75} />
+                </span>
                 <p className="mt-3 text-sm font-bold text-(--foreground)">{title}</p>
                 <p className="mt-1 text-xs leading-relaxed text-(--muted)">{desc}</p>
               </div>
             ))}
           </div>
-          <div className="mt-6 text-center">
+          <div className="mt-8 text-center">
             <Link className="btn btn-primary" href="/events">Browse open events <ArrowUpRight className="h-4 w-4" /></Link>
           </div>
         </div>
       ) : null}
 
-      {/* Proof action strip */}
+      {/* ── PROOF REMINDER ─────────────────────────────────── */}
       {needsProof.length > 0 ? (
-        <div className="rounded-2xl border border-(--sage)/25 bg-(--sage-soft)/40 p-5 sm:p-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-bold text-(--foreground)">Upload GPS proof ({needsProof.length} pending)</p>
-              <p className="mt-1 text-sm text-(--muted)">Finished your run? Upload a GPS screenshot to get verified and unlock your certificate + medal.</p>
+        <div className="rounded-2xl border border-(--sage)/25 bg-(--sage-soft)/50 p-5 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-(--sage) text-white">
+                <Eye className="h-4 w-4" />
+              </span>
+              <div>
+                <p className="text-sm font-bold text-(--foreground)">
+                  {needsProof.length} registration{needsProof.length === 1 ? "" : "s"} need GPS proof
+                </p>
+                <p className="mt-1 text-sm text-(--muted)">
+                  Finished your run? Upload a GPS screenshot to get verified and unlock your certificate + medal.
+                </p>
+              </div>
             </div>
-            <button className="btn btn-primary shrink-0 cursor-pointer" onClick={() => { const t = needsProof[0]; setProofRegId(t.id); setProofMessage(null); setProofError(null); document.getElementById(`reg-${t.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }); }} type="button">
-              Submit proof <ArrowUpRight className="h-4 w-4" />
+            <button
+              className="btn btn-primary shrink-0 cursor-pointer"
+              onClick={() => {
+                const t = needsProof[0];
+                setProofRegId(t.id);
+                setProofMessage(null);
+                setProofError(null);
+                document.getElementById(`reg-${t.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+              }}
+              type="button"
+            >
+              Upload proof <ArrowUpRight className="h-4 w-4" />
             </button>
           </div>
-          <ol className="mt-4 flex gap-2 text-xs text-(--muted) flex-wrap">
-            {["Finish your run with GPS on", "Screenshot activity summary", "Upload here · wait for approval"].map((s, i) => (
-              <li key={i} className="flex items-center gap-1.5 rounded-lg bg-(--panel)/80 px-3 py-2"><span className="flex h-4 w-4 items-center justify-center rounded-full bg-(--sage) text-[0.55rem] font-bold text-white">{i + 1}</span>{s}</li>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {["Run with GPS on", "Screenshot activity", "Upload & wait for approval"].map((s, i) => (
+              <span key={i} className="inline-flex items-center gap-1.5 rounded-lg bg-(--panel)/80 px-3 py-1.5 text-xs text-(--muted)">
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-(--sage) text-[0.55rem] font-bold text-white">{i + 1}</span>
+                {s}
+              </span>
             ))}
-          </ol>
+          </div>
         </div>
       ) : null}
 
+      {/* ── WAITING REVIEW ─────────────────────────────────── */}
       {waitingReview.length > 0 ? (
-        <div className="rounded-xl border border-(--line) bg-(--panel-soft) px-4 py-3 text-sm text-(--muted) flex items-center gap-2">
-          <Clock className="h-4 w-4 text-(--sage)" />
-          {waitingReview.length} proof{waitingReview.length === 1 ? "" : "s"} waiting for admin review.
+        <div className="flex items-center gap-2 rounded-xl border border-(--line) bg-(--panel-soft) px-4 py-3 text-sm text-(--muted)">
+          <Clock className="h-4 w-4 shrink-0 text-(--sage)" />
+          <span>
+            {waitingReview.length} proof{waitingReview.length === 1 ? "" : "s"} waiting for admin review.
+          </span>
         </div>
       ) : null}
 
-      {proofMessage ? <div className="rounded-xl border border-(--sage)/30 bg-(--sage-soft) px-4 py-3 text-sm text-(--sage)">{proofMessage}</div> : null}
+      {proofMessage ? (
+        <div className="rounded-xl border border-(--sage)/30 bg-(--sage-soft) px-4 py-3 text-sm text-(--sage)">
+          {proofMessage}
+        </div>
+      ) : null}
 
+      {/* ── REWARDS ──────────────────────────────────────────── */}
       {registrations.some((r) => r.proofStatus === "SUBMITTED" || r.proofStatus === "APPROVED") ? (
         <div>
-          <h2 className="text-lg font-bold tracking-tight text-(--foreground)">Rewards</h2>
-          <p className="mt-1 text-sm text-(--muted)">Your earned certificates and medal delivery status.</p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="mb-4">
+            <h2 className="text-lg font-bold tracking-tight text-(--foreground)">Rewards</h2>
+            <p className="mt-1 text-sm text-(--muted)">Your certificates and medal delivery status.</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
             {registrations.filter((r) => r.proofStatus === "SUBMITTED" || r.proofStatus === "APPROVED").map((reg) => (
-              <div key={reg.id} className="rounded-xl border border-(--line) bg-(--panel) p-4 sm:p-5">
-                {/* Title + proof status */}
-                <div className="flex min-w-0 items-start justify-between gap-3">
+              <div key={reg.id} className="rounded-xl border border-(--line) bg-(--panel) p-5">
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-(--foreground)">{reg.event.title}</p>
                     <p className="mt-0.5 text-xs text-(--muted)">{reg.distance}</p>
                   </div>
-                  <span className={`shrink-0 ${badgeClass(reg.proofStatus)} text-[0.65rem]`}>
-                    {reg.proofStatus === "APPROVED" ? "Verified ✓" : "Under review"}
+                  <span className={`shrink-0 ${badgeClass(reg.proofStatus)}`}>
+                    {reg.proofStatus === "APPROVED" ? "Verified" : "Under review"}
                   </span>
                 </div>
 
-                {/* Certificate + Medal status — stacked, no overlap */}
                 <div className="mt-4 space-y-2">
                   <div className="flex items-center justify-between rounded-lg bg-(--panel-soft) px-3 py-2">
                     <span className="text-xs font-medium text-(--muted)">Certificate</span>
-                    <span className={`${reg.certificate && reg.certificate.status !== "QUEUED" ? badgeClass(reg.certificate.status) : "badge"} text-[0.65rem]`}>
+                    <span className={`${reg.certificate && reg.certificate.status !== "QUEUED" ? badgeClass(reg.certificate.status) : "badge"}`}>
                       {reg.certificate
-                        ? reg.certificate.status === "SENT" ? "Emailed to you"
+                        ? reg.certificate.status === "SENT" ? "Emailed"
                           : reg.certificate.status === "GENERATED" ? "Ready"
-                          : "Being processed"
+                          : "Processing"
                         : "After verification"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between rounded-lg bg-(--panel-soft) px-3 py-2">
                     <span className="text-xs font-medium text-(--muted)">Medal</span>
-                    <span className={`${reg.medalDelivery ? badgeClass(reg.medalDelivery.status) : "badge"} text-[0.65rem]`}>
+                    <span className={`${reg.medalDelivery ? badgeClass(reg.medalDelivery.status) : "badge"}`}>
                       {reg.medalDelivery
                         ? reg.medalDelivery.status === "DELIVERED" ? "Delivered"
                           : reg.medalDelivery.status === "DISPATCHED" ? "On the way"
-                          : "Being prepared"
+                          : "Preparing"
                         : "After verification"}
                     </span>
                   </div>
                 </div>
 
-                {/* Tracking info */}
                 {reg.medalDelivery?.trackingNumber ? (
-                  <div className="mt-3 rounded-lg bg-(--panel-soft) px-3 py-2.5 text-xs text-(--muted) space-y-1">
+                  <div className="mt-3 space-y-1 rounded-lg bg-(--panel-soft) px-3 py-2.5 text-xs text-(--muted)">
                     {reg.medalDelivery.courier && <p>Courier: <span className="font-medium text-(--foreground)">{reg.medalDelivery.courier}</span></p>}
                     <p>Tracking: <span className="font-mono font-medium text-(--foreground)">{reg.medalDelivery.trackingNumber}</span></p>
                     {reg.medalDelivery.trackingUrl && (
                       <a className="inline-flex items-center gap-1 text-(--sage) underline-offset-2 hover:underline" href={reg.medalDelivery.trackingUrl} rel="noopener noreferrer" target="_blank">
-                        Track your package <ArrowUpRight className="h-3 w-3" />
+                        Track package <ArrowUpRight className="h-3 w-3" />
                       </a>
                     )}
                   </div>
                 ) : null}
 
-                {/* View certificate button */}
                 {reg.certificate && (reg.certificate.status === "SENT" || reg.certificate.status === "GENERATED") ? (
                   <Link className="btn btn-secondary mt-3 h-9 w-full text-xs" href={`/certificates/${reg.certificate.certificateNumber}`}>
                     View certificate <ArrowUpRight className="h-3.5 w-3.5" />
@@ -343,46 +398,48 @@ export function DashboardClient() {
         </div>
       ) : null}
 
-      {/* Registrations */}
+      {/* ── REGISTRATIONS ─────────────────────────────────────── */}
       <div>
-        <h2 className="text-lg font-bold tracking-tight text-(--foreground)">My registrations</h2>
-        <p className="mt-1 text-sm text-(--muted)">All your events in one place. Complete payment, upload your run, download your certificate.</p>
+        <div className="mb-4">
+          <h2 className="text-lg font-bold tracking-tight text-(--foreground)">My registrations</h2>
+          <p className="mt-1 text-sm text-(--muted)">All your events — payments, proof uploads, and certificates.</p>
+        </div>
 
         {registrations.length === 0 ? (
-          <div className="mt-4 rounded-2xl border border-dashed border-(--line) bg-(--panel-soft)/50 p-8 text-center">
-            <Medal className="mx-auto h-8 w-8 text-(--muted-soft)" />
-            <p className="mt-3 text-sm font-medium text-(--foreground)">No registrations yet</p>
+          <div className="flex flex-col items-center rounded-2xl border border-dashed border-(--line) bg-(--panel-soft)/50 px-6 py-10 text-center">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-(--panel) text-(--muted-soft)">
+              <Medal className="h-6 w-6" />
+            </span>
+            <p className="mt-4 text-sm font-medium text-(--foreground)">No registrations yet</p>
             <p className="mt-1 text-sm text-(--muted)">Join an event to start your journey.</p>
+            <Link className="btn btn-primary mt-6" href="/events">Browse events <ArrowUpRight className="h-4 w-4" /></Link>
           </div>
         ) : (
-          <div className="mt-4 space-y-3">
+          <div className="space-y-4">
             {registrations.map((reg) => {
               const uploadOk = canUpload(reg);
+              const formOpen = proofRegId === reg.id;
               return (
-                <div key={reg.id} id={`reg-${reg.id}`} className="rounded-xl border border-(--line) bg-(--panel) p-4 sm:p-5">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div key={reg.id} id={`reg-${reg.id}`} className="rounded-xl border border-(--line) bg-(--panel)">
+                  {/* Card header */}
+                  <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-base font-bold tracking-tight text-(--foreground) truncate">{reg.event.title}</p>
+                        <p className="truncate text-base font-bold tracking-tight text-(--foreground)">{reg.event.title}</p>
                         <span className={`shrink-0 ${badgeClass(reg.status)}`}>{labelStatus(reg.status)}</span>
                       </div>
                       <p className="mt-1 text-sm text-(--muted)">{reg.distance}</p>
-                      <p className="text-xs text-(--muted-soft)">Joined {new Date(reg.registeredAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                      <p className="text-xs text-(--muted-soft)">
+                        Joined {new Date(reg.registeredAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {/* Proof status — only show when meaningful */}
-                    {reg.proofStatus === "SUBMITTED" && (
-                      <span className="badge badge-warn">Run under review</span>
-                    )}
-                    {reg.proofStatus === "APPROVED" && (
-                      <span className="badge badge-sage">Run verified ✓</span>
-                    )}
-                    {reg.proofStatus === "REJECTED" && (
-                      <span className="badge badge-danger">Proof rejected</span>
-                    )}
-                    {/* Payment */}
+                  {/* Badge row */}
+                  <div className="flex flex-wrap gap-1.5 px-4 pb-1 sm:px-5">
+                    {reg.proofStatus === "SUBMITTED" && <span className="badge badge-warn">Run under review</span>}
+                    {reg.proofStatus === "APPROVED" && <span className="badge badge-sage">Run verified</span>}
+                    {reg.proofStatus === "REJECTED" && <span className="badge badge-danger">Proof rejected</span>}
                     {reg.payment?.status === "CREATED" && (
                       <span className="badge">
                         Payment pending{reg.payment.amountInPaise ? ` — ${formatMoney(reg.payment.amountInPaise)}` : ""}
@@ -391,71 +448,130 @@ export function DashboardClient() {
                     {reg.payment?.status === "PAID" && reg.payment.amountInPaise > 0 && (
                       <span className="badge badge-sage">{formatMoney(reg.payment.amountInPaise)} paid</span>
                     )}
-                    {/* Certificate */}
-                    {reg.certificate?.status === "SENT" && (
-                      <span className="badge badge-sage">Certificate emailed</span>
-                    )}
-                    {/* Medal */}
-                    {reg.medalDelivery?.status === "DISPATCHED" && (
-                      <span className="badge badge-sage">Medal on the way</span>
-                    )}
-                    {reg.medalDelivery?.status === "DELIVERED" && (
-                      <span className="badge badge-solid">Medal delivered</span>
-                    )}
+                    {reg.certificate?.status === "SENT" && <span className="badge badge-sage">Certificate emailed</span>}
+                    {reg.medalDelivery?.status === "DISPATCHED" && <span className="badge badge-sage">Medal on the way</span>}
+                    {reg.medalDelivery?.status === "DELIVERED" && <span className="badge badge-solid">Medal delivered</span>}
                   </div>
 
                   {reg.proofStatus === "REJECTED" && reg.proofUpload?.reviewerNote ? (
-                    <p className="mt-3 rounded-lg border border-(--danger)/20 bg-(--danger)/8 px-3 py-2 text-xs text-(--danger)">Rejected: {reg.proofUpload.reviewerNote}. Upload a clearer GPS screenshot.</p>
+                    <div className="mx-4 mt-3 rounded-lg border border-(--danger)/20 bg-(--danger)/8 px-3 py-2 text-xs text-(--danger) sm:mx-5">
+                      Rejected: {reg.proofUpload.reviewerNote}. Upload a clearer GPS screenshot.
+                    </div>
                   ) : null}
 
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <Link className="btn btn-secondary h-9 px-3 text-xs" href={`/events/${reg.event.slug}`}>Event details <ArrowUpRight className="h-3 w-3" /></Link>
-                    {(reg.status === "PENDING_PAYMENT" || reg.payment?.status === "CREATED") ? <Link className="btn btn-primary h-9 px-3 text-xs" href="/register">Complete payment</Link> : null}
+                  {/* Action buttons */}
+                  <div className="flex flex-wrap items-center gap-2 border-t border-(--line) px-4 py-3 sm:px-5">
+                    <Link className="btn btn-secondary h-8 px-3 text-xs" href={`/events/${reg.event.slug}`}>
+                      Event details <ArrowUpRight className="h-3 w-3" />
+                    </Link>
+                    {(reg.status === "PENDING_PAYMENT" || reg.payment?.status === "CREATED") ? (
+                      <Link className="btn btn-primary h-8 px-3 text-xs" href="/register">
+                        Complete payment
+                      </Link>
+                    ) : null}
                     {uploadOk ? (
-                      <button className="btn btn-primary h-9 px-3 text-xs cursor-pointer" onClick={() => { setProofRegId(reg.id === proofRegId ? null : reg.id); setProofMessage(null); setProofError(null); }} type="button">
-                        {proofRegId === reg.id ? "Close form" : "Upload GPS proof"}
+                      <button
+                        className={`h-8 cursor-pointer rounded-full px-3 text-xs font-medium transition-colors ${
+                          formOpen
+                            ? "bg-(--panel-soft) text-(--muted) border border-(--line)"
+                            : "btn btn-primary"
+                        }`}
+                        onClick={() => {
+                          setProofRegId(formOpen ? null : reg.id);
+                          setProofMessage(null);
+                          setProofError(null);
+                        }}
+                        type="button"
+                      >
+                        {formOpen ? "Close" : "Upload GPS proof"}
                       </button>
                     ) : null}
-                    {reg.proofStatus === "SUBMITTED" ? <span className="inline-flex h-9 items-center rounded-full border border-(--line) px-3 text-xs text-(--muted)"><Clock className="mr-1 h-3 w-3" />Under review</span> : null}
-                    {reg.certificate && reg.certificate.status !== "QUEUED" ? <Link className="btn btn-secondary h-9 px-3 text-xs" href={`/certificates/${reg.certificate.certificateNumber}`}>Certificate <ArrowUpRight className="h-3 w-3" /></Link> : null}
-                    {!isEligible(reg) && reg.status !== "PENDING_PAYMENT" ? <span className="inline-flex h-9 items-center text-xs text-(--muted-soft)">Confirm payment to unlock proof upload</span> : null}
+                    {reg.proofStatus === "SUBMITTED" ? (
+                      <span className="inline-flex h-8 items-center gap-1 rounded-full border border-(--line) px-3 text-xs text-(--muted)">
+                        <Clock className="h-3 w-3" /> Under review
+                      </span>
+                    ) : null}
+                    {reg.certificate && reg.certificate.status !== "QUEUED" ? (
+                      <Link className="btn btn-secondary h-8 px-3 text-xs" href={`/certificates/${reg.certificate.certificateNumber}`}>
+                        Certificate <ArrowUpRight className="h-3 w-3" />
+                      </Link>
+                    ) : null}
+                    {!isEligible(reg) && reg.status !== "PENDING_PAYMENT" ? (
+                      <span className="text-xs text-(--muted-soft)">Pay to unlock proof upload</span>
+                    ) : null}
                   </div>
 
-                  {/* Proof upload form */}
-                  {proofRegId === reg.id ? (
-                    <form className="mt-5 space-y-4 rounded-xl border border-(--line) bg-(--panel-soft) p-4 sm:p-5" onSubmit={submitProof}>
-                      <p className="text-sm font-bold text-(--foreground)">Submit GPS proof</p>
-                      {proofError ? <p className="rounded-lg border border-(--danger)/20 bg-(--danger)/8 px-3 py-2 text-xs text-(--danger)">{proofError}</p> : null}
-                      <label className="block">
-                        <span className="field-label">Activity screenshot</span>
-                        <input accept="image/*" className="input cursor-pointer py-2 file:mr-3 file:rounded-full file:border-0 file:bg-(--sage) file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white" disabled={proofBusy} onChange={(e) => void onPickFile(e.target.files?.[0] ?? null)} type="file" />
-                        {proofFileName ? <p className="mt-1.5 text-xs text-(--sage)">Ready: {proofFileName}</p> : null}
-                      </label>
-                      <label className="block">
-                        <span className="field-label">Or image URL</span>
-                        <input className="input" disabled={proofBusy || Boolean(proofFileName)} onChange={(e) => { setProofUrl(e.target.value); setProofFileName(null); }} placeholder="https://... (public image URL)" type="url" value={proofFileName ? "" : proofUrl.startsWith("data:") ? "" : proofUrl} />
-                      </label>
-                      {proofUrl && (proofUrl.startsWith("data:") || /\.(png|jpe?g|webp)/i.test(proofUrl)) ? (
-                        <div className="overflow-hidden rounded-lg border border-(--line) bg-(--panel)">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img alt="GPS proof preview" className="max-h-48 w-full object-contain" src={proofUrl} />
+                  {/* Proof form */}
+                  {formOpen ? (
+                    <form className="border-t border-(--line) bg-(--panel-soft) p-4 sm:p-5" onSubmit={submitProof}>
+                      <div className="space-y-4">
+                        <p className="text-sm font-bold text-(--foreground)">Upload GPS proof</p>
+
+                        {proofError ? (
+                          <p className="rounded-lg border border-(--danger)/20 bg-(--danger)/8 px-3 py-2 text-xs text-(--danger)">{proofError}</p>
+                        ) : null}
+
+                        <label className="block">
+                          <span className="field-label">Screenshot</span>
+                          <input
+                            accept="image/*"
+                            className="input cursor-pointer py-2 file:mr-3 file:rounded-full file:border-0 file:bg-(--sage) file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
+                            disabled={proofBusy}
+                            onChange={(e) => void onPickFile(e.target.files?.[0] ?? null)}
+                            type="file"
+                          />
+                          {proofFileName ? <p className="mt-1.5 text-xs text-(--sage)">Ready: {proofFileName}</p> : null}
+                        </label>
+
+                        <label className="block">
+                          <span className="field-label">Or paste image URL</span>
+                          <input
+                            className="input"
+                            disabled={proofBusy || Boolean(proofFileName)}
+                            onChange={(e) => { setProofUrl(e.target.value); setProofFileName(null); }}
+                            placeholder="https://..."
+                            type="url"
+                            value={proofFileName ? "" : proofUrl.startsWith("data:") ? "" : proofUrl}
+                          />
+                        </label>
+
+                        {proofUrl && (proofUrl.startsWith("data:") || /\.(png|jpe?g|webp)/i.test(proofUrl)) ? (
+                          <div className="overflow-hidden rounded-lg border border-(--line) bg-(--panel)">
+                            <img alt="Preview" className="max-h-48 w-full object-contain" src={proofUrl} />
+                          </div>
+                        ) : null}
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <label className="block text-sm">
+                            <span className="field-label">Source app</span>
+                            <select className="input" onChange={(e) => setSourceApp(e.target.value)} required value={sourceApp}>
+                              {SOURCE_APPS.map((a) => <option key={a} value={a}>{a}</option>)}
+                            </select>
+                          </label>
+                          <label className="block text-sm">
+                            <span className="field-label">Finish time (minutes)</span>
+                            <input
+                              className="input"
+                              inputMode="decimal"
+                              onChange={(e) => setFinishMinutes(e.target.value)}
+                              placeholder="e.g. 52"
+                              value={finishMinutes}
+                            />
+                          </label>
                         </div>
-                      ) : null}
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <label className="block text-sm">
-                          <span className="field-label">Source app</span>
-                          <select className="input" onChange={(e) => setSourceApp(e.target.value)} required value={sourceApp}>
-                            {SOURCE_APPS.map((a) => <option key={a} value={a}>{a}</option>)}
-                          </select>
-                        </label>
-                        <label className="block text-sm">
-                          <span className="field-label">Finish time (minutes)</span>
-                          <input className="input" inputMode="decimal" onChange={(e) => setFinishMinutes(e.target.value)} placeholder="e.g. 52" value={finishMinutes} />
-                        </label>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <button className="btn btn-primary h-9 cursor-pointer" disabled={proofBusy} type="submit">{proofBusy ? "Submitting..." : "Submit proof"}</button>
-                        <button className="btn btn-ghost h-9 cursor-pointer" onClick={() => { setProofRegId(null); setProofUrl(""); setProofFileName(null); setProofError(null); }} type="button">Cancel</button>
+
+                        <div className="flex flex-wrap gap-2">
+                          <button className="btn btn-primary h-9 cursor-pointer" disabled={proofBusy} type="submit">
+                            {proofBusy ? "Submitting..." : "Submit proof"}
+                          </button>
+                          <button
+                            className="btn btn-ghost h-9 cursor-pointer"
+                            onClick={() => { setProofRegId(null); setProofUrl(""); setProofFileName(null); setProofError(null); }}
+                            type="button"
+                          >
+                            Cancel
+                          </button>
+                        </div>
                       </div>
                     </form>
                   ) : null}
