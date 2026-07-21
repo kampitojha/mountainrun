@@ -40,13 +40,26 @@ function EventCard({ event, variant = "upcoming" }: { event: PublicEvent; varian
             <p className={`text-[0.6rem] font-semibold uppercase tracking-widest ${isPast ? "text-(--muted)" : "text-white/70"}`}>
               {event.banner}
             </p>
-            <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider ${
-              isPast
-                ? "bg-(--sage-soft) text-(--sage)"
-                : "bg-white/20 text-white backdrop-blur-sm"
-            }`}>
-              {isPast ? "Completed" : "Open"}
-            </span>
+            {isPast ? (
+              <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-(--line) bg-(--panel-soft)/80 px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-(--muted)">
+                <span className="h-1.5 w-1.5 rounded-full bg-(--muted-soft)" />
+                Registration Closed
+              </span>
+            ) : (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2, duration: 0.4 }}
+                className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-white backdrop-blur-sm"
+              >
+                <motion.span
+                  animate={{ opacity: [1, 0.4, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  className="h-1.5 w-1.5 rounded-full bg-emerald-300"
+                />
+                Registration Open
+              </motion.span>
+            )}
           </div>
           <p className={`mt-1 text-xs font-medium ${isPast ? "text-(--muted)" : "text-white/80"}`}>{event.reward}</p>
         </div>

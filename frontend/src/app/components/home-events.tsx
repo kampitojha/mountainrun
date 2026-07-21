@@ -1,7 +1,8 @@
 "use client";
 
+import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowUpRight, CalendarDays, IndianRupee } from "lucide-react";
+import { ArrowUpRight, CalendarDays, IndianRupee, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { PublicEvent } from "../data/events";
 import { publicEvents as staticUpcoming } from "../data/events";
@@ -16,9 +17,19 @@ function EventCard({ event }: { event: PublicEvent }) {
             <p className="min-w-0 flex-1 text-[0.6rem] font-semibold uppercase tracking-widest text-white/70 leading-snug">
               {event.banner}
             </p>
-            <span className="shrink-0 rounded-full bg-white/20 px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
-              Active
-            </span>
+            <motion.span
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.4 }}
+              className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-wide text-white backdrop-blur-sm"
+            >
+              <motion.span
+                animate={{ opacity: [1, 0.4, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                className="h-1.5 w-1.5 rounded-full bg-emerald-300"
+              />
+              Registration Open
+            </motion.span>
           </div>
           <p className="mt-2 text-xs font-medium text-white/80 leading-snug">{event.reward}</p>
         </div>
@@ -60,7 +71,8 @@ function EventCard({ event }: { event: PublicEvent }) {
         </p>
 
         <Link className="btn btn-primary mt-4 w-full group/btn text-sm" href={`/events/${event.slug}`}>
-          View event
+          <Sparkles className="h-3.5 w-3.5" />
+          Register now
           <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
         </Link>
       </div>
