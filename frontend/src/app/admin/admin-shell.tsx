@@ -43,7 +43,10 @@ const navGroups: NavGroup[] = [
   },
   {
     label: "Growth",
-    items: [{ label: "Coupons", href: "/admin/coupons", icon: "tag" }],
+    items: [
+      { label: "Coupons",    href: "/admin/coupons",    icon: "tag" },
+      { label: "Newsletter", href: "/admin/newsletter", icon: "mail" },
+    ],
   },
   {
     label: "Website",
