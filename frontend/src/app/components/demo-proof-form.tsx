@@ -98,8 +98,8 @@ export function DemoProofForm() {
       <label
         className={`mt-5 block cursor-pointer rounded-xl border border-dashed p-6 text-center transition ${
           errors.proof
-            ? "border-[var(--danger)] bg-red-50/40"
-            : "border-[var(--line)] bg-[var(--panel-soft)] hover:border-[#d6d3d1]"
+            ? "border-[var(--danger)] bg-[var(--danger)]/5"
+            : "border-[var(--line)] bg-[var(--panel-soft)] hover:border-[var(--line-strong)]"
         }`}
       >
         {file ? (

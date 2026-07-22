@@ -1,11 +1,13 @@
 "use client";
 
 import { useAuth, useClerk, useUser } from "@clerk/nextjs";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { adminFetch } from "../../lib/admin-api";
 import { AdminThemeProvider, AdminThemeToggle, useAdminTheme } from "./admin-theme";
+import { BrandText } from "../components/brand-text";
 import "./admin.css";
 
 type NavItem = { label: string; href: string; icon: string };
@@ -41,7 +43,10 @@ const navGroups: NavGroup[] = [
   },
   {
     label: "Growth",
-    items: [{ label: "Coupons", href: "/admin/coupons", icon: "tag" }],
+    items: [
+      { label: "Coupons",    href: "/admin/coupons",    icon: "tag" },
+      { label: "Newsletter", href: "/admin/newsletter", icon: "mail" },
+    ],
   },
   {
     label: "Website",
@@ -191,13 +196,18 @@ function AdminThemed({
 function GateSignIn() {
   return (
     <AdminThemed className="admin-app admin-gate">
-      <div className="admin-gate-card">
+      <motion.div
+        className="admin-gate-card"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      >
         <div className="admin-gate-logo">
           <div className="admin-gate-logo-icon">
             <BrandMark size={22} />
           </div>
           <span className="admin-gate-logo-text">
-            Mountain <em>Run</em>
+            <BrandText />
           </span>
         </div>
 
@@ -218,12 +228,14 @@ function GateSignIn() {
         </div>
 
         <div className="admin-gate-divider">
-          Mountain Run · Operations Console
+          <BrandText /> · Operations Console
         </div>
-      </div>
+      </motion.div>
     </AdminThemed>
   );
 }
+
+/* ── Fade-in wrapper for gate pages ────────────────────── */
 
 /* ── Gate: signed in but not admin ─────────────────────── */
 function GateRestricted({
@@ -242,17 +254,22 @@ function GateRestricted({
   }
   return (
     <AdminThemed className="admin-app admin-gate">
-      <div className="admin-gate-card">
+      <motion.div
+        className="admin-gate-card"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      >
         <div className="admin-gate-logo">
           <div className="admin-gate-logo-icon">
             <BrandMark size={22} />
           </div>
           <span className="admin-gate-logo-text">
-            Mountain <em>Run</em>
+            <BrandText />
           </span>
         </div>
 
-        <div className="admin-gate-lock" style={{ color: "var(--admin-rose)" }}>
+        <div className="admin-gate-lock" style={{ color: "var(--danger)" }}>
           <ShieldIcon />
         </div>
 
@@ -265,7 +282,7 @@ function GateRestricted({
               <span>Signed in as</span>
               <strong>{email}</strong>
             </div>
-            <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--admin-muted)" }}>
+            <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--muted)" }}>
               This account is not authorised. Contact the system owner to grant admin access,
               or sign out and use a different account.
             </p>
@@ -289,9 +306,9 @@ function GateRestricted({
         </div>
 
         <div className="admin-gate-divider">
-          Need access? Ask the admin to add your email to <code style={{ background: "var(--admin-surface-3)", color: "var(--admin-teal)", padding: "0.1rem 0.3rem", borderRadius: 4, fontSize: "0.7rem" }}>ADMIN_EMAILS</code>
+          Need access? Ask the admin to add your email to <code style={{ background: "var(--panel-soft)", color: "var(--sage)", padding: "0.1rem 0.3rem", borderRadius: 4, fontSize: "0.7rem" }}>ADMIN_EMAILS</code>
         </div>
-      </div>
+      </motion.div>
     </AdminThemed>
   );
 }
@@ -300,20 +317,25 @@ function GateRestricted({
 function GateLoading() {
   return (
     <AdminThemed className="admin-app admin-gate">
-      <div className="admin-gate-card">
+      <motion.div
+        className="admin-gate-card"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      >
         <div className="admin-gate-logo">
           <div className="admin-gate-logo-icon">
             <BrandMark size={22} />
           </div>
           <span className="admin-gate-logo-text">
-            Mountain <em>Run</em>
+            <BrandText />
           </span>
         </div>
         <Spinner />
-        <p style={{ marginTop: "0.75rem", fontSize: "0.84rem", color: "var(--admin-muted)" }}>
+        <p style={{ marginTop: "0.75rem", fontSize: "0.84rem", color: "var(--muted)" }}>
           Verifying admin session…
         </p>
-      </div>
+      </motion.div>
     </AdminThemed>
   );
 }
@@ -334,17 +356,17 @@ function SidebarNav({
 }) {
   return (
     <>
-      <div className="admin-sidebar-brand">
+      <Link href="/" className="admin-sidebar-brand" aria-label="Go to Mountain Run homepage">
         <div className="admin-sidebar-brand-icon">
           <BrandMark size={20} />
         </div>
         <div className="admin-sidebar-brand-text">
           <strong>
-            Mountain <em>Run</em>
+            <BrandText />
           </strong>
           <span>Operations</span>
         </div>
-      </div>
+      </Link>
 
       <nav aria-label="Admin" className="admin-nav">
         {navGroups.map((group) => (
@@ -380,7 +402,9 @@ function SidebarNav({
           <AdminThemeToggle className="is-icon-only" />
         </div>
         <div className="admin-sidebar-links">
-          <Link href="/">View site</Link>
+          <Link href="/" className="admin-sidebar-site-btn">
+            ← View site
+          </Link>
           <Link href="/dashboard">My dashboard</Link>
         </div>
       </div>
@@ -466,13 +490,20 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
     <AdminThemed>
       {/* Mobile top bar */}
       <div className="admin-mobile-bar">
-        <div className="admin-mobile-bar-brand">
+        <Link href="/" className="admin-mobile-bar-brand">
           <BrandMark size={22} />
           <strong>
-            Mountain <em>Run</em>
+            <BrandText />
           </strong>
-        </div>
+        </Link>
         <div className="admin-mobile-bar-actions">
+          <Link
+            href="/"
+            className="admin-mobile-bar-site-link"
+            aria-label="Go to main site"
+          >
+            ← Site
+          </Link>
           <AdminThemeToggle className="is-icon-only" />
           <button
             className="btn btn-secondary"
@@ -485,14 +516,22 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Mobile drawer */}
-      {mobileOpen ? (
-        <div className="admin-mobile-drawer">
-          <SidebarNav
-            {...navProps}
-            onNavClick={() => setMobileOpen(false)}
-          />
-        </div>
-      ) : null}
+      <AnimatePresence>
+        {mobileOpen ? (
+          <motion.div
+            className="admin-mobile-drawer"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <SidebarNav
+              {...navProps}
+              onNavClick={() => setMobileOpen(false)}
+            />
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       {/* Desktop shell */}
       <div className="admin-shell">
@@ -500,7 +539,15 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
           <SidebarNav {...navProps} />
         </aside>
         <main className="admin-main">
-          <div className="admin-page">{children}</div>
+          <motion.div
+            className="admin-page"
+            key={pathname}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {children}
+          </motion.div>
         </main>
       </div>
     </AdminThemed>

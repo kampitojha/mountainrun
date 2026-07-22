@@ -9,7 +9,9 @@ import { adminContentRouter, contentRouter } from "./routes/content.routes.js";
 import { dashboardRouter } from "./routes/dashboard.routes.js";
 import { eventRouter } from "./routes/event.routes.js";
 import { paymentRouter } from "./routes/payment.routes.js";
+import { referralRouter } from "./routes/referral.routes.js";
 import { registrationRouter } from "./routes/registration.routes.js";
+import { subscriberRouter } from "./routes/subscriber.routes.js";
 import { uploadRouter } from "./routes/upload.routes.js";
 import { userRouter } from "./routes/user.routes.js";
 import { ApiError } from "./utils/api-error.js";
@@ -79,6 +81,8 @@ app.use("/api/payments", paymentRouter);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/certificates", certificateRouter);
 app.use("/api/uploads", uploadRouter);
+app.use("/api/referrals", referralRouter);
+app.use("/api/subscribers", subscriberRouter);
 
 app.use((_request, _response, next) => {
   next(new ApiError(404, "Route not found"));

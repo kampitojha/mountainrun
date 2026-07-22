@@ -39,7 +39,7 @@ function parseOriginList(raw: string) {
 }
 
 const configuredFrontendOrigins = parseOriginList(
-  readEnv("FRONTEND_URL", "http://localhost:3000"),
+  readEnv("FRONTEND_URL", "https://mountainrun.in"),
 );
 
 /** Browser origins allowed for CORS + Clerk token verification. */
@@ -101,7 +101,7 @@ function normalizeResendFrom(raw: string | undefined): string {
 
 export const env = {
   port: Number(process.env.PORT ?? 4000),
-  frontendUrl: configuredFrontendOrigins[0] ?? "http://localhost:3000",
+  frontendUrl: configuredFrontendOrigins[0] ?? "https://mountainrun.in",
   allowedOrigins,
   nodeEnv: process.env.NODE_ENV ?? "development",
   razorpayKeyId: process.env.RAZORPAY_KEY_ID ?? "",

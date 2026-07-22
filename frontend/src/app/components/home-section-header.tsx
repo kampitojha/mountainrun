@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Reveal } from "./marketing/motion";
 
 export function HomeSectionHeader({
   eyebrow,
@@ -18,22 +17,32 @@ export function HomeSectionHeader({
 }) {
   if (align === "split") {
     return (
-      <Reveal className="flex flex-col justify-between gap-4 sm:gap-6 md:flex-row md:items-end">
-        <div className="max-w-xl">
+      <div className="flex flex-col gap-4 sm:gap-5 md:flex-row md:items-end md:justify-between">
+        <div className="min-w-0">
           <p className="eyebrow">{eyebrow}</p>
-          <h2 className="heading mt-3 sm:mt-4">{title}</h2>
-          {lead ? <p className="lede mt-3">{lead}</p> : null}
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-(--foreground) sm:text-4xl">
+            {title}
+          </h2>
+          {lead ? (
+            <p className="lede mt-3 max-w-xl">{lead}</p>
+          ) : null}
         </div>
-        {action ? <div className="shrink-0">{action}</div> : null}
-      </Reveal>
+        {action ? (
+          <div className="w-full shrink-0 sm:w-auto">{action}</div>
+        ) : null}
+      </div>
     );
   }
 
   return (
-    <Reveal className="max-w-xl">
+    <div>
       <p className="eyebrow">{eyebrow}</p>
-      <h2 className="heading mt-3 sm:mt-4">{title}</h2>
-      {lead ? <p className="lede mt-4">{lead}</p> : null}
-    </Reveal>
+      <h2 className="mt-3 text-3xl font-bold tracking-tight text-(--foreground) sm:text-4xl">
+        {title}
+      </h2>
+      {lead ? (
+        <p className="lede mt-4 max-w-2xl">{lead}</p>
+      ) : null}
+    </div>
   );
 }

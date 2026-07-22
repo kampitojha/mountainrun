@@ -15,10 +15,12 @@ model User {
   phone         String?
   role          UserRole       @default(RUNNER)
   avatarUrl     String?
+  referralCode  String?        @unique
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   clerkId       String?        @unique
   registrations Registration[]
+  referralsMade Referral[]     @relation("referrals_made")
 }
 
 model Event {
@@ -38,6 +40,14 @@ model Event {
   maxCapacity      Int?
   city             String?
   bannerImageUrl   String?
+  couponCode       String?
+  showCouponOnCard Boolean      @default(false)
+  activityTypes    String[]     @default(["running"])
+  benefits         String[]
+  finishers        Int?
+  verifiedResults  Int?
+  cities           Int?
+  resultNote       String?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   registrations    Registration[]
@@ -49,6 +59,7 @@ model Registration {
   userId            String
   eventId           String
   distance          String
+  activityType      String             @default("running")
   status            RegistrationStatus @default(PENDING_PAYMENT)
   proofStatus       ProofStatus        @default(NOT_SUBMITTED)
   registeredAt      DateTime           @default(now())
@@ -123,6 +134,29 @@ model MedalDelivery {
   registration   Registration @relation(fields: [registrationId], references: [id])
 }
 
+model Subscriber {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  subscribed Boolean  @default(true)
+  createdAt  DateTime @default(now())
+}
+
+model Referral {
+  id         String   @id @default(cuid())
+  referrerId String
+  refereeId  String   @unique
+  code       String
+  status     String   @default("pending")
+  rewardGiven Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  referrer User @relation("referrals_made", fields: [referrerId], references: [id])
+
+  @@index([referrerId])
+  @@index([code])
+  @@map("referrals")
+}
+
 model Coupon {
   id             String    @id @default(cuid())
   code           String    @unique
@@ -168,6 +202,7 @@ model SiteMedia {
   eventLabel        String?
   dateLabel         String?
   meta              String?
+  submittedBy       String?
   sortOrder         Int      @default(0)
   published         Boolean  @default(true)
   showInGallery     Boolean  @default(true)

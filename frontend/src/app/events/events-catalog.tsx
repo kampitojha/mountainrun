@@ -1,7 +1,9 @@
 "use client";
 
+import { motion, useInView, useReducedMotion } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
+import { ArrowUpRight, CalendarDays, IndianRupee, Users, BadgeCheck, MapPin, Sparkles, Medal } from "lucide-react";
 import { getApiUrl } from "../../lib/api";
 import { type ApiEvent, mapApiEventToPublic } from "../../lib/events-api";
 import {
@@ -10,70 +12,120 @@ import {
   type PublicEvent,
 } from "../data/events";
 
-function EventCard({
-  event,
-  variant = "upcoming",
-}: {
-  event: PublicEvent;
-  variant?: "upcoming" | "past";
-}) {
+function FadeIn({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-10%" });
+  const reduce = useReducedMotion();
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      initial={reduce ? false : { opacity: 0, y: 20 }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      transition={{ duration: 0.45, delay, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function EventCard({ event, variant = "upcoming" }: { event: PublicEvent; variant?: "upcoming" | "past" }) {
   const isPast = variant === "past" || event.status === "past";
 
   return (
-    <article className={`card card-hover flex flex-col overflow-hidden ${isPast ? "opacity-95" : ""}`}>
-      <div className={`event-card-banner px-6 py-4 text-white ${isPast ? "!bg-[var(--sage)]" : ""}`}>
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-xs font-medium uppercase tracking-[0.14em] text-white/60">
-            {event.banner}
-          </p>
-          <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-white">
-            {isPast ? "Completed" : "Open"}
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-(--line) bg-(--panel) transition-all duration-300 hover:border-(--sage)/30 hover:shadow-lg">
+      <div className={`relative overflow-hidden ${isPast ? "bg-(--panel-soft)" : "bg-gradient-to-br from-(--sage) to-emerald-600"}`}>
+        <div className="relative z-10 px-4 py-3 sm:px-5 sm:py-3.5">
+          <div className="flex items-start justify-between gap-2">
+            <p className={`text-[0.6rem] font-semibold uppercase tracking-widest ${isPast ? "text-(--muted)" : "text-white/70"}`}>
+              {event.banner}
+            </p>
+            {isPast ? (
+              <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-(--line) bg-(--panel-soft)/80 px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-(--muted)">
+                <span className="h-1.5 w-1.5 rounded-full bg-(--muted-soft)" />
+                Registration Closed
+              </span>
+            ) : (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2, duration: 0.4 }}
+                className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-white backdrop-blur-sm"
+              >
+                <motion.span
+                  animate={{ opacity: [1, 0.4, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  className="h-1.5 w-1.5 rounded-full bg-emerald-300"
+                />
+                Registration Open
+              </motion.span>
+            )}
+          </div>
+          <p className={`mt-1 text-xs font-medium ${isPast ? "text-(--muted)" : "text-white/80"}`}>{event.reward}</p>
+        </div>
+        {!isPast && <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />}
+      </div>
+
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-2">
+          <span className="inline-flex items-center gap-1 rounded-md border border-(--line) bg-(--panel-soft) px-2 py-1 text-[0.6rem] font-medium text-(--muted)">
+            <CalendarDays className="h-3 w-3 text-(--muted-soft)" />
+            {event.date}
+          </span>
+          <span className="inline-flex items-center gap-1 text-sm font-bold text-(--sage)">
+            <IndianRupee className="h-3.5 w-3.5" />
+            {event.price.replace(/^Rs\.\s*/, "").replace(/^₹/, "")}
           </span>
         </div>
-        <p className="mt-2 text-sm font-medium">{event.reward}</p>
-      </div>
-      <div className="flex flex-1 flex-col p-6">
-        <div className="flex items-start justify-between gap-3">
-          <span className="badge">{event.date}</span>
-          <span className="text-sm font-semibold tracking-tight">{event.price}</span>
-        </div>
-        <h2 className="mt-6 text-xl font-semibold tracking-tight">{event.name}</h2>
-        <p className="mt-2 text-sm text-[var(--muted)]">{event.distance}</p>
-        <p className="mt-4 flex-1 text-sm leading-6 text-[var(--muted)]">{event.highlight}</p>
 
-        {isPast && (event.finishers || event.cities) ? (
-          <div className="mt-5 grid grid-cols-3 gap-2 rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] p-3">
+        <h3 className="mt-3 text-base font-bold tracking-tight text-(--foreground) group-hover:text-(--sage) transition-colors sm:text-lg">{event.name}</h3>
+        <p className="mt-0.5 text-[0.6rem] font-semibold uppercase tracking-wider text-(--muted-soft)">{event.distance}</p>
+
+        {event.activityTypes && event.activityTypes.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {event.activityTypes.map((type) => (
+              <span key={type}
+                className="rounded-md border border-(--line) bg-(--panel) px-2 py-0.5 text-[0.6rem] font-semibold capitalize text-(--muted)">
+                {type}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <p className="mt-2 flex-1 text-xs leading-relaxed text-(--muted) sm:text-sm">{event.highlight}</p>
+
+        {isPast && (event.finishers || event.cities) && (
+          <div className="mt-3 grid grid-cols-3 gap-2 rounded-xl border border-(--line) bg-(--panel-soft) p-2.5">
             {[
-              ["Finishers", event.finishers],
-              ["Verified", event.verifiedResults],
-              ["Cities", event.cities],
-            ].map(([label, value]) => (
-              <div key={String(label)} className="text-center">
-                <p className="text-sm font-semibold tracking-tight">
-                  {typeof value === "number" ? value.toLocaleString("en-IN") : "—"}
+              { label: "Finishers", value: event.finishers, icon: Users },
+              { label: "Verified", value: event.verifiedResults, icon: BadgeCheck },
+              { label: "Cities", value: event.cities, icon: MapPin },
+            ].map(({ label, value, icon: Icon }) => (
+              <div key={label} className="text-center">
+                <Icon className="mx-auto h-3 w-3 text-(--muted-soft)" />
+                <p className="mt-0.5 text-sm font-bold tracking-tight text-(--foreground)">
+                  {typeof value === "number" ? value.toLocaleString("en-IN") : "\u2014"}
                 </p>
-                <p className="mt-0.5 text-[0.65rem] uppercase tracking-[0.1em] text-[var(--muted)]">
-                  {label}
-                </p>
+                <p className="mt-0.5 text-[0.5rem] uppercase tracking-wider text-(--muted-soft)">{label}</p>
               </div>
             ))}
           </div>
-        ) : null}
+        )}
 
-        <div className="mt-8 grid gap-2">
-          <Link className="btn btn-primary" href={`/events/${event.slug}`}>
-            {isPast ? "View recap" : "View details"}
+        <div className="mt-4 flex gap-2">
+          <Link className="btn btn-primary flex-1 group/btn text-sm" href={`/events/${event.slug}`}>
+            <span>{isPast ? "View recap" : "Details"}</span>
+            <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
           </Link>
           {!isPast ? (
-            <Link
-              className="btn btn-secondary"
-              href={`/register?event=${encodeURIComponent(event.slug)}`}
-            >
+            <Link className="btn btn-secondary flex-1 group/btn text-sm" href={`/register?event=${encodeURIComponent(event.slug)}`}>
+              <Medal className="h-3.5 w-3.5" />
               Register
             </Link>
           ) : (
-            <Link className="btn btn-secondary" href="/leaderboard">
-              View leaderboard
+            <Link className="btn btn-secondary flex-1 group/btn text-sm" href="/leaderboard">
+              Results
+              <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
           )}
         </div>
@@ -89,21 +141,14 @@ export function EventsCatalog() {
 
   useEffect(() => {
     let cancelled = false;
-
     async function load() {
       try {
         const response = await fetch(getApiUrl("/api/events?group=true"));
-        if (!response.ok) {
-          return;
-        }
+        if (!response.ok) return;
         const json = await response.json();
         const upcomingApi = (json.data?.upcoming ?? []) as ApiEvent[];
         const pastApi = (json.data?.past ?? []) as ApiEvent[];
-
-        if (cancelled || (upcomingApi.length === 0 && pastApi.length === 0)) {
-          return;
-        }
-
+        if (cancelled || (upcomingApi.length === 0 && pastApi.length === 0)) return;
         setUpcoming(upcomingApi.map((event) => mapApiEventToPublic(event, "upcoming")));
         setPast(pastApi.map((event) => mapApiEventToPublic(event, "past")));
         setSource("api");
@@ -111,54 +156,68 @@ export function EventsCatalog() {
         // keep static catalog
       }
     }
-
     void load();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   return (
-    <>
-      <div className="mt-14">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <div className="min-w-0">
+      {/* Upcoming events */}
+      <div className="mt-6 sm:mt-8">
+        <div className="flex items-end justify-between gap-2">
           <div>
             <p className="eyebrow">Open now</p>
-            <h2 className="heading mt-2">Upcoming events</h2>
+            <h2 className="mt-1.5 text-2xl font-bold tracking-tight text-(--foreground) sm:text-3xl">Upcoming events</h2>
           </div>
-          <p className="text-sm text-[var(--muted)]">
-            {upcoming.length} race{upcoming.length === 1 ? "" : "s"} open for registration
-            {source === "api" ? " · live from API" : ""}
+          <p className="shrink-0 text-xs text-(--muted)">
+            {upcoming.length} race{upcoming.length === 1 ? "" : "s"}
+            {source === "api" ? " \u00B7 live" : ""}
           </p>
         </div>
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
-          {upcoming.map((event) => (
-            <EventCard event={event} key={event.slug} variant="upcoming" />
-          ))}
-        </div>
+
+        {upcoming.length > 0 ? (
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {upcoming.map((event, i) => (
+              <FadeIn key={event.slug} delay={i * 0.06}>
+                <EventCard event={event} variant="upcoming" />
+              </FadeIn>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-5 flex flex-col items-center justify-center rounded-2xl border border-(--line) bg-(--panel) px-6 py-10 text-center">
+            <Sparkles className="h-7 w-7 text-(--muted-soft)" />
+            <p className="mt-2 text-sm font-semibold text-(--foreground)">No open events right now</p>
+            <p className="mt-0.5 text-xs text-(--muted)">Check back soon for new races.</p>
+          </div>
+        )}
       </div>
 
-      <div className="mt-20 border-t border-[var(--line)] pt-14">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="eyebrow">Archive</p>
-            <h2 className="heading mt-2">Past events</h2>
-            <p className="lede mt-3 max-w-xl">
-              Races that have already finished. Tap any event to see distances, rewards, and how
-              it went.
+      {/* Past events */}
+      {past.length > 0 && (
+        <div className="mt-12 border-t border-(--line) pt-8 sm:mt-14 sm:pt-10">
+          <div className="flex items-end justify-between gap-2">
+            <div>
+              <p className="eyebrow">Archive</p>
+              <h2 className="mt-1.5 text-2xl font-bold tracking-tight text-(--foreground) sm:text-3xl">Past events</h2>
+            </div>
+            <p className="shrink-0 text-xs text-(--muted)">
+              {past.length} completed race{past.length === 1 ? "" : "s"}
             </p>
           </div>
-          <p className="text-sm text-[var(--muted)]">
-            {past.length} completed race{past.length === 1 ? "" : "s"}
-          </p>
-        </div>
 
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
-          {past.map((event) => (
-            <EventCard event={event} key={event.slug} variant="past" />
-          ))}
+          <p className="lede mt-2 max-w-xl text-xs sm:text-sm">
+            Races that have already finished. Tap any event to see distances, rewards, and verified results.
+          </p>
+
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {past.map((event, i) => (
+              <FadeIn key={event.slug} delay={i * 0.06}>
+                <EventCard event={event} variant="past" />
+              </FadeIn>
+            ))}
+          </div>
         </div>
-      </div>
-    </>
+      )}
+    </div>
   );
 }

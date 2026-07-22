@@ -1,46 +1,91 @@
-import { PageHeader, PageShell } from "../components/app-shell";
+import type { Metadata } from "next";
+import { FileText, Medal, Shirt, Trophy } from "lucide-react";
+import { PageShell } from "../components/app-shell";
+import { Breadcrumb } from "../components/breadcrumb";
 import { EventsCatalog } from "./events-catalog";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mountainrun.in";
+
+export const metadata: Metadata = {
+  title: "Virtual Running Events - Marathons, 5K, 10K Races | Mountain Run",
+  description:
+    "Browse upcoming virtual running events in India. Register for marathons, 5K, 10K, half marathon races. GPS verification, medals, certificates, and leaderboards.",
+  keywords: [
+    "virtual running events",
+    "online marathon India",
+    "5K run events",
+    "10K run events",
+    "half marathon virtual",
+    "running races India",
+    "GPS verified runs",
+    "virtual race registration",
+  ],
+  openGraph: {
+    title: "Virtual Running Events - Marathons, 5K, 10K Races",
+    description:
+      "Browse upcoming virtual running events in India. Register for marathons, 5K, 10K, half marathon races.",
+    url: "/events",
+    type: "website",
+  },
+  alternates: {
+    canonical: `${SITE_URL}/events`,
+  },
+};
 
 export default function EventsPage() {
   return (
     <PageShell>
-      <section className="section">
-        <div className="container-page">
-          <div className="overflow-hidden rounded-[var(--radius)] border border-[var(--line)] bg-(--panel)">
-            <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-              <div className="p-6 sm:p-8 lg:p-10">
-                <PageHeader
-                  eyebrow="Events"
-                  description="Choose a run, register once, upload GPS proof, and appear on the verified leaderboard."
-                  title="Upcoming virtual races"
-                />
-                <div className="mt-7 flex flex-wrap gap-2">
-                  {["Medals", "T-shirts", "Certificates", "Leaderboard"].map((item) => (
-                    <span className="badge badge-sage" key={item}>
-                      {item}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="relative min-h-64 bg-[#0f172a]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover opacity-80"
-                  src="/images/mountain-run-hero.png"
-                />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-6 text-white sm:p-8">
-                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-white/65">
-                    Run anywhere
-                  </p>
-                  <p className="mt-2 text-xl font-semibold tracking-tight">
-                    Finish with proof. Celebrate with rewards.
-                  </p>
-                </div>
-              </div>
+      <section className="relative overflow-hidden border-b border-(--line)">
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10"
+          style={{
+            background: [
+              "radial-gradient(ellipse 80% 50% at 0% 0%, color-mix(in srgb, var(--sage) 12%, transparent) 0%, transparent 60%)",
+              "radial-gradient(ellipse 50% 40% at 100% 100%, color-mix(in srgb, var(--sage) 6%, transparent) 0%, transparent 50%)",
+              "var(--background)",
+            ].join(", "),
+          }}
+        />
+        <div aria-hidden className="pointer-events-none absolute top-8 right-8 flex gap-1.5 opacity-20">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-1.5 w-1.5 rounded-full bg-(--sage) animate-pulse" style={{ animationDelay: `${i * 0.3}s` }} />
+          ))}
+        </div>
+
+        <div className="container-page py-6 sm:py-8">
+          <Breadcrumb
+            items={[
+              { name: "Home", href: "/" },
+              { name: "Events", href: "/events" },
+            ]}
+          />
+
+          <div className="mx-auto mt-6 max-w-xl text-center sm:mt-8">
+            <p className="eyebrow">Events</p>
+            <h1 className="mt-3 text-4xl font-bold leading-[1.1] tracking-tight text-(--foreground) sm:text-5xl">
+              Upcoming virtual races
+            </h1>
+            <p className="lede mx-auto mt-4 max-w-lg">
+              Choose a run, register once, upload GPS proof, and appear on the verified leaderboard.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              {[
+                { label: "Medals", icon: Medal },
+                { label: "T-shirts", icon: Shirt },
+                { label: "Certificates", icon: FileText },
+                { label: "Leaderboard", icon: Trophy },
+              ].map(({ label, icon: Icon }) => (
+                <span key={label} className="inline-flex items-center gap-1.5 rounded-full border border-(--line) bg-(--sage-soft) px-3 py-1 text-xs font-semibold text-(--sage)">
+                  <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+                  {label}
+                </span>
+              ))}
             </div>
           </div>
+        </div>
+      </section>
 
+      <section className="page-section">
+        <div className="container-page">
           <EventsCatalog />
         </div>
       </section>

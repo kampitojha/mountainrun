@@ -1,3 +1,4 @@
+import { v2 as cloudinary } from "cloudinary";
 import { env } from "../config/env.js";
 import { ApiError } from "../utils/api-error.js";
 
@@ -7,6 +8,14 @@ type CloudinaryUploadResult = {
   bytes: number;
   format: string;
 };
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: env.cloudinaryCloudName,
+  api_key: env.cloudinaryApiKey,
+  api_secret: env.cloudinaryApiSecret,
+  secure: true,
+});
 
 export function isCloudinaryConfigured() {
   return Boolean(env.cloudinaryCloudName && env.cloudinaryApiKey && env.cloudinaryApiSecret);
@@ -24,35 +33,48 @@ export async function uploadImageToCloudinary(
     throw new ApiError(503, "Image upload is not configured (Cloudinary)");
   }
 
-  const endpoint = `https://api.cloudinary.com/v1_1/${env.cloudinaryCloudName}/image/upload`;
-  const timestamp = Math.floor(Date.now() / 1000).toString();
-
-  // Signature: sorted params excluding file/api_key/resource_type + secret
-  const toSign = `folder=${folder}&timestamp=${timestamp}${env.cloudinaryApiSecret}`;
-  const signature = await sha1Hex(toSign);
-
-  const body = new URLSearchParams();
-  body.set("file", file);
-  body.set("api_key", env.cloudinaryApiKey);
-  body.set("timestamp", timestamp);
-  body.set("folder", folder);
-  body.set("signature", signature);
-
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload(
+      file,
+      {
+        folder,
+        resource_type: "auto",
+      },
+      (error, result) => {
+        if (error) {
+          reject(new ApiError(502, `Image upload failed: ${error.message}`));
+          return;
+        }
+        if (!result) {
+          reject(new ApiError(502, "Image upload failed - no result returned"));
+          return;
+        }
+        resolve({
+          secure_url: result.secure_url,
+          public_id: result.public_id,
+          bytes: result.bytes || 0,
+          format: result.format || "",
+        });
+      }
+    );
   });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new ApiError(502, `Image upload failed: ${text.slice(0, 200)}`);
-  }
-
-  return (await response.json()) as CloudinaryUploadResult;
 }
 
-async function sha1Hex(input: string) {
-  const { createHash } = await import("node:crypto");
-  return createHash("sha1").update(input).digest("hex");
+/**
+ * Delete an image from Cloudinary by public ID.
+ */
+export async function deleteImageFromCloudinary(publicId: string): Promise<void> {
+  if (!isCloudinaryConfigured()) {
+    throw new ApiError(503, "Image deletion is not configured (Cloudinary)");
+  }
+
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.destroy(publicId, (error, result) => {
+      if (error) {
+        reject(new ApiError(502, `Image deletion failed: ${error.message}`));
+        return;
+      }
+      resolve();
+    });
+  });
 }

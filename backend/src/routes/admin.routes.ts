@@ -21,12 +21,14 @@ import {
   adminListPayments,
   adminListProofs,
   adminListRegistrations,
+  adminListSubscribers,
   adminListUsers,
   adminMarkRegistrationPaid,
   adminMe,
   adminOverview,
   adminReviewProof,
   adminSendCertificate,
+  adminSendNewsletter,
   adminUpdateCertificate,
   adminUpdateCoupon,
   adminUpdateEvent,
@@ -90,3 +92,6 @@ adminRouter.get("/coupons", asyncHandler(adminListCoupons));
 adminRouter.post("/coupons", asyncHandler(adminCreateCoupon));
 adminRouter.patch("/coupons/:id", asyncHandler(adminUpdateCoupon));
 adminRouter.delete("/coupons/:id", asyncHandler(adminDeleteCoupon));
+
+adminRouter.get("/subscribers", asyncHandler(adminListSubscribers));
+adminRouter.post("/newsletter/send", asyncHandler(adminSendNewsletter));

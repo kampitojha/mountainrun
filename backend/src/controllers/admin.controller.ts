@@ -1,7 +1,10 @@
 import type { Response } from "express";
 import type { Prisma } from "@prisma/client";
-import type { AuthenticatedRequest } from "../middleware/clerk-auth.js";
+import { z } from "zod";
+import { env } from "../config/env.js";
 import { prisma } from "../lib/prisma.js";
+import type { AuthenticatedRequest } from "../middleware/clerk-auth.js";
+import { Resend } from "resend";
 import { writeAdminAudit } from "../services/admin-audit.service.js";
 import {
   bulkEmailGeneratedCertificates,
@@ -227,6 +230,14 @@ export async function adminCreateEvent(request: AuthenticatedRequest, response: 
       maxCapacity: payload.maxCapacity ?? null,
       city: payload.city ?? "Virtual",
       bannerImageUrl: payload.bannerImageUrl || null,
+      couponCode: payload.couponCode ?? null,
+      showCouponOnCard: payload.showCouponOnCard ?? false,
+      activityTypes: payload.activityTypes ?? ["running"],
+      benefits: payload.benefits ?? [],
+      finishers: payload.finishers ?? null,
+      verifiedResults: payload.verifiedResults ?? null,
+      cities: payload.cities ?? null,
+      resultNote: payload.resultNote ?? null,
       status: payload.status ?? "DRAFT",
     },
   });
@@ -1180,5 +1191,81 @@ export async function adminListAudit(request: AuthenticatedRequest, response: Re
   response.json({
     data: items,
     meta: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) },
+  });
+}
+
+// ── Newsletter / Subscribers ──────────────────────────────────
+
+export async function adminListSubscribers(request: AuthenticatedRequest, response: Response) {
+  const total = await prisma.subscriber.count({ where: { subscribed: true } });
+  const items = await prisma.subscriber.findMany({
+    where: { subscribed: true },
+    orderBy: { createdAt: "desc" },
+  });
+  response.json({ data: items, meta: { total } });
+}
+
+const newsletterSchema = z.object({
+  subject: z.string().trim().min(1).max(200),
+  body: z.string().trim().min(1).max(10000),
+});
+
+export async function adminSendNewsletter(request: AuthenticatedRequest, response: Response) {
+  const { subject, body } = newsletterSchema.parse(request.body);
+
+  const subscribers = await prisma.subscriber.findMany({
+    where: { subscribed: true },
+    select: { email: true },
+  });
+
+  if (subscribers.length === 0) {
+    response.json({ data: { sent: 0, message: "No active subscribers." } });
+    return;
+  }
+
+  const resendApiKey = env.resendApiKey;
+  if (!resendApiKey) {
+    response.json({ data: { sent: 0, message: "Resend not configured. Set RESEND_API_KEY." } });
+    return;
+  }
+
+  const resend = new Resend(resendApiKey);
+  const from = env.resendFromEmail;
+  let sent = 0;
+  const errors: string[] = [];
+
+  for (const sub of subscribers) {
+    try {
+      const result = await resend.emails.send({
+        from,
+        to: sub.email,
+        subject: `Mountain Run — ${subject}`,
+        html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#151512;padding:24px;"><div style="background:linear-gradient(135deg,#0d9488,#059669);border-radius:12px;padding:24px;margin-bottom:24px;"><h1 style="color:#fff;margin:0;font-size:20px;">Mountain Run</h1></div>${body}<hr style="border:none;border-top:1px solid #eee;margin:24px 0;"><p style="color:#999;font-size:12px;">You received this email because you subscribed to Mountain Run updates. If you no longer wish to hear from us, <a href="${env.frontendUrl}/unsubscribe?email=${encodeURIComponent(sub.email)}" style="color:#0d9488;">unsubscribe here</a>.</p></div>`,
+        text: body.replace(/<[^>]+>/g, ""),
+      });
+      if (result.error) {
+        errors.push(`${sub.email}: ${result.error.message}`);
+      } else {
+        sent++;
+      }
+    } catch (err) {
+      errors.push(`${sub.email}: ${err instanceof Error ? err.message : "Unknown"}`);
+    }
+  }
+
+  await writeAdminAudit(request, {
+    action: "newsletter.send",
+    entityType: "Newsletter",
+    entityId: subject.slice(0, 60),
+    summary: `Sent newsletter "${subject}" to ${sent}/${subscribers.length} subscribers`,
+  });
+
+  response.json({
+    data: {
+      sent,
+      total: subscribers.length,
+      errors: errors.length > 0 ? errors : undefined,
+      message: `Sent to ${sent} of ${subscribers.length} subscribers.`,
+    },
   });
 }

@@ -23,6 +23,7 @@ html[data-theme="light"] {
   --sage-soft: #f0fdfa;
   --success: #059669;
   --danger: #e11d48;
+  --eyebrow-color: #0a7870;
   --radius: 16px;
   --radius-sm: 10px;
   --shadow: 0 4px 30px -4px rgba(15, 23, 42, 0.02), 0 2px 10px -2px rgba(15, 23, 42, 0.02);
@@ -64,6 +65,7 @@ html[data-theme="dark"] {
   --sage-soft: rgba(45, 212, 191, 0.12);
   --success: #34d399;
   --danger: #fb7185;
+  --eyebrow-color: #2dd4bf;
   --shadow: 0 4px 30px -4px rgba(0, 0, 0, 0.45), 0 2px 10px -2px rgba(0, 0, 0, 0.35);
   --shadow-hover: 0 20px 40px -10px rgba(0, 0, 0, 0.55), 0 10px 20px -5px rgba(0, 0, 0, 0.4);
   --focus-ring: rgba(255, 255, 255, 0.14);
@@ -149,9 +151,17 @@ body {
   padding-block: 3rem;
 }
 
+.page-section {
+  padding-block: 1.5rem 3.5rem;
+}
+
 @media (min-width: 640px) {
   .section {
     padding-block: 4.5rem;
+  }
+
+  .page-section {
+    padding-block: 2rem 4.5rem;
   }
 }
 
@@ -159,41 +169,102 @@ body {
   .section {
     padding-block: 6rem;
   }
+
+  .page-section {
+    padding-block: 2.5rem 5.5rem;
+  }
 }
 
+.page-breadcrumb {
+  display: flex;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-glass);
+  padding: 0.35rem 0.55rem;
+  width: fit-content;
+  color: var(--muted);
+  backdrop-filter: blur(10px);
+}
+
+.page-breadcrumb-item {
+  display: inline-flex;
+  min-height: 1.75rem;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding-inline: 0.45rem;
+  font-size: 0.8125rem;
+  font-weight: 550;
+  line-height: 1;
+}
+
+.page-breadcrumb-current {
+  background: var(--sage-soft);
+  color: var(--sage);
+}
+
+@media (max-width: 479px) {
+  .page-section {
+    padding-block: 1rem 3rem;
+  }
+
+  .page-breadcrumb {
+    border-radius: var(--radius-sm);
+    width: 100%;
+  }
+
+  .page-breadcrumb-item {
+    font-size: 0.75rem;
+  }
+}
+
+/* ─── Typography system ───────────────────────────────────── */
+
 .eyebrow {
-  font-size: 0.6875rem;
-  font-weight: 500;
+  font-size: 0.75rem;
+  font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--eyebrow-color);
 }
 
 @media (min-width: 640px) {
   .eyebrow {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
   }
 }
 
 .display {
   font-size: clamp(2rem, 7vw, 4rem);
-  font-weight: 550;
+  font-weight: 700;
   letter-spacing: -0.04em;
-  line-height: 1.08;
+  line-height: 1.06;
   overflow-wrap: anywhere;
 }
 
 .heading {
-  font-size: clamp(1.375rem, 4vw, 2.25rem);
-  font-weight: 550;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 700;
   letter-spacing: -0.03em;
-  line-height: 1.2;
+  line-height: 1.18;
+  overflow-wrap: anywhere;
+}
+
+.subheading {
+  font-size: clamp(1.125rem, 3vw, 1.5rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
   overflow-wrap: anywhere;
 }
 
 .lede {
-  font-size: 0.975rem;
-  line-height: 1.7;
+  font-size: 1rem;
+  line-height: 1.75;
   color: var(--muted);
 }
 
@@ -302,7 +373,7 @@ img:not([width]) {
 .btn-secondary {
   background: transparent;
   color: var(--foreground);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
 }
 
 .btn-secondary:hover {
@@ -488,6 +559,26 @@ html[data-theme="dark"] .badge-danger {
   max-width: 100% !important;
 }
 
+/* Hide Clerk branding footer */
+.cl-footer,
+.cl-footerAction,
+.cl-footerActionText,
+.cl-userButtonPopoverFooter,
+.cl-userButtonPopoverFooterAction,
+.cl-userButtonPopoverFooterText,
+.cl-internal-b3gq5w,
+.cl-internal-s1m8kx {
+  display: none !important;
+}
+
+/* Hide any Clerk links and branding */
+[class*="cl-"] a[href*="clerk.com"],
+[class*="cl-"] a[href*="clerk.dev"],
+[class*="cl-"][class*="footer"],
+[class*="cl-"][class*="branding"] {
+  display: none !important;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .fade-up {
     animation: fade-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -661,19 +752,6 @@ html[data-theme="dark"] .badge-danger {
 .event-card:hover {
   border-color: var(--line-strong);
   box-shadow: var(--shadow-hover);
-}
-
-.event-card-banner {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 55%),
-    #0f172a;
-}
-
-html.dark .event-card-banner,
-html[data-theme="dark"] .event-card-banner {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 55%),
-    #1e293b;
 }
 
 .gallery-card {
@@ -896,3 +974,242 @@ html[data-theme="dark"] .event-card-banner {
   opacity: 1;
 }
 
+/* ═══════════════════════════════════════════════
+   MOBILE RESPONSIVENESS FIXES
+   ═══════════════════════════════════════════════ */
+
+/* Gallery card media — use aspect-ratio instead of fixed height so images
+   scale naturally on all screen sizes */
+.gallery-card-media {
+  height: auto;
+  aspect-ratio: 4 / 3;
+}
+
+@media (max-width: 479px) {
+  /* Tighter container padding on very small phones */
+  .container-page {
+    padding-inline: 0.875rem;
+  }
+
+  /* Section vertical spacing — less cramped on mobile */
+  .section {
+    padding-block: 2.5rem;
+  }
+
+  /* Display heading — prevent overflow on narrow screens */
+  .display {
+    font-size: clamp(1.65rem, 9vw, 4rem);
+    letter-spacing: -0.035em;
+  }
+
+  /* Heading */
+  .heading {
+    font-size: clamp(1.2rem, 6vw, 2.25rem);
+  }
+
+  /* Feature icon — keep square on tiny screens */
+  .feature-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    flex-shrink: 0;
+  }
+
+  /* Step card number — slightly smaller on narrow phones */
+  .step-card-number {
+    font-size: 1.5rem;
+  }
+
+  /* Gallery preview cards on home — ensure 2-col stays readable */
+  .gallery-card-media {
+    aspect-ratio: 1 / 1;
+  }
+
+  /* Trust pills — allow wrapping tightly */
+  .trust-pill {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.7rem;
+  }
+
+  /* Card padding tighter */
+  .card {
+    border-radius: var(--radius-sm);
+  }
+
+  /* Table cells — tighter padding on mobile */
+  .table-clean th {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.65rem;
+  }
+
+  .table-clean td {
+    padding: 0.75rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+}
+
+/* Leaderboard table — always scrollable with clear indicator on mobile */
+@media (max-width: 767px) {
+  .table-wrap {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    border-radius: var(--radius-sm);
+  }
+
+  /* table-wrap scroll hint shadow on right edge */
+  .table-wrap::after {
+    content: "";
+    position: sticky;
+    right: 0;
+    top: 0;
+    display: block;
+    width: 24px;
+    background: linear-gradient(to right, transparent, var(--panel));
+    pointer-events: none;
+  }
+}
+
+/* Card premium glow — disable translate on mobile (causes layout jitter) */
+@media (max-width: 639px) {
+  .card-premium-glow:hover {
+    transform: none;
+  }
+
+  /* Feature card hover lift — reduce on mobile */
+  .feature-card:hover {
+    transform: translateY(-1px);
+  }
+
+  .gallery-card:hover {
+    transform: none;
+  }
+
+  /* Section header split — stack vertically, button full width */
+  .section-header-action {
+    width: 100%;
+  }
+
+  /* btn-row — ensure buttons fill width on extra small */
+  .btn-row {
+    flex-direction: column;
+  }
+
+  .btn-row > * {
+    width: 100%;
+  }
+}
+
+/* Footer email — prevent long emails overflowing */
+.footer-email {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+/* Admin quick-links row — wrap on mobile */
+@media (max-width: 639px) {
+  .admin-links-row {
+    flex-wrap: wrap;
+  }
+
+  .admin-links-row > * {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   CLERK USER BUTTON POPUP — Custom styling
+   ═══════════════════════════════════════════════ */
+
+/* Popup card */
+.cl-userButtonPopoverCard {
+  background: var(--panel) !important;
+  border: 1px solid var(--line-strong) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 20px 40px -8px rgba(0,0,0,0.12), 0 8px 16px -4px rgba(0,0,0,0.06) !important;
+  min-width: 220px !important;
+  overflow: hidden !important;
+  padding: 0.25rem !important;
+}
+
+/* User preview section at top */
+.cl-userButtonPopoverUserPreview {
+  padding: 0.75rem 0.85rem !important;
+  border-radius: 0.75rem !important;
+  background: var(--panel-soft) !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.cl-userPreviewMainIdentifier {
+  font-size: 0.875rem !important;
+  font-weight: 700 !important;
+  color: var(--foreground) !important;
+  letter-spacing: -0.01em !important;
+}
+
+.cl-userPreviewSecondaryIdentifier {
+  font-size: 0.75rem !important;
+  color: var(--muted) !important;
+  margin-top: 0.1rem !important;
+}
+
+/* Action buttons */
+.cl-userButtonPopoverActionButton {
+  border-radius: 0.65rem !important;
+  padding: 0.6rem 0.75rem !important;
+  color: var(--foreground) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  transition: background-color 140ms ease !important;
+  width: 100% !important;
+}
+
+.cl-userButtonPopoverActionButton:hover {
+  background: var(--panel-soft) !important;
+}
+
+.cl-userButtonPopoverActionButtonText {
+  color: var(--foreground) !important;
+  font-weight: 500 !important;
+}
+
+.cl-userButtonPopoverActionButtonIcon {
+  color: var(--muted) !important;
+  opacity: 0.8 !important;
+}
+
+/* Sign out button — subtle red tint */
+.cl-userButtonPopoverActionButton__signOut {
+  color: var(--danger) !important;
+}
+
+.cl-userButtonPopoverActionButton__signOut:hover {
+  background: color-mix(in srgb, var(--danger) 8%, transparent) !important;
+}
+
+.cl-userButtonPopoverActionButton__signOut .cl-userButtonPopoverActionButtonText {
+  color: var(--danger) !important;
+}
+
+.cl-userButtonPopoverActionButton__signOut .cl-userButtonPopoverActionButtonIcon {
+  color: var(--danger) !important;
+  opacity: 1 !important;
+}
+
+/* Divider between items */
+.cl-userButtonPopoverActionsSeparator {
+  background: var(--line) !important;
+  margin: 0.2rem 0 !important;
+}
+
+/* Avatar ring on hover */
+.cl-userButtonTrigger:hover .cl-avatarBox,
+.cl-userButtonTrigger:focus .cl-avatarBox {
+  border-color: var(--sage) !important;
+}
+
+/* Dark mode shadows */
+html.dark .cl-userButtonPopoverCard,
+html[data-theme="dark"] .cl-userButtonPopoverCard {
+  box-shadow: 0 20px 40px -8px rgba(0,0,0,0.5), 0 8px 16px -4px rgba(0,0,0,0.35) !important;
+}

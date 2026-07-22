@@ -37,6 +37,7 @@ export const createRegistrationSchema = z
     eventId: z.string().min(1).optional(),
     eventSlug: z.string().min(1).optional(),
     distance: z.string().min(1, "Distance is required"),
+    activityType: z.enum(["running", "cycling", "walking"]).optional(),
     shippingName: z.string().trim().min(2, "Shipping name is required"),
     shippingPhone: phoneSchema,
     shippingLine1: z.string().trim().min(5, "Address must be at least 5 characters"),
@@ -44,6 +45,7 @@ export const createRegistrationSchema = z
     shippingCity: z.string().trim().min(2, "City is required"),
     shippingState: indianStateSchema,
     shippingPincode: pincodeSchema,
+    referralCode: z.string().min(4).max(12).optional(),
   })
   .superRefine((value, context) => {
     if (!value.userId && !value.clerkId && (!value.name || !value.email)) {

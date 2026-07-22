@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 import { galleryMoments } from "../data/events";
 import { fetchHomeContent, type HomeMoment } from "../../lib/events-api";
 import { HomeSectionHeader } from "./home-section-header";
-import { Stagger, StaggerItem } from "./marketing/motion";
 
 const galleryTones = [
   "from-[#fef3c7] via-[#fde68a] to-[#f5f5f4]",
@@ -81,22 +80,23 @@ export function HomeGalleryPreview({
           title="Finish-line stories"
         />
 
-        <Stagger className="mt-8 grid grid-cols-2 gap-3.5 sm:gap-5 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-2 gap-3.5 sm:gap-5 lg:grid-cols-4">
           {moments.map((moment, index) => (
-            <StaggerItem key={moment.id ?? `${moment.title}-${index}`}>
-              <Link
-                className="gallery-card card-premium-glow group block overflow-hidden border border-(--line) rounded-(--radius) bg-(--panel-glass) backdrop-blur-md shadow-xs transition-all duration-300 hover:bg-(--panel) hover:border-(--line-strong) hover:shadow-md hover:-translate-y-1"
-                href="/gallery"
-              >
+            <Link
+              key={moment.id ?? `${moment.title}-${index}`}
+              className="gallery-card group block overflow-hidden border border-(--line) rounded-(--radius) bg-(--panel) shadow-xs transition-all duration-300 hover:border-(--line-strong) hover:shadow-md"
+              href="/gallery"
+            >
                 <div
                   className={`gallery-card-media bg-linear-to-br ${galleryTones[index % galleryTones.length]} relative aspect-4/3 overflow-hidden`}
                 >
                   <Image
                     alt={moment.title}
-                    className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-108"
+                    className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                     src={moment.image}
-                    width={400}
-                    height={300}
+                    width={200}
+                    height={150}
+                    sizes="(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 18vw"
                     loading="lazy"
                   />
                   <span className="absolute left-3.5 bottom-3.5 z-10 rounded-full border border-white/20 bg-(--panel-glass-strong) px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-(--foreground) backdrop-blur-md shadow-xs">
@@ -109,10 +109,9 @@ export function HomeGalleryPreview({
                   </h3>
                   <p className="mt-1 text-xs text-(--muted-soft) font-medium">{moment.meta}</p>
                 </div>
-              </Link>
-            </StaggerItem>
+            </Link>
           ))}
-        </Stagger>
+        </div>
       </div>
     </section>
   );

@@ -53,6 +53,7 @@ export async function ensureDefaultEvents() {
       create: {
         ...event,
         medalIncluded: event.medalIncluded ?? true,
+        benefits: event.benefits ?? [],
       },
       update: {
         title: event.title,
@@ -65,6 +66,7 @@ export async function ensureDefaultEvents() {
         status: event.status,
         city: event.city,
         medalIncluded: event.medalIncluded ?? true,
+        benefits: event.benefits ?? [],
       },
     });
   }

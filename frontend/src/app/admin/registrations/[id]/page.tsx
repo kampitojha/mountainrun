@@ -146,7 +146,7 @@ export default function AdminRegistrationDetailPage() {
               {data.user.email}
               {data.user.phone ? ` · ${data.user.phone}` : ""}
             </p>
-            <p style={{ color: "var(--admin-ink)" }}>
+            <p style={{ color: "var(--foreground)" }}>
               {data.shippingName}
               <br />
               {data.shippingLine1}
@@ -168,7 +168,7 @@ export default function AdminRegistrationDetailPage() {
         <AdminPanel title="Payment">
           {data.payment ? (
             <div className="space-y-2 text-sm admin-muted">
-              <p style={{ color: "var(--admin-ink)" }}>
+              <p style={{ color: "var(--foreground)" }}>
                 {data.payment.status} · {formatInrFromPaise(data.payment.amountInPaise)}
               </p>
               <p className="font-mono text-xs">order: {data.payment.razorpayOrderId}</p>
@@ -194,15 +194,20 @@ export default function AdminRegistrationDetailPage() {
               <>
                 <p className="admin-muted">Source: {data.proofUpload.sourceApp}</p>
                 <a
-                  className="admin-link"
+                  className="mt-1 block overflow-hidden rounded-xl border border-[var(--line)]"
                   href={data.proofUpload.activityImageUrl}
                   rel="noreferrer"
                   target="_blank"
                 >
-                  Open activity image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    alt="GPS proof screenshot"
+                    className="h-44 w-full object-cover"
+                    src={data.proofUpload.activityImageUrl}
+                  />
                 </a>
                 {data.proofUpload.reviewerNote ? (
-                  <p className="admin-muted">Note: {data.proofUpload.reviewerNote}</p>
+                  <p className="admin-muted mt-2">Note: {data.proofUpload.reviewerNote}</p>
                 ) : null}
               </>
             ) : (

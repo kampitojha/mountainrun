@@ -10,6 +10,45 @@ export function asString(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+export function validateEmail(email: string): string | null {
+  if (!email) return "Email is required.";
+  if (!emailPattern.test(email)) return "Enter a valid email address.";
+  return null;
+}
+
+export function validateRequired(value: string, label: string): string | null {
+  if (!value) return `${label} is required.`;
+  return null;
+}
+
+export function validateMinLength(value: string, min: number, label: string): string | null {
+  if (value.length < min) return `${label} must be at least ${min} characters.`;
+  return null;
+}
+
+export function validateMaxLength(value: string, max: number, label: string): string | null {
+  if (value.length > max) return `${label} must be ${max} characters or fewer.`;
+  return null;
+}
+
+export function validateNumber(value: string, label: string): string | null {
+  const n = Number(value);
+  if (!value || Number.isNaN(n)) return `Enter a valid number for ${label}.`;
+  return null;
+}
+
+export function validatePositiveInt(value: string, label: string): string | null {
+  const n = Number(value);
+  if (!value || Number.isNaN(n) || n < 1 || !Number.isInteger(n)) return `${label} must be a positive whole number.`;
+  return null;
+}
+
+export function validateUrl(value: string): string | null {
+  if (!value) return null;
+  if (!/^https?:\/\/.+/.test(value)) return "Enter a valid URL starting with http:// or https://.";
+  return null;
+}
+
 export function validateRegistrationForm(formData: FormData): FieldErrors {
   const errors: FieldErrors = {};
   const name = asString(formData.get("name"));
@@ -23,11 +62,9 @@ export function validateRegistrationForm(formData: FormData): FieldErrors {
   const address = asString(formData.get("address"));
   const landmark = asString(formData.get("landmark"));
 
-  if (name.length < 2) {
-    errors.name = "Full name must be at least 2 characters.";
-  }
+  const nameErr = validateMinLength(name, 2, "Full name");
+  if (nameErr) errors.name = nameErr;
 
-  // Username is profile-derived (read-only on form). Accept empty → backend fills from email.
   if (username && username.length > 0) {
     if (username.length < 3) {
       errors.username = "Username must be at least 3 characters.";
@@ -36,44 +73,28 @@ export function validateRegistrationForm(formData: FormData): FieldErrors {
     }
   }
 
-  if (!emailPattern.test(email)) {
-    errors.email = "Enter a valid email address.";
-  }
+  const emailErr = validateEmail(email);
+  if (emailErr) errors.email = emailErr;
 
   const phoneError = validatePhoneFields(formData);
-  if (phoneError) {
-    errors.phone = phoneError;
-  }
+  if (phoneError) errors.phone = phoneError;
 
-  if (!distance) {
-    errors.distance = "Select a distance.";
-  }
+  if (!distance) errors.distance = "Select a distance.";
+  if (!eventSlug) errors.eventSlug = "Select an event.";
 
-  if (!eventSlug) {
-    errors.eventSlug = "Select an event.";
-  }
+  const cityErr = validateMinLength(city, 2, "City");
+  if (cityErr) errors.city = cityErr;
 
-  if (city.length < 2) {
-    errors.city = "City is required.";
-  }
+  if (!state) errors.state = "Select a state.";
+  else if (!isIndianState(state)) errors.state = "Choose a valid Indian state from the list.";
 
-  if (!state) {
-    errors.state = "Select a state.";
-  } else if (!isIndianState(state)) {
-    errors.state = "Choose a valid Indian state from the list.";
-  }
+  if (!pincodePattern.test(pincode)) errors.pincode = "Enter a valid 6-digit pincode.";
 
-  if (!pincodePattern.test(pincode)) {
-    errors.pincode = "Enter a valid 6-digit pincode.";
-  }
+  const addrErr = validateMinLength(address, 5, "Shipping address");
+  if (addrErr) errors.address = addrErr;
 
-  if (address.length < 5) {
-    errors.address = "Shipping address must be at least 5 characters.";
-  }
-
-  if (landmark.length > 120) {
-    errors.landmark = "Landmark must be 120 characters or fewer.";
-  }
+  const landmarkErr = validateMaxLength(landmark, 120, "Landmark");
+  if (landmarkErr) errors.landmark = landmarkErr;
 
   return errors;
 }
@@ -81,36 +102,88 @@ export function validateRegistrationForm(formData: FormData): FieldErrors {
 export function getValidationSummaryMessage(errors: FieldErrors) {
   const messages = Object.values(errors).filter(Boolean);
 
-  if (messages.length === 0) {
-    return "";
-  }
-
-  if (messages.length === 1) {
-    return messages[0];
-  }
+  if (messages.length === 0) return "";
+  if (messages.length === 1) return messages[0];
 
   return `Please review the ${messages.length} highlighted fields below before continuing to payment.`;
 }
 
-export function validateAdminEventForm(formData: FormData): FieldErrors {
+export function validateAdminEventForm(formData: FormData, isUpdate = false): FieldErrors {
   const errors: FieldErrors = {};
   const title = asString(formData.get("title"));
   const distances = asString(formData.get("distances"));
   const price = asString(formData.get("price"));
 
-  if (title.length < 3) {
-    errors.title = "Event title must be at least 3 characters.";
-  }
+  if (title.length < 3) errors.title = "Event title must be at least 3 characters.";
 
   if (!distances || !distances.split(",").some((part) => part.trim().length > 0)) {
     errors.distances = "Add at least one distance (e.g. 5 km, 10 km).";
   }
 
   const priceNumber = Number(price);
-  if (!price || Number.isNaN(priceNumber) || priceNumber < 1) {
-    errors.price = "Enter a valid price in rupees (minimum 1).";
+  if (!isUpdate) {
+    if (!price || Number.isNaN(priceNumber) || priceNumber < 1) {
+      errors.price = "Enter a valid price in rupees (minimum 1).";
+    }
+  } else if (price) {
+    if (Number.isNaN(priceNumber) || priceNumber < 1) {
+      errors.price = "Enter a valid price in rupees (minimum 1).";
+    }
   }
 
+  return errors;
+}
+
+export function validateAdminCouponForm(code: string, discountInr: string): FieldErrors {
+  const errors: FieldErrors = {};
+  if (!code || code.trim().length < 3) errors.code = "Coupon code must be at least 3 characters.";
+  if (code.length > 40) errors.code = "Coupon code must be 40 characters or fewer.";
+  const discount = Number(discountInr);
+  if (!discountInr || Number.isNaN(discount) || discount < 1 || !Number.isInteger(discount)) {
+    errors.discountInr = "Enter a valid discount amount in whole rupees.";
+  }
+  return errors;
+}
+
+export function validateNewsletterForm(subject: string, body: string): FieldErrors {
+  const errors: FieldErrors = {};
+  if (!subject.trim()) errors.subject = "Subject is required.";
+  else if (subject.length > 200) errors.subject = "Subject must be 200 characters or fewer.";
+  if (!body.trim()) errors.body = "Body is required.";
+  else if (body.length > 10000) errors.body = "Body must be 10000 characters or fewer.";
+  return errors;
+}
+
+export function validateMediaForm(data: { title: string; imageUrl: string; category?: string; location?: string }): FieldErrors {
+  const errors: FieldErrors = {};
+  if (!data.title || data.title.length < 2) errors.title = "Title must be at least 2 characters.";
+  if (data.title && data.title.length > 120) errors.title = "Title must be 120 characters or fewer.";
+  if (!data.imageUrl) errors.imageUrl = "Image URL or file upload is required.";
+  if (data.category && (data.category.length < 2 || data.category.length > 40)) errors.category = "Category must be 2-40 characters.";
+  if (data.location && data.location.length > 80) errors.location = "Location must be 80 characters or fewer.";
+  return errors;
+}
+
+export function validateReviewForm(data: { name: string; role: string; quote: string; rating: number }): FieldErrors {
+  const errors: FieldErrors = {};
+  if (!data.name || data.name.length < 2) errors.name = "Name must be at least 2 characters.";
+  if (data.name && data.name.length > 80) errors.name = "Name must be 80 characters or fewer.";
+  if (!data.role || data.role.length < 2) errors.role = "Role must be at least 2 characters.";
+  if (data.role && data.role.length > 80) errors.role = "Role must be 80 characters or fewer.";
+  if (!data.quote || data.quote.length < 8) errors.quote = "Quote must be at least 8 characters.";
+  if (data.quote && data.quote.length > 600) errors.quote = "Quote must be 600 characters or fewer.";
+  if (!data.rating || data.rating < 1 || data.rating > 5) errors.rating = "Rating must be between 1 and 5.";
+  return errors;
+}
+
+export function validateProofForm(data: { proofUrl: string; sourceApp: string; finishMinutes: string }): FieldErrors {
+  const errors: FieldErrors = {};
+  if (!data.proofUrl) errors.proofUrl = "Upload a screenshot or paste an image URL.";
+  if (!data.sourceApp) errors.sourceApp = "Select a source app.";
+  if (data.finishMinutes) {
+    const mins = Number(data.finishMinutes);
+    if (Number.isNaN(mins) || mins <= 0) errors.finishMinutes = "Enter a valid positive number.";
+  }
   return errors;
 }
 
@@ -121,21 +194,15 @@ export function validateDemoProofForm(formData: FormData): FieldErrors {
   const address = asString(formData.get("address"));
   const proof = formData.get("proof") as File | null;
 
-  if (name.length < 2) {
-    errors.name = "Full name must be at least 2 characters.";
-  }
+  const nameErr = validateMinLength(name, 2, "Full name");
+  if (nameErr) errors.name = nameErr;
 
-  if (!distance) {
-    errors.distance = "Select a distance.";
-  }
+  if (!distance) errors.distance = "Select a distance.";
 
-  if (address.length < 5) {
-    errors.address = "Shipping address must be at least 5 characters.";
-  }
+  const addrErr = validateMinLength(address, 5, "Shipping address");
+  if (addrErr) errors.address = addrErr;
 
-  if (!proof || proof.size === 0) {
-    errors.proof = "Please upload a GPS activity proof file.";
-  }
+  if (!proof || proof.size === 0) errors.proof = "Please upload a GPS activity proof file.";
 
   return errors;
 }

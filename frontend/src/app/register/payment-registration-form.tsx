@@ -3,7 +3,7 @@
 import { useAuth, useUser } from "@clerk/nextjs";
 import { Lock } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 import { Field, inputClass } from "../components/app-shell";
 import { PhoneInput } from "../components/phone-input";
@@ -41,6 +41,7 @@ type RegisterEventOption = {
   value: string;
   amount: string;
   distances: string[];
+  activityTypes?: string[];
 };
 
 type ExistingReg = {
@@ -57,18 +58,21 @@ const fallbackEvents: RegisterEventOption[] = [
     value: "monsoon-mountain-miles",
     amount: "₹499",
     distances: ["3 km", "5 km", "10 km", "21 km"],
+    activityTypes: ["running", "cycling", "walking"],
   },
   {
     label: "Independence Endurance Run",
     value: "independence-endurance-run",
     amount: "₹649",
     distances: ["5 km", "10 km", "25 km"],
+    activityTypes: ["running", "cycling", "walking"],
   },
   {
     label: "Himalayan Winter Sprint",
     value: "himalayan-winter-sprint",
     amount: "₹399",
     distances: ["2 km", "5 km", "10 km"],
+    activityTypes: ["running", "cycling", "walking"],
   },
 ];
 
@@ -99,7 +103,7 @@ function FieldError({ message }: { message?: string }) {
     return null;
   }
 
-  return <p className="mt-1.5 text-xs font-medium text-[var(--danger)]">{message}</p>;
+  return <p className="mt-1.5 text-xs font-medium text-(--danger)">{message}</p>;
 }
 
 function deriveUsername(input: {
@@ -133,6 +137,7 @@ function deriveUsername(input: {
 function PaymentRegistrationFormInner() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const eventFromQuery = searchParams.get("event")?.trim() ?? "";
   const distanceFromQuery = searchParams.get("distance")?.trim() ?? "";
@@ -144,10 +149,12 @@ function PaymentRegistrationFormInner() {
     eventFromQuery || fallbackEvents[0].value,
   );
   const [selectedDistance, setSelectedDistance] = useState(distanceFromQuery || "");
+  const [selectedActivity, setSelectedActivity] = useState("running");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [existingRegs, setExistingRegs] = useState<ExistingReg[]>([]);
   const [dbUsername, setDbUsername] = useState<string | null>(null);
   const [profileName, setProfileName] = useState("");
+  const referralCodeFromUrl = searchParams.get("ref")?.trim().toUpperCase() ?? "";
 
   useEffect(() => {
     let cancelled = false;
@@ -170,10 +177,11 @@ function PaymentRegistrationFormInner() {
         const open = rows
           .filter((row) => row.registrationOpen !== false)
           .map((row) => ({
-            label: row.title,
-            value: row.slug,
-            amount: `₹${Math.round(row.priceInPaise / 100)}`,
-            distances: row.distances?.length ? row.distances : ["5 km"],
+    label: row.title,
+    value: row.slug,
+    amount: `₹${Math.round(row.priceInPaise / 100)}`,
+    distances: row.distances?.length ? row.distances : ["5 km"],
+    activityTypes: (row as { activityTypes?: string[] }).activityTypes ?? ["running"],
           }));
 
         if (cancelled || open.length === 0) {
@@ -257,6 +265,7 @@ function PaymentRegistrationFormInner() {
   );
 
   const distanceOptions = activeEvent?.distances ?? ["5 km"];
+  const activityOptions = activeEvent?.activityTypes ?? ["running"];
 
   useEffect(() => {
     if (distanceFromQuery && distanceOptions.includes(distanceFromQuery)) {
@@ -266,7 +275,10 @@ function PaymentRegistrationFormInner() {
     if (!distanceOptions.includes(selectedDistance)) {
       setSelectedDistance(distanceOptions[0] ?? "");
     }
-  }, [distanceOptions, distanceFromQuery, selectedDistance]);
+    if (!activityOptions.includes(selectedActivity)) {
+      setSelectedActivity(activityOptions[0] ?? "running");
+    }
+  }, [distanceOptions, distanceFromQuery, selectedDistance, activityOptions, selectedActivity]);
 
   const selectedAmount = activeEvent?.amount ?? "₹499";
   const defaultName = profileName || user?.fullName || user?.firstName || "";
@@ -306,30 +318,32 @@ function PaymentRegistrationFormInner() {
 
   if (!isLoaded) {
     return (
-      <div className="card mt-6 p-8 text-center sm:mt-8 sm:p-10">
-        <p className="text-sm text-[var(--muted)]">Checking your session…</p>
+      <div className="flex items-center justify-center rounded-2xl border border-(--line) bg-(--panel) px-4 py-8">
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-(--line-strong) border-t-(--sage)" />
+          <p className="text-sm text-(--muted)">Checking your session\u2026</p>
+        </div>
       </div>
     );
   }
 
   if (!isSignedIn) {
     return (
-      <div className="card mt-6 p-5 sm:mt-8 sm:p-8">
-        <p className="eyebrow">Account required</p>
-        <h2 className="mt-3 text-xl font-semibold tracking-tight sm:text-2xl">
-          Sign in to continue
-        </h2>
-        <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">
-          Create a free account with email and password. After sign-in you can register and pay
-          with UPI.
-        </p>
-        <div className="btn-row mt-6 sm:mt-8">
-          <Link className="btn btn-primary w-full sm:w-auto" href="/sign-in">
-            Sign in
-          </Link>
-          <Link className="btn btn-secondary w-full sm:w-auto" href="/sign-up">
-            Create account
-          </Link>
+      <div className="overflow-hidden rounded-2xl border border-(--line) bg-(--panel)">
+        <div className="bg-gradient-to-r from-(--sage)/10 to-(--sage)/5 px-4 py-3 sm:px-5 sm:py-4">
+          <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-(--sage)">Account required</p>
+        </div>
+        <div className="px-4 py-4 sm:px-5 sm:py-5">
+          <h2 className="text-xl font-semibold tracking-tight text-(--foreground) sm:text-2xl">
+            Sign in to continue
+          </h2>
+          <p className="mt-2 max-w-md text-sm leading-6 text-(--muted)">
+            Create a free account with email and password. After sign-in you can register and pay with UPI.
+          </p>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <Link className="btn btn-primary" href="/sign-in">Sign in</Link>
+            <Link className="btn btn-secondary" href="/sign-up">Create account</Link>
+          </div>
         </div>
       </div>
     );
@@ -340,9 +354,10 @@ function PaymentRegistrationFormInner() {
 
     const form = event.currentTarget;
     const formData = new FormData(form);
-    formData.set("username", username);
-    formData.set("eventSlug", selectedEvent);
-    formData.set("distance", selectedDistance);
+  formData.set("username", username);
+  formData.set("eventSlug", selectedEvent);
+  formData.set("distance", selectedDistance);
+  formData.set("activityType", selectedActivity);
 
     const fieldErrors = validateRegistrationForm(formData);
     setErrors(fieldErrors);
@@ -387,6 +402,7 @@ function PaymentRegistrationFormInner() {
           phone: formData.get("phone"),
           eventSlug: selectedEvent,
           distance: selectedDistance,
+          activityType: selectedActivity,
           shippingName: formData.get("name"),
           shippingPhone: formData.get("phone"),
           shippingLine1: formData.get("address"),
@@ -394,6 +410,7 @@ function PaymentRegistrationFormInner() {
           shippingCity: formData.get("city"),
           shippingState: formData.get("state"),
           shippingPincode: formData.get("pincode"),
+          referralCode: referralCodeFromUrl || undefined,
         }),
       });
 
@@ -469,38 +486,48 @@ function PaymentRegistrationFormInner() {
         },
         theme: { color: "#0d9488" },
         handler: async (response: CheckoutResponse) => {
-          const verifyResponse = await fetch(getApiUrl("/api/payments/verify"), {
-            method: "POST",
-            headers,
-            body: JSON.stringify(response),
-          });
-
-          if (!verifyResponse.ok) {
-            throw new Error(
-              await readApiError(verifyResponse, "Payment captured but verification failed"),
-            );
-          }
-
-          const verifyJson = await verifyResponse.json().catch(() => null);
-          const emailSent = verifyJson?.data?.emailSent === true;
-
-          setStatus("paid");
-          setMessage(
-            emailSent
-              ? "Payment verified. Confirmation email sent."
-              : "Payment verified. Registration confirmed.",
-          );
+          setStatus("paying");
+          setMessage("Payment captured. Verifying registration...");
 
           try {
-            const me = await fetch(getApiUrl("/api/users/me"), {
-              headers: authHeaders(token),
+            const verifyResponse = await fetch(getApiUrl("/api/payments/verify"), {
+              method: "POST",
+              headers,
+              body: JSON.stringify(response),
             });
-            if (me.ok) {
-              const meJson = await me.json();
-              setExistingRegs(meJson.data?.registrations ?? []);
+
+            if (!verifyResponse.ok) {
+              throw new Error(
+                await readApiError(verifyResponse, "Payment captured but verification failed"),
+              );
             }
-          } catch {
-            /* ignore */
+
+            const verifyJson = await verifyResponse.json().catch(() => null);
+            const emailSent = verifyJson?.data?.emailSent === true;
+
+            setStatus("paid");
+            setMessage(
+              emailSent
+                ? "Payment verified. Confirmation email sent."
+                : "Payment verified. Registration confirmed.",
+            );
+
+            try {
+              const me = await fetch(getApiUrl("/api/users/me"), {
+                headers: authHeaders(token),
+              });
+              if (me.ok) {
+                const meJson = await me.json();
+                setExistingRegs(meJson.data?.registrations ?? []);
+              }
+            } catch {
+              /* ignore */
+            }
+
+            router.push("/dashboard");
+          } catch (error) {
+            setStatus("error");
+            setMessage(getFriendlyErrorMessage(error));
           }
         },
         modal: {
@@ -529,10 +556,10 @@ function PaymentRegistrationFormInner() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="card mt-6 w-full min-w-0 overflow-hidden p-4 sm:mt-8 sm:p-6 md:p-8"
+      className="w-full min-w-0 overflow-hidden rounded-2xl border border-(--line) bg-(--panel) p-4 sm:p-5"
       noValidate
     >
-      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         <Field label="Full name" required>
           <input
             aria-invalid={Boolean(errors.name)}
@@ -550,15 +577,15 @@ function PaymentRegistrationFormInner() {
         <div className="min-w-0">
           <span className="field-label">Username</span>
           <div
-            className={`${inputClass} flex min-w-0 items-center gap-2 bg-[var(--panel-soft)] text-[var(--muted)]`}
+            className={`${inputClass} flex min-w-0 items-center gap-2 bg-(--panel-soft) text-(--muted)`}
           >
             <Lock className="h-3.5 w-3.5 shrink-0 opacity-70" strokeWidth={1.75} />
-            <span className="min-w-0 truncate font-medium text-[var(--foreground)]">
+            <span className="min-w-0 truncate font-medium text-(--foreground)">
               @{username}
             </span>
           </div>
           <input name="username" type="hidden" value={username} />
-          <p className="mt-1.5 text-[0.7rem] leading-snug text-[var(--muted-soft)]">
+          <p className="mt-1.5 text-[0.7rem] leading-snug text-(--muted-soft)">
             From your account · not editable
           </p>
         </div>
@@ -567,7 +594,7 @@ function PaymentRegistrationFormInner() {
           <input
             aria-invalid={Boolean(errors.email)}
             autoComplete="email"
-            className={`${inputClass} min-w-0 bg-[var(--panel-soft)]`}
+            className={`${inputClass} min-w-0 bg-(--panel-soft)`}
             defaultValue={defaultEmail}
             key={`email-${defaultEmail}`}
             name="email"
@@ -594,7 +621,7 @@ function PaymentRegistrationFormInner() {
           >
             {events.map((event) => (
               <option key={event.value} value={event.value}>
-                {event.label} · {event.amount}
+                {event.label}
               </option>
             ))}
           </select>
@@ -623,15 +650,38 @@ function PaymentRegistrationFormInner() {
           </select>
           <FieldError message={errors.distance} />
           {distanceAlreadyTaken ? (
-            <p className="mt-1.5 text-xs leading-snug text-[var(--danger)]">
+            <p className="mt-1.5 text-xs leading-snug text-(--danger)">
               Already registered for this distance. Pick another distance or event.
             </p>
           ) : pendingSame ? (
-            <p className="mt-1.5 text-xs leading-snug text-[var(--sage)]">
+            <p className="mt-1.5 text-xs leading-snug text-(--sage)">
               Pending payment — submit to resume checkout.
             </p>
           ) : null}
         </Field>
+
+        {activityOptions.length > 1 ? (
+          <Field label="Activity type">
+            <div className="flex flex-wrap gap-2">
+              {activityOptions.map((type) => (
+                <label key={type}
+                  className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
+                    selectedActivity === type
+                      ? "border-(--sage) bg-(--sage-soft) text-(--sage) shadow-sm"
+                      : "border-(--line) bg-(--panel) text-(--muted) hover:border-(--line-strong) hover:text-(--foreground)"
+                  }`}>
+                  <input type="radio" className="sr-only" name="activityType" value={type}
+                    checked={selectedActivity === type}
+                    onChange={(e) => setSelectedActivity(e.target.value)} />
+                  <span>{type === "running" ? "\u{1F3C3}" : type === "cycling" ? "\u{1F6B4}" : "\u{1F6B6}"}</span>
+                  <span className="capitalize">{type}</span>
+                </label>
+              ))}
+            </div>
+          </Field>
+        ) : (
+          <input type="hidden" name="activityType" value="running" />
+        )}
 
         <Field label="City" required>
           <input
@@ -698,24 +748,27 @@ function PaymentRegistrationFormInner() {
         </div>
       </div>
 
-      <div className="mt-5 flex min-w-0 flex-col gap-3 rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] p-4 sm:mt-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-5">
+      <div className="mt-4 flex min-w-0 flex-col gap-2 rounded-xl border border-(--line) bg-(--sage-soft) p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-4">
         <div className="min-w-0">
-          <p className="text-sm font-medium">Secure checkout</p>
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-(--foreground)">
+            <Lock className="h-3.5 w-3.5 text-(--sage)" strokeWidth={2} />
+            Secure checkout
+          </p>
           <p
-            className={`mt-1 break-words text-sm leading-snug ${
-              status === "error" ? "text-[var(--danger)]" : "text-[var(--muted)]"
+            className={`mt-0.5 text-xs leading-snug ${
+              status === "error" ? "text-(--danger)" : "text-(--muted)"
             }`}
           >
             {message}
           </p>
         </div>
-        <p className="shrink-0 text-2xl font-semibold tracking-tight sm:text-right">
+        <p className="shrink-0 text-xl font-bold tracking-tight text-(--foreground) sm:text-right">
           {selectedAmount}
         </p>
       </div>
 
       <button
-        className="btn btn-primary btn-full mt-5 min-h-12 touch-manipulation disabled:cursor-not-allowed disabled:opacity-50 sm:mt-6"
+        className="btn btn-primary btn-full mt-3 min-h-[2.75rem] touch-manipulation text-sm disabled:cursor-not-allowed disabled:opacity-50"
         disabled={
           status === "creating" ||
           status === "paying" ||
@@ -725,9 +778,9 @@ function PaymentRegistrationFormInner() {
         type="submit"
       >
         {status === "creating"
-          ? "Creating order…"
+          ? "Creating order\u2026"
           : status === "paying"
-            ? "Payment in progress…"
+            ? "Payment in progress\u2026"
             : status === "paid"
               ? "Paid"
               : pendingSame
@@ -740,10 +793,13 @@ function PaymentRegistrationFormInner() {
 
 export function PaymentRegistrationForm() {
   return (
-    <Suspense
+<Suspense
       fallback={
-        <div className="card mt-6 p-8 text-center sm:mt-8 sm:p-10">
-          <p className="text-sm text-[var(--muted)]">Loading form…</p>
+        <div className="flex items-center justify-center rounded-2xl border border-(--line) bg-(--panel) px-4 py-8">
+          <div className="flex flex-col items-center gap-2">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-(--line-strong) border-t-(--sage)" />
+            <p className="text-sm text-(--muted)">Loading form\u2026</p>
+          </div>
         </div>
       }
     >

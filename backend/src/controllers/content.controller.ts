@@ -3,10 +3,13 @@ import { prisma } from "../lib/prisma.js";
 import type { AuthenticatedRequest } from "../middleware/clerk-auth.js";
 import { writeAdminAudit } from "../services/admin-audit.service.js";
 import { ensureDefaultSiteContent } from "../services/content.service.js";
+import { isCloudinaryConfigured, uploadImageToCloudinary } from "../services/cloudinary.service.js";
 import { ApiError } from "../utils/api-error.js";
 import { routeParam } from "../utils/params.js";
 import { validateBody } from "../utils/validate.js";
 import {
+  publicGallerySubmissionSchema,
+  reviewMediaSchema,
   siteMediaSchema,
   siteMediaUpdateSchema,
   siteTestimonialSchema,
@@ -79,6 +82,43 @@ export async function getGalleryContent(request: Request, response: Response) {
       image: m.imageUrl,
       meta: m.meta,
     })),
+  });
+}
+
+/** Public: submit a photo for the gallery (pending moderation). */
+export async function submitGalleryPhoto(request: Request, response: Response) {
+  const payload = validateBody(publicGallerySubmissionSchema, request);
+
+  let imageUrl: string;
+  if (isCloudinaryConfigured()) {
+    const uploaded = await uploadImageToCloudinary(payload.file, "mountainrun/gallery");
+    imageUrl = uploaded.secure_url;
+  } else {
+    if (!payload.file.startsWith("https://")) {
+      throw new ApiError(503, "Image upload requires Cloudinary to be configured");
+    }
+    imageUrl = payload.file;
+  }
+
+  const item = await prisma.siteMedia.create({
+    data: {
+      title: payload.title,
+      imageUrl,
+      category: "Community",
+      eventLabel: payload.eventLabel ?? null,
+      location: payload.location ?? null,
+      submittedBy: payload.name,
+      published: false,
+      showInGallery: true,
+      showOnHomeMoments: false,
+    },
+  });
+
+  response.status(201).json({
+    data: {
+      id: item.id,
+      message: "Thank you! Your photo has been submitted and is pending review.",
+    },
   });
 }
 
@@ -163,6 +203,46 @@ export async function adminDeleteMedia(request: AuthenticatedRequest, response: 
     summary: `Deleted media “${existing.title}”`,
   });
   response.json({ data: { id, deleted: true } });
+}
+
+/** Admin: approve or reject a gallery photo submission. */
+export async function adminReviewMediaSubmission(
+  request: AuthenticatedRequest,
+  response: Response,
+) {
+  const id = routeParam(request, "id");
+  const payload = validateBody(reviewMediaSchema, request);
+
+  const existing = await prisma.siteMedia.findUnique({ where: { id } });
+  if (!existing) {
+    throw new ApiError(404, "Media not found");
+  }
+
+  const item = await prisma.siteMedia.update({
+    where: { id },
+    data: {
+      published: payload.approved,
+      meta: payload.approved ? null : (payload.note ?? existing.meta),
+    },
+  });
+
+  await writeAdminAudit(request, {
+    action: payload.approved ? "content.media.approve" : "content.media.reject",
+    entityType: "SiteMedia",
+    entityId: id,
+    summary: payload.approved
+      ? `Approved gallery submission "${item.title}"`
+      : `Rejected gallery submission "${item.title}"${payload.note ? ": " + payload.note : ""}`,
+  });
+
+  response.json({
+    data: item,
+    meta: {
+      message: payload.approved
+        ? "Photo approved and now visible in the gallery."
+        : "Photo rejected and will not appear in the gallery.",
+    },
+  });
 }
 
 // ── Admin testimonials ────────────────────────────────────────

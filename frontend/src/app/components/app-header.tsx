@@ -1,40 +1,191 @@
 "use client";
 
-import { Show, UserButton } from "@clerk/nextjs";
+import { Show, useUser, useClerk } from "@clerk/nextjs";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, Image as ImageIcon, Info, Trophy, LayoutDashboard, Award, LogIn } from "lucide-react";
+import {
+  Camera,
+  LayoutDashboard,
+  LogIn,
+  Settings,
+  LogOut,
+  CalendarDays,
+  Trophy,
+  Info,
+  Calendar,
+  Gift,
+} from "lucide-react";
+import { BrandText } from "./brand-text";
 import { ThemeToggle } from "./theme-toggle";
 
-/** Public nav — Register is not duplicated here. */
+/* ─── Nav items with icons ─── */
 const publicNav = [
-  ["Events", "/events", Calendar],
-  ["Gallery", "/gallery", ImageIcon],
-  ["About", "/about", Info],
-  ["Leaderboard", "/leaderboard", Trophy],
+  ["Events",      "/events",      Calendar     ],
+  ["Refer & Earn","/refer",       Gift         ],
+  ["Gallery",     "/gallery",     Camera       ],
+  ["Leaderboard", "/leaderboard", Trophy       ],
+  ["About",       "/about",       Info         ],
 ] as const;
 
-function ProfileButton() {
+/* ─── Animated hamburger ─── */
+function Hamburger({ open, onClick }: { open: boolean; onClick: () => void }) {
   return (
-    <UserButton
-      appearance={{
-        elements: {
-          avatarBox: "h-9 w-9 border border-(--line) hover:border-(--line-strong) transition-colors",
-        },
-      }}
+    <button
+      type="button"
+      aria-label={open ? "Close menu" : "Open menu"}
+      aria-expanded={open}
+      onClick={onClick}
+      className="relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--foreground) transition-all duration-200 hover:border-(--sage)/30 hover:bg-(--sage-soft) active:scale-90"
     >
-      <UserButton.MenuItems>
-        <UserButton.Link label="My dashboard" href="/dashboard" labelIcon={<LayoutDashboard className="h-4 w-4" />} />
-        <UserButton.Link label="Register for event" href="/register" labelIcon={<Award className="h-4 w-4" />} />
-        <UserButton.Action label="manageAccount" />
-        <UserButton.Action label="signOut" />
-      </UserButton.MenuItems>
-    </UserButton>
+      <span className="flex w-5 flex-col gap-[5px]">
+        <motion.span
+          animate={open ? { rotate: 45, y: 6.5, width: 20 } : { rotate: 0, y: 0, width: 20 }}
+          className="block h-[1.5px] origin-center rounded-full bg-current"
+          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+        />
+        <motion.span
+          animate={open ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
+          className="block h-[1.5px] origin-center rounded-full bg-current"
+          transition={{ duration: 0.2 }}
+        />
+        <motion.span
+          animate={open ? { rotate: -45, y: -6.5, width: 20 } : { rotate: 0, y: 0, width: 20 }}
+          className="block h-[1.5px] origin-center rounded-full bg-current"
+          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+        />
+      </span>
+    </button>
   );
 }
 
+/* ─── Avatar with gradient ring ─── */
+function AvatarButton({ onClick }: { onClick: () => void }) {
+  const { user } = useUser();
+  if (!user) return null;
+  const name = user.fullName ?? user.firstName ?? "Account";
+  const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+  const avatarUrl = user.imageUrl;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Open profile menu"
+      className="group relative cursor-pointer rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--sage)/40"
+    >
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt={name}
+          className="h-8 w-8 rounded-full object-cover ring-2 ring-(--line) transition-all duration-300 group-hover:ring-(--sage)/50 group-hover:scale-105 sm:h-9 sm:w-9"
+        />
+      ) : (
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-indigo-500 text-[0.6rem] font-bold text-white ring-2 ring-(--line) transition-all duration-300 group-hover:ring-(--sage)/50 group-hover:scale-105 sm:h-9 sm:w-9">
+          {initials}
+        </span>
+      )}
+      {/* Online indicator */}
+      <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-(--panel) bg-emerald-500" />
+    </button>
+  );
+}
+
+/* ─── Profile dropdown ─── */
+function ProfileDropdown() {
+  const { user } = useUser();
+  const { signOut, openUserProfile } = useClerk();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    if (open) document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [open]);
+
+  const name = user?.fullName ?? user?.firstName ?? "Account";
+  const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+  const avatarUrl = user?.imageUrl;
+
+  return (
+    <div className="relative" ref={ref}>
+      <AvatarButton onClick={() => setOpen((v) => !v)} />
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: -6 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -6 }}
+            transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute right-0 top-[calc(100%+10px)] z-50 w-56 origin-top-right overflow-hidden rounded-2xl border border-(--line-strong) bg-(--panel) shadow-[0_20px_40px_-8px_rgba(0,0,0,0.12),0_8px_16px_-4px_rgba(0,0,0,0.06)] dark:shadow-[0_20px_40px_-8px_rgba(0,0,0,0.5)]"
+          >
+            <div className="h-[3px] w-full bg-gradient-to-r from-(--sage) via-emerald-400 to-indigo-500" />
+            <div className="flex justify-center pt-4 pb-2">
+              <img
+                alt="Mountain Run"
+                className="h-8 w-8 opacity-70"
+                height={32}
+                src="/logo-mark.svg"
+                width={32}
+              />
+            </div>
+            <div className="px-2 pb-2">
+              <Link
+                href="/dashboard"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-(--foreground) transition-all duration-200 hover:bg-(--sage-soft) hover:text-(--sage)"
+              >
+                <LayoutDashboard className="h-4 w-4 text-(--muted)" />
+                My dashboard
+              </Link>
+              <Link
+                href="/events"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-(--foreground) transition-all duration-200 hover:bg-(--sage-soft) hover:text-(--sage)"
+              >
+                <CalendarDays className="h-4 w-4 text-(--muted)" />
+                Browse events
+              </Link>
+              <button
+                type="button"
+                onClick={() => { setOpen(false); openUserProfile(); }}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-(--foreground) transition-all duration-200 hover:bg-(--sage-soft) hover:text-(--sage)"
+              >
+                <Settings className="h-4 w-4 text-(--muted)" />
+                Manage account
+              </button>
+              <div className="my-1.5 mx-2 h-px bg-gradient-to-r from-transparent via-(--line) to-transparent" />
+              <button
+                type="button"
+                onClick={() => { setOpen(false); void signOut(() => router.push("/")); }}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-(--danger) transition-all duration-200 hover:bg-(--danger)/8"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign out
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ─── Desktop nav link ─── */
 function NavLink({
   href,
   label,
@@ -48,128 +199,95 @@ function NavLink({
 }) {
   return (
     <Link
-      className={`relative rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors duration-300 ${
-        active ? "text-(--foreground)" : "text-(--muted) hover:text-(--foreground)"
-      }`}
       href={href}
       onClick={onClick}
+      className={`relative rounded-full px-4 py-1.5 text-sm font-medium tracking-tight transition-all duration-300 ${
+        active
+          ? "text-(--foreground)"
+          : "text-(--muted-soft) hover:text-(--foreground)"
+      }`}
     >
+      {label}
       {active && (
         <motion.span
-          layoutId="active-nav-pill"
-          className="absolute inset-0 bg-(--panel) border border-(--line) rounded-full shadow-xs -z-10"
-          transition={{ type: "spring", stiffness: 380, damping: 28 }}
+          layoutId="nav-pill"
+          className="absolute inset-0 -z-10 rounded-full bg-(--panel) shadow-[0_1px_4px_-1px_rgba(0,0,0,0.04)]"
+          transition={{ type: "spring", stiffness: 400, damping: 30 }}
         />
       )}
-      <span>{label}</span>
     </Link>
   );
 }
 
-function BrandLogo({ onNavigate }: { onNavigate?: () => void }) {
-  return (
-    <Link
-      aria-label="Mountain Run home"
-      className="group flex shrink-0 items-center gap-2 sm:gap-2.5"
-      href="/"
-      onClick={onNavigate}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        alt=""
-        className="block h-8 w-8 shrink-0 sm:h-9 sm:w-9 transition-transform duration-500 ease-out group-hover:scale-110 group-hover:rotate-12"
-        height={36}
-        src="/logo-mark.svg"
-        width={36}
-      />
-      <span className="text-base font-semibold tracking-tight text-(--foreground) transition-colors duration-300 sm:text-lg">
-        Mountain{" "}
-        <span className="font-extrabold text-transparent bg-clip-text bg-linear-to-r from-emerald-500 to-indigo-600">
-          Run
-        </span>
-      </span>
-    </Link>
-  );
-}
-
-/* ─── Animated Premium Hamburger Icon ─── */
-function HamburgerButton({
-  open,
-  onClick,
-}: {
-  open: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      aria-expanded={open}
-      aria-label={open ? "Close menu" : "Open menu"}
-      className="focus-ring relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-(--line) bg-(--panel) text-foreground hover:bg-(--panel-soft) transition-colors cursor-pointer"
-      onClick={onClick}
-      type="button"
-    >
-      <div className="relative flex h-5 w-5 flex-col items-center justify-center">
-        <motion.span
-          className="absolute h-[1.5px] w-4 bg-current"
-          animate={{
-            y: open ? 0 : -5,
-            rotate: open ? 45 : 0,
-            width: open ? "16px" : "16px",
-          }}
-          transition={{ type: "spring", stiffness: 300, damping: 22 }}
-        />
-        <motion.span
-          className="absolute h-[1.5px] w-4 bg-current"
-          animate={{
-            opacity: open ? 0 : 1,
-            scale: open ? 0.6 : 1,
-          }}
-          transition={{ duration: 0.15 }}
-        />
-        <motion.span
-          className="absolute h-[1.5px] w-4 bg-current"
-          animate={{
-            y: open ? 0 : 5,
-            rotate: open ? -45 : 0,
-            width: open ? "16px" : "16px",
-          }}
-          transition={{ type: "spring", stiffness: 300, damping: 22 }}
-        />
-      </div>
-    </button>
-  );
-}
-
+/* ─── Main header ─── */
 export function AppHeader() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
 
   const isActive = (href: string) =>
     pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
 
-  // Prevent body scroll when menu is open
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
+    return () => { document.body.style.overflow = prev; };
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-(--line) bg-(--header-bg) backdrop-blur-xl shadow-xs">
-      {/* Accent color gradient bar */}
-      <div className="h-[2px] w-full bg-linear-to-r from-(--sage) via-emerald-400 to-indigo-500" />
-      
-      <div className="container-page">
-        <div className="flex h-14 items-center justify-between gap-2 sm:h-16 sm:gap-4">
-          <BrandLogo onNavigate={() => setOpen(false)} />
+    <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-3 sm:pt-4">
+      {/* ─── Desktop floating bar ─── */}
+      <div
+        className={`hidden w-full max-w-[1280px] transition-all duration-500 ease-out md:block ${
+          scrolled ? "-translate-y-0.5" : ""
+        }`}
+      >
+        <div
+          className={`flex items-center justify-between rounded-2xl border border-(--line) transition-all duration-500 ease-out ${
+            scrolled
+              ? "bg-(--header-bg) py-2 pl-4 pr-2 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.04)] backdrop-blur-2xl"
+              : "bg-(--header-bg)/70 py-2.5 pl-5 pr-2.5 shadow-none backdrop-blur-lg"
+          }`}
+        >
+          {/* Left — Logo */}
+          <Link
+            href="/"
+            aria-label="Mountain Run home"
+            className="group flex shrink-0 items-center gap-2.5"
+          >
+            <img
+              src="/logo-mark.svg"
+              alt="Mountain Run"
+              width={28}
+              height={28}
+              className={`shrink-0 transition-all duration-500 ease-out group-hover:scale-110 group-hover:rotate-3 ${
+                scrolled ? "h-6 w-6 sm:h-7 sm:w-7" : "h-7 w-7 sm:h-8 sm:w-8"
+              }`}
+            />
+            <span className={`font-bold tracking-tight text-(--foreground) transition-all duration-500 ease-out ${
+              scrolled ? "text-sm sm:text-base" : "text-base sm:text-lg"
+            }`}>
+              <BrandText />
+            </span>
+          </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden items-center gap-0.5 md:flex">
+          {/* Center — Nav pill */}
+          <nav className="flex items-center gap-0.5 rounded-full border border-(--line) bg-(--panel-soft)/60 px-1 py-1 shadow-sm" aria-label="Main navigation">
             {publicNav.map(([label, href]) => (
-              <NavLink active={isActive(href)} href={href} key={href} label={label} />
+              <NavLink
+                key={href}
+                active={isActive(href)}
+                href={href}
+                label={label}
+              />
             ))}
             <Show when="signed-in">
               <NavLink
@@ -180,121 +298,170 @@ export function AppHeader() {
             </Show>
           </nav>
 
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Single theme control — all breakpoints (avoid duplicate mobile toggles) */}
+          {/* Right — Actions pill */}
+          <div className="flex items-center gap-1.5 rounded-full border border-(--line) bg-(--panel-soft)/60 px-2 py-1 shadow-sm">
             <ThemeToggle size="sm" />
-            <div className="hidden items-center gap-2 md:flex">
-              <Show when="signed-out">
-                <Link className="btn btn-ghost h-9 px-3" href="/sign-in">
-                  Sign in
-                </Link>
-                <Link className="btn btn-primary h-9 px-4" href="/events">
-                  Join a run
-                </Link>
-              </Show>
-              <Show when="signed-in">
-                <ProfileButton />
-              </Show>
-            </div>
-
-            {/* Mobile: profile + menu (theme lives once above) */}
-            <div className="flex items-center gap-1.5 md:hidden">
-              <Show when="signed-in">
-                <ProfileButton />
-              </Show>
-              <HamburgerButton open={open} onClick={() => setOpen((prev) => !prev)} />
-            </div>
+            <div className="h-5 w-px bg-(--line)" />
+            <Show when="signed-out">
+              <Link
+                className="btn btn-primary h-8 px-3.5 text-xs font-semibold sm:h-9 sm:px-4 sm:text-sm"
+                href="/events"
+              >
+                Browse events
+              </Link>
+            </Show>
+            <Show when="signed-in">
+              <ProfileDropdown />
+            </Show>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu Overlay Container */}
+      {/* ─── Mobile bar ─── */}
+      <div className="flex w-full items-center justify-between md:hidden">
+        <div className={`flex w-full items-center justify-between rounded-2xl border border-(--line) px-4 py-2 transition-all duration-500 ${
+          scrolled
+            ? "bg-(--header-bg) shadow-[0_4px_24px_-6px_rgba(0,0,0,0.04)] backdrop-blur-2xl"
+            : "bg-(--header-bg)/70 backdrop-blur-lg"
+        }`}>
+          <Link href="/" aria-label="Mountain Run home" className="group flex shrink-0 items-center gap-2">
+            <img
+              src="/logo-mark.svg"
+              alt="Mountain Run"
+              width={24}
+              height={24}
+              className="h-6 w-6 shrink-0 transition-transform duration-300 group-hover:scale-110"
+            />
+            <span className="text-sm font-bold tracking-tight text-(--foreground)">
+              <BrandText />
+            </span>
+          </Link>
+
+          <div className="flex items-center gap-1.5">
+            <ThemeToggle size="sm" />
+            <Show when="signed-in">
+              <ProfileDropdown />
+            </Show>
+            <Hamburger open={open} onClick={() => setOpen((v) => !v)} />
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Mobile overlay menu ─── */}
       <AnimatePresence>
         {open && (
-          <>
-            {/* Backdrop: floats over content beneath header */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 flex items-center justify-center md:hidden"
+          >
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-(--overlay) backdrop-blur-md"
               onClick={() => setOpen(false)}
-              className="fixed inset-x-0 bottom-0 top-[56px] sm:top-[64px] z-30 bg-(--overlay) backdrop-blur-xs md:hidden"
             />
 
-            {/* Floating Drawer Overlay */}
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ type: "spring", duration: 0.4, bounce: 0 }}
-              className="absolute left-0 right-0 top-full z-40 border-b border-(--line) bg-(--panel) px-4 pb-6 pt-2 shadow-lg md:hidden overflow-hidden"
+            {/* Centered menu */}
+            <motion.nav
+              initial={{ opacity: 0, y: 24, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 24, scale: 0.96 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="relative z-10 flex w-[85vw] max-w-sm flex-col gap-1.5 rounded-3xl border border-(--line-strong) bg-(--panel) p-3 shadow-2xl"
             >
-              <nav className="flex flex-col gap-1.5">
-                {publicNav.map(([label, href, Icon]) => {
-                  const active = isActive(href);
-                  return (
+              {publicNav.map(([label, href, Icon], i) => {
+                const active = isActive(href);
+                return (
+                  <motion.div
+                    key={href}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05, duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                  >
                     <Link
-                      key={href}
                       href={href}
                       onClick={() => setOpen(false)}
-                      className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition active:scale-[0.98] ${
+                      className={`group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-200 ${
                         active
                           ? "bg-(--sage-soft) text-(--sage)"
-                          : "text-(--muted) hover:bg-(--panel-soft) hover:text-foreground"
+                          : "text-(--muted) hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
                       }`}
                     >
-                      <Icon className={`h-4 w-4 ${active ? "text-(--sage)" : "text-(--muted-soft)"}`} />
-                      <span>{label}</span>
+                      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all ${
+                        active
+                          ? "bg-(--sage) text-white shadow-sm"
+                          : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
+                      }`}>
+                        <Icon className="h-4 w-4" strokeWidth={1.75} />
+                      </span>
+                      <span className="flex-1">{label}</span>
+                      <svg className={`h-4 w-4 transition-all group-hover:translate-x-0.5 ${active ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="m6 4 4 4-4 4" />
+                      </svg>
                     </Link>
-                  );
-                })}
+                  </motion.div>
+                );
+              })}
 
-                <Show when="signed-in">
-                  <div className="my-2 border-t border-(--line)" />
+              {/* Dashboard */}
+              <Show when="signed-in">
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: publicNav.length * 0.05, duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <div className="mx-3 my-1.5 h-px bg-gradient-to-r from-(--line) via-(--line) to-transparent" />
                   <Link
                     href="/dashboard"
                     onClick={() => setOpen(false)}
-                    className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition ${
+                    className={`group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-200 ${
                       isActive("/dashboard")
                         ? "bg-(--sage-soft) text-(--sage)"
-                        : "text-(--muted) hover:bg-(--panel-soft) hover:text-foreground"
+                        : "text-(--muted) hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
                     }`}
                   >
-                    <LayoutDashboard className="h-4 w-4 text-(--muted-soft)" />
-                    <span>Dashboard</span>
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all ${
+                      isActive("/dashboard")
+                        ? "bg-(--sage) text-white shadow-sm"
+                        : "bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)"
+                    }`}>
+                      <LayoutDashboard className="h-4 w-4" strokeWidth={1.75} />
+                    </span>
+                    <span className="flex-1">Dashboard</span>
+                    <svg className={`h-4 w-4 transition-all group-hover:translate-x-0.5 ${isActive("/dashboard") ? "text-(--sage)" : "text-(--muted-soft)"}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m6 4 4 4-4 4" />
+                    </svg>
                   </Link>
-                  <Link
-                    href="/register"
-                    onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-(--muted) hover:bg-(--panel-soft) hover:text-foreground transition"
-                  >
-                    <Award className="h-4 w-4 text-(--muted-soft)" />
-                    <span>Join event</span>
-                  </Link>
-                </Show>
+                </motion.div>
+              </Show>
 
-                <Show when="signed-out">
-                  <div className="mt-4 grid grid-cols-2 gap-2 border-t border-(--line) pt-4">
-                    <Link
-                      className="btn btn-secondary h-10 w-full text-xs font-bold"
-                      href="/sign-in"
-                      onClick={() => setOpen(false)}
-                    >
-                      <LogIn className="mr-1.5 h-3.5 w-3.5" />
-                      Sign in
-                    </Link>
-                    <Link
-                      className="btn btn-primary h-10 w-full text-xs font-bold"
-                      href="/events"
-                      onClick={() => setOpen(false)}
-                    >
-                      Join a run
-                    </Link>
-                  </div>
-                </Show>
-              </nav>
-            </motion.div>
-          </>
+              {/* Sign in for signed-out */}
+              <Show when="signed-out">
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: publicNav.length * 0.05, duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <div className="mx-3 my-1.5 h-px bg-gradient-to-r from-(--line) via-(--line) to-transparent" />
+                  <Link
+                    href="/sign-in"
+                    onClick={() => setOpen(false)}
+                    className="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-(--muted) transition-all duration-200 hover:bg-(--sage-soft)/40 hover:text-(--foreground)"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--panel-soft) text-(--muted-soft) group-hover:bg-(--line)">
+                      <LogIn className="h-4 w-4" strokeWidth={1.75} />
+                    </span>
+                    <span className="flex-1">Sign in</span>
+                    <svg className="h-4 w-4 text-(--muted-soft) transition-all group-hover:translate-x-0.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m6 4 4 4-4 4" />
+                    </svg>
+                  </Link>
+                </motion.div>
+              </Show>
+            </motion.nav>
+          </motion.div>
         )}
       </AnimatePresence>
     </header>

@@ -19,6 +19,10 @@ export type PublicEvent = {
   banner: string;
   reward: string;
   status: "upcoming" | "past";
+  couponCode?: string;
+  showCouponOnCard?: boolean;
+  activityTypes?: string[];
+  benefits?: string[];
   /** Past-event recap stats */
   finishers?: number;
   verifiedResults?: number;

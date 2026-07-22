@@ -1,9 +1,11 @@
 "use client";
 
 import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
+import { Camera, Heart, Loader2, MapPin, Sparkles, Trophy, Upload, X } from "lucide-react";
 import Image from "next/image";
-import { X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { getApiUrl } from "../../lib/api";
+import { fileToDataUrl, validateImageFile } from "../../lib/cloudinary";
 import {
   galleryCategories,
   galleryItems as staticGalleryItems,
@@ -33,21 +35,27 @@ function useCountUp(target: number, active: boolean, duration = 1100) {
   return value;
 }
 
-function StatPill({ label, value }: { label: string; value: number }) {
+const statIcons = [Camera, MapPin, Sparkles, Heart] as const;
+
+function StatCard({ label, value, icon: Icon }: { label: string; value: number; icon: typeof Camera }) {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-12%" });
+  const inView = useInView(ref, { once: true, margin: "-10%" });
   const count = useCountUp(value, inView);
 
   return (
     <div
       ref={ref}
-      className="min-w-0 rounded-2xl border border-(--line) bg-(--panel)/90 px-4 py-4 text-center shadow-(--shadow) backdrop-blur-sm sm:px-5 sm:py-5"
+      className="group relative overflow-hidden rounded-2xl border border-(--line) bg-(--panel) px-4 py-5 text-center transition-shadow hover:shadow-sm sm:px-5 sm:py-6"
     >
-      <p className="text-xl font-semibold tracking-tight tabular-nums sm:text-2xl md:text-3xl">
+      <div aria-hidden className="pointer-events-none absolute -top-6 -right-6 h-16 w-16 rounded-full bg-(--sage)/5 blur-xl transition-all group-hover:bg-(--sage)/10" />
+      <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--sage) transition-all group-hover:border-(--sage)/30 group-hover:bg-(--sage)/10">
+        <Icon className="h-5 w-5" strokeWidth={1.75} />
+      </span>
+      <p className="mt-2 text-2xl font-bold tracking-tight tabular-nums text-(--foreground) sm:text-3xl">
         {count.toLocaleString("en-IN")}
         {value >= 100 ? "+" : ""}
       </p>
-      <p className="mt-1 text-[0.7rem] font-medium text-(--muted) sm:mt-1.5 sm:text-xs">{label}</p>
+      <p className="mt-0.5 text-[0.65rem] font-semibold uppercase tracking-wider text-(--muted) sm:text-xs">{label}</p>
     </div>
   );
 }
@@ -67,11 +75,11 @@ function GalleryCard({
     <motion.button
       type="button"
       onClick={() => onOpen(item)}
-      initial={reduce ? false : { opacity: 0, y: 14 }}
+      initial={reduce ? false : { opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-8%" }}
-      transition={{ duration: 0.4, delay: Math.min(index * 0.04, 0.28), ease: [0.22, 1, 0.36, 1] }}
-      whileHover={reduce ? undefined : { y: -4 }}
+      viewport={{ once: true, margin: "-6%" }}
+      transition={{ duration: 0.45, delay: Math.min(index * 0.05, 0.3), ease: [0.22, 1, 0.36, 1] }}
+      whileHover={reduce ? undefined : { y: -5 }}
       className={cn(
         "group relative w-full overflow-hidden rounded-2xl border border-(--line) bg-(--panel) text-left shadow-(--shadow)",
         "transition-[box-shadow,border-color] duration-300",
@@ -87,7 +95,6 @@ function GalleryCard({
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
-        {/* Soft gradient template so every card feels premium */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/75 via-black/15 to-black/5"
@@ -190,10 +197,301 @@ function Lightbox({ item, onClose }: { item: GalleryItem; onClose: () => void })
   );
 }
 
+function FadeIn({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-15%" });
+  const reduce = useReducedMotion();
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      initial={reduce ? false : { opacity: 0, y: 20 }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function SubmitPhotoModal({ onClose }: { onClose: () => void }) {
+  const [name, setName] = useState("");
+  const [title, setTitle] = useState("");
+  const [eventLabel, setEventLabel] = useState("");
+  const [location, setLocation] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError("");
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const check = validateImageFile(f);
+    if (!check.valid) {
+      setError(check.error ?? "Invalid file");
+      return;
+    }
+    setFile(f);
+    const dataUrl = await fileToDataUrl(f);
+    setPreview(dataUrl);
+  }, []);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    const trimmedName = name.trim();
+    const trimmedTitle = title.trim();
+    if (!trimmedName || trimmedName.length < 2) {
+      setError("Please enter your name (at least 2 characters).");
+      return;
+    }
+    if (!trimmedTitle || trimmedTitle.length < 2) {
+      setError("Please enter a title or caption for your photo.");
+      return;
+    }
+    if (!file || !preview) {
+      setError("Please select an image to upload.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch(getApiUrl("/api/content/gallery/submit"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          file: preview,
+          name: trimmedName,
+          title: trimmedTitle,
+          eventLabel: eventLabel.trim() || null,
+          location: location.trim() || null,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error?.message ?? "Submission failed");
+      }
+      setDone(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [file, preview, name, title, eventLabel, location]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !submitting) onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [onClose, submitting]);
+
+  return (
+    <motion.div
+      role="dialog"
+      aria-modal
+      aria-label="Submit your photo"
+      className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <button
+        type="button"
+        aria-label="Close"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={submitting ? undefined : onClose}
+      />
+      <motion.div
+        className="relative z-10 flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-(--panel) shadow-2xl sm:max-h-[88vh] sm:rounded-3xl"
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 16 }}
+        transition={{ type: "spring", stiffness: 360, damping: 32 }}
+      >
+        <div className="flex items-center justify-between border-b border-(--line) px-5 py-4">
+          <h2 className="text-lg font-semibold tracking-tight">
+            {done ? "Submitted!" : "Submit your photo"}
+          </h2>
+          <button
+            type="button"
+            aria-label="Close"
+            disabled={submitting}
+            onClick={onClose}
+            className="grid h-9 w-9 place-items-center rounded-full text-(--muted) transition hover:bg-(--line) hover:text-(--foreground) disabled:opacity-40"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {done ? (
+          <div className="flex flex-col items-center gap-4 px-5 py-12 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-(--sage)/10">
+              <Camera className="h-7 w-7 text-(--sage)" strokeWidth={1.75} />
+            </div>
+            <p className="text-xl font-semibold tracking-tight">Thank you!</p>
+            <p className="max-w-xs text-sm text-(--muted)">
+              Your photo has been submitted and is pending review. We&rsquo;ll notify you once it&rsquo;s live.
+            </p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-2 rounded-full bg-(--sage) px-6 py-2.5 text-sm font-semibold text-(--on-accent) transition hover:opacity-90"
+            >
+              Done
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4 overflow-y-auto px-5 py-5">
+            {error ? (
+              <p className="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                {error}
+              </p>
+            ) : null}
+
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-(--muted)">
+                Your name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Arjun Singh"
+                className="w-full rounded-xl border border-(--line) bg-(--panel-soft) px-4 py-2.5 text-sm text-(--foreground) outline-none transition focus:border-(--sage)/50 focus:ring-2 focus:ring-(--sage)/15"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-(--muted)">
+                Title / caption <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Conquered the 10K in Bangalore"
+                className="w-full rounded-xl border border-(--line) bg-(--panel-soft) px-4 py-2.5 text-sm text-(--foreground) outline-none transition focus:border-(--sage)/50 focus:ring-2 focus:ring-(--sage)/15"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-(--muted)">
+                  Event name
+                </label>
+                <input
+                  type="text"
+                  value={eventLabel}
+                  onChange={(e) => setEventLabel(e.target.value)}
+                  placeholder="e.g. Pune Half Marathon"
+                  className="w-full rounded-xl border border-(--line) bg-(--panel-soft) px-4 py-2.5 text-sm text-(--foreground) outline-none transition focus:border-(--sage)/50 focus:ring-2 focus:ring-(--sage)/15"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-(--muted)">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="e.g. Mumbai"
+                  className="w-full rounded-xl border border-(--line) bg-(--panel-soft) px-4 py-2.5 text-sm text-(--foreground) outline-none transition focus:border-(--sage)/50 focus:ring-2 focus:ring-(--sage)/15"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-(--muted)">
+                Photo <span className="text-red-500">*</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                className={cn(
+                  "flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center transition",
+                  preview
+                    ? "border-(--sage)/30 bg-(--sage)/5"
+                    : "border-(--line) bg-(--panel-soft) hover:border-(--line-strong)",
+                )}
+              >
+                {preview ? (
+                  <div className="relative aspect-[4/3] w-full max-w-xs overflow-hidden rounded-lg">
+                    <Image
+                      alt="Preview"
+                      src={preview}
+                      fill
+                      className="object-cover"
+                      sizes="320px"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="h-8 w-8 text-(--muted-soft)" strokeWidth={1.5} />
+                    <p className="text-sm text-(--muted)">Tap to select a photo</p>
+                    <p className="text-xs text-(--muted-soft)">JPEG · PNG · WebP · max 5 MB</p>
+                  </>
+                )}
+              </button>
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/heic"
+                className="hidden"
+                onChange={handleFile}
+              />
+              {preview ? (
+                <button
+                  type="button"
+                  onClick={() => { setFile(null); setPreview(null); setError(""); }}
+                  className="mt-1.5 text-xs text-(--muted) underline transition hover:text-(--foreground)"
+                >
+                  Remove and choose another
+                </button>
+              ) : null}
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-(--sage) px-6 py-3 text-sm font-semibold text-(--on-accent) transition hover:opacity-90 disabled:opacity-50"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                "Submit for review"
+              )}
+            </button>
+
+            <p className="text-center text-xs text-(--muted-soft)">
+              Photos are reviewed before being published to the gallery.
+            </p>
+          </form>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export function GalleryClient() {
+  const reduce = useReducedMotion();
   const [category, setCategory] = useState<GalleryCategory>("All");
   const [active, setActive] = useState<GalleryItem | null>(null);
   const [items, setItems] = useState<GalleryItem[]>(staticGalleryItems);
+  const [showSubmit, setShowSubmit] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -223,33 +521,56 @@ export function GalleryClient() {
 
   return (
     <div className="min-w-0">
-      {/* Compact hero + stats only */}
+
+      {/* ── HERO ──────────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-b border-(--line)">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 -z-10"
           style={{
-            background:
-              "radial-gradient(ellipse 80% 60% at 50% -20%, color-mix(in srgb, var(--sage) 14%, transparent), transparent 60%), var(--background)",
+            background: [
+              "radial-gradient(ellipse 80% 50% at 0% 0%, color-mix(in srgb, var(--sage) 12%, transparent) 0%, transparent 60%)",
+              "radial-gradient(ellipse 50% 40% at 100% 100%, color-mix(in srgb, var(--sage) 6%, transparent) 0%, transparent 50%)",
+              "var(--background)",
+            ].join(", "),
           }}
         />
-        <div className="container-page py-10 sm:py-12 md:py-14">
-          <div className="mx-auto max-w-xl text-center">
-            <p className="eyebrow">Gallery</p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl md:text-[2.75rem] md:leading-[1.1]">
-              Moments
-            </h1>
-          </div>
+        <div aria-hidden className="pointer-events-none absolute top-8 right-8 flex gap-1.5 opacity-20">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-1.5 w-1.5 rounded-full bg-(--sage) animate-pulse" style={{ animationDelay: `${i * 0.3}s` }} />
+          ))}
+        </div>
 
-          <div className="mx-auto mt-8 grid max-w-4xl grid-cols-2 gap-2.5 sm:mt-10 sm:gap-3 md:grid-cols-4 md:gap-4">
-            {galleryStats.map((stat) => (
-              <StatPill key={stat.label} label={stat.label} value={stat.value} />
+        <div className="container-page py-10 sm:py-12 md:py-14">
+          <motion.div
+            className="mx-auto max-w-xl text-center"
+            initial={reduce ? false : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <p className="eyebrow">Gallery</p>
+            <h1 className="mt-3 text-4xl font-bold leading-[1.1] tracking-tight text-(--foreground) sm:text-5xl">
+              Captured moments
+            </h1>
+            <p className="lede mx-auto mt-4 max-w-lg">
+              Race finishes, training miles, community runs &mdash; every frame tells a story from the Mountain Run community.
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="mx-auto mt-8 grid max-w-4xl grid-cols-2 gap-3 sm:mt-10 sm:gap-4 md:grid-cols-4"
+            initial={reduce ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {galleryStats.map((stat, i) => (
+              <StatCard key={stat.label} label={stat.label} value={stat.value} icon={statIcons[i]} />
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Filters + image grid */}
+      {/* ── FILTERS + GRID ────────────────────────────────────── */}
       <section className="section pt-8 sm:pt-10">
         <div className="container-page">
           <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible">
@@ -261,9 +582,9 @@ export function GalleryClient() {
                   type="button"
                   onClick={() => setCategory(cat)}
                   className={cn(
-                    "shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium transition touch-manipulation",
+                    "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-all",
                     on
-                      ? "border-(--accent) bg-(--accent) text-(--on-accent) shadow-xs"
+                      ? "border-(--sage) bg-(--sage) text-(--on-accent) shadow-xs"
                       : "border-(--line) bg-(--panel) text-(--muted) hover:border-(--line-strong) hover:text-(--foreground)",
                   )}
                 >
@@ -285,13 +606,50 @@ export function GalleryClient() {
           </div>
 
           {filtered.length === 0 ? (
-            <p className="mt-12 text-center text-sm text-(--muted)">No moments in this category.</p>
+            <motion.div
+              className="mt-16 flex flex-col items-center gap-3 text-center"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <Camera className="h-10 w-10 text-(--muted-soft)" strokeWidth={1.25} />
+              <p className="text-sm text-(--muted)">No moments in this category yet.</p>
+            </motion.div>
           ) : null}
         </div>
       </section>
 
+      {/* ── Floating submit button ───────────────────────────── */}
+      <motion.button
+        type="button"
+        onClick={() => setShowSubmit(true)}
+        initial={{ opacity: 0, y: 32 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        whileHover={{ y: -3 }}
+        whileTap={{ scale: 0.97 }}
+        className={cn(
+          "fixed bottom-5 left-1/2 z-40 -translate-x-1/2 whitespace-nowrap",
+          "flex items-center gap-1.5 rounded-xl",
+          "bg-(--panel) ring-1 ring-(--line) shadow-[0_8px_32px_-8px_rgba(0,0,0,0.12)]",
+          "px-3.5 py-2.5 text-xs font-semibold text-(--foreground)",
+          "transition-all hover:shadow-[0_8px_32px_-6px_rgba(0,0,0,0.18)] hover:ring-(--sage)/30",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--sage)/40",
+          "backdrop-blur-xl bg-(--header-bg)/80",
+          "sm:bottom-8 sm:gap-2.5 sm:px-5 sm:py-3 sm:text-sm sm:rounded-2xl",
+        )}
+      >
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-(--sage) to-emerald-500 shadow-xs sm:h-7 sm:w-7">
+          <Upload className="h-3 w-3 text-white sm:h-3.5 sm:w-3.5" strokeWidth={2.5} />
+        </span>
+        <span>Submit<span className="hidden sm:inline">&nbsp;your photo</span></span>
+        <svg className="h-3.5 w-3.5 shrink-0 text-(--muted-soft) sm:h-4 sm:w-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m6 4 4 4-4 4" />
+        </svg>
+      </motion.button>
+
       <AnimatePresence>
         {active ? <Lightbox item={active} onClose={() => setActive(null)} /> : null}
+        {showSubmit ? <SubmitPhotoModal onClose={() => setShowSubmit(false)} /> : null}
       </AnimatePresence>
     </div>
   );
