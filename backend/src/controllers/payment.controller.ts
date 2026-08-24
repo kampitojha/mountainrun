@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { env } from "../config/env.js";
 import { prisma } from "../lib/prisma.js";
+import { sendTelegramAlert } from "../services/alert.service.js";
 import { sendRegistrationConfirmationEmail } from "../services/email.service.js";
 import {
   createRazorpayOrder,
@@ -77,6 +78,17 @@ export async function verifyPayment(request: Request, response: Response) {
   });
 
   if (!isValid) {
+    void sendTelegramAlert({
+      title: "Invalid Payment Signature",
+      level: "CRITICAL",
+      service: "Razorpay Checkout",
+      message: "Payment verification failed due to signature mismatch.",
+      details: {
+        orderId: payload.razorpay_order_id,
+        paymentId: payload.razorpay_payment_id,
+      },
+      link: `${env.frontendUrl}/admin`,
+    });
     throw new ApiError(400, "Invalid Razorpay payment signature");
   }
 
@@ -128,6 +140,19 @@ export async function verifyPayment(request: Request, response: Response) {
     });
   } catch (err) {
     console.error("[verifyPayment] Registration update or email failed:", err);
+    void sendTelegramAlert({
+      title: "Post-Payment Registration Update Failed",
+      level: "CRITICAL",
+      service: "Payment Controller",
+      message: "Payment was marked PAID but updating registration failed.",
+      details: {
+        orderId: payload.razorpay_order_id,
+        paymentId: payload.razorpay_payment_id,
+        registrationId: payment.registrationId,
+      },
+      error: err,
+      link: `${env.frontendUrl}/admin/registrations/${payment.registrationId}`,
+    });
   }
 
   response.json({
@@ -145,6 +170,15 @@ export async function handleRazorpayWebhook(request: Request, response: Response
   const isValid = verifyWebhookSignature(rawBody, request.header("x-razorpay-signature"));
 
   if (!isValid) {
+    void sendTelegramAlert({
+      title: "Invalid Razorpay Webhook Signature",
+      level: "WARNING",
+      service: "Razorpay Webhook",
+      message: "Webhook request rejected due to invalid signature.",
+      details: {
+        ip: request.ip,
+      },
+    });
     throw new ApiError(400, "Invalid Razorpay webhook signature");
   }
 
@@ -193,6 +227,19 @@ export async function handleRazorpayWebhook(request: Request, response: Response
       });
     } catch (err) {
       console.error("[webhook] Failed to update registration or send email:", err);
+      void sendTelegramAlert({
+        title: "Webhook Registration Confirmation Failed",
+        level: "CRITICAL",
+        service: "Razorpay Webhook",
+        message: "Payment captured in webhook but registration update failed.",
+        details: {
+          orderId,
+          paymentId,
+          registrationId: payment.registrationId,
+        },
+        error: err,
+        link: `${env.frontendUrl}/admin/registrations/${payment.registrationId}`,
+      });
     }
   }
 

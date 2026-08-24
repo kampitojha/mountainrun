@@ -126,6 +126,9 @@ export const env = {
   adminBootstrap:
     readEnv("ADMIN_BOOTSTRAP", process.env.NODE_ENV === "production" ? "false" : "true")
       .toLowerCase() === "true",
+  /** Telegram Bot configuration for instant error alerts */
+  telegramBotToken: readEnv("TELEGRAM_BOT_TOKEN"),
+  telegramChatId: readEnv("TELEGRAM_CHAT_ID"),
   get clerkEnabled() {
     return isClerkConfigured(this.clerkSecretKey);
   },

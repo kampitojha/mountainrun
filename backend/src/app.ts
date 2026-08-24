@@ -15,6 +15,7 @@ import { registrationRouter } from "./routes/registration.routes.js";
 import { subscriberRouter } from "./routes/subscriber.routes.js";
 import { uploadRouter } from "./routes/upload.routes.js";
 import { userRouter } from "./routes/user.routes.js";
+import { sendTelegramAlert } from "./services/alert.service.js";
 import { ApiError } from "./utils/api-error.js";
 
 export const app = express();
@@ -90,11 +91,24 @@ app.use((_request, _response, next) => {
   next(new ApiError(404, "Route not found"));
 });
 
-app.use((error: Error, _request: Request, response: Response, _next: NextFunction) => {
+app.use((error: Error, request: Request, response: Response, _next: NextFunction) => {
   void _next;
   const statusCode = error instanceof ApiError ? error.statusCode : 500;
   if (statusCode === 500) {
     console.error("[Unhandled Server Error]", error);
+    void sendTelegramAlert({
+      title: "Unhandled 500 Server Error",
+      level: "CRITICAL",
+      service: "Express API",
+      message: error.message || "Internal Server Error",
+      details: {
+        method: request.method,
+        path: request.originalUrl || request.url,
+        ip: request.ip,
+      },
+      error,
+      link: `${env.frontendUrl}/admin`,
+    });
   }
 
   response.status(statusCode).json({

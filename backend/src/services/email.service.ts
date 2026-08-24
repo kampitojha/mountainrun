@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { env } from "../config/env.js";
+import { sendTelegramAlert } from "./alert.service.js";
 import {
   buildCertificateEmailHtml,
   type CertificateRenderData,
@@ -211,10 +212,18 @@ export async function sendRegistrationConfirmationEmail(
       "[email] RESEND_API_KEY is not set. Skipping confirmation email to",
       payload.to,
     );
-    console.info("[email] Would send:", {
-      to: payload.to,
-      bibNumber: payload.bibNumber,
-      eventTitle: payload.eventTitle,
+    void sendTelegramAlert({
+      title: "Email Dispatcher Not Configured",
+      level: "WARNING",
+      service: "Email Service (Resend)",
+      message: "RESEND_API_KEY is missing. Registration confirmation email was skipped.",
+      details: {
+        to: payload.to,
+        runner: payload.runnerName,
+        event: payload.eventTitle,
+        bibNumber: payload.bibNumber,
+      },
+      link: `${env.frontendUrl}/admin/registrations`,
     });
     return { sent: false, error: "RESEND_API_KEY is not configured" };
   }
@@ -230,9 +239,24 @@ export async function sendRegistrationConfirmationEmail(
 
     if (result.error) {
       console.error("[email] Resend error:", result.error, { from });
+      const errorMsg = `${result.error.message} (from: ${from})`;
+      void sendTelegramAlert({
+        title: "Registration Email Delivery Failed",
+        level: "ERROR",
+        service: "Resend Email",
+        message: errorMsg,
+        details: {
+          to: payload.to,
+          runner: payload.runnerName,
+          event: payload.eventTitle,
+          bibNumber: payload.bibNumber,
+        },
+        error: result.error,
+        link: `${env.frontendUrl}/admin/registrations`,
+      });
       return {
         sent: false,
-        error: `${result.error.message} (from: ${from})`,
+        error: errorMsg,
       };
     }
 
@@ -241,6 +265,20 @@ export async function sendRegistrationConfirmationEmail(
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown email error";
     console.error("[email] Failed to send confirmation:", message);
+    void sendTelegramAlert({
+      title: "Registration Email Exception",
+      level: "ERROR",
+      service: "Resend Email",
+      message,
+      details: {
+        to: payload.to,
+        runner: payload.runnerName,
+        event: payload.eventTitle,
+        bibNumber: payload.bibNumber,
+      },
+      error,
+      link: `${env.frontendUrl}/admin/registrations`,
+    });
     return { sent: false, error: message };
   }
 }
@@ -254,10 +292,18 @@ export async function sendCertificateEmail(input: {
       "[email] RESEND_API_KEY is not set. Skipping certificate email to",
       input.to,
     );
-    console.info("[email] Would send certificate:", {
-      to: input.to,
-      certificateNumber: input.data.certificateNumber,
-      verifyUrl: input.data.verifyUrl,
+    void sendTelegramAlert({
+      title: "Email Dispatcher Not Configured",
+      level: "WARNING",
+      service: "Email Service (Resend)",
+      message: "RESEND_API_KEY is missing. Certificate email was skipped.",
+      details: {
+        to: input.to,
+        certificateNumber: input.data.certificateNumber,
+        runner: input.data.runnerName,
+        event: input.data.eventTitle,
+      },
+      link: `${env.frontendUrl}/admin/certificates`,
     });
     return { sent: false, error: "RESEND_API_KEY is not configured" };
   }
@@ -273,9 +319,24 @@ export async function sendCertificateEmail(input: {
 
     if (result.error) {
       console.error("[email] Certificate Resend error:", result.error, { from });
+      const errorMsg = `${result.error.message} (from: ${from})`;
+      void sendTelegramAlert({
+        title: "Certificate Email Delivery Failed",
+        level: "ERROR",
+        service: "Resend Email",
+        message: errorMsg,
+        details: {
+          to: input.to,
+          certificateNumber: input.data.certificateNumber,
+          runner: input.data.runnerName,
+          event: input.data.eventTitle,
+        },
+        error: result.error,
+        link: `${env.frontendUrl}/admin/certificates`,
+      });
       return {
         sent: false,
-        error: `${result.error.message} (from: ${from})`,
+        error: errorMsg,
       };
     }
 
@@ -290,6 +351,20 @@ export async function sendCertificateEmail(input: {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown email error";
     console.error("[email] Failed to send certificate:", message);
+    void sendTelegramAlert({
+      title: "Certificate Email Exception",
+      level: "ERROR",
+      service: "Resend Email",
+      message,
+      details: {
+        to: input.to,
+        certificateNumber: input.data.certificateNumber,
+        runner: input.data.runnerName,
+        event: input.data.eventTitle,
+      },
+      error,
+      link: `${env.frontendUrl}/admin/certificates`,
+    });
     return { sent: false, error: message };
   }
 }

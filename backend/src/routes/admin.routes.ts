@@ -37,6 +37,7 @@ import {
   adminUpdateEvent,
   adminUpdateMedal,
   adminSyncPayments,
+  adminTestAlert,
   adminUpdatePayment,
   adminUpdateRegistration,
   adminUpdateUserRole,
@@ -51,6 +52,7 @@ adminRouter.use(requireClerkAuth, requireAdmin);
 adminRouter.get("/me", asyncHandler(adminMe));
 adminRouter.get("/overview", asyncHandler(adminOverview));
 adminRouter.get("/audit", asyncHandler(adminListAudit));
+adminRouter.post("/test-alert", asyncHandler(adminTestAlert));
 
 adminRouter.get("/events", asyncHandler(adminListEvents));
 adminRouter.get("/events/:id", asyncHandler(adminGetEvent));

@@ -20,6 +20,7 @@ import {
   toCertificateRenderData,
 } from "../services/certificate.service.js";
 import { sendRegistrationConfirmationEmail } from "../services/email.service.js";
+import { sendTelegramAlert } from "../services/alert.service.js";
 import { fetchPaymentsForOrder } from "../services/razorpay.service.js";
 import { ensureDefaultEvents } from "../services/event.service.js";
 import { ApiError } from "../utils/api-error.js";
@@ -1835,6 +1836,33 @@ export async function adminSendNewsletter(request: AuthenticatedRequest, respons
       total: subscribers.length,
       errors: errors.length > 0 ? errors : undefined,
       message: `Sent to ${sent} of ${subscribers.length} subscribers.`,
+    },
+  });
+}
+
+export async function adminTestAlert(request: AuthenticatedRequest, response: Response) {
+  const clerkId = request.auth?.userId;
+  const user = clerkId ? await prisma.user.findFirst({ where: { clerkId } }) : null;
+
+  const sent = await sendTelegramAlert({
+    title: "Admin System Test Alert",
+    level: "INFO",
+    service: "Admin Dashboard",
+    message: `Manual test alert triggered by ${user?.email || "Admin"}. All error notification channels are operational!`,
+    details: {
+      adminUser: user?.name || "Admin",
+      adminEmail: user?.email || "admin",
+      environment: env.nodeEnv,
+    },
+    link: `${env.frontendUrl}/admin`,
+  });
+
+  response.json({
+    data: {
+      sent,
+      message: sent
+        ? "Test alert sent to Telegram successfully!"
+        : "Failed to send alert. Please check TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID.",
     },
   });
 }
