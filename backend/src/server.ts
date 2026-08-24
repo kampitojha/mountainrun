@@ -1,9 +1,11 @@
 import { app } from "./app.js";
 import { env } from "./config/env.js";
 import { prisma } from "./lib/prisma.js";
+import { initCronJobs } from "./services/cron.service.js";
 
 const server = app.listen(env.port, "0.0.0.0", () => {
   console.log(`Mountain Run API listening on port ${env.port}`);
+  initCronJobs();
 });
 
 async function shutdown() {

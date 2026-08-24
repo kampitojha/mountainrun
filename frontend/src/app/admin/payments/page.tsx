@@ -15,7 +15,8 @@ type PaymentRow = {
   paidAt: string | null;
   registration: {
     bibNumber: string;
-    user: { name: string; email: string };
+    distance?: string;
+    user: { name: string; email: string; phone?: string | null };
     event: { title: string };
   };
 };
@@ -157,6 +158,19 @@ export default function AdminPaymentsPage() {
                 <td className="text-xs">{formatDateTime(row.paidAt ?? row.createdAt)}</td>
                 <td>
                   <div className="flex flex-wrap gap-1">
+                    {row.status !== "PAID" && row.status !== "REFUNDED" ? (
+                      <a
+                        href={`https://wa.me/${(row.registration.user.phone || "").replace(/\D/g, "")}?text=${encodeURIComponent(
+                          `Hi ${row.registration.user.name.split(" ")[0]}! You started registering for ${row.registration.event.title} (${row.registration.distance || "Virtual Run"}). Complete your registration in 1 click and claim your custom Finisher Medal: https://mountainrun.in/prize/${row.registration.bibNumber}`
+                        )}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn btn-primary h-8 px-2 text-xs flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white"
+                        title="Send WhatsApp Recovery Message"
+                      >
+                        Recover 🛒
+                      </a>
+                    ) : null}
                     {row.status !== "PAID" ? (
                       <button
                         className="btn btn-secondary h-8 px-2 text-xs"
@@ -168,7 +182,7 @@ export default function AdminPaymentsPage() {
                     ) : null}
                     {row.status === "PAID" ? (
                       <button
-                        className="btn btn-ghost h-8 px-2 text-xs"
+                        className="btn btn-ghost h-8 px-2 text-xs text-red-500 hover:bg-red-500/10 hover:text-red-600"
                         onClick={() => void setPaymentStatus(row.id, "REFUNDED")}
                         type="button"
                       >

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, IndianRupee, Sparkles } from "lucide-react";
+import { IndianRupee, Sparkles } from "lucide-react";
+import { RegisterCta } from "../../components/register-cta";
 
 function formatPrice(price: string) {
   return price.replace(/^Rs\.\s*/, "₹");
@@ -50,13 +51,12 @@ export function EventStickyCta({
           </div>
 
           {/* Premium Glowing CTA Button */}
-          <Link
-            className="group relative flex items-center justify-center gap-1.5 rounded-xl bg-linear-to-r from-amber-400 via-amber-500 to-yellow-400 px-5 py-2.5 text-xs sm:text-sm font-black tracking-wide text-slate-950 shadow-lg shadow-amber-500/25 transition-all duration-200 hover:brightness-110 active:scale-95 shrink-0 select-none"
-            href={`/register?event=${encodeURIComponent(slug)}`}
-          >
-            <span>Register now</span>
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-          </Link>
+          <RegisterCta
+            slug={slug}
+            signedInLabel="Register now"
+            signedOutLabel="Register now"
+            className="shadow-lg shadow-(--gold)/25 transition-all duration-200 hover:brightness-110 active:scale-95 shrink-0 select-none text-xs sm:text-sm font-black tracking-wide"
+          />
         </div>
       </div>
     </>

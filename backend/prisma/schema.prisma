@@ -51,6 +51,7 @@ model Event {
   banner           String?
   reward           String?
   highlight        String?
+  medalImageUrl    String?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   registrations    Registration[]

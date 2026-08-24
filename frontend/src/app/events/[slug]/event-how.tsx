@@ -40,14 +40,14 @@ export function EventHow({ event }: { event: PublicEvent }) {
           lead="You stay in your routine. We handle everything else — proof, verification and delivery."
         />
 
-        <div className="relative mt-12 sm:mt-16">
+        <div className="relative mt-8 sm:mt-10">
           {/* Desktop connector */}
           <div
             aria-hidden
             className="absolute inset-x-16 top-6 hidden h-0.5 bg-gradient-to-r from-(--gold) via-(--sage) to-(--gold) opacity-25 sm:block"
           />
 
-          <div className="grid gap-6 sm:grid-cols-4 sm:gap-4">
+          <div className="grid gap-4 sm:grid-cols-4 sm:gap-4">
             {steps.map(({ icon: Icon, title, desc }, i) => (
               <Reveal key={title} delay={i * 0.12} className="relative">
                 <div className="relative flex items-start gap-4 sm:flex-col sm:items-center sm:text-center">
@@ -55,7 +55,7 @@ export function EventHow({ event }: { event: PublicEvent }) {
                   {i < steps.length - 1 ? (
                     <span
                       aria-hidden
-                      className="absolute left-6 top-12 h-[calc(100%+1rem)] w-0.5 bg-(--gold-line) sm:hidden"
+                      className="absolute left-6 top-12 h-full w-0.5 bg-(--gold-line) sm:hidden"
                     />
                   ) : null}
 

@@ -43,6 +43,7 @@ import {
   adminUpdatePayment,
   adminUpdateRegistration,
   adminUpdateUserRole,
+  adminBulkUploadTracking,
 } from "../controllers/admin.controller.js";
 import { requireAdmin, requireClerkAuth } from "../middleware/clerk-auth.js";
 import { asyncHandler } from "../utils/async-handler.js";
@@ -82,6 +83,7 @@ adminRouter.get("/proofs", asyncHandler(adminListProofs));
 adminRouter.post("/proofs/:id/review", asyncHandler(adminReviewProof));
 
 adminRouter.get("/medals/export.csv", asyncHandler(adminExportMedalsCsv));
+adminRouter.post("/medals/bulk-tracking", asyncHandler(adminBulkUploadTracking));
 adminRouter.get("/medals", asyncHandler(adminListMedals));
 adminRouter.patch("/medals/:id", asyncHandler(adminUpdateMedal));
 

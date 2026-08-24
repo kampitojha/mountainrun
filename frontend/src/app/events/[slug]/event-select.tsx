@@ -97,18 +97,7 @@ export function EventSelect({ event }: { event: PublicEvent }) {
                   </span>
                 </div>
 
-                {/* Countdown */}
-                {event.endsAt ? (
-                  <div className="mt-5 rounded-2xl border border-(--line) bg-(--panel-soft) p-4">
-                    <p className="inline-flex items-center gap-1.5 text-[0.6rem] font-black uppercase tracking-widest text-(--muted)">
-                      <Timer className="h-3.5 w-3.5 text-(--gold-deep)" />
-                      Registration open for
-                    </p>
-                    <div className="mt-3 flex justify-center">
-                      <EventCountdown targetDate={event.endsAt} />
-                    </div>
-                  </div>
-                ) : null}
+                {/* Countdown removed per redesign */}
 
                 {/* What's included */}
                 <div className="mt-5 rounded-2xl border border-(--gold-line) bg-(--gold-soft) p-4">
@@ -192,18 +181,31 @@ export function EventSelect({ event }: { event: PublicEvent }) {
                 {distances.map((distance) => {
                   const km = distanceNum(distance);
                   const t = tier(km ?? 5, activity);
+                  const isPopular = km === 5 || km === 10;
                   return (
                     <Link
                       key={distance}
                       href={`/register?event=${encodeURIComponent(event.slug)}&distance=${encodeURIComponent(distance)}`}
-                      className={`group flex flex-col rounded-2xl border bg-(--panel) px-4 py-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-premium ${t.chip}`}
+                      className={`group relative flex min-h-[72px] flex-col justify-center rounded-2xl border px-4 py-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-premium ${
+                        isPopular ? "border-(--gold) bg-(--gold-soft) shadow-sm" : `bg-(--panel) ${t.chip}`
+                      }`}
                     >
+                      {isPopular && (
+                        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-(--gold-deep) px-2 py-0.5 text-[0.55rem] font-bold uppercase tracking-wider text-white shadow-sm">
+                          Most Popular
+                        </span>
+                      )}
                       <span className="text-lg font-black tracking-tight text-(--foreground)">
                         {distance}
                       </span>
-                      <span className="mt-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-(--muted)">
-                        {t.label}
-                      </span>
+                      <div className="mt-1 flex items-center justify-between border-t border-(--line) pt-1.5">
+                        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
+                          {t.label}
+                        </span>
+                        <span className="text-xs font-black text-(--gold-deep)">
+                          {amount}
+                        </span>
+                      </div>
                     </Link>
                   );
                 })}

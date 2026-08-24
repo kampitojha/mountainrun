@@ -7,7 +7,6 @@ import { allPublicEvents } from "../../data/events";
 import { fetchEventBySlug } from "../../../lib/events-api";
 import { EventHero } from "./event-hero";
 import { EventStats } from "./event-stats";
-import { EventWhy } from "./event-why";
 import { EventRewards } from "./event-rewards";
 import { EventHow } from "./event-how";
 import { EventSelect } from "./event-select";
@@ -212,8 +211,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           <EventHero event={event} isPast={false} />
           <EventSelect event={event} />
           <EventStats />
-          <EventWhy />
-          <EventRewards />
+          <EventRewards event={event} />
           <EventHow event={event} />
           <EventCompare />
           <EventCommunity />

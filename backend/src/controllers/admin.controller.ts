@@ -461,6 +461,10 @@ export async function adminUpdateEvent(request: AuthenticatedRequest, response: 
       payload.bannerImageUrl === "" ? null : payload.bannerImageUrl === undefined
         ? undefined
         : payload.bannerImageUrl,
+    medalImageUrl:
+      payload.medalImageUrl === "" ? null : payload.medalImageUrl === undefined
+        ? undefined
+        : payload.medalImageUrl,
   };
 
   if (payload.priceInPaise !== undefined && payload.paymentRequired === undefined) {
@@ -798,7 +802,7 @@ export async function adminListPayments(request: AuthenticatedRequest, response:
       include: {
         registration: {
           include: {
-            user: { select: { name: true, email: true } },
+            user: { select: { name: true, email: true, phone: true } },
             event: { select: { title: true, slug: true } },
           },
         },
@@ -1472,7 +1476,78 @@ export async function adminUpdateMedal(request: AuthenticatedRequest, response: 
     summary: `Medal for ${medal.registration.bibNumber} → ${payload.status}${payload.trackingNumber ? ` (${payload.trackingNumber})` : ""}`,
   });
 
-  response.json({ data: medal });
+  response.json({ message: "Medal updated successfully", data: medal });
+}
+
+const adminMedalBulkTrackingSchema = z.object({
+  items: z.array(z.object({
+    bibNumber: z.string().optional(),
+    orderId: z.string().optional(), // Razorpay order id or payment id
+    trackingNumber: z.string().min(1),
+    courier: z.string().optional(),
+    trackingUrl: z.string().optional(),
+  })),
+});
+
+export async function adminBulkUploadTracking(request: AuthenticatedRequest, response: Response) {
+  const payload = validateBody(adminMedalBulkTrackingSchema, request);
+  let updatedCount = 0;
+  const errors: any[] = [];
+
+  for (const item of payload.items) {
+    try {
+      let registrationId: string | undefined;
+
+      if (item.bibNumber) {
+        const reg = await prisma.registration.findUnique({
+          where: { bibNumber: item.bibNumber }
+        });
+        if (reg) registrationId = reg.id;
+      } else if (item.orderId) {
+        const payment = await prisma.payment.findFirst({
+          where: {
+            OR: [
+              { razorpayOrderId: item.orderId },
+              { razorpayPaymentId: item.orderId }
+            ]
+          }
+        });
+        if (payment) registrationId = payment.registrationId;
+      }
+
+      if (!registrationId) {
+        errors.push({ item, error: "Registration not found" });
+        continue;
+      }
+
+      await prisma.medalDelivery.upsert({
+        where: { registrationId },
+        create: {
+          registrationId,
+          status: "DISPATCHED",
+          trackingNumber: item.trackingNumber,
+          courier: item.courier || null,
+          trackingUrl: item.trackingUrl || null,
+          dispatchedAt: new Date(),
+        },
+        update: {
+          status: "DISPATCHED",
+          trackingNumber: item.trackingNumber,
+          courier: item.courier || undefined,
+          trackingUrl: item.trackingUrl || undefined,
+          dispatchedAt: new Date(),
+        }
+      });
+      updatedCount++;
+    } catch (err: any) {
+      errors.push({ item, error: err.message });
+    }
+  }
+
+  response.json({
+    message: `Successfully updated ${updatedCount} tracking numbers`,
+    data: { updated: updatedCount, errors }
+  });
 }
 
 // ── Certificates ───────────────────────────────────────────────

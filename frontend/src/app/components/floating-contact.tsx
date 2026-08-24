@@ -62,7 +62,7 @@ export function FloatingContact() {
       ref={ref}
       data-floating-contact="true"
       className={`fixed z-50 flex flex-col items-end gap-3 transition-all duration-300 right-4 sm:right-6 sm:bottom-6 ${
-        isEventPage ? "bottom-21 sm:bottom-6" : "bottom-5 sm:bottom-6"
+        isEventPage ? "bottom-24 sm:bottom-6" : "bottom-5 sm:bottom-6"
       }`}
     >
       <AnimatePresence>

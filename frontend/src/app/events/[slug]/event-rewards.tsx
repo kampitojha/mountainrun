@@ -1,65 +1,71 @@
-import Link from "next/link";
-import { ArrowUpRight, FileBadge, Medal, Shirt, Sparkles, Trophy, Truck } from "lucide-react";
+import { MapPinned, Smartphone, ArrowUpRight, FileBadge, Medal, Shirt, Sparkles, Trophy, Truck } from "lucide-react";
 import { Medal3D } from "./medal";
 import { Reveal, SectionHeader } from "./reveal";
 
-const items = [
+const mergedFeatures = [
+  {
+    icon: MapPinned,
+    title: "Run anywhere",
+    desc: "Park, road, or treadmill — no travel, no city limits.",
+  },
+  {
+    icon: Smartphone,
+    title: "Track & Verify",
+    desc: "Use Strava or Garmin. A real team verifies every finish.",
+  },
   {
     icon: Medal,
     title: "Finisher medal",
-    desc: "A heavyweight metal medal with a gold-trimmed ribbon, designed to be worn.",
+    desc: "A heavyweight metal medal, designed to be worn.",
   },
   {
     icon: Shirt,
-    title: "Premium event T-shirt",
-    desc: "Exclusive athletic-fit tee included with every kit, in a special-edition print.",
+    title: "Premium T-shirt",
+    desc: "Exclusive athletic-fit tee included with every kit.",
   },
   {
     icon: FileBadge,
-    title: "Official printed certificate",
-    desc: "Your name, distance and verified time on a real certificate, delivered to your door.",
-  },
-  {
-    icon: Trophy,
-    title: "Hall of Fame ranking",
-    desc: "Your verified finish joins the public leaderboard with pacing stats.",
+    title: "Official certificate",
+    desc: "Your verified time on a real printed certificate.",
   },
   {
     icon: Truck,
-    title: "Free doorstep delivery",
-    desc: "Everything ships free across India after your proof is verified.",
+    title: "Free delivery",
+    desc: "Everything ships free to your door across India.",
   },
 ];
 
-export function EventRewards() {
+export function EventRewards({ event }: { event?: { medalImageUrl?: string | null } }) {
+  const hasMedalImage = !!event?.medalImageUrl;
+
   return (
     <section id="rewards" className="section scroll-mt-24 border-b border-(--line)">
       <div className="container-page">
         <SectionHeader
-          eyebrow="What you receive"
+          eyebrow="Why this event"
           title={
             <>
-              A finish you&rsquo;ll be{" "}
-              <span className="text-gold">proud to own</span>
+              Run your way, earn a{" "}
+              <span className="text-gold">premium reward</span>
             </>
           }
-          lead="Every verified finisher walks away with a complete reward kit — built to be worn, hung, and remembered."
+          lead="No crowds, no pressure. Just you, your distance, and a complete reward kit built to be remembered."
         />
 
-        <div className="mt-10 grid items-start gap-6 sm:mt-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
-          {/* Reward list */}
-          <div className="space-y-3.5">
-            {items.map(({ icon: Icon, title, desc }, i) => (
-              <Reveal key={title} delay={i * 0.06}>
-                <article className="group flex items-start gap-4 rounded-2xl border border-(--line) bg-(--panel) p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-(--gold-line) hover:shadow-premium sm:p-5">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-(--gold-line) bg-gradient-to-br from-(--gold-soft) to-white text-(--gold-deep) shadow-sm transition-transform duration-300 group-hover:scale-105">
+        <div className="mt-8 grid items-start gap-6 sm:mt-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-10">
+          {/* Merged Feature Grid */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {mergedFeatures.map(({ icon: Icon, title, desc }, i) => (
+              <Reveal key={title} delay={i * 0.05}>
+                <article className="group flex flex-col items-start gap-3 rounded-2xl border border-(--line) bg-(--panel) p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-(--gold-line) hover:shadow-premium sm:p-5">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-(--gold-line) bg-gradient-to-br from-(--gold-soft) to-white/5 text-(--gold-deep) shadow-sm transition-transform duration-300 group-hover:scale-105">
                     <Icon className="h-5 w-5" strokeWidth={1.75} />
                   </span>
                   <div className="min-w-0">
-                    <h3 className="text-sm font-bold tracking-tight text-(--foreground) sm:text-base">
+                    <h3 className="text-sm font-bold tracking-tight text-(--foreground)">
                       {title}
                     </h3>
-                    <p className="mt-1 text-xs leading-relaxed text-(--muted) sm:text-sm">{desc}</p>
+                    <p className="mt-1 text-[0.7rem] leading-relaxed text-(--muted) sm:text-xs">{desc}</p>
                   </div>
                 </article>
               </Reveal>
@@ -78,10 +84,28 @@ export function EventRewards() {
                 }}
               />
 
-              <div className="relative flex items-center justify-center px-6 pt-10">
-                <div className="medal-float w-44 drop-shadow-[0_35px_40px_rgba(122,92,8,0.35)] sm:w-56">
-                  <Medal3D className="h-auto w-full" />
-                </div>
+              <div className="relative flex items-center justify-center px-6 pt-10 min-h-[300px]">
+                {hasMedalImage ? (
+                  <div className="medal-float w-44 drop-shadow-[0_35px_40px_rgba(122,92,8,0.35)] sm:w-56">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img 
+                      src={event.medalImageUrl!} 
+                      alt="Finisher Medal" 
+                      className="h-auto w-full object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="medal-float w-44 sm:w-56 relative flex flex-col items-center justify-center aspect-[3/4] rounded-[3rem] border border-white/20 bg-white/10 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.1)] overflow-hidden">
+                    {/* Inner glowing shimmer for the glass */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(201,162,39,0.2)_0%,transparent_70%)] mix-blend-overlay" />
+                    
+                    <Medal className="h-16 w-16 text-white/50 mb-3 drop-shadow-md" strokeWidth={1} />
+                    <span className="text-xs font-bold uppercase tracking-widest text-white drop-shadow-md bg-black/20 px-3 py-1 rounded-full">
+                      Revealing Soon ✨
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Floating mini chips */}

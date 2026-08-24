@@ -13,10 +13,30 @@ function InstagramGlyph({ className }: { className?: string }) {
 }
 
 const posts = [
-  { src: "/images/sunrise-finish.svg", alt: "Runner finishing at sunrise", likes: "2.4k" },
-  { src: "/images/first-medal.svg", alt: "First medal day celebration", likes: "3.1k" },
-  { src: "/images/club-push.svg", alt: "Running club group effort", likes: "1.9k" },
-  { src: "/images/weekend-long-run.svg", alt: "Weekend long run", likes: "2.8k" },
+  {
+    src: "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?auto=format&fit=crop&w=400&h=400&q=80",
+    name: "Rohan K.",
+    city: "Mumbai",
+    quote: "Got my medal within 5 days! Best virtual run ever.",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1542596594-649edbc13630?auto=format&fit=crop&w=400&h=400&q=80",
+    name: "Priya M.",
+    city: "Bangalore",
+    quote: "The T-shirt quality is insane. Will run again.",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=400&h=400&q=80",
+    name: "Amit S.",
+    city: "Delhi",
+    quote: "Smooth tracking with Strava. Loved the gold medal.",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=400&h=400&q=80",
+    name: "Sneha R.",
+    city: "Pune",
+    quote: "Completed my first 10K! Thank you for the motivation.",
+  },
 ];
 
 export function EventCommunity() {
@@ -34,23 +54,32 @@ export function EventCommunity() {
           lead="Join 25,000+ runners who made Mountain Run part of their journey."
         />
 
-        <div className="mt-10 grid grid-cols-2 gap-3 sm:mt-14 sm:grid-cols-4 sm:gap-4">
+        <div className="mt-10 grid grid-cols-1 gap-4 sm:mt-14 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
           {posts.map((post, i) => (
-            <Reveal key={post.src} delay={i * 0.07}>
-              <div className="group relative aspect-square overflow-hidden rounded-2xl border border-(--line) bg-(--panel)">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={post.src}
-                  alt={post.alt}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 flex items-end justify-between bg-gradient-to-t from-black/70 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                  <span className="flex items-center gap-1.5 text-xs font-bold text-white">
-                    <Heart className="h-3.5 w-3.5 fill-white" />
-                    {post.likes}
-                  </span>
-                  <InstagramGlyph className="h-4 w-4 text-white" />
+            <Reveal key={post.name} delay={i * 0.07}>
+              <div className="group flex h-full flex-col overflow-hidden rounded-3xl border border-(--line) bg-(--panel) transition-all duration-300 hover:-translate-y-1 hover:border-(--gold-line) hover:shadow-premium">
+                <div className="relative aspect-square overflow-hidden border-b border-(--line)">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={post.src}
+                    alt={`Runner ${post.name}`}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute right-3 top-3 rounded-full bg-black/40 p-1.5 backdrop-blur-md">
+                    <InstagramGlyph className="h-4 w-4 text-white" />
+                  </div>
+                </div>
+                <div className="flex flex-1 flex-col justify-between p-5">
+                  <p className="text-sm italic leading-relaxed text-(--foreground)">
+                    &quot;{post.quote}&quot;
+                  </p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <p className="text-xs font-bold text-(--gold-deep)">{post.name}</p>
+                    <p className="text-[0.65rem] font-medium uppercase tracking-wider text-(--muted-soft)">
+                      {post.city}
+                    </p>
+                  </div>
                 </div>
               </div>
             </Reveal>

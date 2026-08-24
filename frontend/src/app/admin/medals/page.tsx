@@ -136,6 +136,12 @@ export default function AdminMedalDispatchPage() {
   const [editTrackingUrl, setEditTrackingUrl] = useState("");
   const [editStatus, setEditStatus] = useState<string>("DISPATCHED");
 
+  // Bulk Tracking Upload State
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [bulkCsvText, setBulkCsvText] = useState("");
+  const [bulkUploading, setBulkUploading] = useState(false);
+  const [bulkResult, setBulkResult] = useState<{ updated: number; errors: any[] } | null>(null);
+
   // Load events for dropdown
   useEffect(() => {
     async function loadEvents() {
@@ -226,6 +232,46 @@ export default function AdminMedalDispatchPage() {
       alert(err instanceof Error ? err.message : "CSV export failed");
     } finally {
       setExporting(false);
+    }
+  }
+
+  // Save dispatch updates
+  async function handleBulkUpload() {
+    if (!bulkCsvText.trim()) return;
+    setBulkUploading(true);
+    setBulkResult(null);
+
+    try {
+      const lines = bulkCsvText.trim().split("\n");
+      const items = lines.slice(1).map(line => {
+        // Simple CSV parser: bibNumber/orderId, courier, trackingNumber, trackingUrl
+        const [id, courier, trackingNumber, trackingUrl] = line.split(",").map(s => s.trim());
+        const isBib = id.includes("-"); // SDC-1234
+        return {
+          [isBib ? "bibNumber" : "orderId"]: id,
+          courier,
+          trackingNumber,
+          trackingUrl,
+        };
+      }).filter(item => item.trackingNumber);
+
+      if (items.length === 0) throw new Error("No valid tracking records found. Please ensure you included headers and comma separated values.");
+
+      const token = await getToken().catch(() => null);
+      const res = await adminFetch<{ data: { updated: number, errors: any[] } }>(
+        "/api/admin/medals/bulk-tracking",
+        token,
+        { method: "POST", body: JSON.stringify({ items }) }
+      );
+
+      setBulkResult(res.data);
+      if (res.data.updated > 0) {
+        await loadData();
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Bulk upload failed");
+    } finally {
+      setBulkUploading(false);
     }
   }
 
@@ -428,6 +474,25 @@ export default function AdminMedalDispatchPage() {
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
             Refresh
+          </button>
+
+          {/* Bulk Tracking Upload Button */}
+          <button
+            type="button"
+            onClick={() => setBulkModalOpen(true)}
+            className="flex items-center gap-2 rounded-xl bg-(--line) px-4 py-2 text-xs font-bold text-(--foreground) transition hover:bg-(--line-strong) sm:text-sm"
+          >
+            <Truck className="h-4 w-4" />
+            Bulk Tracking Upload
+          </button>
+
+          {/* Print Labels Button */}
+          <button
+            type="button"
+            onClick={() => window.open("/admin/medals/print", "_blank")}
+            className="flex items-center gap-2 rounded-xl border border-(--sage) bg-(--panel) px-4 py-2 text-xs font-bold text-(--sage) transition hover:bg-(--sage)/10 sm:text-sm"
+          >
+            Print Labels
           </button>
 
           {/* 1-Click CSV Export Button */}
@@ -876,6 +941,52 @@ export default function AdminMedalDispatchPage() {
           </motion.div>
         ) : null}
       </AnimatePresence>
+
+      {/* Bulk Upload Modal */}
+      {bulkModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-xl rounded-2xl border border-(--line) bg-(--panel) p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-(--foreground)">Bulk Tracking Upload</h2>
+              <button onClick={() => setBulkModalOpen(false)} className="text-(--muted) hover:text-(--foreground)">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="text-sm text-(--muted) mb-4">
+              Paste CSV data. Must include headers. Order doesn't matter. Required columns: <code className="text-xs bg-(--panel-soft) px-1 rounded">bibNumber</code> (or <code className="text-xs bg-(--panel-soft) px-1 rounded">orderId</code>), <code className="text-xs bg-(--panel-soft) px-1 rounded">courier</code>, <code className="text-xs bg-(--panel-soft) px-1 rounded">trackingNumber</code>, <code className="text-xs bg-(--panel-soft) px-1 rounded">trackingUrl</code>.
+            </p>
+            <textarea
+              className="w-full h-48 rounded-xl border border-(--line) bg-(--panel-soft) p-3 text-xs font-mono text-(--foreground) focus:border-(--sage) outline-none"
+              placeholder="bibNumber, courier, trackingNumber, trackingUrl&#10;SDC-1234, Delhivery, 1234567890, https://..."
+              value={bulkCsvText}
+              onChange={(e) => setBulkCsvText(e.target.value)}
+            />
+            {bulkResult && (
+              <div className="mt-4 p-3 rounded-lg bg-(--sage)/10 border border-(--sage)/20">
+                <p className="text-sm font-bold text-(--sage)">Successfully updated: {bulkResult.updated} records</p>
+                {bulkResult.errors.length > 0 && (
+                  <div className="mt-2 text-xs text-red-400 max-h-24 overflow-y-auto">
+                    Failed rows: {bulkResult.errors.length} (Check console for details)
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="mt-6 flex justify-end gap-3">
+              <button onClick={() => setBulkModalOpen(false)} className="px-4 py-2 text-sm font-semibold text-(--muted) hover:text-(--foreground)">
+                Cancel
+              </button>
+              <button
+                onClick={() => void handleBulkUpload()}
+                disabled={bulkUploading || !bulkCsvText.trim()}
+                className="flex items-center gap-2 rounded-xl bg-(--sage) px-5 py-2 text-sm font-bold text-(--on-accent) transition hover:opacity-90 disabled:opacity-50"
+              >
+                {bulkUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                Upload
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

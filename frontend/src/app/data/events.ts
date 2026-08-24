@@ -18,6 +18,7 @@ export type PublicEvent = {
   highlight: string;
   banner: string;
   bannerImageUrl?: string;
+  medalImageUrl?: string;
   reward: string;
   status: "upcoming" | "past";
   couponCode?: string;

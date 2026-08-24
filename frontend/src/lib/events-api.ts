@@ -27,6 +27,7 @@ export type ApiEvent = {
   cities?: number | null;
   resultNote?: string | null;
   bannerImageUrl?: string | null;
+  medalImageUrl?: string | null;
   _count?: { registrations: number };
   stats?: {
     registrations?: number;
@@ -101,6 +102,7 @@ export function mapApiEventToPublic(
         : "Open for registration · Choose distance and join."),
     banner: staticMatch?.banner ?? (isPast ? "Past race" : "Open event"),
     bannerImageUrl: event.bannerImageUrl ?? staticMatch?.bannerImageUrl ?? undefined,
+    medalImageUrl: event.medalImageUrl ?? undefined,
     reward: staticMatch?.reward ?? (isPast ? "Medal + certificate" : "Register now"),
     couponCode: event.couponCode ?? undefined,
     showCouponOnCard: event.showCouponOnCard ?? undefined,

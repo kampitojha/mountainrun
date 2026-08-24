@@ -109,6 +109,7 @@ type EventRow = {
   cities?: number | null;
   resultNote?: string | null;
   bannerImageUrl?: string | null;
+  medalImageUrl?: string | null;
   _count?: { registrations: number };
 };
 
@@ -119,7 +120,7 @@ const emptyForm = {
   maxCapacity: "", city: "Virtual", couponCode: "", showCouponOnCard: false,
   activityTypes: ["running", "cycling", "walking"], benefits: "",
   finishers: "", verifiedResults: "", cities: "", resultNote: "",
-  bannerImageUrl: "",
+  bannerImageUrl: "", medalImageUrl: "",
   status: "DRAFT",
 };
 
@@ -166,7 +167,7 @@ export default function AdminEventsPage() {
     setEditingId(event.id);
     setForm({
       title: event.title, slug: event.slug, description: "",
-      bannerImageUrl: "",
+      bannerImageUrl: "", medalImageUrl: "",
       startsAt: toDatetimeLocalValue(event.startsAt),
       endsAt: toDatetimeLocalValue(event.endsAt),
       proofClosesAt: "",
@@ -187,13 +188,14 @@ export default function AdminEventsPage() {
     });
     void (async () => {
       const token = await getToken().catch(() => null);
-      const json = await adminFetch<{ data: EventRow & { description: string; proofClosesAt: string; bannerImageUrl: string | null } }>(
+      const json = await adminFetch<{ data: EventRow & { description: string; proofClosesAt: string; bannerImageUrl: string | null; medalImageUrl: string | null } }>(
         `/api/admin/events/${event.id}`, token);
       setForm((prev) => ({
         ...prev,
         description: json.data.description,
         proofClosesAt: toDatetimeLocalValue(json.data.proofClosesAt),
         bannerImageUrl: json.data.bannerImageUrl ?? "",
+        medalImageUrl: json.data.medalImageUrl ?? "",
       }));
     })();
     // Scroll form into view on mobile
@@ -236,6 +238,7 @@ export default function AdminEventsPage() {
         cities: form.cities ? Number(form.cities) : null,
         resultNote: form.resultNote || null,
         bannerImageUrl: form.bannerImageUrl || null,
+        medalImageUrl: form.medalImageUrl || null,
         medalIncluded: form.medalIncluded, featured: form.featured,
         maxCapacity: form.maxCapacity ? Number(form.maxCapacity) : null,
         city: form.city || "Virtual", status: form.status,
@@ -352,7 +355,7 @@ export default function AdminEventsPage() {
                     const file = e.target.files?.[0];
                     if (!file) return;
                     if (!file.type.startsWith("image/")) {
-                      toast("error", "Only image files are allowed (PNG, JPEG, WebP, AVIF).");
+                      toast("error", "Only image files are allowed.");
                       return;
                     }
                     if (file.size > 10 * 1024 * 1024) {
@@ -396,6 +399,63 @@ export default function AdminEventsPage() {
               {form.bannerImageUrl && !form.bannerImageUrl.startsWith("/images/") && (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img alt="Banner preview" src={form.bannerImageUrl} className="mt-1 h-12 w-auto max-w-full rounded-lg object-cover" />
+              )}
+            </div>
+
+            <div className="space-y-1.5 mt-4">
+              <span className="field-label text-sm">Medal Image (Preview / Revealed)</span>
+              <div className="flex items-start gap-3">
+                <input
+                  accept="image/png,image/jpeg,image/webp,image/avif"
+                  className="input cursor-pointer py-2 file:mr-3 file:rounded-full file:border-0 file:bg-(--gold-deep) file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white block w-full"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (!file.type.startsWith("image/")) {
+                      toast("error", "Only image files are allowed.");
+                      return;
+                    }
+                    if (file.size > 10 * 1024 * 1024) {
+                      toast("error", "Image must be under 10 MB.");
+                      return;
+                    }
+                    try {
+                      const token = await getToken();
+                      const reader = new FileReader();
+                      reader.onload = async () => {
+                        const base64 = reader.result as string;
+                        const res = await fetch(getApiUrl("/api/uploads/image"), {
+                          method: "POST",
+                          headers: authHeaders(token),
+                          body: JSON.stringify({ file: base64, folder: "mountainrun/admin/medals" }),
+                        });
+                        if (!res.ok) { toast("error", "Upload failed. Try again."); return; }
+                        const json = await res.json();
+                        setForm((f) => ({ ...f, medalImageUrl: json.data.url }));
+                      };
+                      reader.readAsDataURL(file);
+                    } catch { toast("error", "Upload failed. Check connection."); }
+                  }}
+                  type="file"
+                />
+                {form.medalImageUrl && (
+                  <button
+                    className="btn btn-secondary h-9 w-9 shrink-0 flex items-center justify-center p-0 text-sm"
+                    onClick={() => setForm((f) => ({ ...f, medalImageUrl: "" }))}
+                    title="Remove medal image"
+                    type="button"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              <p className="text-[0.65rem] text-[var(--muted)]">If left blank, the premium Frosted Glass teaser will be shown.</p>
+              <input className="input" placeholder="https://…"
+                onChange={(e) => setForm((f) => ({ ...f, medalImageUrl: e.target.value }))}
+                value={form.medalImageUrl} />
+              {form.medalImageUrl && !form.medalImageUrl.startsWith("/images/") && (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img alt="Medal preview" src={form.medalImageUrl} className="mt-1 h-12 w-auto max-w-full rounded-lg object-cover" />
               )}
             </div>
 
