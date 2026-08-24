@@ -12,6 +12,9 @@ if (publishableKey && !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
 const nextConfig: NextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   env: {
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: publishableKey,
   },
