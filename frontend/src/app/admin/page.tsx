@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Sparkles,
   Trophy,
+  UserCheck,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -236,7 +237,7 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* ── KPI METRICS CARDS ─────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7">
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-[0.65rem] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
@@ -271,6 +272,27 @@ export default function AdminOverviewPage() {
             </div>
             <p className="text-[0.65rem] text-(--muted) mt-0.5">
               {data?.stats.confirmedRegs ?? 0} paid · {data?.stats.pendingPayment ?? 0} pending
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-(--line) bg-(--panel) p-4 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
+              Users
+            </span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--panel-soft) text-sky-400">
+              <UserCheck className="h-3.5 w-3.5" />
+            </span>
+          </div>
+          <div className="mt-2">
+            <div className="text-xl sm:text-2xl font-black tabular-nums text-(--foreground)">
+              {data?.stats.users ?? 0}
+            </div>
+            <p className="text-[0.65rem] text-(--muted) mt-0.5">
+              <Link href="/admin/users" className="text-(--sage) hover:underline">
+                Registered runners →
+              </Link>
             </p>
           </div>
         </div>
