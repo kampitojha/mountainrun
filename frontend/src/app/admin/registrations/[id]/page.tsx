@@ -24,7 +24,7 @@ type RegistrationDetail = {
   shippingState: string;
   shippingPincode: string;
   user: { id: string; name: string; email: string; phone: string | null; role: string };
-  event: { id: string; title: string; slug: string; priceInPaise: number };
+  event: { id: string; title: string; slug: string; priceInPaise: number; distances?: string[] };
   payment?: {
     id: string;
     status: string;
@@ -54,6 +54,7 @@ export default function AdminRegistrationDetailPage() {
   const [data, setData] = useState<RegistrationDetail | null>(null);
   const [note, setNote] = useState("");
   const [status, setStatus] = useState("");
+  const [distance, setDistance] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,6 +68,7 @@ export default function AdminRegistrationDetailPage() {
       setData(json.data);
       setNote(json.data.adminNote ?? "");
       setStatus(json.data.status);
+      setDistance(json.data.distance ?? "");
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load");
@@ -83,7 +85,7 @@ export default function AdminRegistrationDetailPage() {
       const token = await getToken().catch(() => null);
       await adminFetch(`/api/admin/registrations/${data.id}`, token, {
         method: "PATCH",
-        body: JSON.stringify({ status, adminNote: note }),
+        body: JSON.stringify({ status, distance, adminNote: note }),
       });
       setMessage("Saved.");
       await load();
@@ -246,16 +248,41 @@ export default function AdminRegistrationDetailPage() {
 
         <AdminPanel className="span-2" title="Admin controls">
           <div className="space-y-3">
-            <label className="block max-w-xs text-sm">
-              <span className="field-label">Status</span>
-              <select className="input" onChange={(e) => setStatus(e.target.value)} value={status}>
-                {["PENDING_PAYMENT", "CONFIRMED", "CANCELLED", "COMPLETED"].map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block text-sm">
+                <span className="field-label">Status</span>
+                <select className="input" onChange={(e) => setStatus(e.target.value)} value={status}>
+                  {["PENDING_PAYMENT", "CONFIRMED", "CANCELLED", "COMPLETED"].map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-sm">
+                <span className="field-label">Distance</span>
+                {data.event.distances && data.event.distances.length > 0 ? (
+                  <select
+                    className="input"
+                    onChange={(e) => setDistance(e.target.value)}
+                    value={distance}
+                  >
+                    {data.event.distances.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    className="input"
+                    onChange={(e) => setDistance(e.target.value)}
+                    type="text"
+                    value={distance}
+                  />
+                )}
+              </label>
+            </div>
             <label className="block text-sm">
               <span className="field-label">Internal note</span>
               <textarea
