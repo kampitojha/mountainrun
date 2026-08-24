@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { FileText, Medal, Shirt, Trophy } from "lucide-react";
 import { PageShell } from "../components/app-shell";
 import { Breadcrumb } from "../components/breadcrumb";
+import { fetchGroupedEvents } from "../../lib/events-api";
 import { EventsCatalog } from "./events-catalog";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mountainrun.in";
@@ -34,7 +35,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function EventsPage() {
+export default async function EventsPage() {
+  const { upcoming, past } = await fetchGroupedEvents().catch(() => ({
+    upcoming: [],
+    past: [],
+  }));
+
   return (
     <PageShell>
       <section className="relative overflow-hidden border-b border-(--line)">
@@ -88,7 +94,7 @@ export default function EventsPage() {
 
       <section className="page-section">
         <div className="container-page">
-          <EventsCatalog />
+          <EventsCatalog initialPast={past} initialUpcoming={upcoming} />
         </div>
       </section>
     </PageShell>

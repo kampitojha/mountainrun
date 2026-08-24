@@ -174,6 +174,38 @@ export async function fetchOpenEvents(options?: {
   return limit != null ? fallback.slice(0, limit) : fallback;
 }
 
+/** Server-side fetch grouped upcoming + past events for /events catalog. */
+export async function fetchGroupedEvents(): Promise<{
+  upcoming: PublicEvent[];
+  past: PublicEvent[];
+}> {
+  try {
+    const response = await fetch(getApiUrl("/api/events?group=true"), {
+      next: { revalidate: 300 },
+    });
+    if (response.ok) {
+      const json = (await response.json()) as {
+        data?: { upcoming?: ApiEvent[]; past?: ApiEvent[] };
+      };
+      const upcomingApi = json.data?.upcoming ?? [];
+      const pastApi = json.data?.past ?? [];
+      if (upcomingApi.length > 0 || pastApi.length > 0) {
+        return {
+          upcoming: upcomingApi.map((event) => mapApiEventToPublic(event, "upcoming")),
+          past: pastApi.map((event) => mapApiEventToPublic(event, "past")),
+        };
+      }
+    }
+  } catch {
+    // fallback
+  }
+
+  return {
+    upcoming: allPublicEvents.filter((event) => event.status === "upcoming"),
+    past: allPublicEvents.filter((event) => event.status === "past"),
+  };
+}
+
 export type HomeMoment = {
   id?: string;
   title: string;

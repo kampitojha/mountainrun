@@ -254,7 +254,7 @@ export function LeaderboardClient() {
   );
 
   const [selectedSlug, setSelectedSlug] = useState<string>(
-    initialEventParam || publicEvents[0]?.slug || "monsoon-mountain-miles",
+    initialEventParam || publicEvents[0]?.slug || "sports-day-celebration",
   );
   const [selectedDistance, setSelectedDistance] = useState<string>(
     initialDistanceParam || "5 km",

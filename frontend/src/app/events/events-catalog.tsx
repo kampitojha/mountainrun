@@ -144,12 +144,28 @@ function EventCard({ event, variant = "upcoming" }: { event: PublicEvent; varian
   );
 }
 
-export function EventsCatalog() {
-  const [upcoming, setUpcoming] = useState<PublicEvent[]>(staticUpcomingEvents);
-  const [past, setPast] = useState<PublicEvent[]>(staticPastEvents);
-  const [source, setSource] = useState<"api" | "static">("static");
+export function EventsCatalog({
+  initialUpcoming,
+  initialPast,
+}: {
+  initialUpcoming?: PublicEvent[];
+  initialPast?: PublicEvent[];
+} = {}) {
+  const [upcoming, setUpcoming] = useState<PublicEvent[]>(
+    initialUpcoming && initialUpcoming.length > 0 ? initialUpcoming : staticUpcomingEvents,
+  );
+  const [past, setPast] = useState<PublicEvent[]>(
+    initialPast && initialPast.length > 0 ? initialPast : staticPastEvents,
+  );
+  const [source, setSource] = useState<"api" | "static">(
+    initialUpcoming && initialUpcoming.length > 0 ? "api" : "static",
+  );
 
   useEffect(() => {
+    // If we already have server-rendered upcoming events, no need to flash or re-fetch immediately on client
+    if (initialUpcoming && initialUpcoming.length > 0) {
+      return;
+    }
     let cancelled = false;
     async function load() {
       try {
@@ -167,8 +183,10 @@ export function EventsCatalog() {
       }
     }
     void load();
-    return () => { cancelled = true; };
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [initialUpcoming]);
 
   return (
     <div className="min-w-0">
