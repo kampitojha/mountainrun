@@ -3,7 +3,6 @@
 import { useAuth } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import {
-  ArrowUpRight,
   BarChart3,
   Calendar,
   CheckCircle2,
@@ -416,96 +415,6 @@ export default function AdminOverviewPage() {
           </div>
         </div>
       )}
-
-      {/* ── PER-EVENT REVENUE & PERFORMANCE BREAKDOWN ─────────── */}
-      <div className="rounded-2xl border border-(--line) bg-(--panel) overflow-hidden shadow-xs">
-        <div className="p-4 sm:p-5 border-b border-(--line) bg-(--panel-soft)/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div>
-            <h2 className="text-base font-bold text-(--foreground)">
-              Event-Wise Revenue Breakdown ({TIME_RANGES.find((t) => t.key === selectedRange)?.label})
-            </h2>
-            <p className="text-xs text-(--muted) mt-0.5">
-              Individual revenue, participant count, and paid conversion for every event.
-            </p>
-          </div>
-          <Link href="/admin/events" className="btn btn-secondary h-8 px-3 text-xs w-fit">
-            Manage All Events <ArrowUpRight className="h-3 w-3 ml-1" />
-          </Link>
-        </div>
-
-        <div className="overflow-x-auto touch-pan-x" style={{ WebkitOverflowScrolling: "touch" }}>
-          <table className="w-full min-w-140 sm:min-w-160 text-left text-xs sm:text-sm">
-            <thead>
-              <tr className="border-b border-(--line) bg-(--panel-soft)/70 text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
-                <th className="px-4 py-3">Event Name</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Revenue (₹)</th>
-                <th className="px-4 py-3">Registrations</th>
-                <th className="px-4 py-3">Paid / Unpaid</th>
-                <th className="px-4 py-3">Conversion</th>
-                <th className="px-4 py-3">Revenue Share</th>
-                <th className="px-4 py-3 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data?.eventBreakdown.map((ev) => (
-                <tr key={ev.eventId} className="border-b border-(--line) last:border-b-0 hover:bg-(--panel-soft)/60 transition-colors">
-                  <td className="px-4 py-3.5">
-                    <p className="font-bold text-(--foreground)">{ev.title}</p>
-                    <p className="text-[0.65rem] text-(--muted) font-mono">/{ev.slug}</p>
-                  </td>
-                  <td className="px-4 py-3.5">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider ${
-                        ev.status === "OPEN"
-                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                          : "bg-slate-500/10 text-slate-600 dark:text-slate-400"
-                      }`}
-                    >
-                      {ev.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3.5">
-                    <span className="font-bold font-mono text-amber-600 dark:text-amber-400 text-sm">
-                      {formatInrFromPaise(ev.revenueInPaise)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3.5 font-bold font-mono text-(--foreground)">
-                    {ev.totalRegistrations}
-                  </td>
-                  <td className="px-4 py-3.5 text-xs text-(--muted)">
-                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">{ev.paidCount} Paid</span>
-                    {" · "}
-                    <span className="text-amber-500">{ev.pendingCount} Pending</span>
-                  </td>
-                  <td className="px-4 py-3.5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-2 rounded-full bg-(--line) overflow-hidden">
-                        <div
-                          style={{ width: `${ev.conversionRate}%` }}
-                          className="h-full bg-emerald-500 rounded-full"
-                        />
-                      </div>
-                      <span className="font-mono text-xs font-bold">{ev.conversionRate}%</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3.5 font-mono text-xs text-(--muted)">
-                    {ev.sharePercent}%
-                  </td>
-                  <td className="px-4 py-3.5 text-right">
-                    <Link
-                      href={`/admin/events/${ev.eventId}`}
-                      className="text-xs font-bold text-(--sage) hover:underline inline-flex items-center gap-1"
-                    >
-                      Manage <ArrowUpRight className="h-3 w-3" />
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
       {/* ── RECENT REGISTRATIONS & RECENT PAYMENTS SPLIT ───────── */}
       <div className="admin-split">
