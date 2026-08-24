@@ -118,14 +118,40 @@ export async function upsertUserFromClerk(input: SyncUserInput) {
     uniqueUsername = `${username.slice(0, 12)}_${clerkId.slice(-4)}`;
   }
 
-  return prisma.user.create({
-    data: {
-      clerkId,
-      email,
-      name,
-      username: uniqueUsername,
-      phone,
-      avatarUrl,
-    },
-  });
+  try {
+    return await prisma.user.create({
+      data: {
+        clerkId,
+        email,
+        name,
+        username: uniqueUsername,
+        phone,
+        avatarUrl,
+      },
+    });
+  } catch (err: any) {
+    // If a concurrent parallel request created the user in the same millisecond (P2002 unique constraint)
+    if (err?.code === "P2002") {
+      const concurrentUser = await prisma.user.findFirst({
+        where: {
+          OR: [{ clerkId }, { email }],
+        },
+      });
+
+      if (concurrentUser) {
+        return await prisma.user.update({
+          where: { id: concurrentUser.id },
+          data: {
+            clerkId: concurrentUser.clerkId ?? clerkId,
+            email,
+            name: name || concurrentUser.name,
+            phone: phone ?? concurrentUser.phone,
+            avatarUrl: avatarUrl ?? concurrentUser.avatarUrl,
+          },
+        });
+      }
+    }
+
+    throw err;
+  }
 }
