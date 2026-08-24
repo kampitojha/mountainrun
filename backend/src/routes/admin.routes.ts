@@ -38,6 +38,8 @@ import {
   adminUpdateMedal,
   adminSyncPayments,
   adminTestAlert,
+  adminOmniSearch,
+  adminResendRegistrationEmail,
   adminUpdatePayment,
   adminUpdateRegistration,
   adminUpdateUserRole,
@@ -51,6 +53,7 @@ adminRouter.use(requireClerkAuth, requireAdmin);
 
 adminRouter.get("/me", asyncHandler(adminMe));
 adminRouter.get("/overview", asyncHandler(adminOverview));
+adminRouter.get("/omni-search", asyncHandler(adminOmniSearch));
 adminRouter.get("/audit", asyncHandler(adminListAudit));
 adminRouter.post("/test-alert", asyncHandler(adminTestAlert));
 
@@ -65,6 +68,7 @@ adminRouter.get("/registrations/export.csv", asyncHandler(adminExportRegistratio
 adminRouter.get("/registrations/:id", asyncHandler(adminGetRegistration));
 adminRouter.patch("/registrations/:id", asyncHandler(adminUpdateRegistration));
 adminRouter.post("/registrations/:id/mark-paid", asyncHandler(adminMarkRegistrationPaid));
+adminRouter.post("/registrations/:id/resend-email", asyncHandler(adminResendRegistrationEmail));
 
 adminRouter.get("/payments", asyncHandler(adminListPayments));
 adminRouter.post("/payments/sync", asyncHandler(adminSyncPayments));

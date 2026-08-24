@@ -1866,3 +1866,140 @@ export async function adminTestAlert(request: AuthenticatedRequest, response: Re
     },
   });
 }
+
+// ── Omni-Search (Unified Universal Search) ───────────────────
+
+export async function adminOmniSearch(request: AuthenticatedRequest, response: Response) {
+  const query = (q(request, "q") || "").trim();
+  if (!query || query.length < 2) {
+    return response.json({
+      data: {
+        query,
+        registrations: [],
+        users: [],
+        payments: [],
+      },
+    });
+  }
+
+  const [registrations, users, payments] = await Promise.all([
+    // 1. Search Registrations
+    prisma.registration.findMany({
+      where: {
+        OR: [
+          { bibNumber: { contains: query, mode: "insensitive" } },
+          { shippingName: { contains: query, mode: "insensitive" } },
+          { shippingPhone: { contains: query, mode: "insensitive" } },
+          { shippingCity: { contains: query, mode: "insensitive" } },
+          { user: { name: { contains: query, mode: "insensitive" } } },
+          { user: { email: { contains: query, mode: "insensitive" } } },
+          { user: { phone: { contains: query, mode: "insensitive" } } },
+          { event: { title: { contains: query, mode: "insensitive" } } },
+        ],
+      },
+      take: 8,
+      orderBy: { registeredAt: "desc" },
+      include: {
+        user: { select: { id: true, name: true, email: true, phone: true, avatarUrl: true } },
+        event: { select: { id: true, title: true, slug: true, distances: true, startsAt: true, endsAt: true, bannerImageUrl: true } },
+        payment: { select: { id: true, status: true, amountInPaise: true, razorpayPaymentId: true, razorpayOrderId: true, paidAt: true } },
+        proofUpload: { select: { id: true, status: true, activityImageUrl: true, sourceApp: true, submittedAt: true } },
+        certificate: { select: { id: true, certificateNumber: true, pdfUrl: true } },
+        medalDelivery: { select: { id: true, status: true, trackingNumber: true, courier: true, trackingUrl: true, dispatchedAt: true, deliveredAt: true } },
+      },
+    }),
+
+    // 2. Search Users
+    prisma.user.findMany({
+      where: {
+        OR: [
+          { name: { contains: query, mode: "insensitive" } },
+          { email: { contains: query, mode: "insensitive" } },
+          { phone: { contains: query, mode: "insensitive" } },
+          { username: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      take: 6,
+      orderBy: { createdAt: "desc" },
+      include: {
+        _count: { select: { registrations: true } },
+        registrations: {
+          take: 3,
+          orderBy: { registeredAt: "desc" },
+          include: {
+            event: { select: { title: true, slug: true } },
+            payment: { select: { status: true, amountInPaise: true } },
+          },
+        },
+      },
+    }),
+
+    // 3. Search Payments
+    prisma.payment.findMany({
+      where: {
+        OR: [
+          { razorpayPaymentId: { contains: query, mode: "insensitive" } },
+          { razorpayOrderId: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      take: 6,
+      orderBy: { createdAt: "desc" },
+      include: {
+        registration: {
+          include: {
+            user: { select: { id: true, name: true, email: true, phone: true } },
+            event: { select: { id: true, title: true, slug: true } },
+          },
+        },
+      },
+    }),
+  ]);
+
+  response.json({
+    data: {
+      query,
+      registrations,
+      users,
+      payments,
+    },
+  });
+}
+
+// ── Resend Registration Confirmation Email ──────────────────
+
+export async function adminResendRegistrationEmail(request: AuthenticatedRequest, response: Response) {
+  const id = routeParam(request, "id");
+  const reg = await prisma.registration.findUnique({
+    where: { id },
+    include: { user: true, event: true, payment: true },
+  });
+
+  if (!reg) {
+    throw new ApiError(404, "Registration not found");
+  }
+
+  const emailResult = await sendRegistrationConfirmationEmail({
+    to: reg.user.email,
+    runnerName: reg.shippingName || reg.user.name,
+    eventTitle: reg.event.title,
+    distance: reg.distance,
+    bibNumber: reg.bibNumber,
+    amountInPaise: reg.payment?.amountInPaise ?? reg.event.priceInPaise,
+  });
+
+  await writeAdminAudit(request, {
+    action: "registration.resend_email",
+    entityType: "Registration",
+    entityId: id,
+    summary: `Resent confirmation email for ${reg.bibNumber} to ${reg.user.email}`,
+  });
+
+  response.json({
+    data: {
+      success: emailResult.sent,
+      id: emailResult.id,
+      error: emailResult.error,
+      email: reg.user.email,
+    },
+  });
+}

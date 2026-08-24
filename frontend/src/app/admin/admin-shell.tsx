@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { adminFetch } from "../../lib/admin-api";
 import { AdminThemeProvider, AdminThemeToggle, useAdminTheme } from "./admin-theme";
+import { OmniSearch } from "./components/omni-search";
 import { BrandText } from "../components/brand-text";
 import "./admin.css";
 
@@ -539,6 +540,21 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
           <SidebarNav {...navProps} />
         </aside>
         <main className="admin-main">
+          {/* Top Omni Navigation Bar */}
+          <header className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-(--line) bg-(--background)/85 px-4 py-2.5 backdrop-blur-md sm:px-8">
+            <OmniSearch />
+            <div className="hidden md:flex items-center gap-3 shrink-0">
+              <Link
+                href="/"
+                target="_blank"
+                className="text-xs font-semibold text-(--muted) hover:text-(--foreground) transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-(--line) bg-(--panel-soft)"
+              >
+                <span>Live Website</span>
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              </Link>
+            </div>
+          </header>
+
           <motion.div
             className="admin-page"
             key={pathname}
