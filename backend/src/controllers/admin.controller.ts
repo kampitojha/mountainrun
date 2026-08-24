@@ -214,30 +214,99 @@ export async function adminOverview(request: AuthenticatedRequest, response: Res
     };
   });
 
-  // Calculate 7-day daily revenue trend
+  // ── Dynamic Graph Trend (7d, 14d, 30d, 90d, 1y/all) ─────────
+  const graphRange = (typeof request.query.graphRange === "string" ? request.query.graphRange.toLowerCase().trim() : "7d") as "7d" | "14d" | "30d" | "90d" | "1y" | "all";
+  let graphSinceDate: Date;
+  let isMonthly = false;
+
+  if (graphRange === "14d") {
+    graphSinceDate = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+  } else if (graphRange === "30d") {
+    graphSinceDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  } else if (graphRange === "90d") {
+    graphSinceDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+  } else if (graphRange === "1y" || graphRange === "all") {
+    isMonthly = true;
+    graphSinceDate = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+  } else {
+    // default 7d
+    graphSinceDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  }
+
+  // Fetch payments and registrations for graph range
+  const [graphPayments, graphRegs] = await Promise.all([
+    prisma.payment.findMany({
+      where: {
+        status: "PAID",
+        createdAt: { gte: graphSinceDate },
+        ...(eventFilter ? { registration: { eventId: eventFilter } } : {}),
+      },
+      select: { amountInPaise: true, createdAt: true },
+    }),
+    prisma.registration.findMany({
+      where: {
+        registeredAt: { gte: graphSinceDate },
+        ...(eventFilter ? { eventId: eventFilter } : {}),
+      },
+      select: { registeredAt: true },
+    }),
+  ]);
+
   const dailyTrendMap = new Map<string, { date: string; label: string; revenuePaise: number; regsCount: number; paidCount: number }>();
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-    const key = d.toISOString().split("T")[0];
-    const label = d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-    dailyTrendMap.set(key, { date: key, label, revenuePaise: 0, regsCount: 0, paidCount: 0 });
-  }
 
-  // Backfill daily trend from filtered payments and registrations
-  for (const pay of filteredPayments) {
-    const key = pay.createdAt.toISOString().split("T")[0];
-    if (dailyTrendMap.has(key)) {
-      const existing = dailyTrendMap.get(key)!;
-      existing.revenuePaise += pay.amountInPaise;
-      existing.paidCount += 1;
+  if (isMonthly) {
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("en-IN", { month: "short", year: "2-digit" });
+      dailyTrendMap.set(key, { date: key, label, revenuePaise: 0, regsCount: 0, paidCount: 0 });
     }
-  }
 
-  for (const reg of recentRegs) {
-    const key = reg.registeredAt.toISOString().split("T")[0];
-    if (dailyTrendMap.has(key)) {
-      const existing = dailyTrendMap.get(key)!;
-      existing.regsCount += 1;
+    for (const pay of graphPayments) {
+      const d = pay.createdAt;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      if (dailyTrendMap.has(key)) {
+        const existing = dailyTrendMap.get(key)!;
+        existing.revenuePaise += pay.amountInPaise;
+        existing.paidCount += 1;
+      }
+    }
+
+    for (const reg of graphRegs) {
+      const d = reg.registeredAt;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      if (dailyTrendMap.has(key)) {
+        const existing = dailyTrendMap.get(key)!;
+        existing.regsCount += 1;
+      }
+    }
+  } else {
+    const numDays = graphRange === "90d" ? 90 : graphRange === "30d" ? 30 : graphRange === "14d" ? 14 : 7;
+    for (let i = numDays - 1; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const key = d.toISOString().split("T")[0];
+      const label = d.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: numDays > 30 ? "numeric" : "short",
+      });
+      dailyTrendMap.set(key, { date: key, label, revenuePaise: 0, regsCount: 0, paidCount: 0 });
+    }
+
+    for (const pay of graphPayments) {
+      const key = pay.createdAt.toISOString().split("T")[0];
+      if (dailyTrendMap.has(key)) {
+        const existing = dailyTrendMap.get(key)!;
+        existing.revenuePaise += pay.amountInPaise;
+        existing.paidCount += 1;
+      }
+    }
+
+    for (const reg of graphRegs) {
+      const key = reg.registeredAt.toISOString().split("T")[0];
+      if (dailyTrendMap.has(key)) {
+        const existing = dailyTrendMap.get(key)!;
+        existing.regsCount += 1;
+      }
     }
   }
 
@@ -249,6 +318,7 @@ export async function adminOverview(request: AuthenticatedRequest, response: Res
   response.json({
     data: {
       timeRange,
+      graphRange,
       eventId: eventFilter ?? null,
       stats: {
         revenueInPaise: totalRevenueInPaise,

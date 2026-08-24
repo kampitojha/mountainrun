@@ -3,6 +3,7 @@
 import { useAuth } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import {
+  Activity,
   BarChart3,
   Calendar,
   CheckCircle2,
@@ -12,6 +13,7 @@ import {
   Medal,
   RefreshCw,
   Sparkles,
+  TrendingUp,
   Trophy,
   UserCheck,
   Users,
@@ -98,6 +100,14 @@ const TIME_RANGES = [
   { key: "all", label: "All Time" },
 ] as const;
 
+const GRAPH_RANGES = [
+  { key: "7d", label: "7 Days" },
+  { key: "14d", label: "14 Days" },
+  { key: "30d", label: "30 Days" },
+  { key: "90d", label: "90 Days" },
+  { key: "1y", label: "1 Year" },
+] as const;
+
 export default function AdminOverviewPage() {
   const { getToken } = useAuth();
   const [data, setData] = useState<Overview | null>(null);
@@ -106,6 +116,8 @@ export default function AdminOverviewPage() {
 
   const [selectedRange, setSelectedRange] = useState<"today" | "3d" | "7d" | "30d" | "all">("today");
   const [selectedEventId, setSelectedEventId] = useState<string>("all");
+  const [selectedGraphRange, setSelectedGraphRange] = useState<"7d" | "14d" | "30d" | "90d" | "1y">("7d");
+  const [graphMetric, setGraphMetric] = useState<"revenue" | "orders">("revenue");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -113,6 +125,7 @@ export default function AdminOverviewPage() {
       const token = await getToken().catch(() => null);
       const queryParams = new URLSearchParams();
       queryParams.set("range", selectedRange);
+      queryParams.set("graphRange", selectedGraphRange);
       if (selectedEventId && selectedEventId !== "all") {
         queryParams.set("eventId", selectedEventId);
       }
@@ -125,7 +138,7 @@ export default function AdminOverviewPage() {
     } finally {
       setLoading(false);
     }
-  }, [getToken, selectedEventId, selectedRange]);
+  }, [getToken, selectedEventId, selectedGraphRange, selectedRange]);
 
   useEffect(() => {
     void load();
@@ -369,52 +382,189 @@ export default function AdminOverviewPage() {
         </div>
       </div>
 
-      {/* ── 7-DAY REVENUE TRAJECTORY (Visual Chart) ────────────── */}
-      {data?.dailyTrend && data.dailyTrend.length > 0 && (
-        <div className="rounded-2xl border border-(--line) bg-(--panel) p-4 sm:p-6 shadow-xs">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-sm sm:text-base font-bold text-(--foreground) flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-(--sage)" /> 7-Day Revenue & Daily Order Activity
-              </h2>
-              <p className="text-xs text-(--muted) mt-0.5">Daily paid collections across active events</p>
-            </div>
-            <span className="text-xs font-mono font-bold text-amber-500">
-              Total {TIME_RANGES.find((t) => t.key === selectedRange)?.label}
-            </span>
-          </div>
+      {/* ── PERFORMANCE TRAJECTORY CHART (Multi-Period & Metric Selector) ── */}
+      {data?.dailyTrend && data.dailyTrend.length > 0 && (() => {
+        const trend = data.dailyTrend;
+        const totalTrajectoryRev = trend.reduce((acc, d) => acc + d.revenueInr, 0);
+        const totalTrajectoryOrders = trend.reduce((acc, d) => acc + d.paidCount, 0);
+        const activeDays = trend.filter((d) => (graphMetric === "revenue" ? d.revenueInr > 0 : d.paidCount > 0)).length;
+        const avgTrajectoryVal = activeDays > 0
+          ? Math.round((graphMetric === "revenue" ? totalTrajectoryRev : totalTrajectoryOrders) / activeDays)
+          : 0;
+        const peakDay = trend.reduce((max, d) => {
+          const val = graphMetric === "revenue" ? d.revenueInr : d.paidCount;
+          const maxVal = graphMetric === "revenue" ? max.revenueInr : max.paidCount;
+          return val > maxVal ? d : max;
+        }, trend[0]);
 
-          <div className="grid grid-cols-7 gap-2 sm:gap-3 items-end h-36 pt-6 pb-2 border-b border-(--line)">
-            {data.dailyTrend.map((day) => {
-              const heightPercent = Math.max(8, Math.min(100, Math.round((day.revenueInr / maxDailyRev) * 100)));
-              return (
-                <div key={day.date} className="flex flex-col items-center gap-1.5 h-full justify-end group relative">
-                  {/* Tooltip on hover */}
-                  <div className="opacity-0 pointer-events-none group-hover:opacity-100 absolute -top-10 bg-slate-900 text-white text-[0.65rem] font-bold py-1 px-2 rounded-lg shadow-lg transition-opacity whitespace-nowrap z-20">
-                    ₹{day.revenueInr.toLocaleString("en-IN")} · {day.paidCount} orders
-                  </div>
+        const peakVal = graphMetric === "revenue" ? peakDay.revenueInr : peakDay.paidCount;
+        const maxVal = Math.max(
+          ...trend.map((d) => (graphMetric === "revenue" ? d.revenueInr : d.paidCount)),
+          graphMetric === "revenue" ? 100 : 5,
+        );
 
-                  <div className="text-[0.6rem] sm:text-xs font-mono font-bold text-(--foreground) opacity-75">
-                    {day.revenueInr > 0 ? `₹${day.revenueInr >= 1000 ? `${(day.revenueInr / 1000).toFixed(1)}k` : day.revenueInr}` : "—"}
-                  </div>
+        return (
+          <div className="rounded-3xl border border-(--line) bg-(--panel) p-4 sm:p-6 shadow-xs space-y-5">
+            {/* Chart Header Controls */}
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-(--line) pb-4">
+              <div>
+                <h2 className="text-sm sm:text-base font-black text-(--foreground) flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-(--sage)" /> Performance Trajectory
+                </h2>
+                <p className="text-xs text-(--muted) mt-0.5">
+                  Historical collections and daily order velocity across selected timeframe.
+                </p>
+              </div>
 
-                  <div
-                    style={{ height: `${heightPercent}%` }}
-                    className={`w-full max-w-10 rounded-t-lg transition-all duration-300 ${
-                      day.revenueInr > 0
-                        ? "bg-gradient-to-t from-amber-500 to-yellow-400 group-hover:brightness-110 shadow-xs"
-                        : "bg-(--panel-soft) border border-dashed border-(--line)"
+              {/* Period & Metric Controls */}
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Metric Selector Pill */}
+                <div className="flex items-center rounded-xl bg-(--panel-soft) p-0.5 border border-(--line)">
+                  <button
+                    onClick={() => setGraphMetric("revenue")}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      graphMetric === "revenue"
+                        ? "bg-amber-500 text-slate-950 shadow-xs"
+                        : "text-(--muted) hover:text-(--foreground)"
                     }`}
-                  />
-                  <span className="text-[0.6rem] sm:text-xs font-semibold text-(--muted) tracking-tight">
-                    {day.label}
-                  </span>
+                    type="button"
+                  >
+                    ₹ Revenue
+                  </button>
+                  <button
+                    onClick={() => setGraphMetric("orders")}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      graphMetric === "orders"
+                        ? "bg-(--sage) text-(--on-accent) shadow-xs"
+                        : "text-(--muted) hover:text-(--foreground)"
+                    }`}
+                    type="button"
+                  >
+                    🏃 Orders
+                  </button>
                 </div>
-              );
-            })}
+
+                {/* Period Selector Tabs */}
+                <div className="flex items-center gap-1 rounded-xl bg-(--panel-soft) p-0.5 border border-(--line)">
+                  {GRAPH_RANGES.map((gr) => {
+                    const active = selectedGraphRange === gr.key;
+                    return (
+                      <button
+                        key={gr.key}
+                        onClick={() => setSelectedGraphRange(gr.key)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          active
+                            ? "bg-(--foreground) text-(--background) shadow-xs"
+                            : "text-(--muted) hover:text-(--foreground)"
+                        }`}
+                        type="button"
+                      >
+                        {gr.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Trajectory Stats Row */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="rounded-2xl border border-(--line) bg-(--panel-soft)/50 p-3">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted) block">
+                  {GRAPH_RANGES.find((r) => r.key === selectedGraphRange)?.label} Total
+                </span>
+                <span className="text-base sm:text-lg font-black text-(--foreground) font-mono mt-0.5 block">
+                  {graphMetric === "revenue"
+                    ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(totalTrajectoryRev)
+                    : `${totalTrajectoryOrders} orders`}
+                </span>
+              </div>
+
+              <div className="rounded-2xl border border-(--line) bg-(--panel-soft)/50 p-3">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted) block">
+                  Active Day Avg
+                </span>
+                <span className="text-base sm:text-lg font-black text-(--foreground) font-mono mt-0.5 block">
+                  {graphMetric === "revenue"
+                    ? `₹${avgTrajectoryVal.toLocaleString("en-IN")}/day`
+                    : `${avgTrajectoryVal} orders/day`}
+                </span>
+              </div>
+
+              <div className="col-span-2 sm:col-span-1 rounded-2xl border border-(--line) bg-(--panel-soft)/50 p-3">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted) block">
+                  Peak ({peakDay?.label || "—"})
+                </span>
+                <span className="text-base sm:text-lg font-black text-amber-500 font-mono mt-0.5 block">
+                  {graphMetric === "revenue" ? `₹${peakVal.toLocaleString("en-IN")}` : `${peakVal} orders`}
+                </span>
+              </div>
+            </div>
+
+            {/* Visual Bars Container */}
+            <div className="pt-4 pb-2 border-b border-(--line) overflow-x-auto scrollbar-none">
+              <div
+                className={`flex items-end h-44 gap-1.5 sm:gap-2 ${
+                  trend.length <= 14 ? "justify-between min-w-full" : "min-w-[620px] justify-between"
+                }`}
+              >
+                {trend.map((day, idx) => {
+                  const val = graphMetric === "revenue" ? day.revenueInr : day.paidCount;
+                  const heightPercent = val > 0 ? Math.max(12, Math.min(100, Math.round((val / maxVal) * 100))) : 4;
+
+                  // For label visibility on dense charts (30d / 90d)
+                  const showLabel =
+                    trend.length <= 14 ||
+                    (trend.length === 30 && (idx % 3 === 0 || idx === trend.length - 1)) ||
+                    (trend.length > 30 && (idx % 7 === 0 || idx === trend.length - 1));
+
+                  return (
+                    <div
+                      key={day.date}
+                      className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group relative min-w-[14px]"
+                    >
+                      {/* Floating Hover Tooltip */}
+                      <div className="opacity-0 pointer-events-none group-hover:opacity-100 absolute -top-12 bg-slate-950 text-white border border-(--line) text-[0.65rem] font-bold py-1.5 px-2.5 rounded-xl shadow-2xl transition-all duration-200 whitespace-nowrap z-30 transform -translate-y-1 group-hover:translate-y-0">
+                        <div className="text-(--sage) font-mono text-[0.6rem] uppercase tracking-wider">{day.label}</div>
+                        <div className="text-white text-xs font-black font-mono">₹{day.revenueInr.toLocaleString("en-IN")}</div>
+                        <div className="text-slate-400 text-[0.6rem] font-medium">{day.paidCount} paid orders</div>
+                      </div>
+
+                      {/* Top value indicator (on wider charts) */}
+                      {trend.length <= 14 && (
+                        <div className="text-[0.6rem] sm:text-xs font-mono font-bold text-(--foreground) opacity-75">
+                          {val > 0 ? (graphMetric === "revenue" ? `₹${val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val}` : val) : "—"}
+                        </div>
+                      )}
+
+                      {/* Animated Bar */}
+                      <div
+                        style={{ height: `${heightPercent}%` }}
+                        className={`w-full max-w-12 rounded-t-lg sm:rounded-t-xl transition-all duration-300 ${
+                          val > 0
+                            ? graphMetric === "revenue"
+                              ? "bg-gradient-to-t from-amber-500 to-yellow-400 group-hover:brightness-125 shadow-xs"
+                              : "bg-gradient-to-t from-(--sage) to-emerald-400 group-hover:brightness-125 shadow-xs"
+                            : "bg-(--panel-soft) border border-dashed border-(--line)"
+                        }`}
+                      />
+
+                      {/* Date Axis Label */}
+                      <span
+                        className={`text-[0.55rem] sm:text-xs font-semibold text-(--muted) tracking-tight truncate ${
+                          showLabel ? "opacity-100" : "opacity-0"
+                        }`}
+                      >
+                        {day.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── RECENT REGISTRATIONS & RECENT PAYMENTS SPLIT ───────── */}
       <div className="admin-split">
