@@ -1,5 +1,7 @@
-import { Sparkles } from "lucide-react";
-import { RegisterCta } from "../../components/register-cta";
+"use client";
+
+import Link from "next/link";
+import { ArrowRight, Sparkles } from "lucide-react";
 
 function formatPrice(price: string) {
   return price.replace(/^Rs\.\s*/, "₹");
@@ -27,10 +29,10 @@ export function EventStickyCta({
         {/* Subtle Top Gold Shimmer Line */}
         <div className="h-[2px] w-full bg-linear-to-r from-transparent via-amber-400 to-transparent opacity-80" />
 
-        <div className="mx-auto flex max-w-md items-center justify-between gap-3 px-4 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto flex max-w-md items-center justify-between gap-3 px-4 py-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {/* Left: Pricing & Value Tag */}
           <div className="min-w-0 flex flex-col justify-center">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <span className="text-xl font-black tracking-tight text-white font-mono">
                 {amount}
               </span>
@@ -48,12 +50,13 @@ export function EventStickyCta({
           </div>
 
           {/* Right: Premium Register Button */}
-          <RegisterCta
-            slug={slug}
-            signedInLabel="Register now"
-            signedOutLabel="Register now"
-            className="btn-gold !py-2.5 !px-5 text-xs font-black tracking-wide rounded-xl shadow-lg shadow-amber-500/25 active:scale-95 shrink-0"
-          />
+          <Link
+            href={`/register?event=${encodeURIComponent(slug)}`}
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 px-4 py-2.5 text-xs font-black tracking-wide text-slate-950 shadow-md shadow-amber-500/20 transition-transform active:scale-95"
+          >
+            <span>Register now</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
       </div>
     </>
