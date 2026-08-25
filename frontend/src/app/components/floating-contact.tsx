@@ -38,13 +38,9 @@ function CloseIcon() {
   );
 }
 
-import { usePathname } from "next/navigation";
-
 export function FloatingContact() {
-  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const isEventPage = pathname?.startsWith("/events/");
 
   useEffect(() => {
     if (!open) return;
@@ -61,9 +57,7 @@ export function FloatingContact() {
     <div
       ref={ref}
       data-floating-contact="true"
-      className={`fixed z-50 flex flex-col items-end gap-3 transition-all duration-300 right-4 sm:right-6 sm:bottom-6 ${
-        isEventPage ? "bottom-24 sm:bottom-6" : "bottom-5 sm:bottom-6"
-      }`}
+      className="fixed z-50 flex flex-col items-end gap-3 transition-all duration-300 right-4 sm:right-6 bottom-5 sm:bottom-6"
     >
       <AnimatePresence>
         {open ? (

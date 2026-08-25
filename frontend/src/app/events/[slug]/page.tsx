@@ -15,7 +15,6 @@ import { EventCommunity } from "./event-community";
 import { EventReviews } from "./event-reviews";
 import { EventCta } from "./event-cta";
 import { EventFaq } from "./faq-accordion";
-import { EventStickyCta } from "./sticky-cta-bar";
 import { Reveal, SectionHeader } from "./reveal";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mountainrun.in";
@@ -265,7 +264,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           </section>
 
           <EventCta event={event} />
-          <EventStickyCta price={event.price} compareAtPrice={event.compareAtPrice} slug={event.slug} />
         </>
       )}
     </PageShell>

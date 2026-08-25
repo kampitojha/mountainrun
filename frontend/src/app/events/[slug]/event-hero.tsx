@@ -8,7 +8,6 @@ import {
   CalendarDays,
   FileBadge,
   Medal,
-  Route,
   ShieldCheck,
   Shirt,
   Sparkles,
@@ -107,24 +106,24 @@ export function EventHero({ event, isPast }: { event: PublicEvent; isPast: boole
                     </span>
                   )}
                 </div>
-                <span className="inline-flex items-center gap-1 rounded-full bg-(--gold-soft) px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-(--gold-deep)">
+                <span className="inline-flex items-center gap-1 rounded-full bg-(--gold-soft) px-3 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-(--gold-deep)">
                   <Sparkles className="h-3 w-3" />
                   All-Inclusive Finisher Kit
                 </span>
               </div>
 
               {/* CTAs */}
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center lg:justify-start">
+              <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-center lg:justify-start">
                 <RegisterCta
-                  className="btn-gold sm:min-w-52"
+                  className="btn-gold !py-3 !px-6 text-sm font-extrabold rounded-xl shadow-lg shadow-(--gold)/15 hover:shadow-(--gold)/30 transition-all text-center justify-center"
                   signedInLabel="Register now"
-                  signedOutLabel={priceLabel}
+                  signedOutLabel="Register now"
                   slug={event.slug}
                 />
                 <button
                   type="button"
                   onClick={() => setIsInspectorOpen(true)}
-                  className="btn btn-secondary inline-flex items-center justify-center gap-2 text-sm"
+                  className="btn btn-secondary !py-3 !px-5 inline-flex items-center justify-center gap-2 text-sm font-bold rounded-xl border border-white/10 hover:border-(--gold-line) transition-colors"
                 >
                   <ZoomIn className="h-4 w-4 text-(--gold)" />
                   Inspect Medal (4K)
@@ -133,7 +132,7 @@ export function EventHero({ event, isPast }: { event: PublicEvent; isPast: boole
 
               {/* Urgency countdown if endsAt */}
               {event.endsAt ? (
-                <div className="mt-5 flex justify-center lg:justify-start">
+                <div className="mt-4 flex justify-center lg:justify-start">
                   <span className="glass-pill inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold text-(--foreground)">
                     <EventCountdown targetDate={event.endsAt} compact />
                   </span>
