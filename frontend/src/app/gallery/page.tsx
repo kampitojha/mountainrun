@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+ import type { Metadata } from "next";
 import { PageShell } from "../components/app-shell";
 import { Breadcrumb } from "../components/breadcrumb";
 import { GalleryClient } from "./gallery-client";

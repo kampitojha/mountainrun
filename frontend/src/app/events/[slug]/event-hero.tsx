@@ -126,7 +126,7 @@ export function EventHero({ event, isPast }: { event: PublicEvent; isPast: boole
                   className="btn btn-secondary !py-3 !px-5 inline-flex items-center justify-center gap-2 text-sm font-bold rounded-xl border border-white/10 hover:border-(--gold-line) transition-colors"
                 >
                   <ZoomIn className="h-4 w-4 text-(--gold)" />
-                  Inspect Medal (4K)
+                  See your medal
                 </button>
               </div>
 

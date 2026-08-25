@@ -208,7 +208,7 @@ export function EventRewards({
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                       <span className="glass-pill inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold text-white shadow-2xl backdrop-blur-md">
                         <ZoomIn className="h-4 w-4 text-(--gold)" />
-                        Click to Inspect Engravings
+                        Click to view medal in HD
                       </span>
                     </div>
                   </div>
