@@ -47,23 +47,15 @@ export function EventHow({ event }: { event: PublicEvent }) {
             className="absolute inset-x-16 top-6 hidden h-0.5 bg-gradient-to-r from-(--gold) via-(--sage) to-(--gold) opacity-25 sm:block"
           />
 
-          <div className="grid gap-4 sm:grid-cols-4 sm:gap-4">
+          <div className="flex gap-3.5 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory sm:grid sm:grid-cols-4 sm:gap-4 sm:overflow-visible sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {steps.map(({ icon: Icon, title, desc }, i) => (
-              <Reveal key={title} delay={i * 0.12} className="relative">
-                <div className="relative flex items-start gap-4 sm:flex-col sm:items-center sm:text-center">
-                  {/* mobile connector */}
-                  {i < steps.length - 1 ? (
-                    <span
-                      aria-hidden
-                      className="absolute left-6 top-12 h-full w-0.5 bg-(--gold-line) sm:hidden"
-                    />
-                  ) : null}
-
-                  <span className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl grad-gold text-white shadow-gold">
+              <Reveal key={title} delay={i * 0.12} className="relative w-[75vw] max-w-[280px] shrink-0 snap-center sm:w-auto sm:max-w-none">
+                <div className="relative flex flex-col items-start sm:items-center sm:text-center">
+                  <span className="relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl grad-gold text-white shadow-gold sm:h-12 sm:w-12">
                     <Icon className="h-5 w-5" strokeWidth={1.75} />
                   </span>
 
-                  <div className="flex-1 rounded-2xl border border-(--line) bg-(--panel) p-4 transition-all duration-300 hover:-translate-y-1 hover:border-(--gold-line) hover:shadow-premium sm:w-full sm:p-5">
+                  <div className="mt-3.5 w-full flex-1 rounded-2xl border border-(--line) bg-(--panel) p-4 transition-all duration-300 hover:-translate-y-1 hover:border-(--gold-line) hover:shadow-premium sm:p-5">
                     <p className="text-[0.6rem] font-black uppercase tracking-widest text-(--gold-deep)">
                       Step {i + 1}
                     </p>
