@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { MapPinned, Smartphone, ArrowUpRight, FileBadge, Medal, Shirt, Sparkles, Trophy, Truck } from "lucide-react";
 import { Medal3D } from "./medal";
 import { Reveal, SectionHeader } from "./reveal";
