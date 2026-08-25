@@ -106,6 +106,13 @@ function EventCard({ event, variant = "upcoming" }: { event: PublicEvent; varian
             </div>
           )}
 
+          {event.medalImageUrl && (
+            <div className="mt-2.5 flex items-center gap-1.5 rounded-lg border border-(--gold-line)/40 bg-(--gold-soft) px-2.5 py-1 text-[0.65rem] font-bold text-(--gold-deep)">
+              <Medal className="h-3.5 w-3.5 shrink-0" />
+              <span>Heavyweight 3D Finisher Medal Included</span>
+            </div>
+          )}
+
           <p className="mt-2 flex-1 text-xs leading-relaxed text-(--muted) sm:text-sm">{event.highlight}</p>
 
           {isPast && (event.finishers || event.cities) && (

@@ -44,3 +44,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 **/next-env.d.ts
+
+# excel / local data files
+SAURAV YADAV MEDAL.xlsx
+MEDALS.xlsx
+*.xlsx
+

@@ -52,7 +52,8 @@ export const allPublicEvents: PublicEvent[] = [
     banner: "Open event",
     bannerImageUrl:
       "https://res.cloudinary.com/yppcqzt6/image/upload/v1787133746/mountainrun/admin/qqrxyzirjkj6yshgkwgg.png",
-    reward: "Premium medal + e-certificate",
+    medalImageUrl: "/images/sports-day-medal.jpg",
+    reward: "Heavyweight 3D medal + e-certificate",
     status: "upcoming",
     compareAtPrice: "Rs. 799",
     activityTypes: ["running", "cycling", "walking"],
