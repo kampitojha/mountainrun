@@ -8,25 +8,28 @@ import { EventsCatalog } from "./events-catalog";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mountainrun.in";
 
 export const metadata: Metadata = {
-  title: "Upcoming Virtual Running Events India 2026 | 5K, 10K, 21K Races — Mountain Run",
+  title: "Upcoming Virtual Running Events & Marathons India 2026 | 5K, 10K, 21K Races — Mountain Run",
   description:
-    "Explore and register for upcoming virtual running events across India. Complete 1.5K, 5K, 10K, or 21K half marathons from anywhere. GPS verification, custom metal medals, DRI-FIT t-shirts, and instant E-certificates.",
+    "Explore and register for upcoming virtual running events and marathons across India. Complete 1.5K, 3K, 5K, 10K, or 21K Half Marathons from anywhere. GPS verification, authentic heavy metal finisher medals, DRI-FIT t-shirts, and instant E-certificates.",
   keywords: [
     "virtual running events",
     "virtual running events india",
     "online marathon India",
-    "5K run events",
-    "10K run events",
-    "half marathon virtual",
+    "virtual marathon 2026",
+    "5K run events india",
+    "10K run events india",
+    "half marathon virtual india",
     "running races India",
     "GPS verified runs",
     "virtual race registration",
-    "virtual marathon 2026",
+    "marathon athlete medals",
+    "running event with medal",
+    "strava virtual marathon india",
   ],
   openGraph: {
-    title: "Upcoming Virtual Running Events India 2026 | 5K, 10K, 21K Races — Mountain Run",
+    title: "Upcoming Virtual Running Events & Marathons India 2026 | 5K, 10K, 21K Races — Mountain Run",
     description:
-      "Explore and register for upcoming virtual running events across India. GPS verification, custom medals & instant certificates.",
+      "Explore and register for upcoming virtual running events and marathons across India. GPS verification, custom medals & instant certificates.",
     url: "/events",
     type: "website",
   },
@@ -67,13 +70,13 @@ export default async function EventsPage() {
             ]}
           />
 
-          <div className="mx-auto mt-6 max-w-xl text-center sm:mt-8">
-            <p className="eyebrow">Events</p>
-            <h1 className="mt-3 text-4xl font-bold leading-[1.1] tracking-tight text-(--foreground) sm:text-5xl">
-              Upcoming virtual races
+          <div className="mx-auto mt-6 max-w-2xl text-center sm:mt-8">
+            <p className="eyebrow">Virtual Running &amp; Marathon Events</p>
+            <h1 className="mt-3 text-3xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl">
+              Upcoming virtual running events &amp; marathons
             </h1>
-            <p className="lede mx-auto mt-4 max-w-lg">
-              Choose a run, register once, upload GPS proof, and appear on the verified leaderboard.
+            <p className="lede mx-auto mt-4 max-w-xl">
+              Choose your challenge, run anywhere at your pace with Strava or Garmin, and claim authentic heavy metal finisher medals delivered across India.
             </p>
             <div className="mt-5 flex flex-wrap justify-center gap-2">
               {[

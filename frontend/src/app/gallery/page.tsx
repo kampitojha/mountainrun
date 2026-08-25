@@ -6,17 +6,16 @@ import { GalleryClient } from "./gallery-client";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mountainrun.in";
 
 export const metadata: Metadata = {
-  title: "Finisher Gallery & Race Moments | Mountain Run India",
+  title: "Finisher Medals Showcase & Race Gallery | Mountain Run India",
   description:
-    "Explore verified finisher moments, medal showcases, and community runner stories from Mountain Run virtual marathons and 5K/10K challenges across India.",
+    "Browse authentic 3D finisher medals, verified runner moments, and race photo stories from Mountain Run virtual marathons, 5K, 10K, and 21K half marathon challenges across India.",
   keywords: [
-    "running gallery",
-    "race photos",
-    "virtual run photos",
-    "marathon gallery india",
-    "running moments",
-    "finisher photos",
     "finisher medals showcase",
+    "marathon medals india",
+    "running gallery india",
+    "virtual run race photos",
+    "marathon athlete finisher moments",
+    "running achievements india",
   ],
   openGraph: {
     title: "Finisher Gallery & Race Moments | Mountain Run India",

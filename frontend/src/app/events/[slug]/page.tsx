@@ -26,15 +26,34 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!event) return { title: "Event Not Found" };
 
   const isPast = event.status === "past";
-  const metaTitle = `${event.name} - ${event.distance} Virtual Run | Mountain Run`;
+  const metaTitle = `${event.name} 2026 | ${event.distance} Virtual Run & Marathon — Mountain Run`;
   const metaDescription = isPast
-    ? `View results and recap for ${event.name}. ${event.finishers ?? 0} finishers, ${event.verifiedResults ?? 0} verified GPS results from across India.`
-    : `Register for ${event.name} - a ${event.distance} virtual running event. GPS verification, medals, certificates, and leaderboard. Entry: ${event.price}.`;
+    ? `View verified results and recap for ${event.name}. Over ${event.finishers ?? 0}+ finishers across ${event.cities ?? 50}+ cities in India. Browse leaderboards and rewards.`
+    : `Register for ${event.name} (${event.distance}). Run anywhere in India, verify GPS run proof with Strava, Nike or Garmin, and claim an authentic heavy 3D metal finisher medal, custom DRI-FIT t-shirt & verified e-certificate. Entry: ${event.price}.`;
+
+  const primaryImage = event.medalImageUrl || event.bannerImageUrl || "/og-image.png";
 
   return {
     title: metaTitle,
     description: metaDescription,
-    keywords: [event.name, event.distance, "virtual run", "GPS verified", "running event", "marathon", "5K run", "10K run", "half marathon", "virtual race India"],
+    keywords: [
+      event.name,
+      `${event.name} 2026`,
+      `${event.name} marathon`,
+      event.distance,
+      "virtual running events",
+      "virtual marathon india",
+      "running events india 2026",
+      "5K run india",
+      "10K challenge",
+      "half marathon virtual 21k",
+      "running event with medal",
+      "marathon athlete medal",
+      "strava virtual marathon india",
+      "garmin running challenges",
+      "GPS verified running",
+      "running certificate with qr code",
+    ],
     openGraph: {
       title: metaTitle,
       description: metaDescription,
@@ -42,10 +61,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       type: "website",
       images: [
         {
-          url: event.bannerImageUrl || "/og-image.png",
+          url: primaryImage,
           width: 1200,
           height: 630,
-          alt: event.name,
+          alt: `${event.name} - Finisher Medal & Virtual Run`,
         },
       ],
     },
@@ -53,7 +72,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       card: "summary_large_image",
       title: metaTitle,
       description: metaDescription,
-      images: [event.bannerImageUrl || "/og-image.png"],
+      images: [primaryImage],
     },
     alternates: { canonical: `${SITE_URL}/events/${slug}` },
   };
@@ -71,6 +90,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   if (!event) notFound();
 
   const isPast = event.status === "past";
+  const primaryImage = event.medalImageUrl || event.bannerImageUrl || `${SITE_URL}/og-image.png`;
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -100,25 +120,27 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const sportsEventSchema = {
     "@context": "https://schema.org",
     "@type": "SportsEvent",
-    name: event.name,
+    name: `${event.name} 2026`,
+    alternateName: `${event.name} Virtual Marathon & Running Challenge`,
     description: event.description || event.highlight,
     url: `${SITE_URL}/events/${slug}`,
-    image: event.bannerImageUrl || `${SITE_URL}/og-image.png`,
+    image: primaryImage,
     startDate: event.date,
+    sport: "Running",
     location: {
       "@type": "VirtualLocation",
       url: `${SITE_URL}/events/${slug}`,
       name: "Online / Virtual (Pan-India)",
     },
     organizer: {
-      "@type": "Organization",
+      "@type": "SportsOrganization",
       name: "Mountain Run",
       url: SITE_URL,
       logo: `${SITE_URL}/logo-mark.svg`,
     },
     offers: {
       "@type": "Offer",
-      price: event.price.replace(/[^\d]/g, ""),
+      price: event.price.replace(/[^\d]/g, "") || "399",
       priceCurrency: "INR",
       url: `${SITE_URL}/events/${slug}`,
       availability: isPast ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
@@ -137,23 +159,31 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         name: `How do I participate in ${event.name}?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: `Register on Mountain Run, choose your distance (${event.distance}), run using any GPS tracking app (Strava, Nike, Garmin), and upload your activity screenshot to claim your medal and certificate.`,
+          text: `Register on Mountain Run, choose your distance (${event.distance}), run anywhere using any GPS tracking app (Strava, Nike Run Club, Garmin, Apple Fitness), and upload your activity screenshot to claim your heavy metal finisher medal and verified digital certificate.`,
         },
       },
       {
         "@type": "Question",
-        name: `When will I receive my finisher medal for ${event.name}?`,
+        name: `When will I receive my physical finisher medal for ${event.name}?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Finisher medals and performance t-shirts are dispatched to your registered postal address via tracked courier within 7-10 business days after your GPS run proof is verified.",
+          text: "Finisher medals and performance t-shirts are dispatched via tracked courier (BlueDart, Delhivery, India Post) to your doorstep within 7-10 business days after your GPS run proof is verified.",
         },
       },
       {
         "@type": "Question",
-        name: "Can I run on a treadmill or outdoors?",
+        name: "Can I run on a treadmill or outdoors for this virtual race?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Yes, you can run outdoors with any GPS app or on a treadmill (by uploading a clear photo of the treadmill console showing total distance and elapsed time).",
+          text: "Yes, you can run outdoors with any GPS app or indoors on a treadmill (by uploading a clear photo of the treadmill console showing total distance and elapsed time).",
+        },
+      },
+      {
+        "@type": "Question",
+        name: `What rewards are included with registration in ${event.name}?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `Every registration in ${event.name} includes an authentic heavy 3D metal finisher medal, custom dri-fit event t-shirt, official QR-verified certificate, national leaderboard placement, and 100% free delivery across India.`,
         },
       },
     ],

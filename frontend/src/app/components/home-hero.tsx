@@ -23,18 +23,18 @@ export function HomeHero() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-(--sage) opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-(--sage)" />
             </span>
-            Virtual running events
+            India&rsquo;s Premier Virtual Running &amp; Marathon Platform
           </p>
 
           <h1 className="display mt-4 font-bold tracking-tight sm:mt-7">
-            Run anywhere.
+            Virtual Running Events &amp; Marathons.
             <br />
-            <span className="text-gradient-premium">Finish with proof.</span>
+            <span className="text-gradient-premium">Run Anywhere. Claim Real Medals.</span>
           </h1>
 
           <p className="lede mx-auto mt-4 max-w-xl px-2 sm:mt-6 sm:px-1">
-            Clean virtual races with GPS verification, leaderboards, certificates,
-            medals, and event merch for runners across India.
+            Join GPS-verified 5K, 10K, and 21K Half Marathon challenges from anywhere in India.
+            Track with Strava or Garmin, rank on the national leaderboard, and get authentic heavy metal finisher medals delivered to your door.
           </p>
 
           <HomeCtas />
