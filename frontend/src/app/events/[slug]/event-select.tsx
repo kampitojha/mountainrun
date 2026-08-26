@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Bike, Footprints, IndianRupee, Route, Sparkles, Timer } from "lucide-react";
+import { Bike, Footprints, IndianRupee, Route, Sparkles } from "lucide-react";
 import type { PublicEvent } from "../../data/events";
 import { RegisterCta } from "../../components/register-cta";
-import { EventCountdown } from "./countdown";
 import { SectionHeader } from "./reveal";
 
 const WHATSAPP_URL = "https://wa.me/917518418960";
@@ -13,9 +12,9 @@ const WHATSAPP_URL = "https://wa.me/917518418960";
 type Activity = { key: string; label: string; icon: typeof Footprints; active: string };
 
 const activities: Activity[] = [
-  { key: "run", label: "Run", icon: Footprints, active: "border-[#0d9488] bg-[#0d9488] text-white shadow-[0_10px_24px_-10px_rgba(13,148,136,0.6)]" },
-  { key: "walk", label: "Walk", icon: Route, active: "border-sky-500 bg-sky-500 text-white shadow-[0_10px_24px_-10px_rgba(14,165,233,0.6)]" },
-  { key: "cycle", label: "Cycle", icon: Bike, active: "border-violet-500 bg-violet-500 text-white shadow-[0_10px_24px_-10px_rgba(139,92,246,0.6)]" },
+  { key: "run", label: "Run", icon: Footprints, active: "border-[#0d9488] bg-[#0d9488] text-white shadow-[0_8px_20px_-6px_rgba(13,148,136,0.6)]" },
+  { key: "walk", label: "Walk", icon: Route, active: "border-sky-500 bg-sky-500 text-white shadow-[0_8px_20px_-6px_rgba(14,165,233,0.6)]" },
+  { key: "cycle", label: "Cycle", icon: Bike, active: "border-violet-500 bg-violet-500 text-white shadow-[0_8px_20px_-6px_rgba(139,92,246,0.6)]" },
 ];
 
 function distanceNum(d: string) {
@@ -24,13 +23,46 @@ function distanceNum(d: string) {
 }
 
 function tier(km: number, activity: string) {
-  if (activity === "walk" && km >= 5) return { label: "Power walk", chip: "border-sky-200 bg-sky-50 text-sky-700", bar: "bg-sky-500" };
-  if (activity === "cycle") return { label: "Ride", chip: "border-violet-200 bg-violet-50 text-violet-700", bar: "bg-violet-500" };
-  if (km <= 3.2) return { label: "Easy starter", chip: "border-emerald-200 bg-emerald-50 text-emerald-700", bar: "bg-emerald-500" };
-  if (km === 5) return { label: "Classic 5K", chip: "border-[#0d9488] bg-[#f0fdfa] text-[#0d9488]", bar: "bg-[#0d9488]" };
-  if (km === 10) return { label: "10K challenge", chip: "border-violet-200 bg-violet-50 text-violet-700", bar: "bg-violet-500" };
-  if (km >= 21) return { label: "Half marathon", chip: "border-[#c9a227] bg-[#fdf8ec] text-[#9a7a12]", bar: "bg-[#c9a227]" };
-  return { label: "Challenge", chip: "border-slate-200 bg-slate-50 text-slate-600", bar: "bg-slate-400" };
+  if (activity === "walk" && km >= 5) {
+    return {
+      label: "Power walk",
+      badge: "border-sky-500/30 bg-sky-500/10 text-sky-400",
+    };
+  }
+  if (activity === "cycle") {
+    return {
+      label: "Ride",
+      badge: "border-violet-500/30 bg-violet-500/10 text-violet-400",
+    };
+  }
+  if (km <= 3.2) {
+    return {
+      label: "Easy starter",
+      badge: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
+    };
+  }
+  if (km === 5) {
+    return {
+      label: "Classic 5K",
+      badge: "border-[#0d9488]/40 bg-[#0d9488]/15 text-teal-300",
+    };
+  }
+  if (km === 10) {
+    return {
+      label: "10K challenge",
+      badge: "border-violet-500/30 bg-violet-500/10 text-violet-400",
+    };
+  }
+  if (km >= 21) {
+    return {
+      label: "Half marathon",
+      badge: "border-(--gold-line) bg-(--gold-soft) text-(--gold-deep)",
+    };
+  }
+  return {
+    label: "Challenge",
+    badge: "border-white/10 bg-white/5 text-(--muted)",
+  };
 }
 
 function formatPrice(price: string) {
@@ -78,7 +110,7 @@ export function EventSelect({ event }: { event: PublicEvent }) {
                       Entry fee
                     </p>
                     <div className="mt-1 flex items-baseline gap-2">
-                      <span className="text-3xl font-black tracking-tight text-(--foreground) sm:text-4xl">
+                      <span className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
                         {amount}
                       </span>
                       {mrp ? (
@@ -96,8 +128,6 @@ export function EventSelect({ event }: { event: PublicEvent }) {
                     <IndianRupee className="h-5 w-5" />
                   </span>
                 </div>
-
-                {/* Countdown removed per redesign */}
 
                 {/* What's included */}
                 <div className="mt-5 rounded-2xl border border-(--gold-line) bg-(--gold-soft) p-4">
@@ -149,12 +179,17 @@ export function EventSelect({ event }: { event: PublicEvent }) {
           {/* Distance picker - appears AFTER payment card on mobile */}
           <div className="order-2 lg:order-1">
             <div className="rounded-3xl border border-(--line) bg-(--panel) p-5 shadow-premium sm:p-7">
-              <p className="text-[0.65rem] font-black uppercase tracking-widest text-(--muted-soft)">
-                Select Distance / Category
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-[0.68rem] font-black uppercase tracking-widest text-(--gold-deep)">
+                  Select Distance / Category
+                </p>
+                <span className="text-[0.65rem] font-semibold text-(--muted)">
+                  Tap to choose
+                </span>
+              </div>
 
               {/* Activity segmented */}
-              <div className="mt-3 grid grid-cols-3 gap-2 rounded-2xl bg-(--panel-soft) p-1.5">
+              <div className="mt-3.5 grid grid-cols-3 gap-2 rounded-2xl border border-white/5 bg-(--panel-soft) p-1.5">
                 {activities.map(({ key, label, icon: Icon, active }) => {
                   const isOn = activity === key;
                   return (
@@ -166,7 +201,7 @@ export function EventSelect({ event }: { event: PublicEvent }) {
                       className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-bold capitalize transition-all duration-200 cursor-pointer ${
                         isOn
                           ? active
-                          : "border-transparent bg-transparent text-(--muted) hover:text-(--foreground)"
+                          : "border-transparent bg-transparent text-(--muted) hover:text-foreground hover:bg-white/5"
                       }`}
                     >
                       <Icon className="h-4 w-4" strokeWidth={2} />
@@ -186,21 +221,30 @@ export function EventSelect({ event }: { event: PublicEvent }) {
                     <Link
                       key={distance}
                       href={`/register?event=${encodeURIComponent(event.slug)}&distance=${encodeURIComponent(distance)}`}
-                      className={`group relative flex min-h-[72px] flex-col justify-center rounded-2xl border px-4 py-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-premium ${
-                        isPopular ? "border-(--gold) bg-(--gold-soft) shadow-sm" : `bg-(--panel) ${t.chip}`
+                      className={`group relative flex min-h-[82px] flex-col justify-between rounded-2xl border p-3.5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_28px_-8px_rgba(0,0,0,0.7)] ${
+                        isPopular
+                          ? "border-(--gold)/70 bg-gradient-to-b from-[#241f14] via-[#1a1710] to-[#12110c] shadow-[0_0_20px_rgba(201,162,39,0.15)] hover:border-(--gold)"
+                          : "border-white/10 bg-gradient-to-b from-[#1b1b22] via-[#14141a] to-[#0f0f13] hover:border-(--gold-line) hover:bg-[#1f1f28]"
                       }`}
                     >
                       {isPopular && (
-                        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-(--gold-deep) px-2 py-0.5 text-[0.55rem] font-bold uppercase tracking-wider text-white shadow-sm">
+                        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-(--gold-deep) to-(--gold) px-2.5 py-0.5 text-[0.55rem] font-black uppercase tracking-wider text-black shadow-md">
                           Most Popular
                         </span>
                       )}
-                      <span className="text-lg font-black tracking-tight text-(--foreground)">
-                        {distance}
-                      </span>
-                      <div className="mt-1 flex items-center justify-between border-t border-(--line) pt-1.5">
-                        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
+                      
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-lg font-black tracking-tight text-foreground transition-colors group-hover:text-(--gold)">
+                          {distance}
+                        </span>
+                        <span className={`rounded-md border px-1.5 py-0.5 text-[0.58rem] font-bold uppercase tracking-wider ${t.badge}`}>
                           {t.label}
+                        </span>
+                      </div>
+
+                      <div className="mt-2 flex items-center justify-between border-t border-white/10 pt-1.5">
+                        <span className="text-[0.62rem] font-semibold text-(--muted) group-hover:text-foreground transition-colors">
+                          Kit &amp; Medal
                         </span>
                         <span className="text-xs font-black text-(--gold-deep)">
                           {amount}
