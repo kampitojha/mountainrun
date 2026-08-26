@@ -69,21 +69,21 @@ function AvatarButton({ onClick }: { onClick: () => void }) {
       type="button"
       onClick={onClick}
       aria-label="Open profile menu"
-      className="group relative cursor-pointer rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--sage)/40"
+      className="group relative flex items-center justify-center cursor-pointer rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--sage)/40"
     >
       {avatarUrl ? (
         <img
           src={avatarUrl}
           alt={name}
-          className="h-8 w-8 rounded-full object-cover ring-2 ring-(--line) transition-all duration-300 group-hover:ring-(--sage)/50 group-hover:scale-105 sm:h-9 sm:w-9"
+          className="h-8.5 w-8.5 rounded-full object-cover ring-2 ring-(--line) transition-all duration-300 group-hover:ring-(--sage) group-hover:scale-105 sm:h-9.5 sm:w-9.5"
         />
       ) : (
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-indigo-500 text-[0.6rem] font-bold text-white ring-2 ring-(--line) transition-all duration-300 group-hover:ring-(--sage)/50 group-hover:scale-105 sm:h-9 sm:w-9">
+        <span className="flex h-8.5 w-8.5 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-indigo-600 text-xs font-black text-white ring-2 ring-white/15 shadow-sm transition-all duration-300 group-hover:ring-(--sage) group-hover:scale-105 sm:h-9.5 sm:w-9.5">
           {initials}
         </span>
       )}
       {/* Online indicator */}
-      <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-(--panel) bg-emerald-500" />
+      <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-(--background) bg-emerald-500 shadow-xs" />
     </button>
   );
 }
@@ -334,13 +334,11 @@ export function AppHeader() {
             </Show>
           </nav>
 
-          {/* Right — Actions pill */}
-          <div className="flex items-center gap-1.5 rounded-full border border-(--line) bg-(--panel-soft)/60 px-2 py-1 shadow-sm">
-            <ThemeToggle size="sm" />
-            <div className="h-5 w-px bg-(--line)" />
+          {/* Right — Actions */}
+          <div className="flex items-center gap-2">
             <Show when="signed-out">
               <Link
-                className="btn btn-primary h-8 px-3.5 text-xs font-semibold sm:h-9 sm:px-4 sm:text-sm"
+                className="btn btn-primary h-8 px-3.5 text-xs font-semibold sm:h-9 sm:px-4 sm:text-sm shadow-sm"
                 href="/events"
               >
                 Browse events
