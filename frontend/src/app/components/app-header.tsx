@@ -394,68 +394,70 @@ export function AppHeader() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
               onClick={() => setOpen(false)}
-              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs md:hidden"
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
             />
 
-            {/* Clean Dropdown Card */}
-            <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.98 }}
-              transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
-              className="fixed inset-x-4 top-18 z-50 overflow-hidden rounded-2xl border border-(--line) bg-(--panel)/95 backdrop-blur-2xl p-2 shadow-2xl md:hidden"
-            >
-              <nav className="flex flex-col gap-1">
-                {[
-                  ["Events", "/events"],
-                  ["Leaderboard", "/leaderboard"],
-                  ["Gallery", "/gallery"],
-                ].map(([label, href]) => {
-                  const active = isActive(href);
-                  return (
+            {/* Centered Modal Card */}
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-5 md:hidden pointer-events-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.92, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.92, y: 10 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="pointer-events-auto w-full max-w-xs overflow-hidden rounded-3xl border border-(--line) bg-(--panel)/98 backdrop-blur-2xl p-3 shadow-2xl"
+              >
+                <nav className="flex flex-col gap-1.5">
+                  {[
+                    ["Events", "/events"],
+                    ["Leaderboard", "/leaderboard"],
+                    ["Gallery", "/gallery"],
+                  ].map(([label, href]) => {
+                    const active = isActive(href);
+                    return (
+                      <Link
+                        key={href}
+                        href={href}
+                        onClick={() => setOpen(false)}
+                        className={`flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm transition-all ${
+                          active
+                            ? "bg-(--sage-soft) text-(--sage) font-bold"
+                            : "text-(--foreground) font-semibold hover:bg-(--panel-soft)"
+                        }`}
+                      >
+                        <span>{label}</span>
+                        {active && (
+                          <span className="h-2 w-2 rounded-full bg-(--sage)" />
+                        )}
+                      </Link>
+                    );
+                  })}
+
+                  <div className="my-1 border-t border-(--line)" />
+
+                  <Show when="signed-in">
                     <Link
-                      key={href}
-                      href={href}
+                      href="/dashboard"
                       onClick={() => setOpen(false)}
-                      className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm transition-all ${
-                        active
-                          ? "bg-(--sage-soft) text-(--sage) font-bold"
-                          : "text-(--foreground) font-medium hover:bg-(--panel-soft)"
-                      }`}
+                      className="flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-(--foreground) hover:bg-(--panel-soft) transition-all"
                     >
-                      <span>{label}</span>
-                      {active && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-(--sage)" />
-                      )}
+                      <span>Runner Dashboard</span>
+                      <span className="text-xs text-(--muted)">→</span>
                     </Link>
-                  );
-                })}
+                  </Show>
 
-                <div className="my-1 border-t border-(--line)" />
-
-                <Show when="signed-in">
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setOpen(false)}
-                    className="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-medium text-(--foreground) hover:bg-(--panel-soft) transition-all"
-                  >
-                    <span>Runner Dashboard</span>
-                    <span className="text-xs text-(--muted)">→</span>
-                  </Link>
-                </Show>
-
-                <Show when="signed-out">
-                  <Link
-                    href="/sign-in"
-                    onClick={() => setOpen(false)}
-                    className="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-medium text-(--foreground) hover:bg-(--panel-soft) transition-all"
-                  >
-                    <span>Sign In</span>
-                    <span className="text-xs text-(--muted)">→</span>
-                  </Link>
-                </Show>
-              </nav>
-            </motion.div>
+                  <Show when="signed-out">
+                    <Link
+                      href="/sign-in"
+                      onClick={() => setOpen(false)}
+                      className="flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-(--foreground) hover:bg-(--panel-soft) transition-all"
+                    >
+                      <span>Sign In</span>
+                      <span className="text-xs text-(--muted)">→</span>
+                    </Link>
+                  </Show>
+                </nav>
+              </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>
