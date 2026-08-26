@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { galleryMoments } from "../data/events";
 import type { HomeMoment } from "../../lib/events-api";
@@ -79,27 +78,27 @@ export function HomeGalleryPreview({
               className="gallery-card group block overflow-hidden border border-(--line) rounded-(--radius) bg-(--panel) shadow-xs transition-all duration-300 hover:border-(--line-strong) hover:shadow-md"
               href="/gallery"
             >
-                <div className="gallery-card-media relative aspect-4/3 overflow-hidden bg-slate-950">
-                  <Image
-                    alt={moment.title}
-                    className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                    src={ensureSvgPath(moment.image)}
-                    width={400}
-                    height={300}
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
-                    loading="lazy"
-                  />
-                  <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
-                  <span className="absolute left-3.5 bottom-3.5 z-10 rounded-full border border-white/20 bg-(--panel-glass-strong) px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-(--foreground) backdrop-blur-md shadow-xs">
-                    {moment.meta}
-                  </span>
-                </div>
-                <div className="p-4 bg-transparent">
-                  <h3 className="text-sm font-bold text-(--foreground) transition-colors duration-300 group-hover:text-(--sage)">
-                    {moment.title}
-                  </h3>
-                  <p className="mt-1 text-xs text-(--muted-soft) font-medium">{moment.meta}</p>
-                </div>
+              <div className="gallery-card-media relative aspect-4/3 overflow-hidden bg-slate-950">
+                <img
+                  alt={moment.title}
+                  className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                  src={ensureSvgPath(moment.image)}
+                  width={400}
+                  height={300}
+                  loading="lazy"
+                  decoding="async"
+                />
+                <div aria-hidden className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                <span className="absolute left-2.5 bottom-2.5 sm:left-3.5 sm:bottom-3.5 z-10 rounded-full border border-white/20 bg-black/80 px-2.5 py-0.5 text-[0.62rem] sm:text-[0.65rem] font-bold uppercase tracking-wider text-white shadow-xs">
+                  {moment.meta}
+                </span>
+              </div>
+              <div className="p-3.5 sm:p-4 bg-transparent">
+                <h3 className="text-xs sm:text-sm font-bold text-foreground transition-colors duration-300 group-hover:text-(--sage) line-clamp-1">
+                  {moment.title}
+                </h3>
+                <p className="mt-0.5 sm:mt-1 text-[0.7rem] sm:text-xs text-(--muted-soft) font-medium">{moment.meta}</p>
+              </div>
             </Link>
           ))}
         </div>

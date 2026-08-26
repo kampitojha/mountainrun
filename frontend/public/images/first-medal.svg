@@ -56,29 +56,19 @@
       <stop offset="100%" stop-color="#f59e0b" />
     </linearGradient>
 
-    <!-- Glow Filter -->
-    <filter id="goldGlow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="12" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
-
-    <filter id="sparkleGlow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="6" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
-
-    <!-- Drop Shadow Filter for 3D Medal -->
-    <filter id="medalShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#000000" flood-opacity="0.8" />
-    </filter>
+    <!-- Radial Glow Spotlight -->
+    <radialGradient id="goldAura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.25" />
+      <stop offset="60%" stop-color="#f59e0b" stop-opacity="0.05" />
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
+    </radialGradient>
   </defs>
 
   <!-- Dark Atmospheric Background -->
   <rect width="800" height="600" fill="url(#medalBg)" />
 
   <!-- Ambient Light Spotlight -->
-  <circle cx="400" cy="330" r="280" fill="#f59e0b" opacity="0.12" filter="url(#goldGlow)" />
-  <circle cx="400" cy="330" r="180" fill="#38bdf8" opacity="0.08" filter="url(#goldGlow)" />
+  <circle cx="400" cy="330" r="280" fill="url(#goldAura)" />
 
   <!-- Background Tech Geometry Circles -->
   <g opacity="0.25" stroke="#94a3b8" stroke-width="1" fill="none">
@@ -93,7 +83,7 @@
   </g>
 
   <!-- LANYARD / RIBBON (V-Hang From Top) -->
-  <g filter="url(#medalShadow)">
+  <g>
     <!-- Left Ribbon Strap -->
     <polygon points="320,0 260,0 365,220 400,210" fill="url(#ribbonLeft)" />
     <polygon points="290,0 280,0 375,215 385,213" fill="url(#ribbonAccent)" />
@@ -108,6 +98,7 @@
     <g opacity="0.3" stroke="#ffffff" stroke-width="1" stroke-dasharray="4 6">
       <line x1="495" y1="0" x2="418" y2="215" />
     </g>
+  </g>
 
     <!-- Ribbon Clamp / Loop Ring -->
     <rect x="375" y="195" width="50" height="24" rx="6" fill="url(#goldRim)" stroke="#78350f" stroke-width="2" />
@@ -214,7 +205,7 @@
   </g>
 
   <!-- Sparkles & Specular Glints -->
-  <g filter="url(#sparkleGlow)">
+  <g>
     <!-- Top-Left Glint on Rim -->
     <g transform="translate(295, 245)">
       <polygon points="0,-16 3,-3 16,0 3,3 0,16 -3,3 -16,0 -3,-3" fill="#ffffff" />
@@ -232,8 +223,8 @@
   </g>
 
   <!-- Holographic Verified Authenticity Badge Floating Bottom Left -->
-  <g transform="translate(80, 480)" filter="url(#medalShadow)">
-    <rect width="180" height="64" rx="16" fill="#0f172a" stroke="url(#holoSeal)" stroke-width="1.8" />
+  <g transform="translate(80, 480)">
+    <rect width="180" height="64" rx="16" fill="#0f172a" fill-opacity="0.95" stroke="url(#holoSeal)" stroke-width="1.8" />
     <circle cx="34" cy="32" r="18" fill="url(#holoSeal)" opacity="0.2" />
     <path d="M 26,32 L 32,38 L 42,26" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
     <text x="62" y="28" fill="#f8fafc" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="800">OFFICIAL REWARD</text>
@@ -241,8 +232,8 @@
   </g>
 
   <!-- Quality Stamp Floating Bottom Right -->
-  <g transform="translate(560, 480)" filter="url(#medalShadow)">
-    <rect width="160" height="64" rx="16" fill="#0f172a" stroke="#d97706" stroke-width="1.8" />
+  <g transform="translate(560, 480)">
+    <rect width="160" height="64" rx="16" fill="#0f172a" fill-opacity="0.95" stroke="#d97706" stroke-width="1.8" />
     <circle cx="32" cy="32" r="16" fill="#f59e0b" opacity="0.2" />
     <text x="32" y="37" fill="#fbbf24" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="900" text-anchor="middle">★</text>
     <text x="58" y="28" fill="#f8fafc" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="800">HEAVY METAL</text>

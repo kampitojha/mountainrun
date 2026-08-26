@@ -28,10 +28,11 @@
       <stop offset="100%" stop-color="#020617" />
     </linearGradient>
 
-    <filter id="enduranceGlow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="8" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
+    <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
+      <stop offset="60%" stop-color="#38bdf8" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0" />
+    </radialGradient>
   </defs>
 
   <!-- Sky Base -->
@@ -50,8 +51,8 @@
   </g>
 
   <!-- Giant Moon / High Altitude Orb -->
-  <circle cx="640" cy="140" r="45" fill="#f8fafc" opacity="0.9" filter="url(#enduranceGlow)" />
-  <circle cx="640" cy="140" r="70" fill="#38bdf8" opacity="0.1" filter="url(#enduranceGlow)" />
+  <circle cx="640" cy="140" r="70" fill="url(#moonGlow)" />
+  <circle cx="640" cy="140" r="45" fill="#f8fafc" opacity="0.95" />
 
   <!-- Distant Alpine Mountain Massif -->
   <polygon points="0,320 120,240 240,290 380,200 490,260 620,180 720,230 800,190 800,600 0,600" fill="url(#ridgeFar)" opacity="0.7" />
@@ -75,34 +76,35 @@
   <polygon points="0,480 180,420 340,460 480,390 640,430 800,380 800,600 0,600" fill="url(#ridgeClose)" />
 
   <!-- Glowing GPS Elevation Path Profile (Luminescent trail) -->
-  <path d="M 50,530 Q 180,470 320,480 T 480,410 T 640,435 T 780,400" fill="none" stroke="url(#topoGreen)" stroke-width="4" stroke-linecap="round" filter="url(#enduranceGlow)" />
+  <path d="M 50,530 Q 180,470 320,480 T 480,410 T 640,435 T 780,400" fill="none" stroke="url(#topoGreen)" stroke-width="6" stroke-linecap="round" opacity="0.4" />
+  <path d="M 50,530 Q 180,470 320,480 T 480,410 T 640,435 T 780,400" fill="none" stroke="url(#topoGreen)" stroke-width="3.5" stroke-linecap="round" />
   <path d="M 50,530 Q 180,470 320,480 T 480,410 T 640,435 T 780,400" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" opacity="0.9" />
 
   <!-- Waypoint Markers along Trail -->
   <!-- 5 KM Pin -->
   <g transform="translate(180, 475)">
-    <circle cx="0" cy="0" r="4" fill="#38bdf8" stroke="#ffffff" stroke-width="1.5" filter="url(#enduranceGlow)" />
+    <circle cx="0" cy="0" r="5" fill="#38bdf8" stroke="#ffffff" stroke-width="1.5" />
     <rect x="-18" y="-24" width="36" height="16" rx="8" fill="#0f172a" stroke="#38bdf8" stroke-width="1" />
     <text x="0" y="-13" fill="#38bdf8" font-family="sans-serif" font-size="8" font-weight="800" text-anchor="middle">5 KM</text>
   </g>
 
   <!-- 10 KM Pin -->
   <g transform="translate(320, 480)">
-    <circle cx="0" cy="0" r="4" fill="#10b981" stroke="#ffffff" stroke-width="1.5" filter="url(#enduranceGlow)" />
+    <circle cx="0" cy="0" r="5" fill="#10b981" stroke="#ffffff" stroke-width="1.5" />
     <rect x="-20" y="-24" width="40" height="16" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="1" />
     <text x="0" y="-13" fill="#10b981" font-family="sans-serif" font-size="8" font-weight="800" text-anchor="middle">10 KM</text>
   </g>
 
   <!-- 15 KM Pin -->
   <g transform="translate(480, 410)">
-    <circle cx="0" cy="0" r="4" fill="#fbbf24" stroke="#ffffff" stroke-width="1.5" filter="url(#enduranceGlow)" />
+    <circle cx="0" cy="0" r="5" fill="#fbbf24" stroke="#ffffff" stroke-width="1.5" />
     <rect x="-20" y="-24" width="40" height="16" rx="8" fill="#0f172a" stroke="#fbbf24" stroke-width="1" />
     <text x="0" y="-13" fill="#fbbf24" font-family="sans-serif" font-size="8" font-weight="800" text-anchor="middle">15 KM</text>
   </g>
 
   <!-- 21 KM Half Marathon Summit Goal -->
   <g transform="translate(640, 435)">
-    <circle cx="0" cy="0" r="6" fill="#a855f7" stroke="#ffffff" stroke-width="2" filter="url(#enduranceGlow)" />
+    <circle cx="0" cy="0" r="7" fill="#a855f7" stroke="#ffffff" stroke-width="2" />
     <rect x="-30" y="-28" width="60" height="20" rx="10" fill="#0f172a" stroke="#c084fc" stroke-width="1.5" />
     <text x="0" y="-15" fill="#e9d5ff" font-family="sans-serif" font-size="9" font-weight="900" text-anchor="middle">21.1 KM 🏁</text>
   </g>
@@ -126,8 +128,8 @@
   </g>
 
   <!-- Live Telemetry Card Overlay Bottom Left -->
-  <g transform="translate(40, 480)" filter="url(#enduranceGlow)">
-    <rect width="210" height="74" rx="18" fill="#0f172a" fill-opacity="0.9" stroke="#334155" stroke-width="1.5" />
+  <g transform="translate(40, 480)">
+    <rect width="210" height="74" rx="18" fill="#0f172a" fill-opacity="0.95" stroke="#334155" stroke-width="1.5" />
     <text x="20" y="28" fill="#94a3b8" font-family="sans-serif" font-size="10" font-weight="700" letter-spacing="1">WEEKEND LONG RUN</text>
     <text x="20" y="52" fill="#38bdf8" font-family="sans-serif" font-size="20" font-weight="900">21.1 KM</text>
     <text x="115" y="52" fill="#10b981" font-family="sans-serif" font-size="12" font-weight="700">+680m ELEV</text>
@@ -135,7 +137,7 @@
 
   <!-- Verification Badge Bottom Right -->
   <g transform="translate(610, 490)">
-    <rect width="150" height="60" rx="16" fill="#0f172a" fill-opacity="0.9" stroke="#10b981" stroke-width="1.5" />
+    <rect width="150" height="60" rx="16" fill="#0f172a" fill-opacity="0.95" stroke="#10b981" stroke-width="1.5" />
     <circle cx="28" cy="30" r="12" fill="#10b981" fill-opacity="0.2" />
     <path d="M 23,30 L 27,34 L 34,26" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" />
     <text x="48" y="27" fill="#f8fafc" font-family="sans-serif" font-size="11" font-weight="800">GPS VERIFIED</text>
