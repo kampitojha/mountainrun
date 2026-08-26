@@ -410,7 +410,6 @@ export function AppHeader() {
                   ["Events", "/events"],
                   ["Leaderboard", "/leaderboard"],
                   ["Gallery", "/gallery"],
-                  ["Track Bib", "/prize"],
                 ].map(([label, href]) => {
                   const active = isActive(href);
                   return (

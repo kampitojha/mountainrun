@@ -174,7 +174,6 @@ export function AppFooter() {
             ["Upcoming Events", "/events"],
             ["National Leaderboard", "/leaderboard"],
             ["Finisher Gallery", "/gallery"],
-            ["Track Medals & Bib", "/prize"],
             ["Event Registration", "/register"],
           ]} />
 
