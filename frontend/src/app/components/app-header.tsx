@@ -384,141 +384,209 @@ export function AppHeader() {
         </div>
       </div>
 
-      {/* ─── Charming Mobile Slide-Down Drawer ─── */}
+      {/* ─── Luxurious Full-Screen Mobile Navigation ─── */}
       <AnimatePresence>
         {open && (
-          <div className="fixed inset-0 z-50 flex flex-col md:hidden">
-            {/* Backdrop with touch lock */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              onClick={() => setOpen(false)}
-              onTouchMove={(e) => e.preventDefault()}
-              className="fixed inset-0 bg-black/80 backdrop-blur-md"
-            />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex flex-col bg-[#0b0b10] text-foreground md:hidden"
+          >
+            {/* Top Navigation Bar */}
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+              <Link
+                href="/"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5"
+              >
+                <img
+                  src="/logo-mark.svg"
+                  alt="Mountain Run"
+                  className="h-7 w-7 shrink-0"
+                />
+                <span className="text-base font-black tracking-tight text-white">
+                  <BrandText />
+                </span>
+              </Link>
 
-            {/* Slide-Down Mobile Sheet */}
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-              className="relative z-10 mx-3 mt-3 flex flex-col overflow-hidden rounded-3xl border border-(--gold-line)/40 bg-[#121217] p-4 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.9)]"
-            >
-              {/* Header inside mobile menu */}
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <Link
-                  href="/"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-2"
-                >
-                  <img src="/logo-mark.svg" alt="Mountain Run" className="h-6 w-6" />
-                  <span className="text-sm font-bold tracking-tight text-foreground">
-                    <BrandText />
-                  </span>
-                </Link>
-
+              <div className="flex items-center gap-2">
+                <ThemeToggle size="sm" />
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-(--muted) transition-colors hover:text-white"
-                  aria-label="Close menu"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/80 transition-colors hover:bg-white/10 hover:text-white active:scale-95"
+                  aria-label="Close navigation"
                 >
-                  ✕
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                 </button>
               </div>
+            </div>
 
-              {/* Nav links */}
-              <div className="mt-3 flex flex-col gap-1.5">
+            {/* Scrollable Navigation Body */}
+            <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
+              {/* Signed-in Athlete Profile Banner */}
+              <Show when="signed-in">
+                <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-3.5">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-emerald-500 to-indigo-600 text-xs font-black text-white ring-2 ring-white/20">
+                      🏃
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-white truncate">Athlete Portal</p>
+                      <p className="text-[0.68rem] text-(--muted) truncate">Trophies, Bibs &amp; Results</p>
+                    </div>
+                  </div>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setOpen(false)}
+                    className="shrink-0 rounded-xl bg-(--gold-soft) border border-(--gold-line) px-3 py-1.5 text-xs font-bold text-(--gold-deep)"
+                  >
+                    Dashboard →
+                  </Link>
+                </div>
+              </Show>
+
+              {/* Main Nav Links */}
+              <div className="space-y-1">
+                <p className="px-1 text-[0.65rem] font-bold uppercase tracking-widest text-(--muted-soft)">
+                  Menu
+                </p>
+
                 {[
-                  { label: "Upcoming Events", href: "/events", icon: Calendar, badge: "Live Race" },
-                  { label: "National Leaderboard", href: "/leaderboard", icon: Trophy },
-                  { label: "Finisher Gallery", href: "/gallery", icon: Camera },
-                  { label: "Track Medals & Bib", href: "/prize", icon: Award },
-                ].map(({ label, href, icon: Icon, badge }) => {
+                  {
+                    label: "Upcoming Races",
+                    href: "/events",
+                    icon: Calendar,
+                    desc: "Explore virtual marathons & 5K/10K",
+                    badge: "Live Race",
+                  },
+                  {
+                    label: "National Leaderboard",
+                    href: "/leaderboard",
+                    icon: Trophy,
+                    desc: "Live timings & runner rankings",
+                  },
+                  {
+                    label: "Finisher Gallery",
+                    href: "/gallery",
+                    icon: Camera,
+                    desc: "Real athlete photos & medals",
+                  },
+                  {
+                    label: "Track Medals & Bib",
+                    href: "/prize",
+                    icon: Award,
+                    desc: "Check certificate & delivery status",
+                  },
+                  {
+                    label: "Policy & Help Hub",
+                    href: "/policies",
+                    icon: CalendarDays,
+                    desc: "Shipping, refund, terms & privacy",
+                  },
+                ].map(({ label, href, icon: Icon, desc, badge }) => {
                   const active = isActive(href);
                   return (
                     <Link
                       key={href}
                       href={href}
                       onClick={() => setOpen(false)}
-                      className={`group flex items-center justify-between rounded-2xl px-3.5 py-2.5 text-sm font-bold transition-all duration-150 ${
+                      className={`group flex items-center justify-between rounded-2xl p-3 transition-all ${
                         active
-                          ? "bg-(--gold-soft) text-(--gold-deep) border border-(--gold-line)"
-                          : "text-(--muted) hover:bg-white/5 hover:text-foreground border border-transparent"
+                          ? "bg-white/10 border border-white/15 text-white"
+                          : "text-(--muted) hover:bg-white/5 hover:text-white border border-transparent"
                       }`}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3.5">
                         <span
-                          className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
+                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
                             active
-                              ? "bg-(--gold) text-black shadow-sm"
-                              : "bg-white/5 text-(--muted) group-hover:bg-white/10 group-hover:text-foreground"
+                              ? "bg-(--gold) text-black font-bold shadow-md"
+                              : "bg-white/5 text-(--muted) group-hover:bg-white/10 group-hover:text-white"
                           }`}
                         >
-                          <Icon className="h-4 w-4" />
+                          <Icon className="h-5 w-5" />
                         </span>
-                        <span>{label}</span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-white">{label}</span>
+                            {badge && (
+                              <span className="rounded-full bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.2 text-[0.58rem] font-extrabold uppercase tracking-wider text-emerald-400">
+                                {badge}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[0.7rem] text-(--muted-soft)">{desc}</p>
+                        </div>
                       </div>
 
-                      {badge && (
-                        <span className="rounded-full bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 text-[0.6rem] font-extrabold uppercase tracking-wider text-emerald-400">
-                          {badge}
-                        </span>
-                      )}
+                      <svg
+                        className={`h-4 w-4 transition-transform group-hover:translate-x-1 ${
+                          active ? "text-(--gold)" : "text-white/30"
+                        }`}
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M6 3.5L10.5 8L6 12.5" />
+                      </svg>
                     </Link>
                   );
                 })}
               </div>
+            </div>
 
-              {/* Signed-in / Signed-out footer action */}
-              <div className="mt-3 border-t border-white/10 pt-3">
-                <Show when="signed-in">
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setOpen(false)}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-(--gold) to-(--gold-deep) py-3 text-xs font-black text-black shadow-lg shadow-(--gold)/20"
-                  >
-                    <LayoutDashboard className="h-4 w-4" />
-                    Open My Dashboard
-                  </Link>
-                </Show>
-
-                <Show when="signed-out">
-                  <div className="flex flex-col gap-2">
-                    <Link
-                      href="/events"
-                      onClick={() => setOpen(false)}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-(--gold) to-(--gold-deep) py-3 text-xs font-black text-black shadow-lg shadow-(--gold)/20"
-                    >
-                      Browse Races &amp; Join (₹399)
-                    </Link>
-                    <Link
-                      href="/sign-in"
-                      onClick={() => setOpen(false)}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-bold text-foreground hover:bg-white/10"
-                    >
-                      <LogIn className="h-3.5 w-3.5 text-(--muted)" />
-                      Runner Sign in
-                    </Link>
-                  </div>
-                </Show>
-
-                {/* WhatsApp Help link */}
-                <a
-                  href="https://wa.me/917518418960?text=Hi!%20I%20have%20a%20question%20about%20Mountain%20Run."
-                  target="_blank"
-                  rel="noopener noreferrer"
+            {/* Bottom Actions & Support */}
+            <div className="border-t border-white/10 bg-[#08080c] p-5 space-y-3">
+              <Show when="signed-out">
+                <Link
+                  href="/events"
                   onClick={() => setOpen(false)}
-                  className="mt-3 flex items-center justify-center gap-1.5 text-center text-[0.7rem] font-semibold text-(--muted) hover:text-(--gold)"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-(--gold) to-(--gold-deep) py-3.5 text-sm font-black text-black shadow-lg shadow-(--gold)/20 transition-all active:scale-98"
                 >
-                  <span>💬 Have a question? Ask on WhatsApp</span>
-                </a>
-              </div>
-            </motion.div>
-          </div>
+                  <span>Explore Races &amp; Join (₹399)</span>
+                  <span>→</span>
+                </Link>
+
+                <Link
+                  href="/sign-in"
+                  onClick={() => setOpen(false)}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-2.5 text-xs font-bold text-white/80 hover:bg-white/10 transition-colors"
+                >
+                  <LogIn className="h-3.5 w-3.5" />
+                  <span>Runner Sign In</span>
+                </Link>
+              </Show>
+
+              <Show when="signed-in">
+                <Link
+                  href="/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-(--gold) to-(--gold-deep) py-3.5 text-sm font-black text-black shadow-lg shadow-(--gold)/20 transition-all active:scale-98"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  <span>Open Runner Dashboard</span>
+                </Link>
+              </Show>
+
+              {/* WhatsApp Support Button */}
+              <a
+                href="https://wa.me/917518418960?text=Hi!%20I%20have%20a%20question%20about%20Mountain%20Run."
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center gap-2 text-center text-xs font-semibold text-emerald-400 hover:text-emerald-300 py-1"
+              >
+                <span>💬 Need help? WhatsApp Support</span>
+              </a>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </header>
