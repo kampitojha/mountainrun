@@ -131,7 +131,7 @@ export function EventHero({ event, isPast }: { event: PublicEvent; isPast: boole
                       <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap">
                         <span className="glass-pill inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[0.65rem] font-bold text-white shadow-lg backdrop-blur-md">
                           <ZoomIn className="h-3 w-3 text-(--gold)" />
-                          Tap for 4K Zoom
+                          See your medal
                         </span>
                       </div>
                     </motion.div>
@@ -183,7 +183,7 @@ export function EventHero({ event, isPast }: { event: PublicEvent; isPast: boole
                   className="btn btn-secondary !py-2.5 !px-4 inline-flex items-center justify-center gap-1.5 text-xs font-bold rounded-xl border border-white/10"
                 >
                   <ZoomIn className="h-3.5 w-3.5 text-(--gold)" />
-                  Inspect Front &amp; Back 4K Medal
+                  See your medal
                 </button>
               </div>
 
