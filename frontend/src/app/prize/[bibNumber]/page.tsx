@@ -212,7 +212,7 @@ export default function PrizeBibPage() {
   }
 
   return (
-    <PageShell>
+    <PageShell footerMode="minimal">
       <section className="relative overflow-hidden border-b border-(--line)">
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10"
           style={{

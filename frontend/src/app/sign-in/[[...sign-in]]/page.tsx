@@ -71,7 +71,7 @@ function ThemedSignIn() {
 
 export default function SignInPage() {
   return (
-    <PageShell>
+    <PageShell footerMode="minimal">
       <section className="section">
         <div className="container-page px-4">
           <div className="mx-auto flex max-w-md flex-col items-center text-center">

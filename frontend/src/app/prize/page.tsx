@@ -15,7 +15,7 @@ export default function PrizeSearchPage() {
   }
 
   return (
-    <PageShell>
+    <PageShell footerMode="minimal">
       {/* ─── Track Search Section ─── */}
       <section className="relative overflow-hidden py-14 sm:py-24 min-h-[70vh] flex items-center justify-center">
         <div

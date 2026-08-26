@@ -42,7 +42,7 @@ export const metadata: Metadata = {
 
 export default function RegisterPage() {
   return (
-    <PageShell>
+    <PageShell footerMode="minimal">
       <section className="relative overflow-hidden border-b border-(--line)">
         <div
           aria-hidden

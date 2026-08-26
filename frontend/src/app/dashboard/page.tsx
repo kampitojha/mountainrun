@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function DashboardPage() {
   return (
-    <PageShell>
+    <PageShell footerMode="minimal">
       <section className="page-section">
         <div className="container-page max-w-5xl">
           <DashboardClient />

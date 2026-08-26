@@ -99,7 +99,7 @@ function UnsubscribeForm() {
 
 export default function UnsubscribePage() {
   return (
-    <PageShell>
+    <PageShell footerMode="minimal">
       <div className="container-page py-20">
         <Suspense fallback={
           <div className="flex justify-center py-20">

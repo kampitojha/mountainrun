@@ -162,7 +162,7 @@ export default function CertificateVerifyPage() {
   }, [params.certificateNumber]);
 
   return (
-    <PageShell>
+    <PageShell footerMode="minimal">
       <section className="section py-8">
         <div className="container-page max-w-5xl">
           {/* Header controls (hidden on print) */}
