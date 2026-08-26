@@ -172,22 +172,26 @@ export function AppFooter() {
 
           <FooterCol title="Events" links={[
             ["Upcoming Events", "/events"],
-            ["Past Races", "/events"],
-            ["Event Gallery", "/gallery"],
-            ["Leaderboard", "/leaderboard"],
+            ["National Leaderboard", "/leaderboard"],
+            ["Finisher Gallery", "/gallery"],
+            ["Track Medals & Bib", "/prize"],
+            ["Event Registration", "/register"],
           ]} />
 
-          <FooterCol title="Help & Support" links={[
-            ["Official Gallery", "/gallery"],
-            ["Leaderboard", "/leaderboard"],
-            ["Contact Support", "mailto:mountainrunofficial@gmail.com"],
-          ]} />
-
-          <FooterCol title="Account" links={[
+          <FooterCol title="Runners Hub" links={[
+            ["My Dashboard", "/dashboard"],
             ["Sign In", "/sign-in"],
             ["Create Account", "/sign-up"],
-            ["My Dashboard", "/dashboard"],
-            ["My Certificates", "/dashboard"],
+            ["Refer & Earn", "/refer"],
+            ["Help & Support", "mailto:mountainrunofficial@gmail.com"],
+          ]} />
+
+          <FooterCol title="Policies & Legal" links={[
+            ["Privacy Policy", "/privacy"],
+            ["Terms of Service", "/terms"],
+            ["Refund & Cancellation", "/refund"],
+            ["Shipping & Delivery", "/shipping"],
+            ["Policy Center", "/policies"],
           ]} />
 
         </div>
