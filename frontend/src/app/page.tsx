@@ -80,30 +80,31 @@ export default async function Home() {
       <AppHeader />
 
       <main className="flex-1 pt-[4.5rem] sm:pt-[5rem] md:pt-[5.5rem]">
+        {/* 1. Brand Introduction Hero */}
         <HomeHero />
-        <HomeSteps />
 
+        {/* 2. 🔥 Live Active Virtual Races (Immediate Spotlight) */}
         <section
           className="section border-b border-(--line) relative overflow-hidden"
           style={{
             background:
-              "radial-gradient(at 100% 0%, rgba(13, 148, 136, 0.03) 0px, transparent 65%), radial-gradient(at 0% 100%, rgba(99, 102, 241, 0.04) 0px, transparent 65%), var(--background)",
+              "radial-gradient(at 100% 0%, rgba(212, 175, 55, 0.05) 0px, transparent 65%), radial-gradient(at 0% 100%, rgba(16, 185, 129, 0.04) 0px, transparent 65%), var(--background)",
           }}
         >
           <div
             aria-hidden="true"
-            className="absolute top-1/4 left-10 h-80 w-80 rounded-full bg-teal-500/3 blur-3xl pointer-events-none"
+            className="absolute top-1/4 left-10 h-80 w-80 rounded-full bg-(--gold)/5 blur-3xl pointer-events-none"
           />
           <div
             aria-hidden="true"
-            className="absolute bottom-1/4 right-10 h-80 w-80 rounded-full bg-indigo-500/4 blur-3xl pointer-events-none"
+            className="absolute bottom-1/4 right-10 h-80 w-80 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none"
           />
 
           <div className="container-page relative z-10">
             <HomeSectionHeader
               action={
                 <Link className="btn btn-secondary group w-full sm:w-auto" href="/events">
-                  View all events
+                  Browse all races
                   <ArrowUpRight
                     aria-hidden="true"
                     className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
@@ -111,17 +112,22 @@ export default async function Home() {
                 </Link>
               }
               align="split"
-              eyebrow="Upcoming"
-              lead="Admin-featured events show first. Choose a distance and register from the event page."
-              title="Open events"
+              eyebrow="Open For Registration"
+              lead="Featured live races. Choose your distance and claim your authentic finisher medal."
+              title="Featured virtual races"
             />
 
             <HomeEvents initial={serverEvents} />
           </div>
         </section>
 
+        {/* 3. ⚡ How It Works (3 Steps) */}
+        <HomeSteps />
+
+        {/* 4. 🥇 Finisher Rewards & Medal Perks */}
         <HomeRewards />
-        {/* Moments + reviews are admin-managed via /admin/content (with static fallbacks). */}
+
+        {/* 5. 📸 Athlete Gallery, FAQ & Reviews */}
         <HomeGalleryPreview moments={serverHome?.moments} />
         <HomeFaq />
         <HomeReviews testimonials={serverHome?.testimonials} />
