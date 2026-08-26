@@ -590,15 +590,20 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
     };
   });
 
-  // Generate deterministic realistic padding if real finishers are under 35
-  const paddedRows = generatePaddedLeaderboard(event.slug, activeDistance, 35);
+  const now = new Date();
+  // An event is upcoming if its startsAt date is in the future, or if it is the current open sports day event
+  const isUpcoming = event.startsAt ? now < new Date(event.startsAt) : event.slug === "sports-day-celebration";
 
-  // Merge real + padded (prioritizing real users)
+  // For upcoming events (not started yet), do NOT inject fake/padded finishers!
+  // Only completed/past events or started races can have padded historical benchmarks if enabled.
   const mergedRows = [...realLeaderboardRows];
-  for (const dummy of paddedRows) {
-    if (mergedRows.length >= 35) break;
-    if (!mergedRows.some((r) => r.runnerName.toLowerCase() === dummy.runnerName.toLowerCase())) {
-      mergedRows.push(dummy);
+  if (!isUpcoming && realLeaderboardRows.length < 35 && event.status === "COMPLETED") {
+    const paddedRows = generatePaddedLeaderboard(event.slug, activeDistance, 35);
+    for (const dummy of paddedRows) {
+      if (mergedRows.length >= 35) break;
+      if (!mergedRows.some((r) => r.runnerName.toLowerCase() === dummy.runnerName.toLowerCase())) {
+        mergedRows.push(dummy);
+      }
     }
   }
 
@@ -643,6 +648,9 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
       eventId: event.id,
       eventSlug: event.slug,
       eventTitle: event.title,
+      isUpcoming,
+      startsAt: event.startsAt,
+      endsAt: event.endsAt,
       availableDistances,
       selectedDistance: activeDistance,
       totalVerified: rankedLeaderboard.length,

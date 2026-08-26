@@ -273,6 +273,12 @@ export function LeaderboardClient() {
     "10 km",
     "21 km",
   ]);
+  const [eventMeta, setEventMeta] = useState<{
+    isUpcoming?: boolean;
+    startsAt?: string | null;
+    endsAt?: string | null;
+    eventTitle?: string;
+  }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -343,6 +349,13 @@ export function LeaderboardClient() {
       setEntries(rankedData);
       setParticipants(rosterData);
       setUserRegistrations(userRegs);
+      if (json.meta) {
+        setEventMeta(json.meta);
+        // If event is upcoming and has no finished ranks yet, default to participants roster
+        if (json.meta.isUpcoming && rankedData.length === 0) {
+          setActiveTab("participants");
+        }
+      }
       if (distList.length > 0) {
         setAvailableDistances(distList);
       }
@@ -569,7 +582,9 @@ export function LeaderboardClient() {
                   )}
                 >
                   <Trophy className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                  <span className="truncate">Verified Leaderboard</span>
+                  <span className="truncate">
+                    {entries.length > 0 ? `Verified Leaderboard (${entries.length})` : "Leaderboard (Unlocks Aug 29)"}
+                  </span>
                 </button>
                 <button
                   onClick={() => setActiveTab("participants")}
@@ -581,7 +596,9 @@ export function LeaderboardClient() {
                   )}
                 >
                   <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                  <span className="truncate">Event Roster</span>
+                  <span className="truncate">
+                    Starting Grid ({participants.length})
+                  </span>
                 </button>
               </div>
 
@@ -677,183 +694,213 @@ export function LeaderboardClient() {
               {/* ── TAB 1: VERIFIED LEADERBOARD ─────────────────────── */}
               {activeTab === "verified" && (
                 <div className="mt-6 sm:mt-8 space-y-6 sm:space-y-8">
-                  {/* TOP 3 PODIUM (Visible when no search active and at least 3 entries exist) */}
-                  {!searchQuery && entries.length >= 3 && (
-                    <div>
-                      <div className="mb-3.5 text-center">
-                        <p className="text-[0.65rem] sm:text-xs font-bold uppercase tracking-wider text-amber-500">
-                          Podium Finishers
-                        </p>
-                        <h2 className="text-lg sm:text-2xl font-bold tracking-tight text-foreground">
-                          Top 3 in {selectedDistance}
-                        </h2>
+                  {entries.length === 0 ? (
+                    /* ── UNSTARTED / UPCOMING RACE UNLOCK STATE ── */
+                    <div className="rounded-3xl border border-(--gold-line)/40 bg-[#121217] p-6 sm:p-10 text-center shadow-xl">
+                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-(--gold-soft) text-(--gold-deep) border border-(--gold-line)">
+                        <Clock className="h-8 w-8" />
                       </div>
 
-                      {/* Responsive Podium Grid: 1st Place on Top on Mobile, 3 cols on Desktop */}
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-5">
-                        {/* 2nd Place (Desktop Left, Mobile 2nd) */}
-                        {topThree.second && (
-                          <div className="order-2 sm:order-1">
-                            <PodiumCard
-                              entry={topThree.second}
-                              position={2}
-                              activeDistance={selectedDistance}
-                            />
-                          </div>
-                        )}
-
-                        {/* 1st Place (Desktop Center Elevated, Mobile 1st) */}
-                        {topThree.first && (
-                          <div className="order-1 sm:order-2">
-                            <PodiumCard
-                              entry={topThree.first}
-                              position={1}
-                              activeDistance={selectedDistance}
-                            />
-                          </div>
-                        )}
-
-                        {/* 3rd Place (Desktop Right, Mobile 3rd) */}
-                        {topThree.third && (
-                          <div className="order-3 sm:order-3">
-                            <PodiumCard
-                              entry={topThree.third}
-                              position={3}
-                              activeDistance={selectedDistance}
-                            />
-                          </div>
-                        )}
+                      <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-xs font-bold text-emerald-400">
+                        <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>Registrations Live · Race Window: 29 Aug – 3 Sep 2026</span>
                       </div>
-                    </div>
-                  )}
 
-                  {/* FULL RANKINGS TABLE */}
-                  <div className="overflow-hidden rounded-2xl border border-(--line) bg-(--panel) shadow-xs">
-                    <div className="border-b border-(--line) bg-(--panel-soft) px-3.5 py-3 sm:px-6 flex items-center justify-between">
-                      <h3 className="text-xs sm:text-sm font-bold text-foreground">
-                        All Verified Finishers · {selectedDistance}
+                      <h3 className="mt-3 text-xl sm:text-2xl font-black text-foreground">
+                        Official Leaderboard for {eventMeta.eventTitle || "This Event"} Unlocks on 29 August
                       </h3>
+
+                      <p className="mt-2 text-xs sm:text-sm text-(--muted) max-w-md mx-auto leading-relaxed">
+                        Sports Day Celebration has not started yet. Once the race window opens on August 29th, participants will upload their Strava/Garmin run proofs, and live verified rankings with GPS times will appear here.
+                      </p>
+
+                      <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                        <button
+                          onClick={() => setActiveTab("participants")}
+                          className="btn btn-secondary w-full sm:w-auto text-xs sm:text-sm px-5 py-2.5 font-bold cursor-pointer"
+                        >
+                          <Users className="h-4 w-4" />
+                          View Starting Grid ({participants.length} Registered)
+                        </button>
+                        <Link
+                          href={`/events/${selectedSlug}`}
+                          className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-linear-to-r from-(--gold) to-(--gold-deep) px-6 py-2.5 text-xs sm:text-sm font-black text-black shadow-md transition-all hover:brightness-110"
+                        >
+                          <span>Register &amp; Claim Bib (₹399)</span>
+                          <span>→</span>
+                        </Link>
+                      </div>
                     </div>
+                  ) : (
+                    <>
+                      {/* TOP 3 PODIUM (Visible when no search active and at least 3 entries exist) */}
+                      {!searchQuery && entries.length >= 3 && (
+                        <div>
+                          <div className="mb-3.5 text-center">
+                            <p className="text-[0.65rem] sm:text-xs font-bold uppercase tracking-wider text-amber-500">
+                              Podium Finishers
+                            </p>
+                            <h2 className="text-lg sm:text-2xl font-bold tracking-tight text-foreground">
+                              Top 3 in {selectedDistance}
+                            </h2>
+                          </div>
 
-                    <div className="overflow-x-auto touch-pan-x" style={{ WebkitOverflowScrolling: "touch" }}>
-                      <table className="w-full min-w-140 sm:min-w-152 text-left text-xs sm:text-sm">
-                        <thead>
-                          <tr className="border-b border-(--line) bg-(--panel-soft)/50 text-[0.6rem] sm:text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
-                            <th className="px-3 py-3 sm:px-4 sm:py-3.5">Rank</th>
-                            <th className="px-3 py-3 sm:px-4 sm:py-3.5">Runner</th>
-                            <th className="px-3 py-3 sm:px-4 sm:py-3.5">Bib #</th>
-                            <th className="px-3 py-3 sm:px-4 sm:py-3.5">City</th>
-                            <th className="px-3 py-3 sm:px-4 sm:py-3.5">Distance</th>
-                            <th className="px-3 py-3 sm:px-4 sm:py-3.5">Pace</th>
-                            <th className="px-3 py-3 sm:px-4 sm:py-3.5">Finish Time</th>
-                            <th className="px-3 py-3 sm:px-4 sm:py-3.5">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredEntries.map((row, idx) => {
-                            const isYou =
-                              Boolean(currentClerkId && row.clerkId === currentClerkId) ||
-                              Boolean(user?.fullName && row.runnerName.toLowerCase() === user.fullName.toLowerCase());
-                            const isTop3 = row.rank <= 3;
+                          {/* Responsive Podium Grid */}
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-5">
+                            {topThree.second && (
+                              <div className="order-2 sm:order-1">
+                                <PodiumCard
+                                  entry={topThree.second}
+                                  position={2}
+                                  activeDistance={selectedDistance}
+                                />
+                              </div>
+                            )}
 
-                            return (
-                              <motion.tr
-                                key={`${row.rank}-${row.bibNumber || row.runnerName}`}
-                                initial={reduce ? false : { opacity: 0, x: -6 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.2, delay: Math.min(idx * 0.02, 0.3) }}
-                                className={cn(
-                                  "border-b border-(--line) last:border-b-0 transition-colors hover:bg-(--panel-soft)/70",
-                                  isYou && "bg-(--sage-soft) ring-1 ring-(--sage)/40",
-                                  isTop3 && "font-medium",
-                                )}
-                              >
-                                {/* Rank */}
-                                <td className="px-3 py-2.5 sm:px-4 sm:py-3.5">
-                                  <div className="flex items-center gap-1 font-mono text-xs font-bold">
-                                    {row.rank === 1 ? (
-                                      <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-md sm:rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
-                                        🥇
-                                      </span>
-                                    ) : row.rank === 2 ? (
-                                      <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-md sm:rounded-lg bg-slate-400/20 text-slate-600 dark:text-slate-300">
-                                        🥈
-                                      </span>
-                                    ) : row.rank === 3 ? (
-                                      <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-md sm:rounded-lg bg-amber-800/20 text-amber-800 dark:text-amber-300">
-                                        🥉
-                                      </span>
-                                    ) : (
-                                      <span className="w-5 sm:w-6 text-center text-(--muted)">
-                                        #{row.rank}
-                                      </span>
+                            {topThree.first && (
+                              <div className="order-1 sm:order-2">
+                                <PodiumCard
+                                  entry={topThree.first}
+                                  position={1}
+                                  activeDistance={selectedDistance}
+                                />
+                              </div>
+                            )}
+
+                            {topThree.third && (
+                              <div className="order-3 sm:order-3">
+                                <PodiumCard
+                                  entry={topThree.third}
+                                  position={3}
+                                  activeDistance={selectedDistance}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* FULL RANKINGS TABLE */}
+                      <div className="overflow-hidden rounded-2xl border border-(--line) bg-(--panel) shadow-xs">
+                        <div className="border-b border-(--line) bg-(--panel-soft) px-3.5 py-3 sm:px-6 flex items-center justify-between">
+                          <h3 className="text-xs sm:text-sm font-bold text-foreground">
+                            All Verified Finishers · {selectedDistance}
+                          </h3>
+                        </div>
+
+                        <div className="overflow-x-auto touch-pan-x" style={{ WebkitOverflowScrolling: "touch" }}>
+                          <table className="w-full min-w-140 sm:min-w-152 text-left text-xs sm:text-sm">
+                            <thead>
+                              <tr className="border-b border-(--line) bg-(--panel-soft)/50 text-[0.6rem] sm:text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
+                                <th className="px-3 py-3 sm:px-4 sm:py-3.5">Rank</th>
+                                <th className="px-3 py-3 sm:px-4 sm:py-3.5">Runner</th>
+                                <th className="px-3 py-3 sm:px-4 sm:py-3.5">Bib #</th>
+                                <th className="px-3 py-3 sm:px-4 sm:py-3.5">City</th>
+                                <th className="px-3 py-3 sm:px-4 sm:py-3.5">Distance</th>
+                                <th className="px-3 py-3 sm:px-4 sm:py-3.5">Pace</th>
+                                <th className="px-3 py-3 sm:px-4 sm:py-3.5">Finish Time</th>
+                                <th className="px-3 py-3 sm:px-4 sm:py-3.5">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {filteredEntries.map((row, idx) => {
+                                const isYou =
+                                  Boolean(currentClerkId && row.clerkId === currentClerkId) ||
+                                  Boolean(user?.fullName && row.runnerName.toLowerCase() === user.fullName.toLowerCase());
+                                const isTop3 = row.rank <= 3;
+
+                                return (
+                                  <motion.tr
+                                    key={`${row.rank}-${row.bibNumber || row.runnerName}`}
+                                    initial={reduce ? false : { opacity: 0, x: -6 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.2, delay: Math.min(idx * 0.02, 0.3) }}
+                                    className={cn(
+                                      "border-b border-(--line) last:border-b-0 transition-colors hover:bg-(--panel-soft)/70",
+                                      isYou && "bg-(--sage-soft) ring-1 ring-(--sage)/40",
+                                      isTop3 && "font-medium",
                                     )}
-                                  </div>
-                                </td>
-
-                                {/* Runner Avatar & Name */}
-                                <td className="px-3 py-2.5 sm:px-4 sm:py-3.5">
-                                  <div className="flex items-center gap-2 sm:gap-2.5">
-                                    <div className="flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-lg border border-(--line) bg-(--panel-soft) text-[0.6rem] sm:text-[0.65rem] font-bold text-foreground">
-                                      {getInitials(row.runnerName)}
-                                    </div>
-                                    <div>
-                                      <p className="font-semibold text-foreground flex items-center gap-1.5 text-xs sm:text-sm">
-                                        {row.runnerName}
-                                        {isYou && (
-                                          <span className="rounded-full bg-(--sage) px-1.5 py-0.2 text-[0.55rem] sm:text-[0.6rem] font-bold uppercase tracking-wider text-white">
-                                            You
+                                  >
+                                    <td className="px-3 py-2.5 sm:px-4 sm:py-3.5">
+                                      <div className="flex items-center gap-1 font-mono text-xs font-bold">
+                                        {row.rank === 1 ? (
+                                          <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-md sm:rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                                            🥇
+                                          </span>
+                                        ) : row.rank === 2 ? (
+                                          <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-md sm:rounded-lg bg-slate-400/20 text-slate-600 dark:text-slate-300">
+                                            🥈
+                                          </span>
+                                        ) : row.rank === 3 ? (
+                                          <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-md sm:rounded-lg bg-amber-800/20 text-amber-800 dark:text-amber-300">
+                                            🥉
+                                          </span>
+                                        ) : (
+                                          <span className="w-5 sm:w-6 text-center text-(--muted)">
+                                            #{row.rank}
                                           </span>
                                         )}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </td>
+                                      </div>
+                                    </td>
 
-                                {/* Bib */}
-                                <td className="px-3 py-2.5 sm:px-4 sm:py-3.5 font-mono text-[0.7rem] sm:text-xs text-(--muted)">
-                                  {row.bibNumber || `MR-${parseKm(selectedDistance)}K-${100 + row.rank}`}
-                                </td>
+                                    <td className="px-3 py-2.5 sm:px-4 sm:py-3.5">
+                                      <div className="flex items-center gap-2 sm:gap-2.5">
+                                        <div className="flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-lg border border-(--line) bg-(--panel-soft) text-[0.6rem] sm:text-[0.65rem] font-bold text-foreground">
+                                          {getInitials(row.runnerName)}
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold text-foreground flex items-center gap-1.5 text-xs sm:text-sm">
+                                            {row.runnerName}
+                                            {isYou && (
+                                              <span className="rounded-full bg-(--sage) px-1.5 py-0.2 text-[0.55rem] sm:text-[0.6rem] font-bold uppercase tracking-wider text-white">
+                                                You
+                                              </span>
+                                            )}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </td>
 
-                                {/* City */}
-                                <td className="px-3 py-2.5 sm:px-4 sm:py-3.5 text-[0.7rem] sm:text-xs text-(--muted)">
-                                  {row.city || "India"}
-                                </td>
+                                    <td className="px-3 py-2.5 sm:px-4 sm:py-3.5 font-mono text-[0.7rem] sm:text-xs text-(--muted)">
+                                      {row.bibNumber || `MR-${parseKm(selectedDistance)}K-${100 + row.rank}`}
+                                    </td>
 
-                                {/* Distance */}
-                                <td className="px-3 py-2.5 sm:px-4 sm:py-3.5 font-medium text-foreground text-[0.7rem] sm:text-xs">
-                                  {row.distance || selectedDistance}
-                                </td>
+                                    <td className="px-3 py-2.5 sm:px-4 sm:py-3.5 text-[0.7rem] sm:text-xs text-(--muted)">
+                                      {row.city || "India"}
+                                    </td>
 
-                                {/* Pace */}
-                                <td className="px-3 py-2.5 sm:px-4 sm:py-3.5 font-mono text-[0.7rem] sm:text-xs font-semibold text-(--sage)">
-                                  {formatPace(row.finishTimeSeconds, selectedDistance)}
-                                </td>
+                                    <td className="px-3 py-2.5 sm:px-4 sm:py-3.5 font-medium text-foreground text-[0.7rem] sm:text-xs">
+                                      {row.distance || selectedDistance}
+                                    </td>
 
-                                {/* Time */}
-                                <td className="px-3 py-2.5 sm:px-4 sm:py-3.5 font-mono text-[0.7rem] sm:text-xs font-bold text-foreground">
-                                  {formatTime(row.finishTimeSeconds)}
-                                </td>
+                                    <td className="px-3 py-2.5 sm:px-4 sm:py-3.5 font-mono text-[0.7rem] sm:text-xs font-semibold text-(--sage)">
+                                      {formatPace(row.finishTimeSeconds, selectedDistance)}
+                                    </td>
 
-                                {/* Status */}
-                                <td className="px-3 py-2.5 sm:px-4 sm:py-3.5">
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[0.6rem] sm:text-[0.65rem] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                                    <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> Verified
-                                  </span>
-                                </td>
-                              </motion.tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
+                                    <td className="px-3 py-2.5 sm:px-4 sm:py-3.5 font-mono text-[0.7rem] sm:text-xs font-bold text-foreground">
+                                      {formatTime(row.finishTimeSeconds)}
+                                    </td>
 
-                    {filteredEntries.length === 0 && (
-                      <div className="py-10 text-center text-xs sm:text-sm text-(--muted)">
-                        No runners match &ldquo;{searchQuery}&rdquo;. Try another name or bib number.
+                                    <td className="px-3 py-2.5 sm:px-4 sm:py-3.5">
+                                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[0.6rem] sm:text-[0.65rem] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                                        <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> Verified
+                                      </span>
+                                    </td>
+                                  </motion.tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {filteredEntries.length === 0 && searchQuery && (
+                          <div className="py-10 text-center text-xs sm:text-sm text-(--muted)">
+                            No runners match &ldquo;{searchQuery}&rdquo;. Try another name or bib number.
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </>
+                  )}
                 </div>
               )}
 
