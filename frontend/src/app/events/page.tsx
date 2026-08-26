@@ -78,7 +78,7 @@ export default async function EventsPage() {
           ))}
         </div>
 
-        <div className="container-page py-6 sm:py-8">
+        <div className="container-page py-8 sm:py-12">
           <Breadcrumb
             items={[
               { name: "Home", href: "/" },
@@ -87,22 +87,34 @@ export default async function EventsPage() {
           />
 
           <div className="mx-auto mt-6 max-w-2xl text-center sm:mt-8">
-            <p className="eyebrow">Virtual Running &amp; Marathon Events</p>
-            <h1 className="mt-3 text-3xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl">
-              Upcoming virtual running events &amp; marathons
+            <div className="inline-flex items-center gap-2 rounded-full border border-(--gold-line) bg-(--gold-soft) px-3.5 py-1 text-[0.68rem] font-bold uppercase tracking-widest text-(--gold-deep) shadow-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              Pan-India Virtual Running Events
+            </div>
+
+            <h1 className="mt-4 text-3xl font-black leading-[1.1] tracking-tight text-foreground sm:text-5xl">
+              Find your next <span className="text-gradient-premium">virtual race</span>
             </h1>
-            <p className="lede mx-auto mt-4 max-w-xl">
-              Choose your challenge, run anywhere at your pace with Strava or Garmin, and claim authentic heavy metal finisher medals delivered across India.
+
+            <p className="lede mx-auto mt-3 max-w-xl text-sm sm:text-base text-(--muted)">
+              Run anywhere at your own pace with Strava, Nike, or Garmin. Complete your distance and claim authentic heavy metal finisher medals delivered to your doorstep.
             </p>
-            <div className="mt-5 flex flex-wrap justify-center gap-2">
+
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
               {[
-                { label: "Medals", icon: Medal },
-                { label: "T-shirts", icon: Shirt },
-                { label: "Certificates", icon: FileText },
-                { label: "Leaderboard", icon: Trophy },
+                { label: "Heavy Metal Medals", icon: Medal },
+                { label: "DRI-FIT T-Shirts", icon: Shirt },
+                { label: "Official Certificate", icon: FileText },
+                { label: "National Leaderboard", icon: Trophy },
               ].map(({ label, icon: Icon }) => (
-                <span key={label} className="inline-flex items-center gap-1.5 rounded-full border border-(--line) bg-(--sage-soft) px-3 py-1 text-xs font-semibold text-(--sage)">
-                  <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-(--panel-soft)/80 px-3 py-1 text-xs font-semibold text-foreground backdrop-blur-xs shadow-xs"
+                >
+                  <Icon className="h-3.5 w-3.5 text-(--gold)" strokeWidth={1.75} />
                   {label}
                 </span>
               ))}

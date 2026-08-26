@@ -34,12 +34,12 @@ function EventCard({ event, variant = "upcoming" }: { event: PublicEvent; varian
   const hasBannerImage = Boolean(event.bannerImageUrl);
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-(--line) bg-(--panel) transition-all duration-300 hover:border-(--sage)/30 hover:shadow-lg">
+    <article className="group flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#141419] shadow-lg transition-all duration-300 hover:border-(--gold-line)/60 hover:shadow-2xl">
       <Link
         href={`/events/${event.slug}`}
         className="flex flex-1 flex-col cursor-pointer"
       >
-        <div className={`relative overflow-hidden ${hasBannerImage ? "min-h-36 bg-(--panel-soft)" : isPast ? "bg-(--panel-soft)" : "bg-linear-to-br from-(--sage) to-emerald-600"}`}>
+        <div className={`relative overflow-hidden ${hasBannerImage ? "min-h-44 bg-(--panel-soft)" : isPast ? "bg-(--panel-soft)" : "bg-linear-to-br from-emerald-800 to-indigo-900"}`}>
           {event.bannerImageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -48,86 +48,82 @@ function EventCard({ event, variant = "upcoming" }: { event: PublicEvent; varian
               src={event.bannerImageUrl}
             />
           ) : null}
-          {hasBannerImage ? <div aria-hidden className="absolute inset-0 bg-linear-to-t from-black/80 via-black/35 to-black/10" /> : null}
-          <div className={`relative z-10 px-4 py-3 sm:px-5 sm:py-3.5 ${hasBannerImage ? "flex min-h-36 flex-col justify-end" : ""}`}>
+          {hasBannerImage ? <div aria-hidden className="absolute inset-0 bg-linear-to-t from-[#141419] via-black/40 to-black/20" /> : null}
+          <div className={`relative z-10 px-4 py-3 sm:px-5 sm:py-3.5 ${hasBannerImage ? "flex min-h-44 flex-col justify-between" : ""}`}>
             <div className="flex items-start justify-between gap-2">
-              <p className={`text-[0.6rem] font-semibold uppercase tracking-widest ${hasBannerImage ? "text-white/80" : isPast ? "text-(--muted)" : "text-white/70"}`}>
-                {event.banner}
-              </p>
+              <span className="rounded-full bg-black/50 border border-white/20 px-2.5 py-0.5 text-[0.62rem] font-black uppercase tracking-wider text-white backdrop-blur-md">
+                {event.banner || "VIRTUAL RACE"}
+              </span>
               {isPast ? (
-                <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider ${hasBannerImage ? "border-white/20 bg-black/35 text-white backdrop-blur-sm" : "border-(--line) bg-(--panel-soft)/80 text-(--muted)"}`}>
+                <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/50 px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-(--muted) backdrop-blur-md">
                   <span className="h-1.5 w-1.5 rounded-full bg-(--muted-soft)" />
-                  Registration Closed
+                  Completed
                 </span>
               ) : (
-                <motion.span
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2, duration: 0.4 }}
-                  className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-white backdrop-blur-sm"
-                >
-                  <motion.span
-                    animate={{ opacity: [1, 0.4, 1] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    className="h-1.5 w-1.5 rounded-full bg-emerald-300"
-                  />
-                  Registration Open
-                </motion.span>
+                <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/30 border border-emerald-400/40 px-2.5 py-0.5 text-[0.62rem] font-black uppercase tracking-wider text-emerald-300 backdrop-blur-md">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Live Registration
+                </span>
               )}
             </div>
-            <p className={`mt-1 text-xs font-medium ${hasBannerImage ? "text-white/90" : isPast ? "text-(--muted)" : "text-white/80"}`}>{event.reward}</p>
+            <p className="mt-1 text-xs font-bold text-white drop-shadow-md">{event.reward}</p>
           </div>
-          {!isPast && !hasBannerImage && <div aria-hidden className="absolute inset-0 bg-linear-to-t from-black/10 to-transparent pointer-events-none" />}
         </div>
 
         <div className="flex flex-1 flex-col p-4 pb-0 sm:p-5 sm:pb-0">
           <div className="flex items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1 rounded-md border border-(--line) bg-(--panel-soft) px-2 py-1 text-[0.6rem] font-medium text-(--muted)">
-              <CalendarDays className="h-3 w-3 text-(--muted-soft)" />
+            <span className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[0.65rem] font-semibold text-(--muted)">
+              <CalendarDays className="h-3.5 w-3.5 text-(--gold)" />
               {event.date}
             </span>
-            <span className="inline-flex items-center gap-1 text-sm font-bold text-(--sage)">
-              <IndianRupee className="h-3.5 w-3.5" />
-              {event.price.replace(/^Rs\.\s*/, "").replace(/^₹/, "")}
-            </span>
+            <div className="flex items-baseline gap-1.5">
+              {!isPast && (
+                <span className="text-xs text-(--muted-soft) line-through font-mono">
+                  ₹799
+                </span>
+              )}
+              <span className="inline-flex items-center text-base font-black text-(--gold)">
+                <IndianRupee className="h-4 w-4" />
+                {event.price.replace(/^Rs\.\s*/, "").replace(/^₹/, "")}
+              </span>
+            </div>
           </div>
 
-          <h3 className="mt-3 text-base font-bold tracking-tight text-foreground group-hover:text-(--sage) transition-colors sm:text-lg">{event.name}</h3>
-          <p className="mt-0.5 text-[0.6rem] font-semibold uppercase tracking-wider text-(--muted-soft)">{event.distance}</p>
-
-          {event.activityTypes && event.activityTypes.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {event.activityTypes.map((type) => (
-                <span key={type}
-                  className="rounded-md border border-(--line) bg-(--panel) px-2 py-0.5 text-[0.6rem] font-semibold capitalize text-(--muted)">
-                  {type}
-                </span>
-              ))}
-            </div>
-          )}
+          <h3 className="mt-3 text-lg font-black tracking-tight text-white group-hover:text-(--gold) transition-colors">{event.name}</h3>
+          
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            {event.distance.split(",").map((d) => (
+              <span
+                key={d.trim()}
+                className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[0.62rem] font-bold text-emerald-400"
+              >
+                {d.trim()}
+              </span>
+            ))}
+          </div>
 
           {event.medalImageUrl && (
-            <div className="mt-2.5 flex items-center gap-1.5 rounded-lg border border-(--gold-line)/40 bg-(--gold-soft) px-2.5 py-1 text-[0.65rem] font-bold text-(--gold-deep)">
-              <Medal className="h-3.5 w-3.5 shrink-0" />
-              <span>Heavyweight 3D Finisher Medal Included</span>
+            <div className="mt-3 flex items-center gap-2 rounded-xl border border-(--gold-line)/40 bg-(--gold-soft) px-3 py-1.5 text-[0.68rem] font-black text-(--gold-deep)">
+              <Medal className="h-4 w-4 shrink-0 text-(--gold)" />
+              <span>Heavyweight 3D Medal + E-Certificate</span>
             </div>
           )}
 
-          <p className="mt-2 flex-1 text-xs leading-relaxed text-(--muted) sm:text-sm">{event.highlight}</p>
+          <p className="mt-2.5 flex-1 text-xs leading-relaxed text-(--muted)">{event.highlight}</p>
 
           {isPast && (event.finishers || event.cities) && (
-            <div className="mt-3 grid grid-cols-3 gap-2 rounded-xl border border-(--line) bg-(--panel-soft) p-2.5">
+            <div className="mt-3 grid grid-cols-3 gap-2 rounded-2xl border border-white/10 bg-white/5 p-2.5">
               {[
                 { label: "Finishers", value: event.finishers, icon: Users },
                 { label: "Verified", value: event.verifiedResults, icon: BadgeCheck },
                 { label: "Cities", value: event.cities, icon: MapPin },
               ].map(({ label, value, icon: Icon }) => (
                 <div key={label} className="text-center">
-                  <Icon className="mx-auto h-3 w-3 text-(--muted-soft)" />
-                  <p className="mt-0.5 text-sm font-bold tracking-tight text-foreground">
+                  <Icon className="mx-auto h-3.5 w-3.5 text-(--muted)" />
+                  <p className="mt-0.5 text-sm font-black tracking-tight text-white">
                     {typeof value === "number" ? value.toLocaleString("en-IN") : "\u2014"}
                   </p>
-                  <p className="mt-0.5 text-[0.5rem] uppercase tracking-wider text-(--muted-soft)">{label}</p>
+                  <p className="mt-0.5 text-[0.5rem] font-bold uppercase tracking-wider text-(--muted-soft)">{label}</p>
                 </div>
               ))}
             </div>
@@ -136,17 +132,20 @@ function EventCard({ event, variant = "upcoming" }: { event: PublicEvent; varian
       </Link>
 
       <div className="p-4 sm:p-5 flex gap-2">
-        <Link className="btn btn-primary flex-1 group/btn text-sm" href={`/events/${event.slug}`}>
-          <span>{isPast ? "View recap" : "Details"}</span>
+        <Link className="btn btn-secondary flex-1 group/btn text-xs sm:text-sm font-bold" href={`/events/${event.slug}`}>
+          <span>{isPast ? "View Recap" : "Details"}</span>
           <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
         </Link>
         {!isPast ? (
-          <Link className="btn btn-secondary flex-1 group/btn text-sm" href={`/register?event=${encodeURIComponent(event.slug)}`}>
+          <Link
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-(--gold) to-(--gold-deep) px-4 py-2.5 text-xs sm:text-sm font-black text-black shadow-md shadow-(--gold)/20 transition-all hover:scale-[1.02] active:scale-95"
+            href={`/register?event=${encodeURIComponent(event.slug)}`}
+          >
             <Medal className="h-3.5 w-3.5" />
-            Register
+            <span>Register (₹399)</span>
           </Link>
         ) : (
-          <Link className="btn btn-secondary flex-1 group/btn text-sm" href="/leaderboard">
+          <Link className="btn btn-primary flex-1 group/btn text-xs sm:text-sm" href="/leaderboard">
             Results
             <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
@@ -169,9 +168,6 @@ export function EventsCatalog({
   const [past, setPast] = useState<PublicEvent[]>(
     initialPast && initialPast.length > 0 ? initialPast : staticPastEvents,
   );
-  const [source, setSource] = useState<"api" | "static">(
-    initialUpcoming && initialUpcoming.length > 0 ? "api" : "static",
-  );
 
   useEffect(() => {
     // If we already have server-rendered upcoming events, no need to flash or re-fetch immediately on client
@@ -189,7 +185,6 @@ export function EventsCatalog({
         if (cancelled || (upcomingApi.length === 0 && pastApi.length === 0)) return;
         setUpcoming(upcomingApi.map((event) => mapApiEventToPublic(event, "upcoming")));
         setPast(pastApi.map((event) => mapApiEventToPublic(event, "past")));
-        setSource("api");
       } catch {
         // keep static catalog
       }
@@ -203,20 +198,24 @@ export function EventsCatalog({
   return (
     <div className="min-w-0">
       {/* Upcoming events */}
-      <div className="mt-6 sm:mt-8">
-        <div className="flex items-end justify-between gap-2">
-          <div>
-            <p className="eyebrow">Open now</p>
-            <h2 className="mt-1.5 text-2xl font-bold tracking-tight text-(--foreground) sm:text-3xl">Upcoming events</h2>
+      <div className="mt-4 sm:mt-6">
+        <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-4">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-3 w-3 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+            </span>
+            <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl">
+              Live &amp; Upcoming Races
+            </h2>
           </div>
-          <p className="shrink-0 text-xs text-(--muted)">
-            {upcoming.length} race{upcoming.length === 1 ? "" : "s"}
-            {source === "api" ? " \u00B7 live" : ""}
-          </p>
+          <span className="rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs font-bold text-(--gold)">
+            {upcoming.length} Active {upcoming.length === 1 ? "Event" : "Events"}
+          </span>
         </div>
 
         {upcoming.length > 0 ? (
-          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {upcoming.map((event, i) => (
               <FadeIn key={event.slug} delay={i * 0.06}>
                 <EventCard event={event} variant="upcoming" />
@@ -224,32 +223,32 @@ export function EventsCatalog({
             ))}
           </div>
         ) : (
-          <div className="mt-5 flex flex-col items-center justify-center rounded-2xl border border-(--line) bg-(--panel) px-6 py-10 text-center">
-            <Sparkles className="h-7 w-7 text-(--muted-soft)" />
-            <p className="mt-2 text-sm font-semibold text-(--foreground)">No open events right now</p>
-            <p className="mt-0.5 text-xs text-(--muted)">Check back soon for new races.</p>
+          <div className="mt-6 flex flex-col items-center justify-center rounded-3xl border border-white/10 bg-[#131318] px-6 py-12 text-center">
+            <Sparkles className="h-8 w-8 text-(--gold)" />
+            <p className="mt-2 text-base font-bold text-white">No open events right now</p>
+            <p className="mt-1 text-xs text-(--muted)">Check back soon for new race releases.</p>
           </div>
         )}
       </div>
 
       {/* Past events */}
       {past.length > 0 && (
-        <div className="mt-12 border-t border-(--line) pt-8 sm:mt-14 sm:pt-10">
-          <div className="flex items-end justify-between gap-2">
+        <div className="mt-14 border-t border-white/10 pt-10 sm:mt-16">
+          <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-4">
             <div>
-              <p className="eyebrow">Archive</p>
-              <h2 className="mt-1.5 text-2xl font-bold tracking-tight text-(--foreground) sm:text-3xl">Past events</h2>
+              <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl">
+                Past Completed Races
+              </h2>
+              <p className="mt-1 text-xs text-(--muted)">
+                Archived events and Hall of Fame. Tap any event to inspect finisher results.
+              </p>
             </div>
-            <p className="shrink-0 text-xs text-(--muted)">
-              {past.length} completed race{past.length === 1 ? "" : "s"}
-            </p>
+            <span className="rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs font-semibold text-(--muted)">
+              {past.length} Finished
+            </span>
           </div>
 
-          <p className="lede mt-2 max-w-xl text-xs sm:text-sm">
-            Races that have already finished. Tap any event to see distances, rewards, and verified results.
-          </p>
-
-          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {past.map((event, i) => (
               <FadeIn key={event.slug} delay={i * 0.06}>
                 <EventCard event={event} variant="past" />
