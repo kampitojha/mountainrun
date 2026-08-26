@@ -11,34 +11,39 @@ type FaqItem = {
 
 const homeFaqs: FaqItem[] = [
   {
-    question: "What is virtual running and how does Mountain Run work in India?",
+    question: "What is a virtual run / marathon and how does Mountain Run work in India?",
     answer:
-      "Virtual running gives you the freedom to run on your own terms. Choose an event, pick your distance (1.5K, 5K, 10K, 21K), and run anytime during the event window. Track your activity with any GPS app (Strava, Garmin, Nike Run Club, Apple Watch, Google Fit) and upload a screenshot to your runner dashboard. Once verified by our arbiters, your official E-Certificate is unlocked instantly and your custom metal finisher medal is dispatched to your doorstep.",
+      "A virtual run or online marathon allows you to run anywhere across India—outdoors or on a treadmill—at your own pace and schedule. Choose an event, pick your distance (1.5K, 3K, 5K, 10K, 21K Half Marathon), and run anytime during the event window. Track with any GPS app (Strava, Garmin, Nike Run Club, Apple Fitness, Google Fit) and upload your activity screenshot to your runner dashboard. Once verified by our arbiters, your official E-Certificate is unlocked instantly and your authentic metal finisher medal and running kit are dispatched to your doorstep.",
   },
   {
-    question: "Which GPS tracking apps and smartwatches are supported?",
+    question: "What distances and running categories are available?",
     answer:
-      "We support all major running platforms including Strava, Garmin Connect, Nike Run Club (NRC), Adidas Running, Apple Fitness, Samsung Health, Google Fit, Coros, and Suunto. Both outdoor GPS runs and treadmill console photos (showing distance and elapsed time) are fully supported.",
+      "We offer categories for every runner: 1.5 km and 3 km (Starter & Youth), 5 km / 5K (Beginners & Fun Run), 10 km / 10K (Endurance Challenge), 21 km / 21K (Half Marathon), as well as Virtual Cycling and Walking challenges. Every distance entry receives the complete finisher rewards kit.",
   },
   {
-    question: "When and how will I receive my finisher medal and running kit?",
+    question: "Do I get a real metal finisher medal, DRI-FIT t-shirt, and certificate?",
     answer:
-      "Heavy embossed metal finisher medals, DRI-FIT running t-shirts, and physical race kits are dispatched via express tracked courier partners (Delhivery, Shiprocket, India Post) within 7-10 business days of GPS proof approval. You will receive live tracking updates directly in your dashboard.",
+      "Yes! Every verified finisher receives an authentic, heavy die-cast metal finisher medal, custom DRI-FIT event t-shirt, and an official verifiable E-Certificate with a unique QR code. Kits are dispatched via express tracked courier with zero delivery charges across all 19,000+ Indian pincodes.",
   },
   {
-    question: "How do I get and verify my official E-Certificate?",
+    question: "Which GPS tracking apps and smartwatches are supported for run proof?",
     answer:
-      "Your official digital certificate is generated instantly upon verification. It comes with a unique verifiable QR code, finish time, average pace, overall category rank, and can be downloaded as a high-resolution PDF to share on social media or LinkedIn.",
+      "We support all major running platforms including Strava, Garmin Connect, Nike Run Club (NRC), Adidas Running, Apple Watch / Apple Fitness, Samsung Health, Google Fit, Coros, and Suunto. Treadmill console photos showing elapsed time and distance are also fully supported.",
   },
   {
-    question: "Can beginners, joggers, and walkers participate?",
+    question: "Can beginners, kids, women, and families participate?",
     answer:
-      "Absolutely! Mountain Run is designed for all fitness levels. We offer accessible distances starting from 1.5K fun walks and 5K runs up to 10K and 21K half marathons. Walk, jog, or sprint at your own pace.",
+      "Absolutely! Mountain Run is designed for all fitness levels. We welcome beginners, joggers, kids, women runners, and families. You can walk, jog, or sprint at your own comfortable pace to complete your goal.",
   },
   {
-    question: "Do you deliver finisher medals to all cities and pincodes in India?",
+    question: "Do you deliver finisher medals to all cities across India?",
     answer:
-      "Yes, we deliver to all 19,000+ pincodes across India—covering metros like Mumbai, Delhi NCR, Bengaluru, Hyderabad, Chennai, Kolkata, Pune, as well as tier-2, tier-3 cities and remote mountain regions.",
+      "Yes, we deliver with 100% free shipping to all 19,000+ pincodes across India—covering Delhi NCR, Mumbai, Bengaluru, Pune, Hyderabad, Chennai, Kolkata, Ahmedabad, Jaipur, Chandigarh, Lucknow, Kochi, and all tier-2/tier-3 cities.",
+  },
+  {
+    question: "How do I check upcoming virtual marathons and running events for 2026?",
+    answer:
+      "You can browse our upcoming virtual running events calendar directly on the Mountain Run Events page. Choose any open challenge, complete online registration in 2 minutes, and start running!",
   },
 ];
 
@@ -70,7 +75,7 @@ export function HomeFaq() {
                 <button
                   type="button"
                   onClick={() => toggle(index)}
-                  className="flex w-full items-center justify-between gap-4 p-4 text-left font-bold text-sm text-(--foreground) sm:p-5 sm:text-base"
+                  className="flex w-full items-center justify-between gap-4 p-4 text-left font-bold text-sm text-foreground sm:p-5 sm:text-base"
                   aria-expanded={isOpen}
                 >
                   <span className="flex items-center gap-2.5">

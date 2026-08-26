@@ -4,9 +4,9 @@ import { MapPin, Package, ShieldCheck } from "lucide-react";
 import { HomeCtas } from "./home-ctas";
 
 const trustPills = [
-  { icon: ShieldCheck, label: "GPS verified finishes" },
-  { icon: MapPin, label: "Run anywhere in India" },
-  { icon: Package, label: "Medals & certificates" },
+  { icon: ShieldCheck, label: "GPS verified (Strava / Garmin)" },
+  { icon: MapPin, label: "Run anywhere across India" },
+  { icon: Package, label: "Medals, T-shirts & Free Delivery" },
 ];
 
 export function HomeHero() {
@@ -33,8 +33,8 @@ export function HomeHero() {
           </h1>
 
           <p className="lede mx-auto mt-4 max-w-xl px-2 sm:mt-6 sm:px-1">
-            Join GPS-verified 5K, 10K, and 21K Half Marathon challenges from anywhere in India.
-            Track with Strava or Garmin, rank on the national leaderboard, and get authentic heavy metal finisher medals delivered to your door.
+            Join GPS-verified 1.5K, 5K, 10K, and 21K Half Marathon challenges from anywhere in India.
+            Track with Strava, Nike Run Club, or Garmin, rank on the national leaderboard, and get authentic heavy metal finisher medals and DRI-FIT t-shirts delivered to your door with 100% free delivery.
           </p>
 
           <HomeCtas />

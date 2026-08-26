@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const metaTitle = `${event.name} 2026 | ${event.distance} Virtual Run & Marathon — Mountain Run`;
   const metaDescription = isPast
     ? `View verified results and recap for ${event.name}. Over ${event.finishers ?? 0}+ finishers across ${event.cities ?? 50}+ cities in India. Browse leaderboards and rewards.`
-    : `Register for ${event.name} (${event.distance}). Run anywhere in India, verify GPS run proof with Strava, Nike or Garmin, and claim an authentic heavy 3D metal finisher medal, custom DRI-FIT t-shirt & verified e-certificate. Entry: ${event.price}.`;
+    : `Register for ${event.name} (${event.distance}). Run anywhere in India, verify GPS run proof with Strava, Nike Run Club or Garmin, and claim an authentic heavy 3D metal finisher medal, custom DRI-FIT t-shirt & verified e-certificate. Entry: ${event.price}. Free doorstep delivery.`;
 
   const primaryImage = event.medalImageUrl || event.bannerImageUrl || "/og-image.png";
 
@@ -39,20 +39,28 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     keywords: [
       event.name,
       `${event.name} 2026`,
+      `${event.name} virtual run`,
       `${event.name} marathon`,
+      `${event.name} registration`,
+      `${event.name} medal`,
       event.distance,
-      "virtual running events",
-      "virtual marathon india",
-      "running events india 2026",
-      "5K run india",
-      "10K challenge",
-      "half marathon virtual 21k",
-      "running event with medal",
-      "marathon athlete medal",
+      "virtual run India",
+      "virtual marathon India",
+      "virtual running events 2026",
+      "5K virtual run with medal",
+      "10K virtual run with medal",
+      "21K virtual run with medal",
+      "half marathon virtual run",
+      "virtual run with medal and certificate",
+      "virtual run with t shirt",
+      "virtual run registration",
+      "finisher medal virtual run",
+      "GPS verified running India",
       "strava virtual marathon india",
       "garmin running challenges",
-      "GPS verified running",
+      "virtual fitness challenge India",
       "running certificate with qr code",
+      "virtual run free delivery",
     ],
     openGraph: {
       title: metaTitle,
