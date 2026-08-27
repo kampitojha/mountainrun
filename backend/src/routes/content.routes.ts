@@ -1,4 +1,4 @@
-import { Router } from "express";
+import express, { Router } from "express";
 import {
   adminCreateMedia,
   adminCreateTestimonial,
@@ -20,7 +20,8 @@ export const contentRouter = Router();
 
 contentRouter.get("/home", asyncHandler(getHomeContent));
 contentRouter.get("/gallery", asyncHandler(getGalleryContent));
-contentRouter.post("/gallery/submit", asyncHandler(submitGalleryPhoto));
+// Gallery photos are sent as base64 data URLs which can be several MB; allow up to 15 MB for this route only.
+contentRouter.post("/gallery/submit", express.json({ limit: "15mb" }), asyncHandler(submitGalleryPhoto));
 
 export const adminContentRouter = Router();
 
