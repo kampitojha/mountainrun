@@ -26,11 +26,22 @@
 .DS_Store
 *.pem
 
-# debug
+# debug & logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
+logs/
+
+# python cache & virtual environments
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
 
 # env files (can opt-in for committing if needed)
 .env*
@@ -45,8 +56,22 @@ yarn-error.log*
 *.tsbuildinfo
 **/next-env.d.ts
 
-# excel / local data files
-SAURAV YADAV MEDAL.xlsx
-MEDALS.xlsx
+# sensitive data, sheets, exports, database backups
 *.xlsx
-
+*.xls
+*.csv
+*.tsv
+*.ods
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.bak
+*.backup
+*.jsonl
+/data/
+/exports/
+/reports/
+/backups/
+/temp/
+/tmp/
