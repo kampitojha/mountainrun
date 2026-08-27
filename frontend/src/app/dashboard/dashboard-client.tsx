@@ -906,7 +906,10 @@ export function DashboardClient() {
                     {/* Primary Action Button */}
                     <div>
                       {!isPaid ? (
-                        <Link className="btn btn-primary h-9 px-4 text-xs font-bold" href="/register">
+                        <Link
+                          className="btn btn-primary h-9 px-4 text-xs font-bold"
+                          href={`/register?event=${reg.event?.slug || 'sports-day-celebration'}&distance=${encodeURIComponent(reg.distance)}`}
+                        >
                           Complete Payment →
                         </Link>
                       ) : canUpload(reg) ? (

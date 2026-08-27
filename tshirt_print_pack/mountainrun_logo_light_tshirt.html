@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 3800px;
+      height: 980px;
+      background: transparent;
+      overflow: hidden;
+    }
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1250 320" width="100%" height="100%" fill="none">
+  <defs>
+    <linearGradient id="mr-grad-primary" x1="40" y1="260" x2="260" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0f766e"/>
+      <stop offset="50%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+
+    <linearGradient id="mr-grad-fill" x1="40" y1="260" x2="260" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0f766e" stop-opacity="0.15"/>
+      <stop offset="50%" stop-color="#10b981" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#4f46e5" stop-opacity="0.05"/>
+    </linearGradient>
+
+    <linearGradient id="mr-grad-sun" x1="180" y1="60" x2="250" y2="130" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="60%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#f43f5e"/>
+    </linearGradient>
+
+    <linearGradient id="mr-grad-text" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0d9488"/>
+      <stop offset="50%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(40, 20)">
+    <circle cx="210" cy="95" r="38" fill="url(#mr-grad-sun)" />
+    <path d="M40 230 L105 110 L155 190 L210 85 L260 230 Z" fill="url(#mr-grad-fill)" />
+    <path d="M40 230 L105 110 L155 190 L210 85 L260 230" 
+          stroke="url(#mr-grad-primary)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M25 195 C 90 195, 115 150, 165 150 C 215 150, 225 210, 275 210" 
+          stroke="url(#mr-grad-primary)" stroke-width="16" stroke-linecap="round" />
+  </g>
+
+  <!-- Typography -->
+  <text x="360" y="185" fill="#0f172a" font-family="'Outfit', 'Montserrat', 'Inter', sans-serif" font-size="124" font-weight="600" letter-spacing="-2">Mountain <tspan fill="url(#mr-grad-text)" font-weight="900">Run</tspan></text>
+  <text x="365" y="240" fill="#64748b" font-family="'Outfit', 'Montserrat', 'Inter', sans-serif" font-size="28" font-weight="700" letter-spacing="12">VIRTUAL MARATHON &amp; RUNNING</text>
+</svg>
+</body>
+</html>

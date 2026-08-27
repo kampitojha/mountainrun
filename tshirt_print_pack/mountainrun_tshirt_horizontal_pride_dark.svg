@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1350 360" width="100%" height="100%" fill="none">
+  <defs>
+    <linearGradient id="hd-grad-primary" x1="40" y1="280" x2="280" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#14b8a6"/>
+      <stop offset="50%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+
+    <linearGradient id="hd-grad-fill" x1="40" y1="280" x2="280" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#14b8a6" stop-opacity="0.25"/>
+      <stop offset="50%" stop-color="#34d399" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#818cf8" stop-opacity="0.10"/>
+    </linearGradient>
+
+    <linearGradient id="hd-grad-sun" x1="200" y1="70" x2="280" y2="150" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="60%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#f43f5e"/>
+    </linearGradient>
+
+    <linearGradient id="hd-grad-text" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2dd4bf"/>
+      <stop offset="50%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#a5b4fc"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(40, 30)">
+    <circle cx="230" cy="105" r="42" fill="url(#hd-grad-sun)" />
+    <path d="M45 255 L115 125 L170 210 L230 95 L285 255 Z" fill="url(#hd-grad-fill)" />
+    <path d="M45 255 L115 125 L170 210 L230 95 L285 255" 
+          stroke="url(#hd-grad-primary)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M30 215 C 100 215, 125 165, 180 165 C 235 165, 245 230, 300 230" 
+          stroke="url(#hd-grad-primary)" stroke-width="18" stroke-linecap="round" />
+  </g>
+
+  <!-- Typography -->
+  <text x="390" y="195" fill="#ffffff" font-family="'Outfit', 'Montserrat', sans-serif" font-size="132" font-weight="700" letter-spacing="-2">Mountain <tspan fill="url(#hd-grad-text)" font-weight="900">Run</tspan></text>
+  
+  <g transform="translate(395, 230)">
+    <rect x="0" y="15" width="420" height="48" rx="24" fill="rgba(45, 212, 191, 0.15)" stroke="#2dd4bf" stroke-width="2" />
+    <text x="210" y="47" text-anchor="middle" fill="#fde047" font-family="'Outfit', 'Montserrat', sans-serif" font-size="22" font-weight="900" letter-spacing="8">RUN WITH PRIDE</text>
+  </g>
+</svg>

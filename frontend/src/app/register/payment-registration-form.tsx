@@ -4,6 +4,7 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import {
   CheckCircle2,
+  Clock,
   Lock,
   MapPin,
   RefreshCw,
@@ -374,34 +375,44 @@ function PaymentRegistrationFormInner() {
     clerkId: user?.id,
   });
 
-  const registeredKeys = useMemo(() => {
+  // Confirmed registrations lock out that distance
+  const confirmedRegisteredKeys = useMemo(() => {
     const set = new Set<string>();
     for (const reg of existingRegs) {
-      if (reg.status !== "CANCELLED") {
+      if (reg.status === "CONFIRMED" || reg.payment?.status === "PAID") {
         set.add(`${reg.event?.slug}::${reg.distance}`);
       }
     }
     return set;
   }, [existingRegs]);
 
-  const distanceAlreadyTaken = Boolean(
-    selectedEvent && selectedDistance && registeredKeys.has(`${selectedEvent}::${selectedDistance}`),
+  // Pending unpaid registrations allow resuming checkout
+  const pendingRegMap = useMemo(() => {
+    const map = new Map<string, ExistingReg>();
+    for (const reg of existingRegs) {
+      const isPaid = reg.status === "CONFIRMED" || reg.payment?.status === "PAID";
+      if (!isPaid && reg.status !== "CANCELLED") {
+        map.set(`${reg.event?.slug}::${reg.distance}`, reg);
+      }
+    }
+    return map;
+  }, [existingRegs]);
+
+  const isDistanceConfirmed = Boolean(
+    selectedEvent && selectedDistance && confirmedRegisteredKeys.has(`${selectedEvent}::${selectedDistance}`),
   );
 
-  const pendingSame = Boolean(
-    existingRegs.find(
-      (r) =>
-        r.event?.slug === selectedEvent &&
-        r.distance === selectedDistance &&
-        r.payment?.status === "CREATED",
-    ),
-  );
+  const currentPendingReg = useMemo(() => {
+    if (!selectedEvent || !selectedDistance) return null;
+    return pendingRegMap.get(`${selectedEvent}::${selectedDistance}`) ?? null;
+  }, [selectedEvent, selectedDistance, pendingRegMap]);
 
   // Live Bib Number Generator Preview
   const previewBibNumber = useMemo(() => {
+    if (currentPendingReg?.bibNumber) return currentPendingReg.bibNumber;
     const distNum = selectedDistance.match(/[0-9]+/)?.[0] || "5";
     return `MR-${distNum}K-${Math.floor(100 + (runnerName.length * 17) % 899)}`;
-  }, [selectedDistance, runnerName]);
+  }, [selectedDistance, runnerName, currentPendingReg]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -692,10 +703,11 @@ function PaymentRegistrationFormInner() {
                 value={selectedDistance}
               >
                 {distanceOptions.map((distance) => {
-                  const taken = registeredKeys.has(`${selectedEvent}::${distance}`);
+                  const isConfirmed = confirmedRegisteredKeys.has(`${selectedEvent}::${distance}`);
+                  const isPending = pendingRegMap.has(`${selectedEvent}::${distance}`);
                   return (
-                    <option disabled={taken} key={distance} value={distance}>
-                      {distance} {taken ? "(Already Registered)" : ""}
+                    <option disabled={isConfirmed} key={distance} value={distance}>
+                      {distance} {isConfirmed ? "(Already Registered - Confirmed)" : isPending ? "(Payment Pending · Complete Payment)" : ""}
                     </option>
                   );
                 })}
@@ -810,6 +822,18 @@ function PaymentRegistrationFormInner() {
             </Field>
           </div>
 
+          {/* Pending Payment Notice if Resuming */}
+          {currentPendingReg && (
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 shrink-0 text-amber-500" />
+                <span>
+                  Resuming registration for <strong>{selectedDistance}</strong> ({currentPendingReg.bibNumber || "Bib Reserved"}). Complete payment below to confirm your slot!
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Checkout Notice */}
           <div className="rounded-2xl border border-(--line) bg-(--panel-soft) p-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-xs text-(--muted)">
@@ -829,14 +853,18 @@ function PaymentRegistrationFormInner() {
 
           <button
             className="btn btn-primary w-full h-12 text-sm font-black tracking-wide shadow-lg shadow-(--sage)/20 cursor-pointer disabled:opacity-50"
-            disabled={status === "creating" || status === "paying" || distanceAlreadyTaken}
+            disabled={status === "creating" || status === "paying" || isDistanceConfirmed}
             type="submit"
           >
             {status === "creating"
               ? "Generating Order..."
               : status === "paying"
                 ? "Opening Razorpay..."
-                : `Pay ${selectedAmount} & Claim Official Bib`}
+                : isDistanceConfirmed
+                  ? `Already Registered for ${selectedDistance}`
+                  : currentPendingReg
+                    ? `Complete Pending Payment (${selectedAmount}) →`
+                    : `Pay ${selectedAmount} & Claim Official Bib`}
           </button>
         </form>
       </div>
