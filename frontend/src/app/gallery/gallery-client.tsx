@@ -1,64 +1,19 @@
 "use client";
 
 import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
-import { Camera, Heart, Loader2, MapPin, Sparkles, Trophy, Upload, X } from "lucide-react";
+import { Camera, Loader2, Upload, X } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getApiUrl } from "../../lib/api";
 import { fileToDataUrl, validateImageFile } from "../../lib/cloudinary";
 import {
-  galleryCategories,
   galleryItems as staticGalleryItems,
-  galleryStats,
-  type GalleryCategory,
   type GalleryItem,
 } from "../data/gallery";
 import { fetchGalleryContent } from "../../lib/events-api";
 import { cn } from "../../lib/cn";
 
-function useCountUp(target: number, active: boolean, duration = 1100) {
-  const [value, setValue] = useState(0);
 
-  useEffect(() => {
-    if (!active) return;
-    let frame = 0;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
-      setValue(Math.round(target * (1 - Math.pow(1 - t, 3))));
-      if (t < 1) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [active, duration, target]);
-
-  return value;
-}
-
-const statIcons = [Camera, MapPin, Sparkles, Heart] as const;
-
-function StatCard({ label, value, icon: Icon }: { label: string; value: number; icon: typeof Camera }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-10%" });
-  const count = useCountUp(value, inView);
-
-  return (
-    <div
-      ref={ref}
-      className="group relative overflow-hidden rounded-2xl border border-(--line) bg-(--panel) px-4 py-5 text-center transition-shadow hover:shadow-sm sm:px-5 sm:py-6"
-    >
-      <div aria-hidden className="pointer-events-none absolute -top-6 -right-6 h-16 w-16 rounded-full bg-(--sage)/5 blur-xl transition-all group-hover:bg-(--sage)/10" />
-      <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl border border-(--line) bg-(--panel-soft) text-(--sage) transition-all group-hover:border-(--sage)/30 group-hover:bg-(--sage)/10">
-        <Icon className="h-5 w-5" strokeWidth={1.75} />
-      </span>
-      <p className="mt-2 text-2xl font-bold tracking-tight tabular-nums text-(--foreground) sm:text-3xl">
-        {count.toLocaleString("en-IN")}
-        {value >= 100 ? "+" : ""}
-      </p>
-      <p className="mt-0.5 text-[0.65rem] font-semibold uppercase tracking-wider text-(--muted) sm:text-xs">{label}</p>
-    </div>
-  );
-}
 
 function GalleryCard({
   item,
@@ -197,22 +152,7 @@ function Lightbox({ item, onClose }: { item: GalleryItem; onClose: () => void })
   );
 }
 
-function FadeIn({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-15%" });
-  const reduce = useReducedMotion();
-  return (
-    <motion.div
-      ref={ref}
-      className={className}
-      initial={reduce ? false : { opacity: 0, y: 20 }}
-      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
-    >
-      {children}
-    </motion.div>
-  );
-}
+
 
 function SubmitPhotoModal({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState("");
@@ -499,7 +439,6 @@ function ensureSvgPath(src: string): string {
 
 export function GalleryClient() {
   const reduce = useReducedMotion();
-  const [category, setCategory] = useState<GalleryCategory>("All");
   const [active, setActive] = useState<GalleryItem | null>(null);
   const [items, setItems] = useState<GalleryItem[]>(staticGalleryItems);
   const [showSubmit, setShowSubmit] = useState(false);
@@ -525,10 +464,7 @@ export function GalleryClient() {
     };
   }, []);
 
-  const filtered = useMemo(() => {
-    if (category === "All") return items;
-    return items.filter((item) => item.category === category);
-  }, [category, items]);
+
 
   return (
     <div className="min-w-0">
@@ -568,45 +504,17 @@ export function GalleryClient() {
             </p>
           </motion.div>
 
-          <motion.div
-            className="mx-auto mt-8 grid max-w-4xl grid-cols-2 gap-3 sm:mt-10 sm:gap-4 md:grid-cols-4"
-            initial={reduce ? false : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {galleryStats.map((stat, i) => (
-              <StatCard key={stat.label} label={stat.label} value={stat.value} icon={statIcons[i]} />
-            ))}
-          </motion.div>
+
         </div>
       </section>
 
       {/* ── FILTERS + GRID ────────────────────────────────────── */}
       <section className="section pt-8 sm:pt-10">
         <div className="container-page">
-          <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible">
-            {galleryCategories.map((cat) => {
-              const on = category === cat;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setCategory(cat)}
-                  className={cn(
-                    "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-all",
-                    on
-                      ? "border-(--sage) bg-(--sage) text-(--on-accent) shadow-xs"
-                      : "border-(--line) bg-(--panel) text-(--muted) hover:border-(--line-strong) hover:text-(--foreground)",
-                  )}
-                >
-                  {cat}
-                </button>
-              );
-            })}
-          </div>
+
 
           <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
-            {filtered.map((item, index) => (
+            {items.map((item, index) => (
               <GalleryCard
                 key={item.id}
                 item={item}
@@ -616,7 +524,7 @@ export function GalleryClient() {
             ))}
           </div>
 
-          {filtered.length === 0 ? (
+          {items.length === 0 ? (
             <motion.div
               className="mt-16 flex flex-col items-center gap-3 text-center"
               initial={{ opacity: 0, y: 12 }}
