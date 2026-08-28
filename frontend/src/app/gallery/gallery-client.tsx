@@ -499,9 +499,7 @@ export function GalleryClient() {
             <h1 className="mt-3 text-4xl font-bold leading-[1.1] tracking-tight text-(--foreground) sm:text-5xl">
               Captured moments
             </h1>
-            <p className="lede mx-auto mt-4 max-w-lg">
-              Race finishes, training miles, community runs &mdash; every frame tells a story from the Mountain Run community.
-            </p>
+
           </motion.div>
 
 
