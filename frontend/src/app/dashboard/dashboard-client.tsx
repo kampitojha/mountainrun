@@ -35,6 +35,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import { authHeaders, getApiUrl, readApiError } from "../../lib/api";
 import { cn } from "../../lib/cn";
 import { parseTimeToSeconds, validateProofForm } from "../../lib/validation";
+import { getEventBySlug } from "../data/events";
 
 type Registration = {
   id: string;
@@ -694,6 +695,24 @@ export function DashboardClient() {
               const isMedalDispatched = Boolean(reg.medalDelivery && (reg.medalDelivery.status === "DISPATCHED" || reg.medalDelivery.status === "DELIVERED"));
               const formOpen = proofRegId === reg.id;
 
+              const eventData = getEventBySlug(reg.event.slug);
+              const now = new Date();
+              let isSubmissionWindowOpen = true;
+              let isBeforeSubmission = false;
+              let isAfterSubmission = false;
+              let submissionOpensAtStr = "";
+              let submissionClosesAtStr = "";
+
+              if (eventData?.startsAt && eventData?.endsAt) {
+                const startsAt = new Date(eventData.startsAt);
+                const endsAt = new Date(eventData.endsAt);
+                isBeforeSubmission = now < startsAt;
+                isAfterSubmission = now > endsAt;
+                isSubmissionWindowOpen = !isBeforeSubmission && !isAfterSubmission;
+                submissionOpensAtStr = startsAt.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+                submissionClosesAtStr = endsAt.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+              }
+
               return (
                 <div
                   key={reg.id}
@@ -913,23 +932,35 @@ export function DashboardClient() {
                           Complete Payment →
                         </Link>
                       ) : canUpload(reg) ? (
-                        <button
-                          onClick={() => {
-                            setProofRegId(formOpen ? null : reg.id);
-                            setProofMessage(null);
-                            setProofError(null);
-                          }}
-                          className={cn(
-                            "h-9 px-4 text-xs font-bold rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5",
-                            formOpen
-                              ? "border border-(--line) bg-(--panel) text-(--muted)"
-                              : "btn btn-primary shadow-md shadow-(--sage)/20",
-                          )}
-                          type="button"
-                        >
-                          <UploadCloud className="h-4 w-4" />
-                          {formOpen ? "Close Uploader" : "Upload GPS Run Proof"}
-                        </button>
+                        isSubmissionWindowOpen ? (
+                          <button
+                            onClick={() => {
+                              setProofRegId(formOpen ? null : reg.id);
+                              setProofMessage(null);
+                              setProofError(null);
+                            }}
+                            className={cn(
+                              "h-9 px-4 text-xs font-bold rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5",
+                              formOpen
+                                ? "border border-(--line) bg-(--panel) text-(--muted)"
+                                : "btn btn-primary shadow-md shadow-(--sage)/20",
+                            )}
+                            type="button"
+                          >
+                            <UploadCloud className="h-4 w-4" />
+                            {formOpen ? "Close Uploader" : "Upload GPS Run Proof"}
+                          </button>
+                        ) : isBeforeSubmission ? (
+                          <div className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                            <Clock className="h-3.5 w-3.5" /> 
+                            <span>Proof upload opens {submissionOpensAtStr}</span>
+                          </div>
+                        ) : (
+                          <div className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-1.5 text-xs font-bold text-red-600 dark:text-red-400">
+                            <Clock className="h-3.5 w-3.5" /> 
+                            <span>Event window closed</span>
+                          </div>
+                        )
                       ) : isProofSubmitted ? (
                         <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
                           <Clock className="h-3.5 w-3.5" /> Proof Under Review

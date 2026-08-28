@@ -60,6 +60,8 @@ export const allPublicEvents: PublicEvent[] = [
     finishers: 2356,
     verifiedResults: 2245,
     cities: 52,
+    startsAt: "2026-08-29T00:00:00+05:30",
+    endsAt: "2026-09-03T23:59:59+05:30",
   },
   {
     name: "Independence Day Virtual Run 2026 🇮🇳",
