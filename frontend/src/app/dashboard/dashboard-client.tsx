@@ -45,7 +45,7 @@ type Registration = {
   proofStatus: string;
   finishTimeSeconds?: number | null;
   registeredAt: string;
-  event: { title: string; slug: string; benefits?: string[] };
+  event: { title: string; slug: string; benefits?: string[]; startsAt?: string; endsAt?: string };
   payment: { status: string; amountInPaise: number } | null;
   proofUpload?: {
     activityImageUrl: string;
@@ -702,10 +702,13 @@ export function DashboardClient() {
               let isAfterSubmission = false;
               let submissionOpensAtStr = "";
               let submissionClosesAtStr = "";
+              
+              const startStr = eventData?.startsAt || reg.event.startsAt;
+              const endStr = eventData?.endsAt || reg.event.endsAt;
 
-              if (eventData?.startsAt && eventData?.endsAt) {
-                const startsAt = new Date(eventData.startsAt);
-                const endsAt = new Date(eventData.endsAt);
+              if (startStr && endStr) {
+                const startsAt = new Date(startStr);
+                const endsAt = new Date(endStr);
                 isBeforeSubmission = now < startsAt;
                 isAfterSubmission = now > endsAt;
                 isSubmissionWindowOpen = !isBeforeSubmission && !isAfterSubmission;
