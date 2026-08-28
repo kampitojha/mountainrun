@@ -7,13 +7,9 @@ import { allPublicEvents } from "../../data/events";
 import { fetchEventBySlug } from "../../../lib/events-api";
 import { EventHero } from "./event-hero";
 import { EventStats } from "./event-stats";
-import { EventRewards } from "./event-rewards";
 import { EventHow } from "./event-how";
 import { EventSelect } from "./event-select";
 import { EventCompare } from "./event-compare";
-import { EventCommunity } from "./event-community";
-import { EventReviews } from "./event-reviews";
-import { EventCta } from "./event-cta";
 import { EventFaq } from "./faq-accordion";
 import { EventStickyCta } from "./sticky-cta-bar";
 import { Reveal, SectionHeader } from "./reveal";
@@ -216,8 +212,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         <>
           <EventHero event={event} isPast />
           <EventStats />
-          <EventCommunity />
-          <EventReviews />
 
           <section
             className="section relative overflow-hidden"
@@ -249,11 +243,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           <EventHero event={event} isPast={false} />
           <EventSelect event={event} />
           <EventStats />
-          <EventRewards event={event} />
           <EventHow event={event} />
           <EventCompare />
-          <EventCommunity />
-          <EventReviews />
 
           <section className="section border-b border-(--line)">
             <div className="container-page">
@@ -272,7 +263,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             </div>
           </section>
 
-          <EventCta event={event} />
           <EventStickyCta price={event.price} compareAtPrice={event.compareAtPrice || "Rs. 799"} slug={event.slug} />
         </>
       )}
