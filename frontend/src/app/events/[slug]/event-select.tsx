@@ -137,7 +137,7 @@ export function EventSelect({ event }: { event: PublicEvent }) {
                   <ul className="mt-3 space-y-1.5 text-[0.72rem] font-medium text-(--muted)">
                     <li className="flex items-center gap-1.5">
                       <Sparkles className="h-3 w-3 shrink-0 text-(--gold-deep)" />
-                      Finisher medal · Premium T-shirt · Printed certificate
+                      Finisher medal for everyone
                     </li>
                     <li className="flex items-center gap-1.5">
                       <Sparkles className="h-3 w-3 shrink-0 text-(--gold-deep)" />
