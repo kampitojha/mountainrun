@@ -109,9 +109,12 @@ function parseKm(distStr: string): number {
 
 function formatDuration(seconds: number | null | undefined): string {
   if (seconds == null || Number.isNaN(seconds) || seconds <= 0) return "—";
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
+  const d = Math.floor(seconds / 86400);
+  const remDay = seconds % 86400;
+  const h = Math.floor(remDay / 3600);
+  const m = Math.floor((remDay % 3600) / 60);
+  const s = Math.floor(remDay % 60);
+  if (d > 0) return `${d}d ${h}h ${m}m ${String(s).padStart(2, "0")}s`;
   if (h > 0) return `${h}h ${m}m ${String(s).padStart(2, "0")}s`;
   return `${m}m ${String(s).padStart(2, "0")}s`;
 }
@@ -415,6 +418,7 @@ export function DashboardClient() {
   }, []);
 
   const [sourceApp, setSourceApp] = useState("Strava");
+  const [finishDays, setFinishDays] = useState("");
   const [finishHours, setFinishHours] = useState("");
   const [finishMinutes, setFinishMinutes] = useState("");
   const [finishSeconds, setFinishSeconds] = useState("");
@@ -426,6 +430,7 @@ export function DashboardClient() {
   const [hidePendingBanner, setHidePendingBanner] = useState(false);
   const seq = useRef(0);
 
+  const daysInputRef = useRef<HTMLInputElement | null>(null);
   const hoursInputRef = useRef<HTMLInputElement | null>(null);
   const minutesInputRef = useRef<HTMLInputElement | null>(null);
   const secondsInputRef = useRef<HTMLInputElement | null>(null);
@@ -436,9 +441,12 @@ export function DashboardClient() {
     const parsedSecs = parseTimeToSeconds(text);
     if (parsedSecs && parsedSecs > 0) {
       e.preventDefault();
-      const h = Math.floor(parsedSecs / 3600);
-      const m = Math.floor((parsedSecs % 3600) / 60);
-      const s = parsedSecs % 60;
+      const d = Math.floor(parsedSecs / 86400);
+      const remDay = parsedSecs % 86400;
+      const h = Math.floor(remDay / 3600);
+      const m = Math.floor((remDay % 3600) / 60);
+      const s = remDay % 60;
+      setFinishDays(d > 0 ? String(d) : "");
       setFinishHours(h > 0 ? String(h).padStart(2, "0") : "");
       setFinishMinutes(String(m).padStart(2, "0"));
       setFinishSeconds(String(s).padStart(2, "0"));
@@ -446,20 +454,25 @@ export function DashboardClient() {
   }
 
   const formattedTimePreview = useMemo(() => {
+    const d = parseInt(finishDays, 10) || 0;
     const h = parseInt(finishHours, 10) || 0;
     const m = parseInt(finishMinutes, 10) || 0;
     const s = parseInt(finishSeconds, 10) || 0;
-    if (!finishHours && !finishMinutes && !finishSeconds) return null;
-    if (h === 0 && m === 0 && s === 0) return null;
+    if (!finishDays && !finishHours && !finishMinutes && !finishSeconds) return null;
+    if (d === 0 && h === 0 && m === 0 && s === 0) return null;
 
     const parts: string[] = [];
+    if (d > 0) parts.push(`${d} day${d > 1 ? "s" : ""}`);
     if (h > 0) parts.push(`${h} hr${h > 1 ? "s" : ""}`);
-    if (m > 0 || h > 0) parts.push(`${m} min${m !== 1 ? "s" : ""}`);
-    if (s > 0 || (!h && !m)) parts.push(`${s} sec${s !== 1 ? "s" : ""}`);
+    if (m > 0 || h > 0 || d > 0) parts.push(`${m} min${m !== 1 ? "s" : ""}`);
+    if (s > 0 || (!d && !h && !m)) parts.push(`${s} sec${s !== 1 ? "s" : ""}`);
 
-    const digital = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    const digital = d > 0
+      ? `${d}d ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+      : `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+
     return { label: parts.join(" "), digital };
-  }, [finishHours, finishMinutes, finishSeconds]);
+  }, [finishDays, finishHours, finishMinutes, finishSeconds]);
 
   const load = useCallback(async () => {
     const id = ++seq.current;
@@ -686,6 +699,7 @@ export function DashboardClient() {
       const errors = validateProofForm({
         proofUrls: proofPhotos.map((p) => p.name),
         sourceApp,
+        finishDays,
         finishHours,
         finishMinutes,
         finishSeconds,
@@ -696,20 +710,21 @@ export function DashboardClient() {
         throw new Error(firstError);
       }
 
+      const d = Math.max(0, parseInt(finishDays, 10) || 0);
       const h = Math.max(0, parseInt(finishHours, 10) || 0);
       const m = Math.max(0, parseInt(finishMinutes, 10) || 0);
       const s = Math.max(0, parseInt(finishSeconds, 10) || 0);
-      const totalSecs = h * 3600 + m * 60 + s;
+      const totalSecs = d * 86400 + h * 3600 + m * 60 + s;
 
-      if (!finishHours && !finishMinutes && !finishSeconds) {
-        throw new Error("Official finish time is required. Enter the total duration from your screenshot (HH:MM:SS).");
+      if (!finishDays && !finishHours && !finishMinutes && !finishSeconds) {
+        throw new Error("Official finish time is required. Enter the total duration from your screenshot.");
       }
 
       if (totalSecs < 60) {
         throw new Error("Finish time must be at least 1 minute (e.g. 00:25:30). Please check your entered time.");
       }
-      if (totalSecs > 86400) {
-        throw new Error("Finish time must be under 24 hours.");
+      if (totalSecs > 86400 * 15) {
+        throw new Error("Finish time must be under 15 days.");
       }
 
       const secs = totalSecs;
@@ -764,6 +779,7 @@ export function DashboardClient() {
       setProofMessage("Proof submitted successfully! You'll receive your e-certificate after verification.");
       setProofRegId(null);
       setProofPhotos([]);
+      setFinishDays("");
       setFinishHours("");
       setFinishMinutes("");
       setFinishSeconds("");
@@ -1636,65 +1652,96 @@ export function DashboardClient() {
                                   Required for Certificate
                                 </span>
                               </div>
-                              <div className="flex items-center gap-1.5">
-                                <input
-                                  ref={hoursInputRef}
-                                  aria-label="Hours"
-                                  className="input text-center font-mono text-xs font-bold h-10 w-16"
-                                  max={23}
-                                  min={0}
-                                  required
-                                  onPaste={handleTimePaste}
-                                  onChange={(e) => {
-                                    const val = e.target.value.slice(0, 2);
-                                    setFinishHours(val);
-                                    if (val.length === 2 && minutesInputRef.current) {
-                                      minutesInputRef.current.focus();
-                                    }
-                                  }}
-                                  placeholder="HH"
-                                  type="number"
-                                  value={finishHours}
-                                />
-                                <span className="font-mono text-sm text-(--muted)">:</span>
-                                <input
-                                  ref={minutesInputRef}
-                                  aria-label="Minutes"
-                                  className="input text-center font-mono text-xs font-bold h-10 w-16"
-                                  max={59}
-                                  min={0}
-                                  required
-                                  onPaste={handleTimePaste}
-                                  onChange={(e) => {
-                                    const val = e.target.value.slice(0, 2);
-                                    setFinishMinutes(val);
-                                    if (val.length === 2 && secondsInputRef.current) {
-                                      secondsInputRef.current.focus();
-                                    }
-                                  }}
-                                  placeholder="MM"
-                                  type="number"
-                                  value={finishMinutes}
-                                />
-                                <span className="font-mono text-sm text-(--muted)">:</span>
-                                <input
-                                  ref={secondsInputRef}
-                                  aria-label="Seconds"
-                                  className="input text-center font-mono text-xs font-bold h-10 w-16"
-                                  max={59}
-                                  min={0}
-                                  required
-                                  onPaste={handleTimePaste}
-                                  onChange={(e) => {
-                                    setFinishSeconds(e.target.value.slice(0, 2));
-                                  }}
-                                  placeholder="SS"
-                                  type="number"
-                                  value={finishSeconds}
-                                />
+                              <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
+                                <div className="flex flex-col items-center">
+                                  <span className="text-[0.58rem] font-bold text-(--muted) uppercase mb-0.5">Days</span>
+                                  <input
+                                    ref={daysInputRef}
+                                    aria-label="Days"
+                                    className="input text-center font-mono text-xs font-bold h-10 w-13"
+                                    max={15}
+                                    min={0}
+                                    onPaste={handleTimePaste}
+                                    onChange={(e) => {
+                                      const val = e.target.value.slice(0, 2);
+                                      setFinishDays(val);
+                                      if (val.length === 2 && hoursInputRef.current) {
+                                        hoursInputRef.current.focus();
+                                      }
+                                    }}
+                                    placeholder="0"
+                                    type="number"
+                                    value={finishDays}
+                                  />
+                                </div>
+                                <span className="font-mono text-xs text-(--muted) self-end pb-2.5 font-bold">d</span>
+                                <div className="flex flex-col items-center">
+                                  <span className="text-[0.58rem] font-bold text-(--muted) uppercase mb-0.5">Hours</span>
+                                  <input
+                                    ref={hoursInputRef}
+                                    aria-label="Hours"
+                                    className="input text-center font-mono text-xs font-bold h-10 w-13"
+                                    max={23}
+                                    min={0}
+                                    required
+                                    onPaste={handleTimePaste}
+                                    onChange={(e) => {
+                                      const val = e.target.value.slice(0, 2);
+                                      setFinishHours(val);
+                                      if (val.length === 2 && minutesInputRef.current) {
+                                        minutesInputRef.current.focus();
+                                      }
+                                    }}
+                                    placeholder="HH"
+                                    type="number"
+                                    value={finishHours}
+                                  />
+                                </div>
+                                <span className="font-mono text-xs text-(--muted) self-end pb-2.5 font-bold">:</span>
+                                <div className="flex flex-col items-center">
+                                  <span className="text-[0.58rem] font-bold text-(--muted) uppercase mb-0.5">Mins</span>
+                                  <input
+                                    ref={minutesInputRef}
+                                    aria-label="Minutes"
+                                    className="input text-center font-mono text-xs font-bold h-10 w-13"
+                                    max={59}
+                                    min={0}
+                                    required
+                                    onPaste={handleTimePaste}
+                                    onChange={(e) => {
+                                      const val = e.target.value.slice(0, 2);
+                                      setFinishMinutes(val);
+                                      if (val.length === 2 && secondsInputRef.current) {
+                                        secondsInputRef.current.focus();
+                                      }
+                                    }}
+                                    placeholder="MM"
+                                    type="number"
+                                    value={finishMinutes}
+                                  />
+                                </div>
+                                <span className="font-mono text-xs text-(--muted) self-end pb-2.5 font-bold">:</span>
+                                <div className="flex flex-col items-center">
+                                  <span className="text-[0.58rem] font-bold text-(--muted) uppercase mb-0.5">Secs</span>
+                                  <input
+                                    ref={secondsInputRef}
+                                    aria-label="Seconds"
+                                    className="input text-center font-mono text-xs font-bold h-10 w-13"
+                                    max={59}
+                                    min={0}
+                                    required
+                                    onPaste={handleTimePaste}
+                                    onChange={(e) => {
+                                      setFinishSeconds(e.target.value.slice(0, 2));
+                                    }}
+                                    placeholder="SS"
+                                    type="number"
+                                    value={finishSeconds}
+                                  />
+                                </div>
                               </div>
                               <p className="text-[0.68rem] text-(--muted) mt-1">
-                                Enter the total duration shown on your GPS activity screenshot.
+                                Total time from your GPS screenshot. For multi-day challenges (e.g. 30km/50km over multiple days), enter Days + Time.
                               </p>
                             </div>
                           </div>

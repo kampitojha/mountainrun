@@ -182,28 +182,34 @@ export function parseTimeToSeconds(input: string | number | null | undefined): n
   const str = String(input).trim();
   if (!str) return null;
 
-  // Format: HH:MM:SS or MM:SS (e.g. "33:06", "01:25:30")
-  if (str.includes(":")) {
-    const parts = str.split(":").map((p) => parseFloat(p.trim()));
-    if (parts.some((p) => Number.isNaN(p) || p < 0)) return null;
-    if (parts.length === 3) {
-      return Math.round((parts[0] * 3600) + (parts[1] * 60) + parts[2]);
-    }
-    if (parts.length === 2) {
-      return Math.round((parts[0] * 60) + parts[1]);
-    }
-  }
+  // Format: Days + HH:MM:SS or HH:MM:SS or MM:SS (e.g. "2d 03:33:06", "33:06", "01:25:30")
+  const dMatch = str.match(/(\d+)\s*(?:d|days?)/i);
+  const hMatch = str.match(/(\d+)\s*(?:h|hrs?|hours?)/i);
+  const mMatch = str.match(/(\d+)\s*(?:m|mins?|minutes?)/i);
+  const sMatch = str.match(/(\d+)\s*(?:s|secs?|seconds?)/i);
 
-  // Format: e.g. "33m 6s" or "1h 20m 10s"
-  const hMatch = str.match(/(\d+)\s*h/i);
-  const mMatch = str.match(/(\d+)\s*m/i);
-  const sMatch = str.match(/(\d+)\s*s/i);
-  if (hMatch || mMatch || sMatch) {
+  if (dMatch || hMatch || mMatch || sMatch) {
+    const d = dMatch ? parseInt(dMatch[1], 10) : 0;
     const h = hMatch ? parseInt(hMatch[1], 10) : 0;
     const m = mMatch ? parseInt(mMatch[1], 10) : 0;
     const s = sMatch ? parseInt(sMatch[1], 10) : 0;
-    const total = (h * 3600) + (m * 60) + s;
+    const total = d * 86400 + h * 3600 + m * 60 + s;
     return total > 0 ? total : null;
+  }
+
+  if (str.includes(":")) {
+    const parts = str.split(":").map((p) => parseFloat(p.trim()));
+    if (parts.some((p) => Number.isNaN(p) || p < 0)) return null;
+    if (parts.length === 4) {
+      // Days:Hours:Minutes:Seconds
+      return Math.round(parts[0] * 86400 + parts[1] * 3600 + parts[2] * 60 + parts[3]);
+    }
+    if (parts.length === 3) {
+      return Math.round(parts[0] * 3600 + parts[1] * 60 + parts[2]);
+    }
+    if (parts.length === 2) {
+      return Math.round(parts[0] * 60 + parts[1]);
+    }
   }
 
   // Fallback: simple numeric minutes
@@ -219,6 +225,7 @@ export function validateProofForm(data: {
   proofUrl?: string;
   proofUrls?: string[];
   sourceApp?: string;
+  finishDays?: string;
   finishMinutes?: string;
   finishHours?: string;
   finishSeconds?: string;
@@ -226,7 +233,7 @@ export function validateProofForm(data: {
   const errors: FieldErrors = {};
   const hasProof = Boolean(
     (data.proofUrl && data.proofUrl.trim()) ||
-    (data.proofUrls && data.proofUrls.some((u) => Boolean(u && u.trim()))),
+      (data.proofUrls && data.proofUrls.some((u) => Boolean(u && u.trim()))),
   );
 
   if (!hasProof) {
@@ -236,16 +243,20 @@ export function validateProofForm(data: {
     errors.sourceApp = "Select a source app.";
   }
 
+  const dStr = (data.finishDays ?? "").trim();
   const hStr = (data.finishHours ?? "").trim();
   const mStr = (data.finishMinutes ?? "").trim();
   const sStr = (data.finishSeconds ?? "").trim();
 
+  const d = Number(dStr || "0");
   const h = Number(hStr || "0");
   const m = Number(mStr || "0");
   const s = Number(sStr || "0");
 
-  if (!hStr && !mStr && !sStr) {
+  if (!dStr && !hStr && !mStr && !sStr) {
     errors.finishTime = "Official finish time is required for your finisher certificate.";
+  } else if (Number.isNaN(d) || !Number.isInteger(d) || d < 0 || d > 15) {
+    errors.finishDays = "Days must be between 0 and 15.";
   } else if (Number.isNaN(h) || !Number.isInteger(h) || h < 0 || h > 23) {
     errors.finishHours = "Hours must be between 0 and 23.";
   } else if (Number.isNaN(m) || !Number.isInteger(m) || m < 0 || m > 59) {
@@ -253,11 +264,11 @@ export function validateProofForm(data: {
   } else if (Number.isNaN(s) || !Number.isInteger(s) || s < 0 || s > 59) {
     errors.finishSeconds = "Seconds must be between 0 and 59.";
   } else {
-    const total = h * 3600 + m * 60 + s;
+    const total = d * 86400 + h * 3600 + m * 60 + s;
     if (total < 60) {
       errors.finishTime = "Finish time must be at least 1 minute (e.g. 00:25:30).";
-    } else if (total > 86400) {
-      errors.finishTime = "Finish time must be under 24 hours.";
+    } else if (total > 86400 * 15) {
+      errors.finishTime = "Finish time must be under 15 days.";
     }
   }
 

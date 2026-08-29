@@ -977,7 +977,7 @@ export default function AdminMedalDispatchPage() {
               </button>
             </div>
             <p className="text-sm text-(--muted) mb-4">
-              Paste CSV data. Must include headers. Order doesn't matter. Required columns: <code className="text-xs bg-(--panel-soft) px-1 rounded">bibNumber</code> (or <code className="text-xs bg-(--panel-soft) px-1 rounded">orderId</code>), <code className="text-xs bg-(--panel-soft) px-1 rounded">courier</code>, <code className="text-xs bg-(--panel-soft) px-1 rounded">trackingNumber</code>, <code className="text-xs bg-(--panel-soft) px-1 rounded">trackingUrl</code>.
+              Paste CSV data. Must include headers. Order does not matter. Required columns: <code className="text-xs bg-(--panel-soft) px-1 rounded">bibNumber</code> (or <code className="text-xs bg-(--panel-soft) px-1 rounded">orderId</code>), <code className="text-xs bg-(--panel-soft) px-1 rounded">courier</code>, <code className="text-xs bg-(--panel-soft) px-1 rounded">trackingNumber</code>, <code className="text-xs bg-(--panel-soft) px-1 rounded">trackingUrl</code>.
             </p>
             <textarea
               className="w-full h-48 rounded-xl border border-(--line) bg-(--panel-soft) p-3 text-xs font-mono text-(--foreground) focus:border-(--sage) outline-none"

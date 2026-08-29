@@ -35,9 +35,14 @@ export function formatFinishTime(seconds: number | null | undefined) {
     return "—";
   }
   const total = Math.round(seconds);
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
+  const d = Math.floor(total / 86400);
+  const remDay = total % 86400;
+  const h = Math.floor(remDay / 3600);
+  const m = Math.floor((remDay % 3600) / 60);
+  const s = remDay % 60;
+  if (d > 0) {
+    return `${d}d ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
   if (h > 0) {
     return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   }

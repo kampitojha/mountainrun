@@ -150,7 +150,7 @@ export const submitProofSchema = z
       .number({ message: "Official finish time is required for your certificate." })
       .int()
       .min(60, "Finish time must be at least 1 minute")
-      .max(86400, "Finish time must be under 24 hours"),
+      .max(86400 * 15, "Finish time must be under 15 days"),
   })
   .refine(
     (data) => Boolean(data.activityImageUrl || (data.activityImageUrls && data.activityImageUrls.length > 0)),
