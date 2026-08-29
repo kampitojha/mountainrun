@@ -385,7 +385,7 @@ export default function AdminOverviewPage() {
                   {data?.stats.subscribers ?? 0}
                 </div>
                 <p className="text-[0.65rem] text-(--muted) mt-0.5">
-                  <Link href="/admin/subscribers" className="text-(--sage) hover:underline">
+                  <Link href="/admin/newsletter" className="text-(--sage) hover:underline">
                     Newsletter audience →
                   </Link>
                 </p>
