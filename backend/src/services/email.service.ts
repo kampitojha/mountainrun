@@ -391,9 +391,31 @@ export function buildMedalDispatchHtml(payload: MedalDispatchEmailPayload) {
   const MUTED = "#8a7a5a";
   const LINE = "#e8dfc8";
 
-  const trackingUrl =
-    payload.trackingUrl ||
-    `https://track.dtdc.com/ctrk-tracking/tracker?awbNo=${payload.trackingNumber}`;
+  const courierUpper = (payload.courier || "").toUpperCase();
+  const isDelhivery = courierUpper.includes("DELHIVERY");
+  const isDtdc = courierUpper.includes("DTDC");
+  const isSpeedPost = courierUpper.includes("POST") || courierUpper.includes("SPEED");
+
+  let defaultTrackingUrl = "https://mountainrun.in/dashboard";
+  let courierPortalLabel = "Courier Tracking Portal";
+  let courierInstructions = "";
+
+  if (isDelhivery) {
+    defaultTrackingUrl = `https://www.delhivery.com/track/package/${encodeURIComponent(payload.trackingNumber.trim())}`;
+    courierPortalLabel = "Track Live on Delhivery";
+    courierInstructions = `Your parcel is in transit with Delhivery Express. You can track real-time movements using AWB <strong>${payload.trackingNumber}</strong>.`;
+  } else if (isDtdc) {
+    defaultTrackingUrl = "https://www.dtdc.com/track-your-shipment/";
+    courierPortalLabel = "Track on DTDC Official Portal";
+    courierInstructions = `Click the button above to visit DTDC's tracking portal and enter your AWB number <strong>${payload.trackingNumber}</strong> in the consignment box.`;
+  } else if (isSpeedPost) {
+    defaultTrackingUrl = "https://www.indiapost.gov.in/_layouts/15/dpt.cpt.application.tracking/tracking.aspx";
+    courierPortalLabel = "Track on India Post";
+    courierInstructions = `Click above to open India Post SpeedPost tracking and enter consignment number <strong>${payload.trackingNumber}</strong>.`;
+  }
+
+  const trackingUrl = payload.trackingUrl || defaultTrackingUrl;
+  const mountainRunPrizeUrl = `https://mountainrun.in/prize/${encodeURIComponent(payload.bibNumber)}`;
 
   const addressDisplay = [
     payload.shippingLine1,
@@ -497,7 +519,7 @@ export function buildMedalDispatchHtml(payload: MedalDispatchEmailPayload) {
                     <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${MUTED};">Tracking / AWB No.</p>
                   </td>
                   <td style="padding:14px 18px;border-bottom:1px solid #f0ede5;background-color:#ffffff;">
-                    <p style="margin:0;font-size:17px;font-weight:900;color:${DARK_GREEN};letter-spacing:0.08em;font-family:Consolas,Monaco,monospace;">
+                    <p style="margin:0;font-size:18px;font-weight:900;color:${DARK_GREEN};letter-spacing:0.08em;font-family:Consolas,Monaco,monospace;">
                       ${payload.trackingNumber}
                     </p>
                   </td>
@@ -524,21 +546,27 @@ export function buildMedalDispatchHtml(payload: MedalDispatchEmailPayload) {
             </td>
           </tr>
 
-          <!-- CTA Button -->
+          <!-- CTA Buttons -->
           <tr>
             <td style="padding:0 36px 28px;text-align:center;">
               <table width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td align="center">
                     <a href="${trackingUrl}" target="_blank" style="display:inline-block;background-color:${DARK_GREEN};color:#ffffff;font-size:14px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;text-decoration:none;padding:15px 36px;border-radius:10px;box-shadow:0 6px 18px rgba(26,58,46,0.25);border:1px solid ${GOLD};">
-                      🚚 Track Your Medal Live &rarr;
+                      🚚 ${courierPortalLabel} &rarr;
                     </a>
                   </td>
                 </tr>
                 <tr>
-                  <td align="center" style="padding-top:10px;">
-                    <p style="margin:0;font-size:11px;color:#777777;">
-                      Direct Link: <a href="${trackingUrl}" target="_blank" style="color:${DARK_GREEN};font-weight:600;word-break:break-all;">${trackingUrl}</a>
+                  <td align="center" style="padding-top:12px;">
+                    <p style="margin:0;font-size:12px;color:#555555;line-height:1.5;">
+                      ${courierInstructions}
+                    </p>
+                    <p style="margin:8px 0 0;font-size:11px;color:#777777;">
+                      Tracking Link: <a href="${trackingUrl}" target="_blank" style="color:${DARK_GREEN};font-weight:600;word-break:break-all;">${trackingUrl}</a>
+                    </p>
+                    <p style="margin:8px 0 0;font-size:11px;color:#777777;">
+                      Mountain Run Live Tracker: <a href="${mountainRunPrizeUrl}" target="_blank" style="color:#d97706;font-weight:600;">${mountainRunPrizeUrl}</a>
                     </p>
                   </td>
                 </tr>
@@ -554,7 +582,7 @@ export function buildMedalDispatchHtml(payload: MedalDispatchEmailPayload) {
               <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#faf8f3;border:1px dashed ${LINE};border-radius:10px;padding:14px 18px;">
                 <tr>
                   <td>
-                    <p style="margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:${MUTED};">📍 Shipping Address Provided</p>
+                    <p style="margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:${MUTED};">📍 Shipping Address</p>
                     <p style="margin:0;font-size:13px;color:#444444;line-height:1.5;">${addressDisplay}</p>
                   </td>
                 </tr>
