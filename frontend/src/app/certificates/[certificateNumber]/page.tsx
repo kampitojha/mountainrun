@@ -22,9 +22,14 @@ type CertificateData = {
 function formatFinishTime(seconds: number | null | undefined) {
   if (seconds == null || !Number.isFinite(seconds) || seconds <= 0) return "—";
   const total = Math.round(seconds);
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
+  const d = Math.floor(total / 86400);
+  const remDay = total % 86400;
+  const h = Math.floor(remDay / 3600);
+  const m = Math.floor((remDay % 3600) / 60);
+  const s = remDay % 60;
+  if (d > 0) {
+    return `${d}d ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
   if (h > 0) {
     return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   }
@@ -133,15 +138,19 @@ export default function CertificateVerifyPage() {
   const [data, setData] = useState<CertificateData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
+  const [overrideQuery, setOverrideQuery] = useState<string | null>(null);
+  const activeQuery = overrideQuery ?? params.certificateNumber;
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
+      if (!activeQuery) return;
       setLoading(true);
       setError(null);
       try {
         const response = await fetch(
-          getApiUrl(`/api/certificates/verify/${encodeURIComponent(params.certificateNumber)}`),
+          getApiUrl(`/api/certificates/verify/${encodeURIComponent(activeQuery)}`),
         );
         if (!response.ok) throw new Error(await readApiError(response, "Certificate not found"));
         const json = await response.json();
@@ -159,7 +168,15 @@ export default function CertificateVerifyPage() {
     return () => {
       cancelled = true;
     };
-  }, [params.certificateNumber]);
+  }, [activeQuery]);
+
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const query = searchInput.trim();
+    if (query) {
+      setOverrideQuery(query);
+    }
+  }
 
   return (
     <PageShell footerMode="minimal">
@@ -195,12 +212,36 @@ export default function CertificateVerifyPage() {
           )}
 
           {/* Error state */}
-          {error && (
-            <div className="card p-12 text-center">
+          {error && !loading && (
+            <div className="card p-8 sm:p-12 text-center max-w-xl mx-auto">
               <div className="text-4xl mb-3">⚠️</div>
-              <p className="text-base font-semibold text-(--danger)">{error}</p>
-              <p className="text-xs text-(--muted) mt-1">Please verify the certificate URL or contact Mountain Run support.</p>
-              <Link className="btn btn-secondary mt-5" href="/">Back to Home</Link>
+              <h3 className="text-lg font-bold text-foreground">Certificate Not Found</h3>
+              <p className="text-xs sm:text-sm text-(--muted) mt-1 max-w-md mx-auto">
+                {error}. You can search using your <strong>Bib Number</strong> (e.g. <code>TAR124824</code> or <code>SDC-1234</code>) or Certificate ID.
+              </p>
+
+              {/* Direct Bib / Certificate Search Input */}
+              <form onSubmit={handleSearchSubmit} className="mt-5 flex items-center gap-2 max-w-md mx-auto">
+                <input
+                  type="text"
+                  className="input flex-1 text-xs font-mono"
+                  placeholder="Enter Bib # or Certificate ID..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                />
+                <button type="submit" className="btn btn-primary h-10 px-4 text-xs font-bold shrink-0">
+                  Find Certificate
+                </button>
+              </form>
+
+              <div className="mt-6 flex items-center justify-center gap-3">
+                <Link className="btn btn-secondary text-xs" href="/dashboard">
+                  Go to My Dashboard
+                </Link>
+                <Link className="btn btn-ghost text-xs" href="/">
+                  Back to Home
+                </Link>
+              </div>
             </div>
           )}
 
