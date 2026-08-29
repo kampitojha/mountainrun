@@ -8,9 +8,7 @@ import { HomeFaq } from "./components/home-faq";
 import { HomeGalleryPreview } from "./components/home-gallery-preview";
 import { HomeHero } from "./components/home-hero";
 import { HomeReviews } from "./components/home-reviews";
-import { HomeRewards } from "./components/home-rewards";
 import { HomeSectionHeader } from "./components/home-section-header";
-import { HomeSteps } from "./components/home-steps";
 import { fetchOpenEvents, fetchHomeContent } from "../lib/events-api";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mountainrun.in";
@@ -121,13 +119,7 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* 3. ⚡ How It Works (3 Steps) */}
-        <HomeSteps />
-
-        {/* 4. 🥇 Finisher Rewards & Medal Perks */}
-        <HomeRewards />
-
-        {/* 5. 📸 Athlete Gallery, FAQ & Reviews */}
+        {/* 3. 📸 Athlete Gallery, FAQ & Reviews */}
         <HomeGalleryPreview moments={serverHome?.moments} />
         <HomeFaq />
         <HomeReviews testimonials={serverHome?.testimonials} />
