@@ -303,7 +303,7 @@ export function buildCertificateEmailHtml(data: CertificateRenderData) {
 
           <!-- ══════ QR CODE & VERIFICATION CTA ══════ -->
           <tr>
-            <td style="padding:14px 28px 24px;text-align:center;background:#f4ede1;">
+            <td style="padding:14px 28px 20px;text-align:center;background:#f4ede1;">
               <!-- QR Code Container -->
               <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 14px;">
                 <tr>
@@ -323,6 +323,35 @@ export function buildCertificateEmailHtml(data: CertificateRenderData) {
               <p style="margin:12px 0 0;font-size:11px;font-family:Consolas, monospace;color:${MUTED};">
                 CERTIFICATE NO: <strong style="color:${DARK_GREEN};">${escapeHtml(data.certificateNumber)}</strong> &nbsp;•&nbsp; BIB: <strong style="color:${DARK_GREEN};">${escapeHtml(data.bibNumber)}</strong>
               </p>
+            </td>
+          </tr>
+
+          <!-- ══════ MEDAL & DISPATCH NOTICE CALLOUT ══════ -->
+          <tr>
+            <td style="padding:0 24px 24px;background:#f4ede1;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg, ${DARK_GREEN} 0%, #082118 100%);border:2px solid ${GOLD};border-radius:14px;overflow:hidden;box-shadow:0 6px 20px rgba(13,56,41,0.25);">
+                <tr>
+                  <td style="padding:18px 20px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <!-- Medal Icon -->
+                        <td width="48" valign="middle" align="center" style="font-size:32px;line-height:1;padding-right:12px;">
+                          🏅
+                        </td>
+                        <!-- Text Description -->
+                        <td valign="middle" align="left">
+                          <p style="margin:0;font-size:13px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;color:${BRIGHT_GOLD};line-height:1.2;">
+                            FINISHER MEDAL &amp; GOODIES UPDATE
+                          </p>
+                          <p style="margin:4px 0 0;font-size:12px;color:#fdfaf3;line-height:1.5;">
+                            Your official engraved physical finisher medal is being prepared! <strong>You will receive your Courier Tracking ID (Delhivery / DTDC) via email in a few days</strong> as soon as your package is dispatched.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
