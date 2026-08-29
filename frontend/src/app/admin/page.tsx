@@ -1,27 +1,28 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { motion } from "framer-motion";
 import {
   Activity,
+  Award,
   BarChart3,
-  Calendar,
   CheckCircle2,
   Clock,
   Filter,
   IndianRupee,
-  Medal,
+  Mail,
   RefreshCw,
+  Repeat,
   Sparkles,
   TrendingUp,
   Trophy,
+  Truck,
   UserCheck,
   Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { adminFetch, formatDateTime, formatInrFromPaise } from "../../lib/admin-api";
-import { AdminEmpty, AdminPageHeader, AdminPanel, AdminStat } from "./ui";
+import { AdminEmpty, AdminPageHeader, AdminPanel } from "./ui";
 
 type EventBreakdown = {
   eventId: string;
@@ -62,9 +63,19 @@ type Overview = {
     events: number;
     openEvents: number;
     pendingProofs: number;
-    certificates: number;
+    proofsNotSubmitted?: number;
+    proofsApproved?: number;
+    proofsRejected?: number;
     medalsPending: number;
+    medalsDispatched?: number;
+    medalsDelivered?: number;
+    medalsFulfilled?: number;
     users: number;
+    newRunners?: number;
+    repeatRunners?: number;
+    repeatRate?: number;
+    subscribers?: number;
+    certificates: number;
   };
   eventBreakdown: EventBreakdown[];
   dailyTrend: DailyTrend[];
@@ -248,136 +259,252 @@ export default function AdminOverviewPage() {
         </div>
       </div>
 
-      {/* ── KPI METRICS CARDS ─────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7">
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-              Revenue
-            </span>
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600">
-              <IndianRupee className="h-3.5 w-3.5" />
+      {/* ── KPI METRICS: FINANCIALS & RUNNERS COMMUNITY ──────────────── */}
+      <div className="space-y-4">
+        <div>
+          <div className="flex items-center gap-2 mb-2 px-0.5">
+            <span className="text-[0.68rem] font-black uppercase tracking-wider text-(--muted) flex items-center gap-1.5">
+              <TrendingUp className="h-3 w-3 text-(--sage)" /> Financials & Runner Reach
             </span>
           </div>
-          <div className="mt-2">
-            <div className="text-xl sm:text-2xl font-black tabular-nums text-(--foreground)">
-              {formatInrFromPaise(data?.stats.revenueInPaise ?? 0)}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+            {/* Revenue */}
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                  Revenue
+                </span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600">
+                  <IndianRupee className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="text-xl sm:text-2xl font-black tabular-nums text-(--foreground)">
+                  {formatInrFromPaise(data?.stats.revenueInPaise ?? 0)}
+                </div>
+                <p className="text-[0.65rem] text-(--muted) mt-0.5">
+                  Avg ₹{data?.stats.avgOrderValueInr ?? 0} / order
+                </p>
+              </div>
             </div>
-            <p className="text-[0.65rem] text-(--muted) mt-0.5">
-              Avg ₹{data?.stats.avgOrderValueInr ?? 0} / order
-            </p>
+
+            {/* Registrations */}
+            <div className="rounded-2xl border border-(--line) bg-(--panel) p-4 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
+                  Registrations
+                </span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--panel-soft) text-(--sage)">
+                  <Users className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="text-xl sm:text-2xl font-black tabular-nums text-(--foreground)">
+                  {data?.stats.registrations ?? 0}
+                </div>
+                <p className="text-[0.65rem] text-(--muted) mt-0.5">
+                  <Link href="/admin/registrations" className="text-(--sage) hover:underline">
+                    {data?.stats.confirmedRegs ?? 0} paid · {data?.stats.pendingPayment ?? 0} pending
+                  </Link>
+                </p>
+              </div>
+            </div>
+
+            {/* Conversion */}
+            <div className="rounded-2xl border border-(--line) bg-(--panel) p-4 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
+                  Conversion
+                </span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--panel-soft) text-emerald-500">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="text-xl sm:text-2xl font-black tabular-nums text-emerald-600 dark:text-emerald-400">
+                  {data?.stats.conversionRate ?? 0}%
+                </div>
+                <p className="text-[0.65rem] text-(--muted) mt-0.5">Paid vs Total</p>
+              </div>
+            </div>
+
+            {/* Total Users */}
+            <div className="rounded-2xl border border-(--line) bg-(--panel) p-4 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
+                  Users
+                </span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--panel-soft) text-sky-400">
+                  <UserCheck className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="text-xl sm:text-2xl font-black tabular-nums text-(--foreground)">
+                  {data?.stats.users ?? 0}
+                </div>
+                <p className="text-[0.65rem] text-(--muted) mt-0.5">
+                  <Link href="/admin/users" className="text-(--sage) hover:underline">
+                    Registered runners →
+                  </Link>
+                </p>
+              </div>
+            </div>
+
+            {/* Active vs New Runners */}
+            <div className="rounded-2xl border border-(--line) bg-(--panel) p-4 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
+                  Runner Loyalty
+                </span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-400">
+                  <Repeat className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="text-xl sm:text-2xl font-black tabular-nums text-indigo-400">
+                  {data?.stats.repeatRunners ?? 0} <span className="text-xs font-bold text-(--muted)">repeat</span>
+                </div>
+                <p className="text-[0.65rem] text-(--muted) mt-0.5">
+                  {data?.stats.newRunners ?? 0} new · {data?.stats.repeatRate ?? 0}% repeat rate
+                </p>
+              </div>
+            </div>
+
+            {/* Email Subscribers */}
+            <div className="rounded-2xl border border-(--line) bg-(--panel) p-4 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
+                  Subscribers
+                </span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-500/15 text-rose-400">
+                  <Mail className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="text-xl sm:text-2xl font-black tabular-nums text-rose-400">
+                  {data?.stats.subscribers ?? 0}
+                </div>
+                <p className="text-[0.65rem] text-(--muted) mt-0.5">
+                  <Link href="/admin/subscribers" className="text-(--sage) hover:underline">
+                    Newsletter audience →
+                  </Link>
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-(--line) bg-(--panel) p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
-              Registrations
-            </span>
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--panel-soft) text-(--sage)">
-              <Users className="h-3.5 w-3.5" />
+        {/* ── KPI METRICS: OPERATIONS & FULFILLMENT LIFECYCLE ───────── */}
+        <div>
+          <div className="flex items-center gap-2 mb-2 px-0.5">
+            <span className="text-[0.68rem] font-black uppercase tracking-wider text-(--muted) flex items-center gap-1.5">
+              <Activity className="h-3 w-3 text-(--sage)" /> Operations & Fulfillment Pipeline
             </span>
           </div>
-          <div className="mt-2">
-            <div className="text-xl sm:text-2xl font-black tabular-nums text-(--foreground)">
-              {data?.stats.registrations ?? 0}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+            {/* Proof Queue (In Review) */}
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-amber-500">
+                  Proof Queue
+                </span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/15 text-amber-500">
+                  <Clock className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="text-xl sm:text-2xl font-black tabular-nums text-amber-500">
+                  {data?.stats.pendingProofs ?? 0}
+                </div>
+                <p className="text-[0.65rem] text-(--muted) mt-0.5">
+                  <Link href="/admin/proofs" className="text-(--sage) hover:underline">
+                    Needs review →
+                  </Link>
+                </p>
+              </div>
             </div>
-            <p className="text-[0.65rem] text-(--muted) mt-0.5">
-              {data?.stats.confirmedRegs ?? 0} paid · {data?.stats.pendingPayment ?? 0} pending
-            </p>
-          </div>
-        </div>
 
-        <div className="rounded-2xl border border-(--line) bg-(--panel) p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
-              Users
-            </span>
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--panel-soft) text-sky-400">
-              <UserCheck className="h-3.5 w-3.5" />
-            </span>
-          </div>
-          <div className="mt-2">
-            <div className="text-xl sm:text-2xl font-black tabular-nums text-(--foreground)">
-              {data?.stats.users ?? 0}
+            {/* Proof Not Submitted */}
+            <div className="rounded-2xl border border-(--line) bg-(--panel) p-4 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
+                  Proof Pending
+                </span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-500/15 text-sky-400">
+                  <Activity className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="text-xl sm:text-2xl font-black tabular-nums text-(--foreground)">
+                  {data?.stats.proofsNotSubmitted ?? 0}
+                </div>
+                <p className="text-[0.65rem] text-(--muted) mt-0.5">Runners yet to submit proof</p>
+              </div>
             </div>
-            <p className="text-[0.65rem] text-(--muted) mt-0.5">
-              <Link href="/admin/users" className="text-(--sage) hover:underline">
-                Registered runners →
-              </Link>
-            </p>
-          </div>
-        </div>
 
-        <div className="rounded-2xl border border-(--line) bg-(--panel) p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
-              Conversion
-            </span>
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--panel-soft) text-emerald-500">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-            </span>
-          </div>
-          <div className="mt-2">
-            <div className="text-xl sm:text-2xl font-black tabular-nums text-emerald-600 dark:text-emerald-400">
-              {data?.stats.conversionRate ?? 0}%
+            {/* Approved Finishers */}
+            <div className="rounded-2xl border border-(--line) bg-(--panel) p-4 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
+                  Finishers
+                </span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
+                  <Award className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="text-xl sm:text-2xl font-black tabular-nums text-emerald-500">
+                  {data?.stats.proofsApproved ?? 0}
+                </div>
+                <p className="text-[0.65rem] text-(--muted) mt-0.5">
+                  {data?.stats.proofsRejected ? `${data.stats.proofsRejected} rejected · ` : ""}Verified runs
+                </p>
+              </div>
             </div>
-            <p className="text-[0.65rem] text-(--muted) mt-0.5">Paid vs Total</p>
-          </div>
-        </div>
 
-        <div className="rounded-2xl border border-(--line) bg-(--panel) p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
-              Proof Queue
-            </span>
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--panel-soft) text-amber-500">
-              <Clock className="h-3.5 w-3.5" />
-            </span>
-          </div>
-          <div className="mt-2">
-            <div className="text-xl sm:text-2xl font-black tabular-nums text-(--foreground)">
-              {data?.stats.pendingProofs ?? 0}
+            {/* Medals Fulfillment Tracker */}
+            <div className="rounded-2xl border border-(--line) bg-(--panel) p-4 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
+                  Medals Dispatched
+                </span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-500/15 text-teal-400">
+                  <Truck className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="text-xl sm:text-2xl font-black tabular-nums text-(--foreground)">
+                  {data?.stats.medalsFulfilled ?? (data?.stats.medalsDispatched ?? 0) + (data?.stats.medalsDelivered ?? 0)}
+                </div>
+                <p className="text-[0.65rem] text-(--muted) mt-0.5">
+                  <Link href="/admin/medals" className="text-(--sage) hover:underline">
+                    {data?.stats.medalsPending ?? 0} pending fulfillment →
+                  </Link>
+                </p>
+              </div>
             </div>
-            <p className="text-[0.65rem] text-(--muted) mt-0.5">
-              <Link href="/admin/proofs" className="text-(--sage) hover:underline">
-                Review queue →
-              </Link>
-            </p>
-          </div>
-        </div>
 
-        <div className="rounded-2xl border border-(--line) bg-(--panel) p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
-              Medals Out
-            </span>
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--panel-soft) text-(--sage)">
-              <Medal className="h-3.5 w-3.5" />
-            </span>
-          </div>
-          <div className="mt-2">
-            <div className="text-xl sm:text-2xl font-black tabular-nums text-(--foreground)">
-              {data?.stats.medalsPending ?? 0}
+            {/* Certificates */}
+            <div className="rounded-2xl border border-(--line) bg-(--panel) p-4 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
+                  Certificates
+                </span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-500/15 text-purple-400">
+                  <Trophy className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="text-xl sm:text-2xl font-black tabular-nums text-(--foreground)">
+                  {data?.stats.certificates ?? 0}
+                </div>
+                <p className="text-[0.65rem] text-(--muted) mt-0.5">
+                  <Link href="/admin/certificates" className="text-(--sage) hover:underline">
+                    Generated & sent →
+                  </Link>
+                </p>
+              </div>
             </div>
-            <p className="text-[0.65rem] text-(--muted) mt-0.5">Pending fulfillment</p>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-(--line) bg-(--panel) p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
-              Certificates
-            </span>
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--panel-soft) text-(--sage)">
-              <Trophy className="h-3.5 w-3.5" />
-            </span>
-          </div>
-          <div className="mt-2">
-            <div className="text-xl sm:text-2xl font-black tabular-nums text-(--foreground)">
-              {data?.stats.certificates ?? 0}
-            </div>
-            <p className="text-[0.65rem] text-(--muted) mt-0.5">Generated</p>
           </div>
         </div>
       </div>

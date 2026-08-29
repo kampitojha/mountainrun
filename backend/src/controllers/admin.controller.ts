@@ -118,8 +118,15 @@ export async function adminOverview(request: AuthenticatedRequest, response: Res
     openEventsCount,
     totalUsersCount,
     pendingProofsCount,
-    certificatesCount,
+    proofsNotSubmittedCount,
+    proofsApprovedCount,
+    proofsRejectedCount,
+    subscribersCount,
     medalsPendingCount,
+    medalsDispatchedCount,
+    medalsDeliveredCount,
+    userRegGroups,
+    certificatesCount,
     filteredRegs,
     filteredPayments,
     recentRegs,
@@ -140,9 +147,65 @@ export async function adminOverview(request: AuthenticatedRequest, response: Res
     prisma.event.count(),
     prisma.event.count({ where: { status: "OPEN" } }),
     prisma.user.count(),
-    prisma.registration.count({ where: { proofStatus: "SUBMITTED", ...(eventFilter ? { eventId: eventFilter } : {}) } }),
+    prisma.registration.count({
+      where: {
+        proofStatus: "SUBMITTED",
+        ...(eventFilter ? { eventId: eventFilter } : {}),
+        ...(sinceDate ? { registeredAt: { gte: sinceDate } } : {}),
+      },
+    }),
+    prisma.registration.count({
+      where: {
+        status: { in: ["CONFIRMED", "COMPLETED"] },
+        proofStatus: "NOT_SUBMITTED",
+        ...(eventFilter ? { eventId: eventFilter } : {}),
+        ...(sinceDate ? { registeredAt: { gte: sinceDate } } : {}),
+      },
+    }),
+    prisma.registration.count({
+      where: {
+        proofStatus: "APPROVED",
+        ...(eventFilter ? { eventId: eventFilter } : {}),
+        ...(sinceDate ? { registeredAt: { gte: sinceDate } } : {}),
+      },
+    }),
+    prisma.registration.count({
+      where: {
+        proofStatus: "REJECTED",
+        ...(eventFilter ? { eventId: eventFilter } : {}),
+        ...(sinceDate ? { registeredAt: { gte: sinceDate } } : {}),
+      },
+    }),
+    prisma.subscriber.count({ where: { subscribed: true } }),
+    prisma.registration.count({
+      where: {
+        status: { in: ["CONFIRMED", "COMPLETED"] },
+        OR: [{ medalDelivery: null }, { medalDelivery: { status: "PENDING" } }],
+        ...(eventFilter ? { eventId: eventFilter } : {}),
+      },
+    }),
+    prisma.registration.count({
+      where: {
+        status: { in: ["CONFIRMED", "COMPLETED"] },
+        medalDelivery: { status: "DISPATCHED" },
+        ...(eventFilter ? { eventId: eventFilter } : {}),
+      },
+    }),
+    prisma.registration.count({
+      where: {
+        status: { in: ["CONFIRMED", "COMPLETED"] },
+        medalDelivery: { status: "DELIVERED" },
+        ...(eventFilter ? { eventId: eventFilter } : {}),
+      },
+    }),
+    prisma.registration.groupBy({
+      by: ["userId"],
+      where: {
+        status: { in: ["CONFIRMED", "COMPLETED"] },
+      },
+      _count: { id: true },
+    }),
     prisma.certificate.count({ where: eventFilter ? { registration: { eventId: eventFilter } } : undefined }),
-    prisma.medalDelivery.count({ where: { status: { in: ["PENDING", "DISPATCHED"] }, ...(eventFilter ? { registration: { eventId: eventFilter } } : {}) } }),
     prisma.registration.findMany({
       where: regWhere,
       select: { id: true, status: true, eventId: true },
@@ -175,6 +238,11 @@ export async function adminOverview(request: AuthenticatedRequest, response: Res
       },
     }),
   ]);
+
+  // Runner Loyalty & Multi-Event Breakdown
+  const repeatRunners = userRegGroups.filter((g) => g._count.id > 1).length;
+  const newRunners = userRegGroups.filter((g) => g._count.id === 1).length;
+  const repeatRate = userRegGroups.length > 0 ? Math.round((repeatRunners / userRegGroups.length) * 100) : 0;
 
   // Overall calculations for the active scope
   const totalRevenueInPaise = filteredPayments.reduce((acc, p) => acc + p.amountInPaise, 0);
@@ -332,9 +400,19 @@ export async function adminOverview(request: AuthenticatedRequest, response: Res
         events: totalEventsCount,
         openEvents: openEventsCount,
         pendingProofs: pendingProofsCount,
-        certificates: certificatesCount,
+        proofsNotSubmitted: proofsNotSubmittedCount,
+        proofsApproved: proofsApprovedCount,
+        proofsRejected: proofsRejectedCount,
         medalsPending: medalsPendingCount,
+        medalsDispatched: medalsDispatchedCount,
+        medalsDelivered: medalsDeliveredCount,
+        medalsFulfilled: medalsDispatchedCount + medalsDeliveredCount,
         users: totalUsersCount,
+        newRunners,
+        repeatRunners,
+        repeatRate,
+        subscribers: subscribersCount,
+        certificates: certificatesCount,
       },
       eventBreakdown,
       dailyTrend,
