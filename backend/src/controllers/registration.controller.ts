@@ -339,7 +339,8 @@ export async function reviewProof(request: AuthenticatedRequest, response: Respo
   response.json({ data: registration });
 }
 
-const INDIAN_RUNNERS_ROSTER = [
+const INDIAN_RUNNERS_MASTER_POOL = [
+  // 1.5K / 1.6K Partition (Index 0 - 49)
   { name: "Aarav Sharma", city: "Bengaluru", state: "Karnataka" },
   { name: "Nisha Rawat", city: "Dehradun", state: "Uttarakhand" },
   { name: "Kabir Sethi", city: "Delhi NCR", state: "Delhi" },
@@ -380,12 +381,386 @@ const INDIAN_RUNNERS_ROSTER = [
   { name: "Varun Kaushik", city: "Ghaziabad", state: "Uttar Pradesh" },
   { name: "Ankita Roy", city: "Ranchi", state: "Jharkhand" },
   { name: "Naveen Choudhury", city: "Bhubaneswar", state: "Odisha" },
+  { name: "Dhruv Singhal", city: "Agra", state: "Uttar Pradesh" },
+  { name: "Pallavi Nambiar", city: "Thrissur", state: "Kerala" },
+  { name: "Kunal Goswami", city: "Jalandhar", state: "Punjab" },
+  { name: "Ritika Mathur", city: "Udaipur", state: "Rajasthan" },
+  { name: "Suraj Rathore", city: "Jodhpur", state: "Rajasthan" },
+  { name: "Anindita Bose", city: "Howrah", state: "West Bengal" },
+  { name: "Yashwant Patil", city: "Kolhapur", state: "Maharashtra" },
+  { name: "Bhavna Bhatt", city: "Vadodara", state: "Gujarat" },
+  { name: "Tushar Agnihotri", city: "Prayagraj", state: "Uttar Pradesh" },
+  { name: "Monika Sandhu", city: "Ludhiana", state: "Punjab" },
+
+  // 3K / 3.2K Partition (Index 50 - 99)
+  { name: "Kavita Nair", city: "Kozhikode", state: "Kerala" },
+  { name: "Sahil Verma", city: "Jammu", state: "Jammu & Kashmir" },
+  { name: "Divya Iyer", city: "Madurai", state: "Tamil Nadu" },
+  { name: "Rajat Chauhan", city: "Meerut", state: "Uttar Pradesh" },
+  { name: "Harini Sundaram", city: "Tiruchirappalli", state: "Tamil Nadu" },
+  { name: "Ayush Saxena", city: "Bareilly", state: "Uttar Pradesh" },
+  { name: "Garima Pandey", city: "Gorakhpur", state: "Uttar Pradesh" },
+  { name: "Pranav Deshpande", city: "Aurangabad", state: "Maharashtra" },
+  { name: "Smriti Mukherjee", city: "Durgapur", state: "West Bengal" },
+  { name: "Akhil Varghese", city: "Kollam", state: "Kerala" },
+  { name: "Charu Mittal", city: "Rohtak", state: "Haryana" },
+  { name: "Gautam Shenoy", city: "Udupi", state: "Karnataka" },
+  { name: "Shikha Rastogi", city: "Moradabad", state: "Uttar Pradesh" },
+  { name: "Jaspreet Gill", city: "Patiala", state: "Punjab" },
+  { name: "Tejaswini Sawant", city: "Solapur", state: "Maharashtra" },
+  { name: "Kushagra Jain", city: "Kota", state: "Rajasthan" },
+  { name: "Preeti Mahajan", city: "Pathankot", state: "Punjab" },
+  { name: "Bikramjit Dutta", city: "Siliguri", state: "West Bengal" },
+  { name: "Radhika Somani", city: "Bhilwara", state: "Rajasthan" },
+  { name: "Mayank Trivedi", city: "Rajkot", state: "Gujarat" },
+  { name: "Meenakshi Pillai", city: "Alappuzha", state: "Kerala" },
+  { name: "Girish Kulkarni", city: "Belagavi", state: "Karnataka" },
+  { name: "Sangeeta Mohanty", city: "Cuttack", state: "Odisha" },
+  { name: "Abhishek Poddar", city: "Jamshedpur", state: "Jharkhand" },
+  { name: "Chitra Vaidya", city: "Thane", state: "Maharashtra" },
+  { name: "Deepak Bhardwaj", city: "Karnal", state: "Haryana" },
+  { name: "Lipika Hazarika", city: "Dibrugarh", state: "Assam" },
+  { name: "Nitin Bhalerao", city: "Amravati", state: "Maharashtra" },
+  { name: "Renuka Acharya", city: "Mysuru", state: "Karnataka" },
+  { name: "Sourabh Ghosh", city: "Asansol", state: "West Bengal" },
+  { name: "Damini Sharma", city: "Ajmer", state: "Rajasthan" },
+  { name: "Karthik Ranganathan", city: "Salem", state: "Tamil Nadu" },
+  { name: "Lavanya Reddy", city: "Warangal", state: "Telangana" },
+  { name: "Pawan Kalyan", city: "Guntur", state: "Andhra Pradesh" },
+  { name: "Hemant Sahu", city: "Raipur", state: "Chhattisgarh" },
+  { name: "Komal Sonawane", city: "Jalgaon", state: "Maharashtra" },
+  { name: "Baljeet Sidhu", city: "Bathinda", state: "Punjab" },
+  { name: "Payal Kashyap", city: "Haridwar", state: "Uttarakhand" },
+  { name: "Rishabh Shukla", city: "Jhansi", state: "Uttar Pradesh" },
+  { name: "Sunil Marandi", city: "Dhanbad", state: "Jharkhand" },
+  { name: "Madhuri Ganguly", city: "Burdwan", state: "West Bengal" },
+  { name: "Vikas Bishnoi", city: "Bikaner", state: "Rajasthan" },
+  { name: "Jahnvi Sheth", city: "Surat", state: "Gujarat" },
+  { name: "Pankaj Bora", city: "Tezpur", state: "Assam" },
+  { name: "Archana Hegde", city: "Hubballi", state: "Karnataka" },
+  { name: "Niraj Sengupta", city: "Kharagpur", state: "West Bengal" },
+  { name: "Mamta Sisodia", city: "Ujjain", state: "Madhya Pradesh" },
+  { name: "Shashank Tripathi", city: "Faizabad", state: "Uttar Pradesh" },
+  { name: "Kalyani Swaminathan", city: "Tirunelveli", state: "Tamil Nadu" },
+  { name: "Rajat Manhas", city: "Srinagar", state: "Jammu & Kashmir" },
+
+  // 5K Partition (Index 100 - 149)
+  { name: "Tanmay Kulkarni", city: "Pune", state: "Maharashtra" },
+  { name: "Simran Bhatia", city: "Delhi NCR", state: "Delhi" },
+  { name: "Raghav Reddy", city: "Hyderabad", state: "Telangana" },
+  { name: "Nandini Bhattacharya", city: "Kolkata", state: "West Bengal" },
+  { name: "Suresh Pillai", city: "Bengaluru", state: "Karnataka" },
+  { name: "Kavya Menon", city: "Kochi", state: "Kerala" },
+  { name: "Abhayraj Chauhan", city: "Jaipur", state: "Rajasthan" },
+  { name: "Monika Deshmukh", city: "Mumbai", state: "Maharashtra" },
+  { name: "Rishi Chawla", city: "Gurgaon", state: "Haryana" },
+  { name: "Shilpa Sundaram", city: "Chennai", state: "Tamil Nadu" },
+  { name: "Harpreet Grewal", city: "Chandigarh", state: "Punjab" },
+  { name: "Udit Singhal", city: "Lucknow", state: "Uttar Pradesh" },
+  { name: "Ananya Mahajan", city: "Indore", state: "Madhya Pradesh" },
+  { name: "Vinay Thampi", city: "Thiruvananthapuram", state: "Kerala" },
+  { name: "Bhumika Sethi", city: "Ahmedabad", state: "Gujarat" },
+  { name: "Chirag Joshi", city: "Nagpur", state: "Maharashtra" },
+  { name: "Divyanshi Rawat", city: "Dehradun", state: "Uttarakhand" },
+  { name: "Pranav Shenoy", city: "Mangaluru", state: "Karnataka" },
+  { name: "Megha Kashyap", city: "Noida", state: "Uttar Pradesh" },
+  { name: "Siddhesh Tawde", city: "Thane", state: "Maharashtra" },
+  { name: "Alankrita Sen", city: "Siliguri", state: "West Bengal" },
+  { name: "Dharmendra Rathore", city: "Jodhpur", state: "Rajasthan" },
+  { name: "Pooja Varghese", city: "Thrissur", state: "Kerala" },
+  { name: "Kailash Bishnoi", city: "Bikaner", state: "Rajasthan" },
+  { name: "Jaya Subramanian", city: "Coimbatore", state: "Tamil Nadu" },
+  { name: "Gaurang Patel", city: "Vadodara", state: "Gujarat" },
+  { name: "Tanvi Saxena", city: "Bhopal", state: "Madhya Pradesh" },
+  { name: "Lalit Mohan", city: "Haridwar", state: "Uttarakhand" },
+  { name: "Sumanth Shetty", city: "Udupi", state: "Karnataka" },
+  { name: "Rashmi Agrawal", city: "Raipur", state: "Chhattisgarh" },
+  { name: "Himanshu Mathur", city: "Kota", state: "Rajasthan" },
+  { name: "Parul Sandhu", city: "Ludhiana", state: "Punjab" },
+  { name: "Sujit Mukherjee", city: "Asansol", state: "West Bengal" },
+  { name: "Kiranmai Naidu", city: "Visakhapatnam", state: "Andhra Pradesh" },
+  { name: "Taranjit Deol", city: "Jalandhar", state: "Punjab" },
+  { name: "Anushree Shukla", city: "Varanasi", state: "Uttar Pradesh" },
+  { name: "Mohit Ranawat", city: "Udaipur", state: "Rajasthan" },
+  { name: "Sushmita Roy", city: "Ranchi", state: "Jharkhand" },
+  { name: "Balram Tripathi", city: "Kanpur", state: "Uttar Pradesh" },
+  { name: "Gita Namboodiri", city: "Kollam", state: "Kerala" },
+  { name: "Virendra Yadav", city: "Patna", state: "Bihar" },
+  { name: "Jyotsna Acharya", city: "Mysuru", state: "Karnataka" },
+  { name: "Rohit Gadkari", city: "Nashik", state: "Maharashtra" },
+  { name: "Barkha Goswami", city: "Agra", state: "Uttar Pradesh" },
+  { name: "Manvendra Chauhan", city: "Gwalior", state: "Madhya Pradesh" },
+  { name: "Iravati Somani", city: "Surat", state: "Gujarat" },
+  { name: "Debashish Das", city: "Bhubaneswar", state: "Odisha" },
+  { name: "Harsha Vardhan", city: "Vijayawada", state: "Andhra Pradesh" },
+  { name: "Nalini Hegde", city: "Hubballi", state: "Karnataka" },
+  { name: "Samarjit Singha", city: "Guwahati", state: "Assam" },
+
+  // 7K Partition (Index 150 - 199)
+  { name: "Sneha Banerjee", city: "Kolkata", state: "West Bengal" },
+  { name: "Rohan Joshi", city: "Pune", state: "Maharashtra" },
+  { name: "Pooja Deshmukh", city: "Nagpur", state: "Maharashtra" },
+  { name: "Vikram Singhania", city: "Mumbai", state: "Maharashtra" },
+  { name: "Ananya Poddar", city: "Jamshedpur", state: "Jharkhand" },
+  { name: "Siddharth Chawla", city: "Delhi NCR", state: "Delhi" },
+  { name: "Kavita Rangan", city: "Chennai", state: "Tamil Nadu" },
+  { name: "Harshvardhan Sahu", city: "Raipur", state: "Chhattisgarh" },
+  { name: "Simranjit Gill", city: "Amritsar", state: "Punjab" },
+  { name: "Naveen Thampi", city: "Kochi", state: "Kerala" },
+  { name: "Alokita Sharma", city: "Jaipur", state: "Rajasthan" },
+  { name: "Prateek Deshpande", city: "Aurangabad", state: "Maharashtra" },
+  { name: "Divya Nambiar", city: "Kozhikode", state: "Kerala" },
+  { name: "Mayank Bhardwaj", city: "Chandigarh", state: "Punjab" },
+  { name: "Ritika Shenoy", city: "Mangaluru", state: "Karnataka" },
+  { name: "Gaurav Rastogi", city: "Meerut", state: "Uttar Pradesh" },
+  { name: "Deepa Acharya", city: "Bengaluru", state: "Karnataka" },
+  { name: "Tarun Bishnoi", city: "Jodhpur", state: "Rajasthan" },
+  { name: "Namrata Dutta", city: "Siliguri", state: "West Bengal" },
+  { name: "Ayush Kulkarni", city: "Nashik", state: "Maharashtra" },
+  { name: "Smriti Rawat", city: "Nainital", state: "Uttarakhand" },
+  { name: "Abhishek Saxena", city: "Bareilly", state: "Uttar Pradesh" },
+  { name: "Charu Sundaram", city: "Madurai", state: "Tamil Nadu" },
+  { name: "Nitin Rathore", city: "Bikaner", state: "Rajasthan" },
+  { name: "Sangeeta Menon", city: "Thiruvananthapuram", state: "Kerala" },
+  { name: "Kunal Agnihotri", city: "Prayagraj", state: "Uttar Pradesh" },
+  { name: "Bhavna Sandhu", city: "Patiala", state: "Punjab" },
+  { name: "Rahul Mukherjee", city: "Durgapur", state: "West Bengal" },
+  { name: "Swati Vaidya", city: "Thane", state: "Maharashtra" },
+  { name: "Dhruv Sisodia", city: "Ujjain", state: "Madhya Pradesh" },
+  { name: "Meera Hazarika", city: "Guwahati", state: "Assam" },
+  { name: "Karan Sheth", city: "Ahmedabad", state: "Gujarat" },
+  { name: "Pallavi Shukla", city: "Varanasi", state: "Uttar Pradesh" },
+  { name: "Shashank Reddy", city: "Hyderabad", state: "Telangana" },
+  { name: "Jahnvi Iyer", city: "Tiruchirappalli", state: "Tamil Nadu" },
+  { name: "Tushar Somani", city: "Surat", state: "Gujarat" },
+  { name: "Monika Pillai", city: "Coimbatore", state: "Tamil Nadu" },
+  { name: "Balram Tripathi", city: "Gorakhpur", state: "Uttar Pradesh" },
+  { name: "Lipika Mohanty", city: "Bhubaneswar", state: "Odisha" },
+  { name: "Sourabh Sengupta", city: "Kharagpur", state: "West Bengal" },
+  { name: "Preeti Mahajan", city: "Jammu", state: "Jammu & Kashmir" },
+  { name: "Hemant Sonawane", city: "Jalgaon", state: "Maharashtra" },
+  { name: "Damini Bhatt", city: "Vadodara", state: "Gujarat" },
+  { name: "Gautam Deol", city: "Bathinda", state: "Punjab" },
+  { name: "Radhika Shukla", city: "Jhansi", state: "Uttar Pradesh" },
+  { name: "Pawan Marandi", city: "Dhanbad", state: "Jharkhand" },
+  { name: "Madhuri Roy", city: "Ranchi", state: "Jharkhand" },
+  { name: "Vikas Yadav", city: "Patna", state: "Bihar" },
+  { name: "Archana Hegde", city: "Belagavi", state: "Karnataka" },
+  { name: "Niraj Goswami", city: "Kota", state: "Rajasthan" },
+
+  // 10K Partition (Index 200 - 249)
+  { name: "Manish Agarwal", city: "Delhi NCR", state: "Delhi" },
+  { name: "Shreya Pillai", city: "Bengaluru", state: "Karnataka" },
+  { name: "Abhinav Sinha", city: "Patna", state: "Bihar" },
+  { name: "Kriti Saxena", city: "Bhopal", state: "Madhya Pradesh" },
+  { name: "Alok Tiwari", city: "Kanpur", state: "Uttar Pradesh" },
+  { name: "Siddharth Nambiar", city: "Kochi", state: "Kerala" },
+  { name: "Neha Choudhury", city: "Cuttack", state: "Odisha" },
+  { name: "Gaurav Kapoor", city: "Chandigarh", state: "Punjab" },
+  { name: "Priyanka Shenoy", city: "Mangaluru", state: "Karnataka" },
+  { name: "Sameer Tawde", city: "Mumbai", state: "Maharashtra" },
+  { name: "Kavita Joshi", city: "Shimla", state: "Himachal Pradesh" },
+  { name: "Prateek Mathur", city: "Jaipur", state: "Rajasthan" },
+  { name: "Varun Shenoy", city: "Udupi", state: "Karnataka" },
+  { name: "Ankita Somani", city: "Ahmedabad", state: "Gujarat" },
+  { name: "Naveen Deshmukh", city: "Pune", state: "Maharashtra" },
+  { name: "Dhruv Grewal", city: "Ludhiana", state: "Punjab" },
+  { name: "Pallavi Sundaram", city: "Chennai", state: "Tamil Nadu" },
+  { name: "Kunal Varghese", city: "Thrissur", state: "Kerala" },
+  { name: "Ritika Chauhan", city: "Dehradun", state: "Uttarakhand" },
+  { name: "Suraj Poddar", city: "Ranchi", state: "Jharkhand" },
+  { name: "Anindita Sen", city: "Kolkata", state: "West Bengal" },
+  { name: "Yashwant Shinde", city: "Solapur", state: "Maharashtra" },
+  { name: "Bhavna Rawat", city: "Haridwar", state: "Uttarakhand" },
+  { name: "Tushar Sethi", city: "Gurgaon", state: "Haryana" },
+  { name: "Monika Naidu", city: "Visakhapatnam", state: "Andhra Pradesh" },
+  { name: "Kavita Acharya", city: "Mysuru", state: "Karnataka" },
+  { name: "Sahil Gadkari", city: "Nashik", state: "Maharashtra" },
+  { name: "Divya Sisodia", city: "Ujjain", state: "Madhya Pradesh" },
+  { name: "Rajat Bhatt", city: "Surat", state: "Gujarat" },
+  { name: "Harini Das", city: "Bhubaneswar", state: "Odisha" },
+  { name: "Ayush Vardhan", city: "Vijayawada", state: "Andhra Pradesh" },
+  { name: "Garima Hegde", city: "Hubballi", state: "Karnataka" },
+  { name: "Pranav Singha", city: "Guwahati", state: "Assam" },
+  { name: "Smriti Ranawat", city: "Udaipur", state: "Rajasthan" },
+  { name: "Akhil Shukla", city: "Lucknow", state: "Uttar Pradesh" },
+  { name: "Charu Bishnoi", city: "Bikaner", state: "Rajasthan" },
+  { name: "Gautam Namboodiri", city: "Kollam", state: "Kerala" },
+  { name: "Shikha Yadav", city: "Gwalior", state: "Madhya Pradesh" },
+  { name: "Jaspreet Gill", city: "Patiala", state: "Punjab" },
+  { name: "Tejaswini Patil", city: "Kolhapur", state: "Maharashtra" },
+  { name: "Kushagra Agnihotri", city: "Varanasi", state: "Uttar Pradesh" },
+  { name: "Preeti Shenoy", city: "Belagavi", state: "Karnataka" },
+  { name: "Bikramjit Mukherjee", city: "Howrah", state: "West Bengal" },
+  { name: "Radhika Deshpande", city: "Aurangabad", state: "Maharashtra" },
+  { name: "Mayank Sandhu", city: "Jalandhar", state: "Punjab" },
+  { name: "Meenakshi Iyer", city: "Madurai", state: "Tamil Nadu" },
+  { name: "Girish Sahu", city: "Raipur", state: "Chhattisgarh" },
+  { name: "Sangeeta Kulkarni", city: "Amravati", state: "Maharashtra" },
+  { name: "Abhishek Dutta", city: "Durgapur", state: "West Bengal" },
+  { name: "Chitra Bisht", city: "Nainital", state: "Uttarakhand" },
+
+  // 15K Partition (Index 250 - 299)
+  { name: "Deepak Bhardwaj", city: "Delhi NCR", state: "Delhi" },
+  { name: "Lipika Sundaram", city: "Chennai", state: "Tamil Nadu" },
+  { name: "Nitin Shenoy", city: "Bengaluru", state: "Karnataka" },
+  { name: "Renuka Menon", city: "Kochi", state: "Kerala" },
+  { name: "Sourabh Deshmukh", city: "Pune", state: "Maharashtra" },
+  { name: "Damini Chawla", city: "Chandigarh", state: "Punjab" },
+  { name: "Karthik Banerjee", city: "Kolkata", state: "West Bengal" },
+  { name: "Lavanya Joshi", city: "Jaipur", state: "Rajasthan" },
+  { name: "Pawan Shinde", city: "Mumbai", state: "Maharashtra" },
+  { name: "Hemant Reddy", city: "Hyderabad", state: "Telangana" },
+  { name: "Komal Grewal", city: "Amritsar", state: "Punjab" },
+  { name: "Baljeet Varma", city: "Lucknow", state: "Uttar Pradesh" },
+  { name: "Payal Patel", city: "Ahmedabad", state: "Gujarat" },
+  { name: "Rishabh Tawde", city: "Nagpur", state: "Maharashtra" },
+  { name: "Sunil Shenoy", city: "Mangaluru", state: "Karnataka" },
+  { name: "Madhuri Rawat", city: "Dehradun", state: "Uttarakhand" },
+  { name: "Vikas Sethi", city: "Noida", state: "Uttar Pradesh" },
+  { name: "Jahnvi Gupta", city: "Indore", state: "Madhya Pradesh" },
+  { name: "Pankaj Srivastava", city: "Varanasi", state: "Uttar Pradesh" },
+  { name: "Archana Saxena", city: "Bhopal", state: "Madhya Pradesh" },
+  { name: "Niraj Hegde", city: "Udupi", state: "Karnataka" },
+  { name: "Mamta Tiwari", city: "Kanpur", state: "Uttar Pradesh" },
+  { name: "Shashank Sen", city: "Siliguri", state: "West Bengal" },
+  { name: "Kalyani Bhatia", city: "Gurgaon", state: "Haryana" },
+  { name: "Rajat Pillai", city: "Thiruvananthapuram", state: "Kerala" },
+  { name: "Kavita Jha", city: "Patna", state: "Bihar" },
+  { name: "Sahil Das", city: "Guwahati", state: "Assam" },
+  { name: "Divya Kulkarni", city: "Nashik", state: "Maharashtra" },
+  { name: "Rohan Bisht", city: "Haridwar", state: "Uttarakhand" },
+  { name: "Harini Mehra", city: "Faridabad", state: "Haryana" },
+  { name: "Ayush Kaushik", city: "Ghaziabad", state: "Uttar Pradesh" },
+  { name: "Garima Roy", city: "Ranchi", state: "Jharkhand" },
+  { name: "Pranav Choudhury", city: "Bhubaneswar", state: "Odisha" },
+  { name: "Smriti Singhal", city: "Agra", state: "Uttar Pradesh" },
+  { name: "Akhil Nambiar", city: "Thrissur", state: "Kerala" },
+  { name: "Charu Goswami", city: "Jalandhar", state: "Punjab" },
+  { name: "Gautam Mathur", city: "Udaipur", state: "Rajasthan" },
+  { name: "Shikha Rathore", city: "Jodhpur", state: "Rajasthan" },
+  { name: "Jaspreet Bose", city: "Howrah", state: "West Bengal" },
+  { name: "Tejaswini Patil", city: "Kolhapur", state: "Maharashtra" },
+  { name: "Kushagra Bhatt", city: "Vadodara", state: "Gujarat" },
+  { name: "Preeti Agnihotri", city: "Prayagraj", state: "Uttar Pradesh" },
+  { name: "Bikramjit Sandhu", city: "Ludhiana", state: "Punjab" },
+  { name: "Radhika Nair", city: "Kozhikode", state: "Kerala" },
+  { name: "Mayank Verma", city: "Jammu", state: "Jammu & Kashmir" },
+  { name: "Meenakshi Iyer", city: "Madurai", state: "Tamil Nadu" },
+  { name: "Girish Chauhan", city: "Meerut", state: "Uttar Pradesh" },
+  { name: "Sangeeta Sundaram", city: "Tiruchirappalli", state: "Tamil Nadu" },
+  { name: "Abhishek Saxena", city: "Bareilly", state: "Uttar Pradesh" },
+  { name: "Chitra Pandey", city: "Gorakhpur", state: "Uttar Pradesh" },
+
+  // 21K Half Marathon Partition (Index 300 - 349)
+  { name: "Siddharth Nambiar", city: "Bengaluru", state: "Karnataka" },
+  { name: "Neha Choudhury", city: "Bhubaneswar", state: "Odisha" },
+  { name: "Gaurav Kapoor", city: "Delhi NCR", state: "Delhi" },
+  { name: "Priyanka Shenoy", city: "Mangaluru", state: "Karnataka" },
+  { name: "Sameer Tawde", city: "Mumbai", state: "Maharashtra" },
+  { name: "Kavita Joshi", city: "Pune", state: "Maharashtra" },
+  { name: "Prateek Mathur", city: "Jaipur", state: "Rajasthan" },
+  { name: "Varun Shenoy", city: "Udupi", state: "Karnataka" },
+  { name: "Ankita Somani", city: "Ahmedabad", state: "Gujarat" },
+  { name: "Naveen Deshmukh", city: "Nagpur", state: "Maharashtra" },
+  { name: "Dhruv Grewal", city: "Chandigarh", state: "Punjab" },
+  { name: "Pallavi Sundaram", city: "Chennai", state: "Tamil Nadu" },
+  { name: "Kunal Varghese", city: "Kochi", state: "Kerala" },
+  { name: "Ritika Chauhan", city: "Dehradun", state: "Uttarakhand" },
+  { name: "Suraj Poddar", city: "Ranchi", state: "Jharkhand" },
+  { name: "Anindita Sen", city: "Kolkata", state: "West Bengal" },
+  { name: "Yashwant Shinde", city: "Thane", state: "Maharashtra" },
+  { name: "Bhavna Rawat", city: "Shimla", state: "Himachal Pradesh" },
+  { name: "Tushar Sethi", city: "Gurgaon", state: "Haryana" },
+  { name: "Monika Naidu", city: "Hyderabad", state: "Telangana" },
+  { name: "Kavita Acharya", city: "Mysuru", state: "Karnataka" },
+  { name: "Sahil Gadkari", city: "Nashik", state: "Maharashtra" },
+  { name: "Divya Sisodia", city: "Indore", state: "Madhya Pradesh" },
+  { name: "Rajat Bhatt", city: "Surat", state: "Gujarat" },
+  { name: "Harini Das", city: "Cuttack", state: "Odisha" },
+  { name: "Ayush Vardhan", city: "Visakhapatnam", state: "Andhra Pradesh" },
+  { name: "Garima Hegde", city: "Belagavi", state: "Karnataka" },
+  { name: "Pranav Singha", city: "Guwahati", state: "Assam" },
+  { name: "Smriti Ranawat", city: "Kota", state: "Rajasthan" },
+  { name: "Akhil Shukla", city: "Lucknow", state: "Uttar Pradesh" },
+  { name: "Charu Bishnoi", city: "Bikaner", state: "Rajasthan" },
+  { name: "Gautam Namboodiri", city: "Thiruvananthapuram", state: "Kerala" },
+  { name: "Shikha Yadav", city: "Noida", state: "Uttar Pradesh" },
+  { name: "Jaspreet Gill", city: "Ludhiana", state: "Punjab" },
+  { name: "Tejaswini Patil", city: "Kolhapur", state: "Maharashtra" },
+  { name: "Kushagra Agnihotri", city: "Prayagraj", state: "Uttar Pradesh" },
+  { name: "Preeti Shenoy", city: "Kozhikode", state: "Kerala" },
+  { name: "Bikramjit Mukherjee", city: "Asansol", state: "West Bengal" },
+  { name: "Radhika Deshpande", city: "Aurangabad", state: "Maharashtra" },
+  { name: "Mayank Sandhu", city: "Patiala", state: "Punjab" },
+  { name: "Meenakshi Iyer", city: "Salem", state: "Tamil Nadu" },
+  { name: "Girish Sahu", city: "Raipur", state: "Chhattisgarh" },
+  { name: "Sangeeta Kulkarni", city: "Amravati", state: "Maharashtra" },
+  { name: "Abhishek Dutta", city: "Durgapur", state: "West Bengal" },
+  { name: "Chitra Bisht", city: "Nainital", state: "Uttarakhand" },
+  { name: "Deepak Bhardwaj", city: "Faridabad", state: "Haryana" },
+  { name: "Lipika Sundaram", city: "Tirunelveli", state: "Tamil Nadu" },
+  { name: "Nitin Shenoy", city: "Hubballi", state: "Karnataka" },
+  { name: "Renuka Menon", city: "Thrissur", state: "Kerala" },
+  { name: "Sourabh Deshmukh", city: "Solapur", state: "Maharashtra" },
+
+  // 25K / 30K / 42K Marathon Partition (Index 350 - 399)
+  { name: "Devendra Rathore", city: "Jaipur", state: "Rajasthan" },
+  { name: "Ananya Mukherjee", city: "Kolkata", state: "West Bengal" },
+  { name: "Vikram Nambiar", city: "Kochi", state: "Kerala" },
+  { name: "Meera Tawde", city: "Mumbai", state: "Maharashtra" },
+  { name: "Rohan Shenoy", city: "Bengaluru", state: "Karnataka" },
+  { name: "Kavya Deshmukh", city: "Pune", state: "Maharashtra" },
+  { name: "Abhayraj Kapoor", city: "Chandigarh", state: "Punjab" },
+  { name: "Pooja Sundaram", city: "Chennai", state: "Tamil Nadu" },
+  { name: "Siddharth Chawla", city: "Delhi NCR", state: "Delhi" },
+  { name: "Harshvardhan Reddy", city: "Hyderabad", state: "Telangana" },
+  { name: "Simran Grewal", city: "Amritsar", state: "Punjab" },
+  { name: "Naveen Varma", city: "Lucknow", state: "Uttar Pradesh" },
+  { name: "Alokita Patel", city: "Ahmedabad", state: "Gujarat" },
+  { name: "Prateek Deshpande", city: "Nagpur", state: "Maharashtra" },
+  { name: "Divya Shenoy", city: "Mangaluru", state: "Karnataka" },
+  { name: "Mayank Rawat", city: "Dehradun", state: "Uttarakhand" },
+  { name: "Ritika Sethi", city: "Noida", state: "Uttar Pradesh" },
+  { name: "Gaurav Gupta", city: "Indore", state: "Madhya Pradesh" },
+  { name: "Deepa Srivastava", city: "Varanasi", state: "Uttar Pradesh" },
+  { name: "Tarun Saxena", city: "Bhopal", state: "Madhya Pradesh" },
+  { name: "Namrata Hegde", city: "Udupi", state: "Karnataka" },
+  { name: "Ayush Tiwari", city: "Kanpur", state: "Uttar Pradesh" },
+  { name: "Smriti Sen", city: "Siliguri", state: "West Bengal" },
+  { name: "Abhishek Bhatia", city: "Gurgaon", state: "Haryana" },
+  { name: "Charu Pillai", city: "Thiruvananthapuram", state: "Kerala" },
+  { name: "Nitin Jha", city: "Patna", state: "Bihar" },
+  { name: "Sangeeta Das", city: "Guwahati", state: "Assam" },
+  { name: "Kunal Kulkarni", city: "Nashik", state: "Maharashtra" },
+  { name: "Bhavna Bisht", city: "Haridwar", state: "Uttarakhand" },
+  { name: "Rahul Mehra", city: "Faridabad", state: "Haryana" },
+  { name: "Swati Kaushik", city: "Ghaziabad", state: "Uttar Pradesh" },
+  { name: "Dhruv Roy", city: "Ranchi", state: "Jharkhand" },
+  { name: "Meera Choudhury", city: "Bhubaneswar", state: "Odisha" },
+  { name: "Karan Singhal", city: "Agra", state: "Uttar Pradesh" },
+  { name: "Pallavi Nambiar", city: "Thrissur", state: "Kerala" },
+  { name: "Shashank Goswami", city: "Jalandhar", state: "Punjab" },
+  { name: "Jahnvi Mathur", city: "Udaipur", state: "Rajasthan" },
+  { name: "Tushar Rathore", city: "Jodhpur", state: "Rajasthan" },
+  { name: "Monika Bose", city: "Howrah", state: "West Bengal" },
+  { name: "Balram Patil", city: "Kolhapur", state: "Maharashtra" },
+  { name: "Lipika Bhatt", city: "Vadodara", state: "Gujarat" },
+  { name: "Sourabh Agnihotri", city: "Prayagraj", state: "Uttar Pradesh" },
+  { name: "Preeti Sandhu", city: "Ludhiana", state: "Punjab" },
+  { name: "Hemant Nair", city: "Kozhikode", state: "Kerala" },
+  { name: "Damini Verma", city: "Jammu", state: "Jammu & Kashmir" },
+  { name: "Gautam Iyer", city: "Madurai", state: "Tamil Nadu" },
+  { name: "Radhika Chauhan", city: "Meerut", state: "Uttar Pradesh" },
+  { name: "Pawan Sundaram", city: "Tiruchirappalli", state: "Tamil Nadu" },
+  { name: "Madhuri Saxena", city: "Bareilly", state: "Uttar Pradesh" },
+  { name: "Vikas Pandey", city: "Gorakhpur", state: "Uttar Pradesh" },
 ];
 
 function parseDistanceKm(distanceStr: string): number {
   if (!distanceStr) return 5;
   const lower = distanceStr.toLowerCase().trim();
-  if (lower.includes("half") || lower.includes("21.1")) return 21.0975;
+  if (lower.includes("half") || lower.includes("21.1") || lower.includes("21k")) return 21.0975;
   if (lower.includes("full") || (lower.includes("marathon") && !lower.includes("half"))) return 42.195;
   const match = distanceStr.match(/([0-9]+(?:\.[0-9]+)?)/);
   if (match && match[1]) {
@@ -405,40 +780,70 @@ function hashSeed(str: string): number {
   return Math.abs(hash);
 }
 
-function getBasePacesForDistance(km: number): number[] {
-  // Base pace in seconds per km scaled realistically by race distance
-  // Sprints (1.5k - 3k) are faster (~3:20 to 7:20/km), while 20k - 30k are endurance paces (~4:30 to 8:40/km)
-  let startPace = 215; // ~3:35/km for 5k
-  if (km <= 2) startPace = 200; // ~3:20/km
-  else if (km <= 3) startPace = 210; // ~3:30/km
-  else if (km <= 5) startPace = 225; // ~3:45/km
-  else if (km <= 10) startPace = 245; // ~4:05/km
-  else if (km <= 15) startPace = 265; // ~4:25/km
-  else if (km <= 21.1) startPace = 275; // ~4:35/km
-  else if (km <= 25) startPace = 285; // ~4:45/km
-  else startPace = 295; // ~4:55/km for 30k+
+function getCategorySliceOffset(distance: string): number {
+  const km = parseDistanceKm(distance);
+  if (km <= 2) return 0;       // 1.5k / 1.6k -> Slice 0..49
+  if (km <= 4) return 50;      // 3k / 3.2k   -> Slice 50..99
+  if (km <= 6) return 100;     // 5k          -> Slice 100..149
+  if (km <= 8) return 150;     // 7k          -> Slice 150..199
+  if (km <= 12) return 200;    // 10k         -> Slice 200..249
+  if (km <= 18) return 250;    // 15k         -> Slice 250..299
+  if (km <= 23) return 300;    // 21.1k       -> Slice 300..349
+  return 350;                  // 25k+ / 42k  -> Slice 350..399
+}
 
-  // Progressive distribution from Rank 1 to Rank 35+
-  return Array.from({ length: 40 }, (_, i) => {
-    const spread = Math.round(startPace + Math.pow(i, 1.35) * 2.8);
+function getBasePacesForDistance(km: number, targetCount = 50, startBasePace?: number): number[] {
+  let startPace = startBasePace ?? 225;
+  if (!startBasePace) {
+    if (km <= 2) startPace = 205;       // ~3:25/km
+    else if (km <= 3.5) startPace = 215;// ~3:35/km
+    else if (km <= 5.5) startPace = 230;// ~3:50/km
+    else if (km <= 7.5) startPace = 250;// ~4:10/km
+    else if (km <= 11) startPace = 265; // ~4:25/km
+    else if (km <= 16) startPace = 285; // ~4:45/km
+    else if (km <= 22) startPace = 300; // ~5:00/km
+    else startPace = 320;               // ~5:20/km
+  }
+
+  return Array.from({ length: targetCount }, (_, i) => {
+    const spread = Math.round(startPace + Math.pow(i + 1, 1.32) * 2.6);
     return spread;
   });
 }
 
-function generatePaddedLeaderboard(eventSlug: string, distance: string, minCount = 35) {
+function generatePaddedLeaderboard(
+  eventSlug: string,
+  distance: string,
+  targetTotal = 50,
+  realRunnersCount = 0,
+  minPaceBaseline?: number,
+) {
   const km = parseDistanceKm(distance);
   const seed = hashSeed(`${eventSlug}-${distance}`);
   const cleanCode = distance.replace(/[^a-zA-Z0-9.]/g, "").toUpperCase() || "RUN";
-  const basePaces = getBasePacesForDistance(km);
+  const offset = getCategorySliceOffset(distance);
+  const needed = Math.max(0, targetTotal - realRunnersCount);
 
-  return INDIAN_RUNNERS_ROSTER.slice(0, Math.max(minCount, basePaces.length)).map((profile, idx) => {
-    const variance = ((seed + idx * 7) % 7) - 3;
-    const paceSec = Math.max(190, basePaces[idx % basePaces.length] + variance);
+  // Derive event prefix (e.g. SDC for sports-day-celebration, IDVR for independence-day)
+  let eventPrefix = "MR";
+  if (eventSlug.includes("sports-day")) eventPrefix = "SDC";
+  else if (eventSlug.includes("independence")) eventPrefix = "IDVR";
+  else if (eventSlug.includes("spring-valley")) eventPrefix = "SVD";
+
+  const basePaces = getBasePacesForDistance(km, needed, minPaceBaseline);
+
+  const paddedList = [];
+  for (let idx = 0; idx < needed; idx++) {
+    const profileIdx = (offset + idx) % INDIAN_RUNNERS_MASTER_POOL.length;
+    const profile = INDIAN_RUNNERS_MASTER_POOL[profileIdx];
+    const variance = ((seed + idx * 11) % 9) - 4;
+    const paceSec = Math.max(195, basePaces[idx] + variance);
     const finishSeconds = Math.round(km * paceSec);
-    const bibNum = 101 + idx;
-    const bibNumber = `MR-${cleanCode}-${String(bibNum).padStart(3, "0")}`;
 
-    return {
+    const deterministicBibNum = ((seed + idx * 37) % 899999) + 100001;
+    const bibNumber = `${eventPrefix}-${cleanCode}-${deterministicBibNum}`;
+
+    paddedList.push({
       runnerName: profile.name,
       city: profile.city,
       state: profile.state,
@@ -447,10 +852,12 @@ function generatePaddedLeaderboard(eventSlug: string, distance: string, minCount
       bibNumber,
       status: "Verified" as const,
       isPadded: true,
-      userId: `dummy-${idx}`,
+      userId: `dummy-${eventSlug}-${cleanCode}-${idx}`,
       clerkId: null,
-    };
-  });
+    });
+  }
+
+  return paddedList;
 }
 
 export async function getLeaderboard(request: AuthenticatedRequest, response: Response) {
@@ -573,7 +980,6 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
     let validSeconds = reg.finishTimeSeconds;
     if (validSeconds != null && validSeconds > 0) {
       if (validSeconds < minRealisticSeconds) {
-        // If user entered minutes (e.g., 45 instead of 2700) or hours (e.g., 2 instead of 7200)
         if (validSeconds * 60 >= minRealisticSeconds && validSeconds * 60 <= activeKm * 600) {
           validSeconds = validSeconds * 60;
         } else if (validSeconds * 3600 >= minRealisticSeconds && validSeconds * 3600 <= activeKm * 600) {
@@ -598,24 +1004,28 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
     };
   });
 
-  const now = new Date();
-  // An event is upcoming if its startsAt date is in the future, or if it is the current open sports day event
-  const isUpcoming = event.startsAt ? now < new Date(event.startsAt) : event.slug === "sports-day-celebration";
+  // Highest preference to real users: Real approved runners lead and take top spots!
+  realLeaderboardRows.sort((a, b) => (a.finishTimeSeconds ?? 999999) - (b.finishTimeSeconds ?? 999999));
 
-  // For upcoming events (not started yet), do NOT inject fake/padded finishers!
-  // Only completed/past events or started races can have padded historical benchmarks if enabled.
+  // Determine starting baseline pace for padded finishers so real users stay comfortably in top preference
+  let lastRealPace = Math.round(activeKm * 270 / activeKm);
+  if (realLeaderboardRows.length > 0) {
+    const slowestRealSecs = realLeaderboardRows[realLeaderboardRows.length - 1].finishTimeSeconds || Math.round(activeKm * 320);
+    lastRealPace = Math.max(220, Math.round(slowestRealSecs / activeKm) + 12);
+  }
+
   const mergedRows = [...realLeaderboardRows];
-  if (!isUpcoming && realLeaderboardRows.length < 35 && event.status === "COMPLETED") {
-    const paddedRows = generatePaddedLeaderboard(event.slug, activeDistance, 35);
+  if (mergedRows.length < 50) {
+    const paddedRows = generatePaddedLeaderboard(event.slug, activeDistance, 50, mergedRows.length, lastRealPace);
     for (const dummy of paddedRows) {
-      if (mergedRows.length >= 35) break;
+      if (mergedRows.length >= 50) break;
       if (!mergedRows.some((r) => r.runnerName.toLowerCase() === dummy.runnerName.toLowerCase())) {
         mergedRows.push(dummy);
       }
     }
   }
 
-  // Sort strictly by finish time ascending
+  // Sort by finish time ascending
   mergedRows.sort((a, b) => (a.finishTimeSeconds ?? 999999) - (b.finishTimeSeconds ?? 999999));
 
   // Compute ranks
@@ -647,6 +1057,8 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
     userId: p.user.id,
     clerkId: p.user.clerkId,
   }));
+
+  const isUpcoming = event.startsAt ? new Date() < new Date(event.startsAt) : false;
 
   response.json({
     data: rankedLeaderboard,
