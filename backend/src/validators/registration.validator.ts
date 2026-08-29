@@ -146,7 +146,11 @@ export const submitProofSchema = z
     activityImageUrl: z.string().min(5).optional(),
     activityImageUrls: z.array(z.string().min(5)).min(1).max(10).optional(),
     sourceApp: z.string().min(2, "Source app is required"),
-    finishTimeSeconds: z.number().int().positive().nullable().optional(),
+    finishTimeSeconds: z
+      .number({ message: "Official finish time is required for your certificate." })
+      .int()
+      .min(60, "Finish time must be at least 1 minute")
+      .max(86400, "Finish time must be under 24 hours"),
   })
   .refine(
     (data) => Boolean(data.activityImageUrl || (data.activityImageUrls && data.activityImageUrls.length > 0)),

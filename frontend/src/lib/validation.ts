@@ -240,22 +240,24 @@ export function validateProofForm(data: {
   const mStr = (data.finishMinutes ?? "").trim();
   const sStr = (data.finishSeconds ?? "").trim();
 
-  if (hStr) {
-    const h = Number(hStr);
-    if (Number.isNaN(h) || !Number.isInteger(h) || h < 0 || h > 23) {
-      errors.finishHours = "Hours must be between 0 and 23.";
-    }
-  }
-  if (mStr) {
-    const m = Number(mStr);
-    if (Number.isNaN(m) || !Number.isInteger(m) || m < 0 || m > 59) {
-      errors.finishMinutes = "Minutes must be between 0 and 59.";
-    }
-  }
-  if (sStr) {
-    const s = Number(sStr);
-    if (Number.isNaN(s) || !Number.isInteger(s) || s < 0 || s > 59) {
-      errors.finishSeconds = "Seconds must be between 0 and 59.";
+  const h = Number(hStr || "0");
+  const m = Number(mStr || "0");
+  const s = Number(sStr || "0");
+
+  if (!hStr && !mStr && !sStr) {
+    errors.finishTime = "Official finish time is required for your finisher certificate.";
+  } else if (Number.isNaN(h) || !Number.isInteger(h) || h < 0 || h > 23) {
+    errors.finishHours = "Hours must be between 0 and 23.";
+  } else if (Number.isNaN(m) || !Number.isInteger(m) || m < 0 || m > 59) {
+    errors.finishMinutes = "Minutes must be between 0 and 59.";
+  } else if (Number.isNaN(s) || !Number.isInteger(s) || s < 0 || s > 59) {
+    errors.finishSeconds = "Seconds must be between 0 and 59.";
+  } else {
+    const total = h * 3600 + m * 60 + s;
+    if (total < 60) {
+      errors.finishTime = "Finish time must be at least 1 minute (e.g. 00:25:30).";
+    } else if (total > 86400) {
+      errors.finishTime = "Finish time must be under 24 hours.";
     }
   }
 

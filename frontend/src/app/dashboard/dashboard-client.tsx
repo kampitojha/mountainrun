@@ -675,11 +675,18 @@ export function DashboardClient() {
       const s = Math.max(0, parseInt(finishSeconds, 10) || 0);
       const totalSecs = h * 3600 + m * 60 + s;
 
-      if (totalSecs > 0 && totalSecs < 60) {
-        throw new Error("Finish time cannot be under 1 minute. Please check your entered time or leave it empty.");
+      if (!finishHours && !finishMinutes && !finishSeconds) {
+        throw new Error("Official finish time is required. Enter the total duration from your screenshot (HH:MM:SS).");
       }
 
-      const secs = totalSecs > 0 ? totalSecs : undefined;
+      if (totalSecs < 60) {
+        throw new Error("Finish time must be at least 1 minute (e.g. 00:25:30). Please check your entered time.");
+      }
+      if (totalSecs > 86400) {
+        throw new Error("Finish time must be under 24 hours.");
+      }
+
+      const secs = totalSecs;
 
       // Upload each photo
       const uploadedUrls: string[] = [];
@@ -1539,9 +1546,14 @@ export function DashboardClient() {
                           </label>
 
                           <div>
-                            <span className="block text-xs font-bold uppercase tracking-wider text-(--muted) mb-1.5">
-                              Finish Time (Optional)
-                            </span>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="block text-xs font-bold uppercase tracking-wider text-(--foreground) flex items-center gap-1.5">
+                                <Clock className="h-3.5 w-3.5 text-(--sage)" /> Official Finish Time <span className="text-red-500 font-black">*</span>
+                              </span>
+                              <span className="text-[0.62rem] font-bold uppercase tracking-wider text-(--sage)">
+                                Required for Certificate
+                              </span>
+                            </div>
                             <div className="flex items-center gap-1.5">
                               <input
                                 ref={hoursInputRef}
@@ -1549,6 +1561,7 @@ export function DashboardClient() {
                                 className="input text-center font-mono text-xs font-bold h-10 w-16"
                                 max={23}
                                 min={0}
+                                required
                                 onPaste={handleTimePaste}
                                 onChange={(e) => {
                                   const val = e.target.value.slice(0, 2);
@@ -1568,6 +1581,7 @@ export function DashboardClient() {
                                 className="input text-center font-mono text-xs font-bold h-10 w-16"
                                 max={59}
                                 min={0}
+                                required
                                 onPaste={handleTimePaste}
                                 onChange={(e) => {
                                   const val = e.target.value.slice(0, 2);
@@ -1587,6 +1601,7 @@ export function DashboardClient() {
                                 className="input text-center font-mono text-xs font-bold h-10 w-16"
                                 max={59}
                                 min={0}
+                                required
                                 onPaste={handleTimePaste}
                                 onChange={(e) => {
                                   setFinishSeconds(e.target.value.slice(0, 2));
@@ -1596,13 +1611,29 @@ export function DashboardClient() {
                                 value={finishSeconds}
                               />
                             </div>
+                            <p className="text-[0.68rem] text-(--muted) mt-1">
+                              Enter the total duration shown on your GPS activity screenshot.
+                            </p>
                           </div>
                         </div>
 
-                        {formattedTimePreview && (
-                          <p className="text-xs text-(--sage) font-medium">
-                            ⏱ Entered Time: {formattedTimePreview.label} ({formattedTimePreview.digital})
-                          </p>
+                        {formattedTimePreview ? (
+                          <div className="rounded-xl border border-(--sage)/30 bg-(--sage)/10 p-2.5 flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2">
+                              <Award className="h-4 w-4 text-(--sage)" />
+                              <span className="font-semibold text-(--foreground)">
+                                Certificate Timing: <span className="font-mono font-bold text-(--sage)">{formattedTimePreview.digital}</span> ({formattedTimePreview.label})
+                              </span>
+                            </div>
+                            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--sage) bg-(--sage)/20 px-2 py-0.5 rounded-full">
+                              Official
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-[0.72rem] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-2">
+                            <span>⚠️</span>
+                            <span>Enter your activity finish time above so your certificate is issued with accurate timing.</span>
+                          </div>
                         )}
 
                         <div className="flex items-center gap-3 pt-2">
