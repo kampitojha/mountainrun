@@ -485,17 +485,23 @@ export function DashboardClient() {
     try {
       const token = await getToken();
       if (!token) throw new Error("Could not get session token.");
-      await fetch(getApiUrl("/api/users/sync"), {
-        method: "POST",
-        headers: authHeaders(token),
-        body: JSON.stringify({
-          clerkId: user?.id,
-          email: user?.primaryEmailAddress?.emailAddress,
-          name: user?.fullName ?? user?.firstName,
-          phone: user?.primaryPhoneNumber?.phoneNumber,
-          avatarUrl: user?.imageUrl,
-        }),
-      });
+
+      // Fire background sync non-blockingly
+      if (user?.id) {
+        void fetch(getApiUrl("/api/users/sync"), {
+          method: "POST",
+          headers: authHeaders(token),
+          body: JSON.stringify({
+            clerkId: user?.id,
+            email: user?.primaryEmailAddress?.emailAddress,
+            name: user?.fullName ?? user?.firstName,
+            phone: user?.primaryPhoneNumber?.phoneNumber,
+            avatarUrl: user?.imageUrl,
+          }),
+        }).catch(() => {});
+      }
+
+      // Fetch dashboard data immediately
       const res = await fetch(getApiUrl("/api/users/me"), {
         headers: authHeaders(token),
       });

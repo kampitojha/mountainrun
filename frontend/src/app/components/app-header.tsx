@@ -253,44 +253,46 @@ export function AppHeader() {
   const isActive = (href: string) =>
     pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
 
+  // Fast non-blocking scroll listener
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setScrolled(window.scrollY > 15);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Strict background scroll locking for iOS and mobile browsers
+  // Lightweight scroll lock without expensive DOM reflows
   useEffect(() => {
     if (!open) return;
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    const originalTouchAction = document.body.style.touchAction;
-
+    const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-    document.body.style.touchAction = "none";
-
     return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
-      document.body.style.touchAction = originalTouchAction;
+      document.body.style.overflow = prev;
     };
   }, [open]);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-3 sm:pt-4">
+    <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-3 sm:px-4 pt-2.5 sm:pt-4">
       {/* ─── Desktop floating bar ─── */}
       <div
-        className={`hidden w-full max-w-[1280px] transition-all duration-500 ease-out md:block ${
+        className={`hidden w-full max-w-[1280px] transition-all duration-300 ease-out md:block ${
           scrolled ? "-translate-y-0.5" : ""
         }`}
       >
         <div
-          className={`flex items-center justify-between rounded-2xl border border-(--line) transition-all duration-500 ease-out ${
+          className={`flex items-center justify-between rounded-2xl border border-(--line) transition-all duration-300 ease-out ${
             scrolled
-              ? "bg-(--header-bg) py-2 pl-4 pr-2 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.04)] backdrop-blur-2xl"
-              : "bg-(--header-bg)/70 py-2.5 pl-5 pr-2.5 shadow-none backdrop-blur-lg"
+              ? "bg-(--header-bg) py-2 pl-4 pr-2 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.06)] backdrop-blur-xl"
+              : "bg-(--header-bg)/80 py-2.5 pl-5 pr-2.5 shadow-none backdrop-blur-md"
           }`}
         >
           {/* Left — Logo */}
@@ -304,11 +306,11 @@ export function AppHeader() {
               alt="Mountain Run"
               width={28}
               height={28}
-              className={`shrink-0 transition-all duration-500 ease-out group-hover:scale-110 group-hover:rotate-3 ${
+              className={`shrink-0 transition-all duration-300 ease-out group-hover:scale-110 group-hover:rotate-3 ${
                 scrolled ? "h-6 w-6 sm:h-7 sm:w-7" : "h-7 w-7 sm:h-8 sm:w-8"
               }`}
             />
-            <span className={`font-bold tracking-tight text-(--foreground) transition-all duration-500 ease-out ${
+            <span className={`font-bold tracking-tight text-(--foreground) transition-all duration-300 ease-out ${
               scrolled ? "text-sm sm:text-base" : "text-base sm:text-lg"
             }`}>
               <BrandText />
@@ -351,12 +353,12 @@ export function AppHeader() {
         </div>
       </div>
 
-      {/* ─── Mobile bar ─── */}
+      {/* ─── Mobile bar (Optimized for instantaneous touch response) ─── */}
       <div className="flex w-full items-center justify-between md:hidden">
-        <div className={`flex w-full items-center justify-between rounded-2xl border border-(--line) px-4 py-2 transition-all duration-300 ${
+        <div className={`flex w-full items-center justify-between rounded-2xl border border-(--line) px-3.5 py-1.5 transition-all duration-200 ${
           scrolled
-            ? "bg-(--header-bg) shadow-[0_4px_24px_-6px_rgba(0,0,0,0.04)] backdrop-blur-2xl"
-            : "bg-(--header-bg)/80 backdrop-blur-lg"
+            ? "bg-(--header-bg) shadow-md backdrop-blur-md"
+            : "bg-(--header-bg)/90 backdrop-blur-sm"
         }`}>
           <Link href="/" aria-label="Mountain Run home" className="group flex shrink-0 items-center gap-2">
             <img
@@ -364,14 +366,14 @@ export function AppHeader() {
               alt="Mountain Run"
               width={24}
               height={24}
-              className="h-6 w-6 shrink-0 transition-transform duration-300 group-hover:scale-110"
+              className="h-6 w-6 shrink-0 transition-transform duration-200 group-hover:scale-110"
             />
             <span className="text-sm font-bold tracking-tight text-(--foreground)">
               <BrandText />
             </span>
           </Link>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 touch-manipulation">
             <ThemeToggle size="sm" />
             <Show when="signed-in">
               <ProfileDropdown />
@@ -381,7 +383,7 @@ export function AppHeader() {
         </div>
       </div>
 
-      {/* ─── Clean Minimalist Mobile Navigation ─── */}
+      {/* ─── High-Performance Smooth Mobile Navigation ─── */}
       <AnimatePresence>
         {open && (
           <>
@@ -390,19 +392,19 @@ export function AppHeader() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
+              transition={{ duration: 0.12 }}
               onClick={() => setOpen(false)}
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+              className="fixed inset-0 z-40 bg-black/65 backdrop-blur-xs md:hidden"
             />
 
             {/* Centered Modal Card */}
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-5 md:hidden pointer-events-none">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:hidden pointer-events-none">
               <motion.div
-                initial={{ opacity: 0, scale: 0.92, y: 10 }}
+                initial={{ opacity: 0, scale: 0.95, y: 8 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.92, y: 10 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                className="pointer-events-auto w-full max-w-xs overflow-hidden rounded-3xl border border-(--line) bg-(--panel)/98 backdrop-blur-2xl p-3 shadow-2xl"
+                exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="pointer-events-auto w-full max-w-xs overflow-hidden rounded-3xl border border-(--line) bg-(--panel) p-3 shadow-2xl"
               >
                 <nav className="flex flex-col gap-1.5">
                   {[
@@ -416,10 +418,10 @@ export function AppHeader() {
                         key={href}
                         href={href}
                         onClick={() => setOpen(false)}
-                        className={`flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm transition-all ${
+                        className={`flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm transition-colors ${
                           active
                             ? "bg-(--sage-soft) text-(--sage) font-bold"
-                            : "text-(--foreground) font-semibold hover:bg-(--panel-soft)"
+                            : "text-(--foreground) font-semibold hover:bg-(--panel-soft) active:bg-(--panel-soft)"
                         }`}
                       >
                         <span>{label}</span>
@@ -436,7 +438,7 @@ export function AppHeader() {
                     <Link
                       href="/dashboard"
                       onClick={() => setOpen(false)}
-                      className="flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-(--foreground) hover:bg-(--panel-soft) transition-all"
+                      className="flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-(--foreground) hover:bg-(--panel-soft) active:bg-(--panel-soft) transition-colors"
                     >
                       <span>Runner Dashboard</span>
                       <span className="text-xs text-(--muted)">→</span>
@@ -447,7 +449,7 @@ export function AppHeader() {
                     <Link
                       href="/sign-in"
                       onClick={() => setOpen(false)}
-                      className="flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-(--foreground) hover:bg-(--panel-soft) transition-all"
+                      className="flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-(--foreground) hover:bg-(--panel-soft) active:bg-(--panel-soft) transition-colors"
                     >
                       <span>Sign In</span>
                       <span className="text-xs text-(--muted)">→</span>
