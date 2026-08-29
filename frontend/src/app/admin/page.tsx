@@ -20,7 +20,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { adminFetch, formatDateTime, formatInrFromPaise } from "../../lib/admin-api";
 import { AdminEmpty, AdminPageHeader, AdminPanel } from "./ui";
 
@@ -126,9 +126,10 @@ export default function AdminOverviewPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [selectedRange, setSelectedRange] = useState<"today" | "3d" | "7d" | "30d" | "all">("today");
-  const [selectedEventId, setSelectedEventId] = useState<string>("all");
+  const [selectedEventId, setSelectedEventId] = useState<string>("auto");
   const [selectedGraphRange, setSelectedGraphRange] = useState<"7d" | "14d" | "30d" | "90d" | "1y">("7d");
   const [graphMetric, setGraphMetric] = useState<"revenue" | "orders">("revenue");
+  const hasInitializedEventRef = useRef(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -137,11 +138,39 @@ export default function AdminOverviewPage() {
       const queryParams = new URLSearchParams();
       queryParams.set("range", selectedRange);
       queryParams.set("graphRange", selectedGraphRange);
-      if (selectedEventId && selectedEventId !== "all") {
-        queryParams.set("eventId", selectedEventId);
+
+      let effectiveEventId = selectedEventId;
+
+      // On initial load, discover the active running event and default to it
+      if (!hasInitializedEventRef.current && selectedEventId === "auto") {
+        const initialJson = await adminFetch<{ data: Overview }>(
+          `/api/admin/overview?range=${selectedRange}&graphRange=${selectedGraphRange}`,
+          token,
+        );
+        const openEvent =
+          initialJson.data.allEvents.find((e) => e.status === "OPEN") ||
+          initialJson.data.allEvents[0];
+        if (openEvent) {
+          hasInitializedEventRef.current = true;
+          setSelectedEventId(openEvent.id);
+          effectiveEventId = openEvent.id;
+          queryParams.set("eventId", openEvent.id);
+          const eventJson = await adminFetch<{ data: Overview }>(
+            `/api/admin/overview?${queryParams.toString()}`,
+            token,
+          );
+          setData(eventJson.data);
+          setError(null);
+          return;
+        }
+      } else if (effectiveEventId && effectiveEventId !== "all" && effectiveEventId !== "auto") {
+        queryParams.set("eventId", effectiveEventId);
       }
 
-      const json = await adminFetch<{ data: Overview }>(`/api/admin/overview?${queryParams.toString()}`, token);
+      const json = await adminFetch<{ data: Overview }>(
+        `/api/admin/overview?${queryParams.toString()}`,
+        token,
+      );
       setData(json.data);
       setError(null);
     } catch (err) {
@@ -171,7 +200,7 @@ export default function AdminOverviewPage() {
     );
   }
 
-  const maxDailyRev = data ? Math.max(...data.dailyTrend.map((d) => d.revenueInr), 100) : 100;
+  const selectedEventObj = data?.allEvents.find((e) => e.id === selectedEventId);
 
   return (
     <div className="admin-stack pb-12">
@@ -190,6 +219,25 @@ export default function AdminOverviewPage() {
           <p className="text-xs sm:text-sm text-(--muted) mt-0.5">
             Real-time breakdown of event revenue, conversions, and fulfillment pipeline.
           </p>
+          {selectedEventObj && (
+            <div className="mt-2 flex items-center gap-2">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold tracking-wide border ${
+                  selectedEventObj.status === "OPEN"
+                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : "border-(--line) bg-(--panel-soft) text-(--muted)"
+                }`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    selectedEventObj.status === "OPEN" ? "bg-emerald-500 animate-pulse" : "bg-zinc-400"
+                  }`}
+                />
+                {selectedEventObj.status === "OPEN" ? "Active Running Event:" : "Filtered Event:"}{" "}
+                {selectedEventObj.title}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -239,21 +287,34 @@ export default function AdminOverviewPage() {
           </div>
 
           {/* Event Filter Dropdown */}
-          <div className="flex items-center gap-2 min-w-0 sm:min-w-64">
+          <div className="flex items-center gap-2 min-w-0 sm:min-w-72">
             <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted) flex items-center gap-1 shrink-0">
               <Filter className="h-3 w-3 text-(--sage)" /> Event:
             </span>
             <select
               value={selectedEventId}
               onChange={(e) => setSelectedEventId(e.target.value)}
-              className="input text-xs font-medium h-9 w-full"
+              className="input text-xs font-semibold h-9 w-full bg-(--panel) border-(--line) cursor-pointer"
             >
-              <option value="all">All Events (Combined)</option>
-              {data?.allEvents.map((ev) => (
-                <option key={ev.id} value={ev.id}>
-                  {ev.title} ({ev.status})
-                </option>
-              ))}
+              {/* Active/Open events first */}
+              {data?.allEvents
+                .filter((ev) => ev.status === "OPEN")
+                .map((ev) => (
+                  <option key={ev.id} value={ev.id}>
+                    🟢 {ev.title} (Running Live)
+                  </option>
+                ))}
+
+              {/* Past/Closed events */}
+              {data?.allEvents
+                .filter((ev) => ev.status !== "OPEN")
+                .map((ev) => (
+                  <option key={ev.id} value={ev.id}>
+                    ⚪ {ev.title} ({ev.status})
+                  </option>
+                ))}
+
+              <option value="all">🌐 All Events (Combined Total)</option>
             </select>
           </div>
         </div>
