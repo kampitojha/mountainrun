@@ -110,10 +110,11 @@ function PodiumCard({
   const medalMeta = {
     1: {
       badgeClass: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
-      borderClass: "border-amber-500/40 shadow-amber-500/10",
-      avatarClass: "from-amber-400 to-yellow-600 text-white ring-amber-400/40",
+      borderClass: "border-amber-500/50 shadow-amber-500/15",
+      avatarClass: "from-amber-400 to-yellow-600 text-white ring-amber-400/50",
       crown: true,
       rankLabel: "Gold 🥇",
+      rankText: "1st",
     },
     2: {
       badgeClass: "bg-slate-400/15 text-slate-600 dark:text-slate-300 border-slate-400/30",
@@ -121,6 +122,7 @@ function PodiumCard({
       avatarClass: "from-slate-400 to-slate-600 text-white ring-slate-400/30",
       crown: false,
       rankLabel: "Silver 🥈",
+      rankText: "2nd",
     },
     3: {
       badgeClass: "bg-amber-800/15 text-amber-800 dark:text-amber-300 border-amber-800/30",
@@ -128,84 +130,92 @@ function PodiumCard({
       avatarClass: "from-amber-700 to-amber-900 text-white ring-amber-700/30",
       crown: false,
       rankLabel: "Bronze 🥉",
+      rankText: "3rd",
     },
   }[position];
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: isFirst ? -8 : 12 }}
+      initial={{ opacity: 0, y: isFirst ? -6 : 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: position * 0.1 }}
+      transition={{ duration: 0.35, delay: position * 0.08 }}
       className={cn(
-        "relative flex flex-col items-center justify-between rounded-2xl border bg-(--panel) p-3.5 text-center transition-all duration-300 hover:shadow-xl sm:p-5",
+        "relative flex flex-col items-center justify-between rounded-xl sm:rounded-2xl border bg-(--panel) p-2 sm:p-4 text-center transition-all duration-300 hover:shadow-xl w-full",
         medalMeta.borderClass,
-        isFirst && "sm:-translate-y-2 ring-1 ring-amber-500/30 bg-linear-to-b from-amber-500/5 via-(--panel) to-(--panel)",
+        isFirst
+          ? "-translate-y-1 sm:-translate-y-3 ring-1 ring-amber-500/30 bg-linear-to-b from-amber-500/8 via-(--panel) to-(--panel) shadow-lg"
+          : "opacity-95 hover:opacity-100",
       )}
     >
       {/* Crown for #1 */}
       {medalMeta.crown && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-full bg-linear-to-r from-amber-500 to-yellow-400 px-2.5 py-0.5 text-[0.6rem] sm:text-[0.65rem] font-black uppercase tracking-wider text-slate-950 shadow-md whitespace-nowrap">
-          <Crown className="h-3 w-3" /> Champion
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-full bg-linear-to-r from-amber-500 to-yellow-400 px-2 py-0.5 text-[0.55rem] sm:text-[0.65rem] font-black uppercase tracking-wider text-slate-950 shadow-md whitespace-nowrap z-10">
+          <Crown className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> Champion
         </div>
       )}
 
       {/* Header Badge */}
-      <div className="mb-2 flex w-full items-center justify-between">
+      <div className="mb-1 sm:mb-2 flex w-full items-center justify-between gap-1">
         <span
           className={cn(
-            "rounded-full border px-2 py-0.5 text-[0.6rem] sm:text-[0.65rem] font-bold uppercase tracking-wider",
+            "rounded-full border px-1.5 py-0.2 sm:px-2 sm:py-0.5 text-[0.55rem] sm:text-[0.65rem] font-bold uppercase tracking-wider",
             medalMeta.badgeClass,
           )}
         >
           {medalMeta.rankLabel}
         </span>
         {entry.bibNumber && (
-          <span className="font-mono text-[0.6rem] sm:text-[0.65rem] font-medium text-(--muted)">
+          <span className="hidden sm:inline font-mono text-[0.6rem] sm:text-[0.65rem] font-medium text-(--muted) truncate">
             {entry.bibNumber}
           </span>
         )}
       </div>
 
       {/* Avatar */}
-      <div className="relative my-1.5 sm:my-2">
+      <div className="relative my-1 sm:my-2">
         <div
           className={cn(
-            "flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-linear-to-tr font-bold tracking-tight shadow-md ring-4 text-sm sm:text-lg",
+            "flex items-center justify-center rounded-xl sm:rounded-2xl bg-linear-to-tr font-bold tracking-tight shadow-md ring-2 sm:ring-4",
+            isFirst
+              ? "h-11 w-11 sm:h-16 sm:w-16 text-xs sm:text-lg"
+              : "h-9 w-9 sm:h-14 sm:w-14 text-[0.7rem] sm:text-base",
             medalMeta.avatarClass,
           )}
         >
           {getInitials(entry.runnerName)}
         </div>
-        <span className="absolute -bottom-1 -right-1 flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-(--panel) text-[0.65rem] sm:text-xs font-bold shadow border border-(--line)">
+        <span className="absolute -bottom-1 -right-1 flex h-4.5 w-4.5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-(--panel) text-[0.55rem] sm:text-xs font-black shadow border border-(--line)">
           #{position}
         </span>
       </div>
 
       {/* Runner Info */}
-      <div className="mt-1 sm:mt-2 w-full min-w-0">
-        <h3 className="truncate text-sm sm:text-base font-bold tracking-tight text-foreground">
+      <div className="mt-0.5 sm:mt-1.5 w-full min-w-0 px-0.5">
+        <h3 className="truncate text-[0.7rem] sm:text-sm font-bold tracking-tight text-foreground leading-tight">
           {entry.runnerName}
         </h3>
-        {entry.city && (
-          <p className="flex items-center justify-center gap-1 text-[0.7rem] sm:text-xs text-(--muted) truncate">
-            <MapPin className="h-3 w-3 shrink-0 text-(--muted-soft)" />
-            {entry.city}
+        {entry.city ? (
+          <p className="flex items-center justify-center gap-0.5 text-[0.6rem] sm:text-xs text-(--muted) truncate mt-0.5">
+            <MapPin className="h-2.5 w-2.5 shrink-0 text-(--muted-soft) hidden sm:inline" />
+            <span className="truncate">{entry.city}</span>
           </p>
+        ) : (
+          <p className="text-[0.6rem] sm:text-xs text-(--muted) truncate mt-0.5">India</p>
         )}
       </div>
 
       {/* Time & Pace stats */}
-      <div className="mt-3 w-full rounded-xl border border-(--line) bg-(--panel-soft) p-2 sm:p-2.5">
-        <div className="grid grid-cols-2 gap-1 sm:gap-2 text-center">
+      <div className="mt-2 sm:mt-3 w-full rounded-lg sm:rounded-xl border border-(--line) bg-(--panel-soft) p-1.5 sm:p-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-0.5 sm:gap-2 text-center">
           <div>
-            <p className="text-[0.55rem] sm:text-[0.6rem] font-semibold uppercase tracking-wider text-(--muted)">Time</p>
-            <p className="font-mono text-xs sm:text-sm font-bold tracking-wide text-foreground">
+            <p className="text-[0.5rem] sm:text-[0.6rem] font-semibold uppercase tracking-wider text-(--muted)">Time</p>
+            <p className="font-mono text-[0.65rem] sm:text-sm font-bold tracking-tight text-foreground truncate">
               {formatTime(entry.finishTimeSeconds)}
             </p>
           </div>
-          <div className="border-l border-(--line)">
+          <div className="hidden sm:block border-l border-(--line)">
             <p className="text-[0.55rem] sm:text-[0.6rem] font-semibold uppercase tracking-wider text-(--muted)">Pace</p>
-            <p className="font-mono text-xs sm:text-sm font-bold tracking-wide text-(--sage)">
+            <p className="font-mono text-[0.65rem] sm:text-sm font-bold tracking-tight text-(--sage) truncate">
               {formatPace(entry.finishTimeSeconds, activeDistance)}
             </p>
           </div>
@@ -636,10 +646,10 @@ export function LeaderboardClient() {
                     </h2>
                   </div>
 
-                  {/* Responsive Podium Grid */}
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-5">
+                  {/* Responsive 3-Column Parallel Podium Grid */}
+                  <div className="grid grid-cols-3 gap-1.5 sm:gap-4 md:gap-5 items-end max-w-4xl mx-auto pt-3 sm:pt-6">
                     {topThree.second && (
-                      <div className="order-2 sm:order-1">
+                      <div className="order-1">
                         <PodiumCard
                           entry={topThree.second}
                           position={2}
@@ -649,7 +659,7 @@ export function LeaderboardClient() {
                     )}
 
                     {topThree.first && (
-                      <div className="order-1 sm:order-2">
+                      <div className="order-2">
                         <PodiumCard
                           entry={topThree.first}
                           position={1}
@@ -659,7 +669,7 @@ export function LeaderboardClient() {
                     )}
 
                     {topThree.third && (
-                      <div className="order-3 sm:order-3">
+                      <div className="order-3">
                         <PodiumCard
                           entry={topThree.third}
                           position={3}
