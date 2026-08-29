@@ -23,6 +23,7 @@ import {
   User,
   X,
 } from "lucide-react";
+import { parseProofImages } from "../../../lib/proof-utils";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { adminFetch } from "../../../lib/admin-api";
@@ -808,14 +809,37 @@ export default function AdminMedalDispatchPage() {
                   </div>
 
                   {activeItem.proofUpload?.activityImageUrl ? (
-                    <div className="mt-3 overflow-hidden rounded-lg border border-(--line)">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={activeItem.proofUpload.activityImageUrl}
-                        alt="GPS Proof screenshot"
-                        className="max-h-48 w-full object-contain bg-black"
-                      />
-                    </div>
+                    (() => {
+                      const imgs = parseProofImages(activeItem.proofUpload.activityImageUrl);
+                      return (
+                        <div className="mt-3 space-y-2">
+                          <div className="overflow-hidden rounded-lg border border-(--line) bg-black">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={imgs[0]}
+                              alt="GPS Proof screenshot"
+                              className="max-h-48 w-full object-contain mx-auto"
+                            />
+                          </div>
+                          {imgs.length > 1 && (
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                              {imgs.map((im, idx) => (
+                                <a
+                                  key={idx}
+                                  href={im}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="relative h-12 w-12 shrink-0 rounded-md overflow-hidden border border-(--line) hover:border-(--sage) transition"
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={im} alt={`Proof ${idx + 1}`} className="h-full w-full object-cover" />
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()
                   ) : (
                     <p className="mt-2 text-[0.7rem] text-(--muted-soft)">
                       No screenshot attached (Manually approved)

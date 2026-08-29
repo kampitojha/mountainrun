@@ -13,7 +13,11 @@ import {
   ZoomIn,
   Clock,
   MapPin,
+  ChevronLeft,
+  ChevronRight,
+  Layers,
 } from "lucide-react";
+import { parseProofImages } from "../../../lib/proof-utils";
 
 /* ── Toast ──────────────────────────────────────────────── */
 type Toast = { id: number; type: "success" | "error" | "info"; message: string };
@@ -150,41 +154,131 @@ function RejectModal({
   );
 }
 
-/* ── Lightbox Image Modal ───────────────────────────────── */
+/* ── Multi-Image Lightbox Modal ─────────────────────────── */
 function LightboxModal({
-  url,
+  images,
+  initialIndex = 0,
   onClose,
 }: {
-  url: string | null;
+  images: string[] | null;
+  initialIndex?: number;
   onClose: () => void;
 }) {
-  if (!url) return null;
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+
+  useEffect(() => {
+    setCurrentIndex(initialIndex);
+  }, [initialIndex, images]);
+
+  useEffect(() => {
+    if (!images || images.length === 0) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") {
+        setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
+      }
+      if (e.key === "ArrowRight") {
+        setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [images, onClose]);
+
+  if (!images || images.length === 0) return null;
+
+  const currentUrl = images[currentIndex] || images[0];
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)" }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
+      style={{ background: "rgba(0,0,0,0.88)", backdropFilter: "blur(8px)" }}
       onClick={onClose}
     >
       <div
-        className="relative max-w-4xl max-h-[90vh] flex flex-col rounded-xl overflow-hidden shadow-2xl bg-black"
+        className="relative max-w-5xl w-full max-h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-black/90 border border-white/10"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="absolute top-3 right-3 z-10">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full bg-black/60 p-2 text-white hover:bg-black/90 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+        {/* Header Bar */}
+        <div className="flex items-center justify-between px-4 py-3 bg-black/60 border-b border-white/10 z-10">
+          <div className="flex items-center gap-2 text-xs font-semibold text-white/80">
+            <span className="rounded-md bg-white/10 px-2 py-0.5 font-mono">
+              {currentIndex + 1} / {images.length}
+            </span>
+            {images.length > 1 && (
+              <span className="hidden sm:inline text-white/50">
+                Use arrow keys or buttons to navigate
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <a
+              href={currentUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-[var(--sage)] hover:underline flex items-center gap-1 bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg transition"
+            >
+              Open Original <ExternalLink className="h-3 w-3" />
+            </a>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg bg-white/10 p-1.5 text-white/80 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={url}
-          alt="GPS proof preview"
-          className="max-h-[85vh] w-auto object-contain mx-auto"
-        />
+
+        {/* Main Image Display with Prev/Next Buttons */}
+        <div className="relative flex-1 flex items-center justify-center p-2 min-h-[300px] max-h-[70vh] overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={currentUrl}
+            alt={`GPS proof screenshot ${currentIndex + 1}`}
+            className="max-h-[68vh] max-w-full w-auto object-contain mx-auto select-none transition-all duration-150"
+          />
+
+          {images.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() => setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1))}
+                className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/60 hover:bg-black/90 text-white p-2.5 border border-white/20 shadow-lg cursor-pointer transition"
+                aria-label="Previous photo"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0))}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/60 hover:bg-black/90 text-white p-2.5 border border-white/20 shadow-lg cursor-pointer transition"
+                aria-label="Next photo"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Bottom Thumbnail Strip for Multi-Images */}
+        {images.length > 1 && (
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-black/70 border-t border-white/10 overflow-x-auto justify-center">
+            {images.map((img, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setCurrentIndex(idx)}
+                className={`relative h-12 w-12 rounded-lg overflow-hidden border-2 transition shrink-0 cursor-pointer ${
+                  currentIndex === idx ? "border-[var(--sage)] scale-105" : "border-white/20 opacity-60 hover:opacity-100"
+                }`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img} alt={`Thumb ${idx + 1}`} className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -239,7 +333,7 @@ export default function AdminProofsPage() {
   const [rejectBusy, setRejectBusy] = useState(false);
 
   // Lightbox modal state
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [lightboxGallery, setLightboxGallery] = useState<{ images: string[]; initialIndex: number } | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -343,8 +437,9 @@ export default function AdminProofsPage() {
       />
 
       <LightboxModal
-        url={lightboxUrl}
-        onClose={() => setLightboxUrl(null)}
+        images={lightboxGallery?.images ?? null}
+        initialIndex={lightboxGallery?.initialIndex ?? 0}
+        onClose={() => setLightboxGallery(null)}
       />
 
       <div className="admin-stack">
@@ -371,55 +466,80 @@ export default function AdminProofsPage() {
           ) : (
             items.map((row) => {
               const timeObj = verifiedTimes[row.id] ?? { h: "00", m: "00", s: "00" };
-              const claimedParsed = formatSecondsToHms(row.finishTimeSeconds);
+              const proofImages = parseProofImages(row.proofUpload?.activityImageUrl);
 
               return (
                 <article
-                  className="admin-panel admin-panel-pad grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(240px,320px)] border rounded-2xl shadow-xs"
                   key={row.id}
+                  className="rounded-2xl p-5 md:p-6 transition-all duration-150 grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6"
+                  style={{
+                    background: "var(--panel)",
+                    border: "1px solid var(--line)",
+                  }}
                 >
-                  {/* Left Column: Participant Details & Verification Form */}
+                  {/* Left Column: Participant & Event info + Time form + Actions */}
                   <div className="space-y-4">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="text-lg font-bold tracking-tight text-[var(--foreground)]">
-                          {row.user.name}
+                    {/* Header */}
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="font-mono text-xs font-bold px-2 py-0.5 rounded-md"
+                            style={{ background: "var(--panel-soft)", color: "var(--sage)", border: "1px solid var(--line)" }}
+                          >
+                            {row.bibNumber}
+                          </span>
+                          <span
+                            className="text-xs font-medium px-2 py-0.5 rounded-full"
+                            style={{ background: "rgba(227,100,20,0.12)", color: "#c45400" }}
+                          >
+                            {row.distance}
+                          </span>
+                          <span className="text-xs text-[var(--muted)]">
+                            Submitted {formatDateTime(row.proofUpload?.submittedAt ?? row.registeredAt)}
+                          </span>
+                        </div>
+                        <h2 className="text-lg font-bold mt-1" style={{ color: "var(--foreground)" }}>
+                          {row.user.name || "Unknown Runner"}
                         </h2>
-                        <span className="badge font-mono font-bold">Bib #{row.bibNumber}</span>
-                        <span className="badge badge-sage font-semibold">{row.distance}</span>
+                        <p className="text-xs text-[var(--muted)]">{row.user.email}</p>
                       </div>
-                      <p className="mt-1 text-sm text-[var(--muted)]">
-                        {row.event.title} · <span className="font-mono text-xs">{row.user.email}</span>
-                      </p>
-                      <p className="mt-1 text-xs text-[var(--muted-soft)]">
-                        Registered {formatDateTime(row.registeredAt)}
-                        {row.proofUpload ? ` · App: ${row.proofUpload.sourceApp}` : ""}
-                      </p>
+
+                      <div className="text-right">
+                        <p className="text-xs font-semibold text-[var(--sage)]">{row.event.title}</p>
+                        <p className="text-xs text-[var(--muted)] mt-0.5">
+                          App: <span className="font-semibold text-[var(--foreground)]">{row.proofUpload?.sourceApp ?? "Unknown"}</span>
+                        </p>
+                      </div>
                     </div>
 
-                    {/* GPS Claimed Time vs Verified Time */}
-                    <div className="rounded-xl border border-[var(--line)] bg-[var(--panel-soft)] p-4 space-y-3">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-[var(--muted)] flex items-center gap-1.5">
-                          <Clock className="h-3.5 w-3.5" /> Claimed Finish Time:
-                        </span>
-                        <span className="font-mono font-bold text-[var(--foreground)]">
-                          {claimedParsed.label}
+                    {/* Time Input Section */}
+                    <div
+                      className="p-4 rounded-xl space-y-3"
+                      style={{ background: "var(--panel-soft)", border: "1px solid var(--line)" }}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-[var(--sage)]" />
+                          <span className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+                            Official Finish Time
+                          </span>
+                        </div>
+                        <span className="text-[0.7rem] text-[var(--muted)]">
+                          Participant entered: <strong className="text-[var(--foreground)]">{formatSecondsToHms(row.finishTimeSeconds).label}</strong>
                         </span>
                       </div>
 
-                      {/* Verified Finish Time Inputs */}
-                      <div className="pt-2 border-t border-[var(--line)]">
-                        <p className="text-xs font-semibold text-[var(--foreground)] mb-1.5 flex items-center justify-between">
-                          <span>Verified Finish Time (for Certificate &amp; Leaderboard):</span>
-                          <span className="text-[0.65rem] text-[var(--muted)]">HH : MM : SS</span>
-                        </p>
-                        <div className="grid grid-cols-3 gap-2">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-[var(--muted)] font-medium shrink-0">
+                          Verify / Adjust Time:
+                        </span>
+                        <div className="flex items-center gap-1.5">
                           <div>
                             <input
                               type="number"
                               min="0"
-                              max="23"
+                              max="99"
                               className="input text-center text-sm font-mono h-9"
                               value={timeObj.h}
                               onChange={(e) => handleTimeChange(row.id, "h", e.target.value)}
@@ -427,6 +547,7 @@ export default function AdminProofsPage() {
                             />
                             <span className="text-[0.65rem] text-[var(--muted)] block text-center mt-0.5">Hours</span>
                           </div>
+                          <span className="font-bold text-sm text-[var(--muted)] pb-3">:</span>
                           <div>
                             <input
                               type="number"
@@ -435,10 +556,11 @@ export default function AdminProofsPage() {
                               className="input text-center text-sm font-mono h-9"
                               value={timeObj.m}
                               onChange={(e) => handleTimeChange(row.id, "m", e.target.value)}
-                              placeholder="45"
+                              placeholder="00"
                             />
                             <span className="text-[0.65rem] text-[var(--muted)] block text-center mt-0.5">Mins</span>
                           </div>
+                          <span className="font-bold text-sm text-[var(--muted)] pb-3">:</span>
                           <div>
                             <input
                               type="number"
@@ -477,37 +599,59 @@ export default function AdminProofsPage() {
                     </div>
                   </div>
 
-                  {/* Right Column: GPS Screenshot Preview with Zoom & Open */}
+                  {/* Right Column: GPS Screenshots Preview with Gallery & Zoom */}
                   <div className="flex flex-col">
                     <p className="text-xs font-semibold text-[var(--muted)] mb-2 flex items-center justify-between">
-                      <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> GPS Activity Screenshot</span>
-                      {row.proofUpload && (
-                        <a
-                          href={row.proofUpload.activityImageUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-[0.7rem] text-[var(--sage)] hover:underline flex items-center gap-0.5"
-                        >
-                          Full size <ExternalLink className="h-2.5 w-2.5" />
-                        </a>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3.5 w-3.5 text-[var(--sage)]" /> 
+                        Activity Proof {proofImages.length > 1 ? `(${proofImages.length} Photos)` : ""}
+                      </span>
+                      {proofImages.length > 0 && (
+                        <span className="text-[0.7rem] text-[var(--sage)] font-medium">
+                          Click to enlarge
+                        </span>
                       )}
                     </p>
-                    {row.proofUpload ? (
-                      <div className="relative group rounded-xl overflow-hidden border border-[var(--line)] bg-black/5 flex-1 min-h-[160px] max-h-[220px]">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          alt="GPS proof screenshot"
-                          className="h-full w-full object-contain cursor-pointer transition-transform duration-200 group-hover:scale-105"
-                          src={row.proofUpload.activityImageUrl}
-                          onClick={() => setLightboxUrl(row.proofUpload?.activityImageUrl ?? null)}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setLightboxUrl(row.proofUpload?.activityImageUrl ?? null)}
-                          className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold gap-1.5"
-                        >
-                          <ZoomIn className="h-4 w-4" /> Click to Zoom
-                        </button>
+
+                    {proofImages.length > 0 ? (
+                      <div className="flex flex-col gap-2 flex-1">
+                        {/* Primary Image preview */}
+                        <div className="relative group rounded-xl overflow-hidden border border-[var(--line)] bg-black/5 flex-1 min-h-[150px] max-h-[200px]">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            alt="GPS proof screenshot"
+                            className="h-full w-full object-contain cursor-pointer transition-transform duration-200 group-hover:scale-105"
+                            src={proofImages[0]}
+                            onClick={() => setLightboxGallery({ images: proofImages, initialIndex: 0 })}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setLightboxGallery({ images: proofImages, initialIndex: 0 })}
+                            className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold gap-1.5 cursor-pointer"
+                          >
+                            <ZoomIn className="h-4 w-4" /> Click to Zoom
+                          </button>
+                        </div>
+
+                        {/* Multi-Photo Thumbnails */}
+                        {proofImages.length > 1 && (
+                          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                            {proofImages.map((img, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => setLightboxGallery({ images: proofImages, initialIndex: idx })}
+                                className="relative h-12 w-12 shrink-0 rounded-lg overflow-hidden border border-[var(--line)] hover:border-[var(--sage)] transition-all cursor-pointer group"
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={img} alt={`Proof ${idx + 1}`} className="h-full w-full object-cover" />
+                                <span className="absolute bottom-0 right-0 bg-black/70 text-[0.6rem] text-white font-mono px-1 rounded-tl">
+                                  #{idx + 1}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="grid place-items-center rounded-xl border border-dashed border-[var(--line)] text-sm text-[var(--muted)] flex-1 min-h-[160px]">

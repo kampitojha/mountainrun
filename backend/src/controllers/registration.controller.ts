@@ -252,6 +252,14 @@ export async function submitProof(request: AuthenticatedRequest, response: Respo
     );
   }
 
+  let finalActivityImageUrl = payload.activityImageUrl || "";
+  if (payload.activityImageUrls && payload.activityImageUrls.length > 0) {
+    finalActivityImageUrl =
+      payload.activityImageUrls.length === 1
+        ? payload.activityImageUrls[0]
+        : JSON.stringify(payload.activityImageUrls);
+  }
+
   const registration = await prisma.registration.update({
     where: { id: registrationId },
     data: {
@@ -260,12 +268,12 @@ export async function submitProof(request: AuthenticatedRequest, response: Respo
       proofUpload: {
         upsert: {
           create: {
-            activityImageUrl: payload.activityImageUrl,
+            activityImageUrl: finalActivityImageUrl,
             sourceApp: payload.sourceApp,
             status: "SUBMITTED",
           },
           update: {
-            activityImageUrl: payload.activityImageUrl,
+            activityImageUrl: finalActivityImageUrl,
             sourceApp: payload.sourceApp,
             submittedAt: new Date(),
             status: "SUBMITTED",

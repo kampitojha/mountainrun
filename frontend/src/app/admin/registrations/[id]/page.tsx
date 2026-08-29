@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { adminFetch, formatDateTime, formatInrFromPaise } from "../../../../lib/admin-api";
+import { parseProofImages } from "../../../../lib/proof-utils";
 import { AdminBackLink, AdminPageHeader, AdminPanel } from "../../ui";
 
 type RegistrationDetail = {
@@ -195,19 +196,27 @@ export default function AdminRegistrationDetailPage() {
             {data.proofUpload ? (
               <>
                 <p className="admin-muted">Source: {data.proofUpload.sourceApp}</p>
-                <a
-                  className="mt-1 block overflow-hidden rounded-xl border border-[var(--line)]"
-                  href={data.proofUpload.activityImageUrl}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    alt="GPS proof screenshot"
-                    className="h-44 w-full object-cover"
-                    src={data.proofUpload.activityImageUrl}
-                  />
-                </a>
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {parseProofImages(data.proofUpload.activityImageUrl).map((img, i) => (
+                    <a
+                      key={i}
+                      className="group relative block overflow-hidden rounded-xl border border-[var(--line)] aspect-video bg-black/5 hover:border-[var(--sage)] transition-colors"
+                      href={img}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        alt={`GPS proof screenshot ${i + 1}`}
+                        className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                        src={img}
+                      />
+                      <span className="absolute bottom-1 right-1 rounded bg-black/70 px-1.5 py-0.5 text-[0.65rem] font-mono text-white">
+                        #{i + 1}
+                      </span>
+                    </a>
+                  ))}
+                </div>
                 {data.proofUpload.reviewerNote ? (
                   <p className="admin-muted mt-2">Note: {data.proofUpload.reviewerNote}</p>
                 ) : null}

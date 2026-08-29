@@ -1,39 +1,41 @@
 "use client";
 
 import { useAuth, useUser } from "@clerk/nextjs";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertCircle,
   ArrowRight,
-  ArrowUpRight,
   Award,
-  Calendar,
+  Camera,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Copy,
   ExternalLink,
-  Flame,
   Gift,
-  HelpCircle,
-  IndianRupee,
+  Image as ImageIcon,
+  Loader2,
   MapPin,
   Medal,
   Plus,
   RefreshCw,
   Route,
-  Share2,
   ShieldCheck,
   Sparkles,
+  Trash2,
   Trophy,
   Truck,
   UploadCloud,
   Users,
   X,
+  ZoomIn,
 } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { authHeaders, getApiUrl, readApiError } from "../../lib/api";
 import { cn } from "../../lib/cn";
+import { parseProofImages } from "../../lib/proof-utils";
 import { parseTimeToSeconds, validateProofForm } from "../../lib/validation";
 import { getEventBySlug } from "../data/events";
 
@@ -181,8 +183,200 @@ async function fileToPayload(file: File): Promise<string> {
   });
 }
 
+type SelectedProofPhoto = {
+  id: string;
+  file: File;
+  name: string;
+  size: number;
+  previewUrl: string;
+};
+
+const MAX_PROOF_PHOTOS = 5;
+
+type DashboardToast = {
+  id: number;
+  type: "success" | "error" | "info";
+  message: string;
+};
+
+function DashboardToastContainer({
+  toasts,
+  dismiss,
+}: {
+  toasts: DashboardToast[];
+  dismiss: (id: number) => void;
+}) {
+  return (
+    <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm sm:max-w-md pointer-events-none">
+      <AnimatePresence>
+        {toasts.map((t) => (
+          <motion.div
+            key={t.id}
+            initial={{ opacity: 0, y: 16, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className={cn(
+              "pointer-events-auto flex items-start gap-3 rounded-2xl border p-4 shadow-2xl text-xs sm:text-sm font-semibold backdrop-blur-xl",
+              t.type === "success" &&
+                "border-emerald-500/30 bg-emerald-950/90 text-emerald-200 shadow-emerald-950/40",
+              t.type === "error" &&
+                "border-red-500/30 bg-red-950/90 text-red-200 shadow-red-950/40",
+              t.type === "info" &&
+                "border-(--line) bg-(--panel)/95 text-foreground shadow-black/30",
+            )}
+          >
+            <span className="mt-0.5 shrink-0">
+              {t.type === "success" ? (
+                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              ) : t.type === "error" ? (
+                <AlertCircle className="h-4 w-4 text-red-400" />
+              ) : (
+                <Sparkles className="h-4 w-4 text-(--sage)" />
+              )}
+            </span>
+            <span className="flex-1 leading-snug">{t.message}</span>
+            <button
+              type="button"
+              onClick={() => dismiss(t.id)}
+              className="shrink-0 text-white/50 hover:text-white cursor-pointer"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function RunnerLightboxModal({
+  images,
+  initialIndex = 0,
+  onClose,
+}: {
+  images: string[] | null;
+  initialIndex?: number;
+  onClose: () => void;
+}) {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+
+  useEffect(() => {
+    setCurrentIndex(initialIndex);
+  }, [initialIndex, images]);
+
+  useEffect(() => {
+    if (!images || images.length === 0) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") {
+        setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
+      }
+      if (e.key === "ArrowRight") {
+        setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [images, onClose]);
+
+  if (!images || images.length === 0) return null;
+
+  const currentUrl = images[currentIndex] || images[0];
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
+      style={{ background: "rgba(0,0,0,0.88)", backdropFilter: "blur(8px)" }}
+      onClick={onClose}
+    >
+      <div
+        className="relative max-w-4xl w-full max-h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-black/90 border border-white/10"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-4 py-3 bg-black/60 border-b border-white/10 z-10">
+          <div className="flex items-center gap-2 text-xs font-semibold text-white/80">
+            <span className="rounded-md bg-white/10 px-2 py-0.5 font-mono">
+              {currentIndex + 1} / {images.length}
+            </span>
+            {images.length > 1 && (
+              <span className="hidden sm:inline text-white/50">
+                Use arrow keys or click thumbnails
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <a
+              href={currentUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-(--sage) hover:underline flex items-center gap-1 bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg transition"
+            >
+              Open Original <ExternalLink className="h-3 w-3" />
+            </a>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg bg-white/10 p-1.5 text-white/80 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="relative flex-1 flex items-center justify-center p-2 min-h-[260px] max-h-[68vh] overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={currentUrl}
+            alt={`GPS proof screenshot ${currentIndex + 1}`}
+            className="max-h-[66vh] max-w-full w-auto object-contain mx-auto select-none"
+          />
+
+          {images.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() => setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1))}
+                className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/60 hover:bg-black/90 text-white p-2.5 border border-white/20 shadow-lg cursor-pointer transition"
+                aria-label="Previous photo"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0))}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/60 hover:bg-black/90 text-white p-2.5 border border-white/20 shadow-lg cursor-pointer transition"
+                aria-label="Next photo"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </>
+          )}
+        </div>
+
+        {images.length > 1 && (
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-black/70 border-t border-white/10 overflow-x-auto justify-center">
+            {images.map((img, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setCurrentIndex(idx)}
+                className={`relative h-12 w-12 rounded-lg overflow-hidden border-2 transition shrink-0 cursor-pointer ${
+                  currentIndex === idx ? "border-(--sage) scale-105" : "border-white/20 opacity-60 hover:opacity-100"
+                }`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img} alt={`Thumb ${idx + 1}`} className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function DashboardClient() {
-  const reduce = useReducedMotion();
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
 
@@ -191,10 +385,35 @@ export function DashboardClient() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"active" | "trophies" | "refer">("active");
 
-  // Proof upload modal/drawer state
+  // Multi-Photo Proof Upload state (Up to 5 photos)
   const [proofRegId, setProofRegId] = useState<string | null>(null);
-  const [proofUrl, setProofUrl] = useState("");
-  const [proofFileName, setProofFileName] = useState<string | null>(null);
+  const [proofPhotos, setProofPhotos] = useState<SelectedProofPhoto[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadProgressText, setUploadProgressText] = useState("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Gallery viewer state for runner
+  const [viewingGallery, setViewingGallery] = useState<{ images: string[]; initialIndex: number } | null>(null);
+
+  // Floating toast notifications
+  const [toasts, setToasts] = useState<DashboardToast[]>([]);
+  const toastIdCounter = useRef(0);
+
+  const showToast = useCallback(
+    (type: DashboardToast["type"], message: string, duration = 4000) => {
+      const id = ++toastIdCounter.current;
+      setToasts((prev) => [...prev, { id, type, message }]);
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, duration);
+    },
+    [],
+  );
+
+  const dismissToast = useCallback((id: number) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
   const [sourceApp, setSourceApp] = useState("Strava");
   const [finishHours, setFinishHours] = useState("");
   const [finishMinutes, setFinishMinutes] = useState("");
@@ -345,35 +564,101 @@ export function DashboardClient() {
     setRefreshing(false);
   }
 
-  async function onPickFile(file: File | null) {
+  async function onPickFiles(incoming: FileList | File[] | null) {
+    if (!incoming || incoming.length === 0) return;
     setProofError(null);
-    setProofFileName(null);
-    setProofUrl("");
-    if (!file) return;
-    try {
-      setProofBusy(true);
-      setProofUrl(await fileToPayload(file));
-      setProofFileName(file.name);
-    } catch (err) {
-      setProofError(err instanceof Error ? err.message : "Could not read image");
-    } finally {
-      setProofBusy(false);
+
+    const filesArray = Array.from(incoming);
+    const validImageFiles: File[] = [];
+
+    for (const f of filesArray) {
+      const isImage =
+        (f.type && f.type.startsWith("image/")) ||
+        /\.(jpe?g|png|webp|heic|bmp|gif)$/i.test(f.name);
+      if (!isImage) {
+        showToast("error", `"${f.name}" is not an image. Please choose PNG, JPG, or WebP.`);
+        continue;
+      }
+      if (f.size > 15 * 1024 * 1024) {
+        showToast("error", `"${f.name}" exceeds 15 MB limit. Please choose a smaller image.`);
+        continue;
+      }
+      validImageFiles.push(f);
     }
+
+    if (validImageFiles.length === 0) return;
+
+    const currentCount = proofPhotos.length;
+    const availableSlots = MAX_PROOF_PHOTOS - currentCount;
+
+    if (availableSlots <= 0) {
+      showToast("info", `Maximum ${MAX_PROOF_PHOTOS} photos allowed. Remove a photo to add a new one.`);
+      return;
+    }
+
+    const filesToAdd = validImageFiles.slice(0, availableSlots);
+    if (validImageFiles.length > availableSlots) {
+      showToast("info", `Selected first ${availableSlots} photo(s). Maximum ${MAX_PROOF_PHOTOS} photos allowed.`);
+    }
+
+    const newItems: SelectedProofPhoto[] = [];
+    for (const file of filesToAdd) {
+      try {
+        const previewUrl = URL.createObjectURL(file);
+        newItems.push({
+          id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          file,
+          name: file.name,
+          size: file.size,
+          previewUrl,
+        });
+      } catch (err) {
+        console.warn("Could not create object url:", err);
+      }
+    }
+
+    if (newItems.length > 0) {
+      setProofPhotos((prev) => [...prev, ...newItems]);
+      const totalNow = currentCount + newItems.length;
+      showToast(
+        "success",
+        `Added ${newItems.length} photo${newItems.length > 1 ? "s" : ""} (${totalNow}/${MAX_PROOF_PHOTOS} attached)`,
+      );
+    }
+  }
+
+  function removePhoto(id: string) {
+    setProofPhotos((prev) => {
+      const target = prev.find((p) => p.id === id);
+      if (target?.previewUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+      const updated = prev.filter((p) => p.id !== id);
+      showToast("info", `Photo removed (${updated.length}/${MAX_PROOF_PHOTOS} remaining)`);
+      return updated;
+    });
   }
 
   async function submitProof(e: FormEvent) {
     e.preventDefault();
     if (!proofRegId) return;
+    if (proofPhotos.length === 0) {
+      const msg = "Please select at least 1 GPS run proof screenshot.";
+      setProofError(msg);
+      showToast("error", msg);
+      return;
+    }
+
     setProofBusy(true);
     setProofMessage(null);
     setProofError(null);
+
     try {
       const token = await getToken();
       if (!token) throw new Error("Please sign in again to submit proof.");
-      let url = proofUrl.trim();
 
       const errors = validateProofForm({
-        proofUrl: url,
+        proofUrls: proofPhotos.map((p) => p.name),
         sourceApp,
         finishHours,
         finishMinutes,
@@ -383,24 +668,6 @@ export function DashboardClient() {
       const firstError = Object.values(errors).find(Boolean);
       if (firstError) {
         throw new Error(firstError);
-      }
-
-      if (url.startsWith("data:") || url.startsWith("https://") || url.startsWith("http://")) {
-        if (url.startsWith("data:")) {
-          const up = await fetch(getApiUrl("/api/uploads/image"), {
-            method: "POST",
-            headers: authHeaders(token),
-            body: JSON.stringify({ file: url, folder: "mountainrun/proofs" }),
-          });
-          if (!up.ok) {
-            if (!url.startsWith("https://")) {
-              throw new Error(await readApiError(up, "Image upload failed. Please try again."));
-            }
-          } else {
-            const upJson = await up.json();
-            url = upJson.data?.url || url;
-          }
-        }
       }
 
       const h = Math.max(0, parseInt(finishHours, 10) || 0);
@@ -414,11 +681,39 @@ export function DashboardClient() {
 
       const secs = totalSecs > 0 ? totalSecs : undefined;
 
+      // Upload each photo
+      const uploadedUrls: string[] = [];
+      for (let i = 0; i < proofPhotos.length; i++) {
+        const photo = proofPhotos[i];
+        setUploadProgressText(`Uploading photo ${i + 1} of ${proofPhotos.length}...`);
+        const payload = await fileToPayload(photo.file);
+
+        const up = await fetch(getApiUrl("/api/uploads/image"), {
+          method: "POST",
+          headers: authHeaders(token),
+          body: JSON.stringify({ file: payload, folder: "mountainrun/proofs" }),
+        });
+
+        if (!up.ok) {
+          throw new Error(await readApiError(up, `Photo ${i + 1} upload failed. Please try again.`));
+        }
+
+        const upJson = await up.json();
+        const finalUrl = upJson.data?.url || payload;
+        uploadedUrls.push(finalUrl);
+      }
+
+      setUploadProgressText("Saving your submission...");
+
+      const payloadImageUrl =
+        uploadedUrls.length === 1 ? uploadedUrls[0] : JSON.stringify(uploadedUrls);
+
       const res = await fetch(getApiUrl(`/api/registrations/${proofRegId}/proof`), {
         method: "POST",
         headers: authHeaders(token),
         body: JSON.stringify({
-          activityImageUrl: url,
+          activityImageUrl: payloadImageUrl,
+          activityImageUrls: uploadedUrls,
           sourceApp: sourceApp.trim() || "Strava",
           finishTimeSeconds: secs,
         }),
@@ -428,18 +723,25 @@ export function DashboardClient() {
         throw new Error(await readApiError(res, "Proof submission failed. Please try again."));
       }
 
+      showToast(
+        "success",
+        `🎉 ${uploadedUrls.length} GPS proof photo${uploadedUrls.length > 1 ? "s" : ""} submitted successfully! Review in progress.`,
+        6000,
+      );
       setProofMessage("Proof submitted successfully! You'll receive your e-certificate after verification.");
       setProofRegId(null);
-      setProofUrl("");
-      setProofFileName(null);
+      setProofPhotos([]);
       setFinishHours("");
       setFinishMinutes("");
       setFinishSeconds("");
       await load();
     } catch (err) {
-      setProofError(err instanceof Error ? err.message : "Proof submit failed");
+      const msg = err instanceof Error ? err.message : "Proof submit failed";
+      setProofError(msg);
+      showToast("error", msg);
     } finally {
       setProofBusy(false);
+      setUploadProgressText("");
     }
   }
 
@@ -891,6 +1193,58 @@ export function DashboardClient() {
                     </div>
                   </div>
 
+                  {/* ── SUBMITTED PROOF GALLERY PREVIEW ── */}
+                  {reg.proofUpload?.activityImageUrl && (
+                    <div className="mx-4 sm:mx-6 my-2 p-3.5 rounded-2xl border border-(--line) bg-(--panel-soft)/40">
+                      <div className="flex items-center justify-between text-xs mb-2.5">
+                        <span className="font-bold text-foreground flex items-center gap-1.5">
+                          <MapPin className="h-3.5 w-3.5 text-(--sage)" /> GPS Activity Proof
+                          <span className="rounded-md bg-(--sage)/15 text-(--sage) px-1.5 py-0.5 text-[0.65rem] font-bold">
+                            {parseProofImages(reg.proofUpload.activityImageUrl).length} Photo
+                            {parseProofImages(reg.proofUpload.activityImageUrl).length > 1 ? "s" : ""}
+                          </span>
+                        </span>
+                        <span className="text-[0.7rem] text-(--muted)">
+                          Via {reg.proofUpload.sourceApp || "GPS"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2.5 overflow-x-auto pb-1">
+                        {parseProofImages(reg.proofUpload.activityImageUrl).map((url, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() =>
+                              setViewingGallery({
+                                images: parseProofImages(reg.proofUpload?.activityImageUrl),
+                                initialIndex: idx,
+                              })
+                            }
+                            className="relative h-14 w-14 shrink-0 rounded-xl overflow-hidden border border-(--line) hover:border-(--sage) hover:scale-105 transition cursor-pointer group shadow-sm bg-black/40"
+                            title="Click to view full photo"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={url}
+                              alt={`Proof ${idx + 1}`}
+                              className="h-full w-full object-cover select-none"
+                            />
+                            <span className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition">
+                              <ZoomIn className="h-4 w-4" />
+                            </span>
+                            <span className="absolute bottom-0.5 right-0.5 rounded bg-black/70 px-1 text-[0.55rem] font-mono text-white/90">
+                              #{idx + 1}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                      {reg.proofUpload.reviewerNote && (
+                        <p className="mt-2 text-[0.7rem] text-(--muted) italic border-t border-(--line) pt-2">
+                          Note: {reg.proofUpload.reviewerNote}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   {/* ── ACTION HUB BAR ── */}
                   <div className="p-4 sm:p-5 bg-(--panel-soft)/30 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-2">
@@ -938,9 +1292,13 @@ export function DashboardClient() {
                         isSubmissionWindowOpen ? (
                           <button
                             onClick={() => {
-                              setProofRegId(formOpen ? null : reg.id);
+                              const willOpen = !formOpen;
+                              setProofRegId(willOpen ? reg.id : null);
                               setProofMessage(null);
                               setProofError(null);
+                              if (willOpen) {
+                                setProofPhotos([]);
+                              }
                             }}
                             className={cn(
                               "h-9 px-4 text-xs font-bold rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5",
@@ -951,7 +1309,7 @@ export function DashboardClient() {
                             type="button"
                           >
                             <UploadCloud className="h-4 w-4" />
-                            {formOpen ? "Close Uploader" : "Upload GPS Run Proof"}
+                            {formOpen ? "Close Uploader" : "Upload GPS Run Proof (Up to 5 Photos)"}
                           </button>
                         ) : isBeforeSubmission ? (
                           <div className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400">
@@ -972,58 +1330,196 @@ export function DashboardClient() {
                     </div>
                   </div>
 
-                  {/* ── INLINE GPS PROOF SUBMISSION DRAWER ── */}
+                  {/* ── INLINE GPS PROOF SUBMISSION DRAWER (UP TO 5 PHOTOS) ── */}
                   {formOpen && (
                     <form
-                      className="border-t border-(--line) bg-(--panel-soft) p-4 sm:p-6"
+                      className="border-t border-(--line) bg-(--panel-soft) p-4 sm:p-6 transition-all"
                       onSubmit={submitProof}
                       noValidate
                     >
-                      <div className="space-y-4 max-w-2xl">
+                      <div className="space-y-4 max-w-3xl">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
-                            <UploadCloud className="h-4 w-4 text-(--sage)" />
-                            Submit GPS Proof for {reg.event.title} ({reg.distance})
-                          </h3>
+                          <div>
+                            <h3 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
+                              <UploadCloud className="h-4 w-4 text-(--sage)" />
+                              Submit GPS Proof &bull; {reg.event.title} ({reg.distance})
+                            </h3>
+                            <p className="text-xs text-(--muted) mt-0.5">
+                              Attach up to 5 photos: GPS route map, pace/elevation stats, splits, watch screenshot, or selfie!
+                            </p>
+                          </div>
                           <button
                             type="button"
-                            onClick={() => setProofRegId(null)}
-                            className="text-(--muted) hover:text-foreground cursor-pointer"
+                            onClick={() => {
+                              setProofRegId(null);
+                              setProofPhotos([]);
+                            }}
+                            className="text-(--muted) hover:text-foreground cursor-pointer p-1 rounded-lg hover:bg-(--panel)"
                           >
                             <X className="h-4 w-4" />
                           </button>
                         </div>
 
                         {proofError && (
-                          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+                          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4 shrink-0" />
                             {proofError}
                           </div>
                         )}
 
-                        <label className="block">
-                          <span className="block text-xs font-bold uppercase tracking-wider text-(--muted) mb-1.5">
-                            Activity Screenshot (Strava / Nike / Garmin)
-                          </span>
-                          <input
-                            accept="image/*"
-                            className="input cursor-pointer py-2 file:mr-3 file:rounded-xl file:border-0 file:bg-(--sage) file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
-                            disabled={proofBusy}
-                            onChange={(e) => void onPickFile(e.target.files?.[0] ?? null)}
-                            type="file"
-                          />
-                          {proofFileName && (
-                            <p className="mt-1.5 text-xs font-medium text-(--sage)">Ready: {proofFileName}</p>
-                          )}
-                        </label>
+                        {/* Drag & Drop Upload Zone */}
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            void onPickFiles(e.target.files);
+                            e.target.value = "";
+                          }}
+                        />
 
-                        {proofUrl && (proofUrl.startsWith("data:") || /\.(png|jpe?g|webp)/i.test(proofUrl)) && (
-                          <div className="overflow-hidden rounded-xl border border-(--line) bg-(--panel) max-w-sm">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img alt="Preview" className="max-h-48 w-full object-contain" src={proofUrl} />
+                        <div
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            setIsDragging(true);
+                          }}
+                          onDragLeave={() => setIsDragging(false)}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            setIsDragging(false);
+                            void onPickFiles(e.dataTransfer.files);
+                          }}
+                          onClick={() => {
+                            if (proofPhotos.length < MAX_PROOF_PHOTOS && !proofBusy) {
+                              fileInputRef.current?.click();
+                            }
+                          }}
+                          className={cn(
+                            "relative rounded-2xl border-2 border-dashed p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2.5",
+                            isDragging
+                              ? "border-(--sage) bg-(--sage)/15 scale-[1.01]"
+                              : "border-(--line) bg-(--panel)/70 hover:border-(--sage)/70 hover:bg-(--panel)",
+                            proofPhotos.length >= MAX_PROOF_PHOTOS && "opacity-75 cursor-default",
+                          )}
+                        >
+                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-(--sage)/15 text-(--sage)">
+                            <Camera className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <p className="text-xs sm:text-sm font-bold text-foreground">
+                              {proofPhotos.length >= MAX_PROOF_PHOTOS
+                                ? "Maximum 5 photos reached"
+                                : "Click to select or drag & drop run proof photos"}
+                            </p>
+                            <p className="text-[0.7rem] text-(--muted) mt-0.5">
+                              JPEG, PNG, WebP up to 15 MB &bull; {proofPhotos.length}/5 photos attached
+                            </p>
+                          </div>
+                          {proofPhotos.length < MAX_PROOF_PHOTOS && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                fileInputRef.current?.click();
+                              }}
+                              className="btn btn-secondary h-8 px-3.5 text-xs font-semibold rounded-xl inline-flex items-center gap-1.5 shadow-sm"
+                            >
+                              <Plus className="h-3.5 w-3.5 text-(--sage)" /> Browse Photos
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Selected Photos Gallery Grid */}
+                        {proofPhotos.length > 0 && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-xs text-(--muted)">
+                              <span className="font-semibold text-foreground">
+                                Attached Photos ({proofPhotos.length}/5)
+                              </span>
+                              <span className="text-[0.7rem]">Click thumbnail to inspect</span>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                              {proofPhotos.map((photo, idx) => {
+                                const tagLabels = [
+                                  "Primary Map",
+                                  "Pace / Splits",
+                                  "Elevation / HR",
+                                  "Watch / Selfie",
+                                  "Additional Proof",
+                                ];
+                                return (
+                                  <div
+                                    key={photo.id}
+                                    className="group relative rounded-xl border border-(--line) bg-(--panel) p-1.5 shadow-sm overflow-hidden flex flex-col justify-between"
+                                  >
+                                    <div
+                                      onClick={() =>
+                                        setViewingGallery({
+                                          images: proofPhotos.map((p) => p.previewUrl),
+                                          initialIndex: idx,
+                                        })
+                                      }
+                                      className="relative aspect-square w-full rounded-lg overflow-hidden bg-black/60 cursor-pointer"
+                                    >
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img
+                                        src={photo.previewUrl}
+                                        alt={photo.name}
+                                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                                      />
+                                      <span className="absolute top-1 left-1 rounded bg-black/75 px-1.5 py-0.5 text-[0.6rem] font-bold text-white">
+                                        #{idx + 1}
+                                      </span>
+                                      <span className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition">
+                                        <ZoomIn className="h-4 w-4" />
+                                      </span>
+                                    </div>
+
+                                    <div className="mt-1.5 flex items-center justify-between gap-1 px-1">
+                                      <div className="min-w-0 flex-1">
+                                        <p className="truncate text-[0.65rem] font-bold text-foreground" title={photo.name}>
+                                          {tagLabels[idx] || `Photo #${idx + 1}`}
+                                        </p>
+                                        <p className="text-[0.6rem] text-(--muted)">
+                                          {(photo.size / (1024 * 1024)).toFixed(1)} MB
+                                        </p>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          removePhoto(photo.id);
+                                        }}
+                                        disabled={proofBusy}
+                                        title="Remove photo"
+                                        className="rounded-lg p-1 text-(--muted) hover:bg-red-500/10 hover:text-red-500 transition cursor-pointer"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+
+                              {proofPhotos.length < MAX_PROOF_PHOTOS && (
+                                <button
+                                  type="button"
+                                  onClick={() => fileInputRef.current?.click()}
+                                  className="aspect-square rounded-xl border border-dashed border-(--line) hover:border-(--sage) hover:bg-(--sage)/5 flex flex-col items-center justify-center gap-1 text-(--muted) hover:text-(--sage) transition cursor-pointer p-2"
+                                >
+                                  <Plus className="h-5 w-5" />
+                                  <span className="text-[0.65rem] font-semibold text-center leading-tight">
+                                    Add Photo ({5 - proofPhotos.length} left)
+                                  </span>
+                                </button>
+                              )}
+                            </div>
                           </div>
                         )}
 
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 pt-1">
                           <label className="block">
                             <span className="block text-xs font-bold uppercase tracking-wider text-(--muted) mb-1.5">
                               Tracking App
@@ -1109,20 +1605,31 @@ export function DashboardClient() {
                           </p>
                         )}
 
-                        <div className="flex items-center gap-2 pt-2">
+                        <div className="flex items-center gap-3 pt-2">
                           <button
-                            className="btn btn-primary h-9 px-4 text-xs font-bold cursor-pointer"
-                            disabled={proofBusy}
+                            className="btn btn-primary h-10 px-5 text-xs font-bold cursor-pointer inline-flex items-center gap-2 shadow-lg shadow-(--sage)/20"
+                            disabled={proofBusy || proofPhotos.length === 0}
                             type="submit"
                           >
-                            {proofBusy ? "Submitting..." : "Submit Proof"}
+                            {proofBusy ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span>{uploadProgressText || "Submitting..."}</span>
+                              </>
+                            ) : (
+                              <>
+                                <UploadCloud className="h-4 w-4" />
+                                <span>
+                                  Submit {proofPhotos.length > 0 ? `${proofPhotos.length} Proof Photo${proofPhotos.length > 1 ? "s" : ""}` : "GPS Proof"}
+                                </span>
+                              </>
+                            )}
                           </button>
                           <button
-                            className="btn btn-secondary h-9 px-3 text-xs cursor-pointer"
+                            className="btn btn-secondary h-10 px-4 text-xs cursor-pointer"
                             onClick={() => {
                               setProofRegId(null);
-                              setProofUrl("");
-                              setProofFileName(null);
+                              setProofPhotos([]);
                               setProofError(null);
                             }}
                             type="button"
@@ -1194,6 +1701,41 @@ export function DashboardClient() {
                             Courier: {reg.medalDelivery.courier || "SpeedPost"} · {reg.medalDelivery.trackingNumber}
                           </p>
                         )}
+                      </div>
+                    )}
+                    {/* Activity Proof Thumbnails */}
+                    {reg.proofUpload?.activityImageUrl && (
+                      <div className="mt-3 pt-3 border-t border-(--line)">
+                        <p className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted) mb-1.5 flex items-center gap-1">
+                          <ImageIcon className="h-3 w-3 text-(--sage)" /> GPS Proof (
+                          {parseProofImages(reg.proofUpload.activityImageUrl).length})
+                        </p>
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                          {parseProofImages(reg.proofUpload.activityImageUrl).map((url, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() =>
+                                setViewingGallery({
+                                  images: parseProofImages(reg.proofUpload?.activityImageUrl),
+                                  initialIndex: idx,
+                                })
+                              }
+                              className="relative h-12 w-12 shrink-0 rounded-lg overflow-hidden border border-(--line) hover:border-(--sage) transition cursor-pointer group shadow-sm bg-black/40"
+                              title="Click to view photo"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={url}
+                                alt={`Proof ${idx + 1}`}
+                                className="h-full w-full object-cover select-none"
+                              />
+                              <span className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition">
+                                <ZoomIn className="h-3.5 w-3.5" />
+                              </span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1273,6 +1815,16 @@ export function DashboardClient() {
           </div>
         </div>
       )}
+
+      {/* ── Runner Lightbox Modal for Proof Image Zoom ── */}
+      <RunnerLightboxModal
+        images={viewingGallery?.images ?? null}
+        initialIndex={viewingGallery?.initialIndex ?? 0}
+        onClose={() => setViewingGallery(null)}
+      />
+
+      {/* ── Floating Dashboard Toast Notifications ── */}
+      <DashboardToastContainer toasts={toasts} dismiss={dismissToast} />
     </div>
   );
 }

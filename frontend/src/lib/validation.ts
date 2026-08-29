@@ -216,15 +216,21 @@ export function parseTimeToSeconds(input: string | number | null | undefined): n
 }
 
 export function validateProofForm(data: {
-  proofUrl: string;
+  proofUrl?: string;
+  proofUrls?: string[];
   sourceApp?: string;
   finishMinutes?: string;
   finishHours?: string;
   finishSeconds?: string;
 }): FieldErrors {
   const errors: FieldErrors = {};
-  if (!data.proofUrl || !data.proofUrl.trim()) {
-    errors.proofUrl = "Upload a screenshot or paste an image URL.";
+  const hasProof = Boolean(
+    (data.proofUrl && data.proofUrl.trim()) ||
+    (data.proofUrls && data.proofUrls.some((u) => Boolean(u && u.trim()))),
+  );
+
+  if (!hasProof) {
+    errors.proofUrl = "Upload at least one GPS activity screenshot or image.";
   }
   if (!data.sourceApp || !data.sourceApp.trim()) {
     errors.sourceApp = "Select a source app.";
