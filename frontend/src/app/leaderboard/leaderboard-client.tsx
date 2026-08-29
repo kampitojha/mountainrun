@@ -512,7 +512,7 @@ export function LeaderboardClient() {
                 Choose Distance Category:
               </p>
               <div
-                className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none touch-pan-x"
+                className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none"
                 style={{ WebkitOverflowScrolling: "touch" }}
               >
                 {distanceOptions.map((dist) => {
@@ -681,82 +681,153 @@ export function LeaderboardClient() {
                 </div>
               )}
 
-              {/* FULL RANKINGS TABLE */}
+              {/* FULL RANKINGS CONTAINER */}
               <div className="overflow-hidden rounded-2xl border border-(--line) bg-(--panel) shadow-xs">
                 <div className="border-b border-(--line) bg-(--panel-soft) px-3.5 py-3 sm:px-6 flex items-center justify-between">
                   <h3 className="text-xs sm:text-sm font-bold text-foreground">
                     All Verified Finishers · {selectedDistance}
                   </h3>
-                  <div className="flex items-center gap-1.5 text-xs text-(--muted)">
-                    <ShieldCheck className="h-4 w-4 text-(--sage)" /> GPS Verified
+                  <div className="flex items-center gap-1.5 text-[0.7rem] sm:text-xs text-(--muted)">
+                    <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-(--sage)" /> GPS Verified
                   </div>
                 </div>
 
-                <div className="overflow-x-auto touch-pan-x" style={{ WebkitOverflowScrolling: "touch" }}>
-                  <table className="w-full min-w-140 sm:min-w-152 text-left text-xs sm:text-sm">
+                {/* ── MOBILE VIEW: High-Performance Compact List (< sm) ── */}
+                <div className="block sm:hidden divide-y divide-(--line)">
+                  {filteredEntries.map((row) => {
+                    const isYou =
+                      Boolean(currentClerkId && row.clerkId === currentClerkId) ||
+                      Boolean(user?.fullName && row.runnerName.toLowerCase() === user.fullName.toLowerCase());
+                    const isTop3 = row.rank <= 3;
+
+                    return (
+                      <div
+                        key={`${row.rank}-${row.bibNumber || row.runnerName}`}
+                        className={cn(
+                          "flex items-center justify-between p-3 transition-colors hover:bg-(--panel-soft)/70",
+                          isYou && "bg-(--sage-soft) ring-1 ring-(--sage)/40",
+                        )}
+                      >
+                        {/* Left: Rank + Avatar + Name & Details */}
+                        <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                          {/* Rank */}
+                          <div className="flex w-6 shrink-0 items-center justify-center font-mono text-xs font-bold">
+                            {row.rank === 1 ? (
+                              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-500/20 text-xs">
+                                🥇
+                              </span>
+                            ) : row.rank === 2 ? (
+                              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-slate-400/20 text-xs">
+                                🥈
+                              </span>
+                            ) : row.rank === 3 ? (
+                              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-800/20 text-xs">
+                                🥉
+                              </span>
+                            ) : (
+                              <span className="text-(--muted) font-semibold text-[0.75rem]">#{row.rank}</span>
+                            )}
+                          </div>
+
+                          {/* Avatar */}
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-(--line) bg-(--panel-soft) text-[0.65rem] font-bold text-foreground">
+                            {getInitials(row.runnerName)}
+                          </div>
+
+                          {/* Name + Subtitle */}
+                          <div className="min-w-0">
+                            <p className="font-semibold text-foreground text-xs truncate flex items-center gap-1.5">
+                              <span className="truncate">{row.runnerName}</span>
+                              {isYou && (
+                                <span className="shrink-0 rounded-full bg-(--sage) px-1.5 py-0.2 text-[0.55rem] font-bold uppercase tracking-wider text-white">
+                                  You
+                                </span>
+                              )}
+                            </p>
+                            <p className="font-mono text-[0.65rem] text-(--muted) truncate">
+                              {row.bibNumber || `MR-${parseKm(selectedDistance)}K-${100 + row.rank}`}
+                              {row.city ? ` · ${row.city}` : " · India"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Right: Time & Pace */}
+                        <div className="text-right shrink-0">
+                          <p className="font-mono text-xs font-bold text-foreground">
+                            {formatTime(row.finishTimeSeconds)}
+                          </p>
+                          <p className="font-mono text-[0.65rem] font-medium text-(--sage)">
+                            {formatPace(row.finishTimeSeconds, selectedDistance)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* ── DESKTOP VIEW: Full Wide Table (>= sm) ── */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="w-full min-w-152 text-left text-xs sm:text-sm">
                     <thead>
-                      <tr className="border-b border-(--line) bg-(--panel-soft)/50 text-[0.6rem] sm:text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
-                        <th className="px-3 py-3 sm:px-4 sm:py-3.5">Rank</th>
-                        <th className="px-3 py-3 sm:px-4 sm:py-3.5">Runner</th>
-                        <th className="px-3 py-3 sm:px-4 sm:py-3.5">Bib #</th>
-                        <th className="px-3 py-3 sm:px-4 sm:py-3.5">City</th>
-                        <th className="px-3 py-3 sm:px-4 sm:py-3.5">Distance</th>
-                        <th className="px-3 py-3 sm:px-4 sm:py-3.5">Pace</th>
-                        <th className="px-3 py-3 sm:px-4 sm:py-3.5">Finish Time</th>
-                        <th className="px-3 py-3 sm:px-4 sm:py-3.5">Status</th>
+                      <tr className="border-b border-(--line) bg-(--panel-soft)/50 text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
+                        <th className="px-4 py-3.5">Rank</th>
+                        <th className="px-4 py-3.5">Runner</th>
+                        <th className="px-4 py-3.5">Bib #</th>
+                        <th className="px-4 py-3.5">City</th>
+                        <th className="px-4 py-3.5">Distance</th>
+                        <th className="px-4 py-3.5">Pace</th>
+                        <th className="px-4 py-3.5">Finish Time</th>
+                        <th className="px-4 py-3.5">Status</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredEntries.map((row, idx) => {
+                      {filteredEntries.map((row) => {
                         const isYou =
                           Boolean(currentClerkId && row.clerkId === currentClerkId) ||
                           Boolean(user?.fullName && row.runnerName.toLowerCase() === user.fullName.toLowerCase());
                         const isTop3 = row.rank <= 3;
 
                         return (
-                          <motion.tr
+                          <tr
                             key={`${row.rank}-${row.bibNumber || row.runnerName}`}
-                            initial={reduce ? false : { opacity: 0, x: -6 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.2, delay: Math.min(idx * 0.02, 0.3) }}
                             className={cn(
                               "border-b border-(--line) last:border-b-0 transition-colors hover:bg-(--panel-soft)/70",
                               isYou && "bg-(--sage-soft) ring-1 ring-(--sage)/40",
                               isTop3 && "font-medium",
                             )}
                           >
-                            <td className="px-3 py-2.5 sm:px-4 sm:py-3.5">
+                            <td className="px-4 py-3.5">
                               <div className="flex items-center gap-1 font-mono text-xs font-bold">
                                 {row.rank === 1 ? (
-                                  <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-md sm:rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
                                     🥇
                                   </span>
                                 ) : row.rank === 2 ? (
-                                  <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-md sm:rounded-lg bg-slate-400/20 text-slate-600 dark:text-slate-300">
+                                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-slate-400/20 text-slate-600 dark:text-slate-300">
                                     🥈
                                   </span>
                                 ) : row.rank === 3 ? (
-                                  <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-md sm:rounded-lg bg-amber-800/20 text-amber-800 dark:text-amber-300">
+                                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/20 text-amber-800 dark:text-amber-300">
                                     🥉
                                   </span>
                                 ) : (
-                                  <span className="w-5 sm:w-6 text-center text-(--muted)">
+                                  <span className="w-6 text-center text-(--muted)">
                                     #{row.rank}
                                   </span>
                                 )}
                               </div>
                             </td>
 
-                            <td className="px-3 py-2.5 sm:px-4 sm:py-3.5">
-                              <div className="flex items-center gap-2 sm:gap-2.5">
-                                <div className="flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-lg border border-(--line) bg-(--panel-soft) text-[0.6rem] sm:text-[0.65rem] font-bold text-foreground">
+                            <td className="px-4 py-3.5">
+                              <div className="flex items-center gap-2.5">
+                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-(--line) bg-(--panel-soft) text-[0.65rem] font-bold text-foreground">
                                   {getInitials(row.runnerName)}
                                 </div>
                                 <div>
                                   <p className="font-semibold text-foreground flex items-center gap-1.5 text-xs sm:text-sm">
                                     {row.runnerName}
                                     {isYou && (
-                                      <span className="rounded-full bg-(--sage) px-1.5 py-0.2 text-[0.55rem] sm:text-[0.6rem] font-bold uppercase tracking-wider text-white">
+                                      <span className="rounded-full bg-(--sage) px-1.5 py-0.2 text-[0.6rem] font-bold uppercase tracking-wider text-white">
                                         You
                                       </span>
                                     )}
@@ -765,32 +836,32 @@ export function LeaderboardClient() {
                               </div>
                             </td>
 
-                            <td className="px-3 py-2.5 sm:px-4 sm:py-3.5 font-mono text-[0.7rem] sm:text-xs text-(--muted)">
+                            <td className="px-4 py-3.5 font-mono text-xs text-(--muted)">
                               {row.bibNumber || `MR-${parseKm(selectedDistance)}K-${100 + row.rank}`}
                             </td>
 
-                            <td className="px-3 py-2.5 sm:px-4 sm:py-3.5 text-[0.7rem] sm:text-xs text-(--muted)">
+                            <td className="px-4 py-3.5 text-xs text-(--muted)">
                               {row.city || "India"}
                             </td>
 
-                            <td className="px-3 py-2.5 sm:px-4 sm:py-3.5 font-medium text-foreground text-[0.7rem] sm:text-xs">
+                            <td className="px-4 py-3.5 font-medium text-foreground text-xs">
                               {row.distance || selectedDistance}
                             </td>
 
-                            <td className="px-3 py-2.5 sm:px-4 sm:py-3.5 font-mono text-[0.7rem] sm:text-xs font-semibold text-(--sage)">
+                            <td className="px-4 py-3.5 font-mono text-xs font-semibold text-(--sage)">
                               {formatPace(row.finishTimeSeconds, selectedDistance)}
                             </td>
 
-                            <td className="px-3 py-2.5 sm:px-4 sm:py-3.5 font-mono text-[0.7rem] sm:text-xs font-bold text-foreground">
+                            <td className="px-4 py-3.5 font-mono text-xs font-bold text-foreground">
                               {formatTime(row.finishTimeSeconds)}
                             </td>
 
-                            <td className="px-3 py-2.5 sm:px-4 sm:py-3.5">
-                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[0.6rem] sm:text-[0.65rem] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                                <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> Verified
+                            <td className="px-4 py-3.5">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                                <CheckCircle2 className="h-3 w-3" /> Verified
                               </span>
                             </td>
-                          </motion.tr>
+                          </tr>
                         );
                       })}
                     </tbody>
