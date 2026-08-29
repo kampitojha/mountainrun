@@ -14,15 +14,18 @@ import {
   Trophy,
   Calendar,
   Award,
+  HelpCircle,
+  Sparkles,
 } from "lucide-react";
 import { BrandText } from "./brand-text";
 import { ThemeToggle } from "./theme-toggle";
 
 /* ─── Nav items with icons ─── */
 const publicNav = [
-  ["Events",      "/events",      Calendar],
-  ["Gallery",     "/gallery",     Camera  ],
-  ["Leaderboard", "/leaderboard", Trophy  ],
+  ["Events", "/events", Calendar],
+  ["What is Virtual Run?", "/what-is-virtual-run", HelpCircle],
+  ["Gallery", "/gallery", Camera],
+  ["Leaderboard", "/leaderboard", Trophy],
 ] as const;
 
 /* ─── Animated hamburger ─── */
@@ -408,6 +411,7 @@ export function AppHeader() {
               >
                 <nav className="flex flex-col gap-1.5">
                   {[
+                    ["What is Virtual Run?", "/what-is-virtual-run"],
                     ["Events", "/events"],
                     ["Leaderboard", "/leaderboard"],
                     ["Gallery", "/gallery"],

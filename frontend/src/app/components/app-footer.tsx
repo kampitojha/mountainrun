@@ -171,6 +171,7 @@ export function AppFooter() {
           </div>
 
           <FooterCol title="Events" links={[
+            ["What is a Virtual Run?", "/what-is-virtual-run"],
             ["Upcoming Events", "/events"],
             ["National Leaderboard", "/leaderboard"],
             ["Finisher Gallery", "/gallery"],
