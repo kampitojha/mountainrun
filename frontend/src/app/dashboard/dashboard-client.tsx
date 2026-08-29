@@ -37,7 +37,7 @@ import { authHeaders, getApiUrl, readApiError } from "../../lib/api";
 import { cn } from "../../lib/cn";
 import { parseProofImages } from "../../lib/proof-utils";
 import { parseTimeToSeconds, validateProofForm } from "../../lib/validation";
-import { getEventBySlug } from "../data/events";
+import { allPublicEvents, getEventBySlug } from "../data/events";
 
 type Registration = {
   id: string;
@@ -423,6 +423,7 @@ export function DashboardClient() {
   const [proofBusy, setProofBusy] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [hidePendingBanner, setHidePendingBanner] = useState(false);
   const seq = useRef(0);
 
   const hoursInputRef = useRef<HTMLInputElement | null>(null);
@@ -520,10 +521,35 @@ export function DashboardClient() {
   const registrations = useMemo(() => dedupe(dbUser?.registrations ?? []), [dbUser]);
   const isAdmin = dbUser?.role === "ADMIN" || dbUser?.role === "SUPER_ADMIN";
 
-  // Categorize registrations for clean tabs
+  // Categorize registrations for clean tabs: ONLY paid & confirmed registrations in main active list
   const activeRegistrations = useMemo(() => {
-    return registrations.filter((r) => r.status !== "CANCELLED");
+    return registrations.filter(
+      (r) =>
+        (r.status === "CONFIRMED" ||
+         r.status === "COMPLETED" ||
+         r.payment?.status === "PAID") &&
+        r.status !== "CANCELLED",
+    );
   }, [registrations]);
+
+  // Unpaid draft checkouts (kept separate so they do not clutter the active feed)
+  const pendingPaymentRegistrations = useMemo(() => {
+    return registrations.filter(
+      (r) => r.status === "PENDING_PAYMENT" && r.payment?.status !== "PAID",
+    );
+  }, [registrations]);
+
+  // Slugs of events the user has already joined
+  const registeredEventSlugs = useMemo(() => {
+    return new Set(activeRegistrations.map((r) => r.event.slug));
+  }, [activeRegistrations]);
+
+  // Upcoming open events to recommend/explore
+  const upcomingEventsToExplore = useMemo(() => {
+    const openEvents = allPublicEvents.filter((e) => e.status === "upcoming");
+    const notJoined = openEvents.filter((e) => !registeredEventSlugs.has(e.slug));
+    return notJoined.length > 0 ? notJoined : openEvents;
+  }, [registeredEventSlugs]);
 
   const trophyRegistrations = useMemo(() => {
     return registrations.filter(
@@ -979,701 +1005,838 @@ export function DashboardClient() {
 
       {/* ── TAB 1: MY REGISTERED EVENTS (UNIFIED JOURNEY CARDS) ── */}
       {activeTab === "active" && (
-        <div className="space-y-5">
+        <div className="space-y-6">
+          {/* ── Slim Incomplete Checkout Notification Banner (if any) ── */}
+          {!hidePendingBanner && pendingPaymentRegistrations.length > 0 && (
+            <div className="rounded-2xl border border-amber-500/25 bg-amber-500/5 p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-start sm:items-center gap-2.5">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-500 font-bold">
+                  <Clock className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="font-bold text-foreground">
+                    Incomplete Registration: {pendingPaymentRegistrations[0].event.title} ({pendingPaymentRegistrations[0].distance})
+                  </p>
+                  <p className="text-[0.68rem] text-(--muted) mt-0.5">
+                    Your spot is initialized. Complete checkout to get your official bib and finisher medal delivery.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                <Link
+                  href={`/register?event=${pendingPaymentRegistrations[0].event.slug}&distance=${encodeURIComponent(pendingPaymentRegistrations[0].distance)}`}
+                  className="btn btn-primary h-8 px-3 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Complete Payment
+                </Link>
+                <button
+                  onClick={() => setHidePendingBanner(true)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-(--line) text-(--muted) hover:text-foreground cursor-pointer"
+                  title="Dismiss notification"
+                  type="button"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {activeRegistrations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-(--line) bg-(--panel) p-10 sm:p-14 text-center">
-              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-(--panel-soft) text-(--muted)">
-                <Medal className="h-7 w-7" />
-              </span>
-              <h3 className="mt-4 text-base sm:text-lg font-bold text-foreground">
-                No active race registrations yet
-              </h3>
-              <p className="mt-1 max-w-sm text-xs sm:text-sm text-(--muted)">
-                Choose your distance, get your official bib, and run at your own pace anywhere in India.
-              </p>
-              <Link className="btn btn-primary mt-6" href="/events">
-                Explore Open Events <ArrowRight className="h-4 w-4 ml-1" />
-              </Link>
+            <div className="space-y-6">
+              <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-(--line) bg-(--panel) p-8 sm:p-12 text-center">
+                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-(--sage-soft) text-(--sage) border border-(--sage)/20">
+                  <Medal className="h-7 w-7" />
+                </span>
+                <h3 className="mt-4 text-base sm:text-lg font-bold text-foreground">
+                  No active race registrations yet
+                </h3>
+                <p className="mt-1 max-w-sm text-xs sm:text-sm text-(--muted)">
+                  Choose your distance, get your official personalized bib, and run at your own pace anywhere in India.
+                </p>
+              </div>
+
+              {/* Open Events to Explore */}
+              {upcomingEventsToExplore.length > 0 && (
+                <div className="rounded-3xl border border-(--line) bg-gradient-to-b from-(--panel) to-(--panel-soft)/40 p-5 sm:p-7 shadow-xs">
+                  <div className="flex items-center justify-between gap-4 mb-4">
+                    <div>
+                      <div className="inline-flex items-center gap-1 rounded-full bg-(--sage)/15 px-2.5 py-0.5 text-[0.65rem] font-bold text-(--sage) border border-(--sage)/30 mb-1">
+                        <Sparkles className="h-3 w-3" /> Live Virtual Marathons
+                      </div>
+                      <h4 className="text-base sm:text-lg font-bold text-foreground">
+                        Featured Events Open for Registration
+                      </h4>
+                    </div>
+                    <Link
+                      href="/events"
+                      className="btn btn-secondary h-8 px-3 text-xs font-bold shrink-0 inline-flex items-center gap-1"
+                    >
+                      All Events <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {upcomingEventsToExplore.slice(0, 3).map((ev) => (
+                      <div
+                        key={ev.slug}
+                        className="group rounded-2xl border border-(--line) bg-(--panel) p-4.5 flex flex-col justify-between transition-all hover:border-(--sage)/50 hover:shadow-md"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[0.65rem] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              Open Now
+                            </span>
+                            <span className="font-mono text-xs font-black text-foreground">
+                              {ev.price}
+                            </span>
+                          </div>
+                          <h5 className="font-bold text-sm text-foreground group-hover:text-(--sage) transition-colors line-clamp-1">
+                            {ev.name}
+                          </h5>
+                          <p className="text-[0.72rem] text-(--muted) mt-1 line-clamp-2 leading-relaxed">
+                            {ev.description}
+                          </p>
+                          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                            {ev.distance.split("/").slice(0, 3).map((d) => (
+                              <span
+                                key={d}
+                                className="rounded-lg bg-(--panel-soft) px-2 py-0.5 text-[0.65rem] font-mono font-semibold text-(--muted)"
+                              >
+                                {d.trim()}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-(--line)/50 flex items-center justify-between">
+                          <span className="text-[0.68rem] text-(--muted) flex items-center gap-1">
+                            <Medal className="h-3 w-3 text-amber-500" /> 3D Medal Included
+                          </span>
+                          <Link
+                            href={`/events/${ev.slug}`}
+                            className="btn btn-primary h-7 px-3 text-[0.68rem] font-bold inline-flex items-center gap-1 shadow-xs"
+                          >
+                            Register Now <ArrowRight className="h-3 w-3" />
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
-            activeRegistrations.map((reg) => {
-              const isPaid = reg.payment?.status === "PAID" || reg.status === "CONFIRMED";
-              const isProofSubmitted = reg.proofStatus === "SUBMITTED";
-              const isVerified = reg.proofStatus === "APPROVED";
-              const isCertReady = Boolean(reg.certificate && reg.certificate.status !== "QUEUED");
-              const isMedalDispatched = Boolean(reg.medalDelivery && (reg.medalDelivery.status === "DISPATCHED" || reg.medalDelivery.status === "DELIVERED"));
-              const formOpen = proofRegId === reg.id;
+            <>
+              {activeRegistrations.map((reg) => {
+                const isPaid = reg.payment?.status === "PAID" || reg.status === "CONFIRMED";
+                const isProofSubmitted = reg.proofStatus === "SUBMITTED";
+                const isVerified = reg.proofStatus === "APPROVED";
+                const isCertReady = Boolean(reg.certificate && reg.certificate.status !== "QUEUED");
+                const isMedalDispatched = Boolean(
+                  reg.medalDelivery &&
+                    (reg.medalDelivery.status === "DISPATCHED" ||
+                      reg.medalDelivery.status === "DELIVERED"),
+                );
+                const formOpen = proofRegId === reg.id;
 
-              const eventData = getEventBySlug(reg.event.slug);
-              const now = new Date();
-              let isSubmissionWindowOpen = true;
-              let isBeforeSubmission = false;
-              let isAfterSubmission = false;
-              let submissionOpensAtStr = "";
-              let submissionClosesAtStr = "";
-              
-              const startStr = eventData?.startsAt || reg.event.startsAt;
-              const endStr = eventData?.endsAt || reg.event.endsAt;
+                const eventData = getEventBySlug(reg.event.slug);
+                const now = new Date();
+                let isSubmissionWindowOpen = true;
+                let isBeforeSubmission = false;
+                let isAfterSubmission = false;
+                let submissionOpensAtStr = "";
 
-              if (startStr && endStr) {
-                const startsAt = new Date(startStr);
-                const endsAt = new Date(endStr);
-                isBeforeSubmission = now < startsAt;
-                isAfterSubmission = now > endsAt;
-                isSubmissionWindowOpen = !isBeforeSubmission && !isAfterSubmission;
-                submissionOpensAtStr = startsAt.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-                submissionClosesAtStr = endsAt.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-              }
+                const startStr = eventData?.startsAt || reg.event.startsAt;
+                const endStr = eventData?.endsAt || reg.event.endsAt;
 
-              return (
-                <div
-                  key={reg.id}
-                  id={`reg-${reg.id}`}
-                  className="rounded-3xl border border-(--line) bg-(--panel) overflow-hidden shadow-xs transition-all hover:shadow-md"
-                >
-                  {/* Event Card Header */}
-                  <div className="p-4 sm:p-6 border-b border-(--line) bg-(--panel-soft)/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="text-base sm:text-xl font-bold tracking-tight text-foreground">
-                          {reg.event.title}
-                        </h2>
-                        <span className="rounded-full bg-(--sage-soft) border border-(--sage)/30 px-2.5 py-0.5 font-mono text-xs font-bold text-(--sage)">
-                          {reg.distance}
-                        </span>
+                if (startStr && endStr) {
+                  const startsAt = new Date(startStr);
+                  const endsAt = new Date(endStr);
+                  isBeforeSubmission = now < startsAt;
+                  isAfterSubmission = now > endsAt;
+                  isSubmissionWindowOpen = !isBeforeSubmission && !isAfterSubmission;
+                  submissionOpensAtStr = startsAt.toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                  });
+                }
+
+                return (
+                  <div
+                    key={reg.id}
+                    id={`reg-${reg.id}`}
+                    className="rounded-3xl border border-(--line) bg-(--panel) overflow-hidden shadow-xs transition-all hover:shadow-md"
+                  >
+                    {/* Event Card Header */}
+                    <div className="p-4 sm:p-6 border-b border-(--line) bg-(--panel-soft)/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h2 className="text-base sm:text-xl font-bold tracking-tight text-foreground">
+                            {reg.event.title}
+                          </h2>
+                          <span className="rounded-full bg-(--sage-soft) border border-(--sage)/30 px-2.5 py-0.5 font-mono text-xs font-bold text-(--sage)">
+                            {reg.distance}
+                          </span>
+                        </div>
+
+                        <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-(--muted)">
+                          <span className="font-mono font-bold text-foreground">
+                            Bib: {reg.bibNumber}
+                          </span>
+                          <span>·</span>
+                          <span>
+                            Joined{" "}
+                            {new Date(reg.registeredAt).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-(--muted)">
-                        <span className="font-mono font-bold text-foreground">
-                          Bib: {reg.bibNumber}
-                        </span>
-                        <span>·</span>
-                        <span>
-                          Joined{" "}
-                          {new Date(reg.registeredAt).toLocaleDateString("en-IN", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          })}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Payment Status Pill */}
-                    <div className="flex items-center gap-2">
-                      {isPaid ? (
+                      {/* Payment Status Pill */}
+                      <div className="flex items-center gap-2">
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                           <CheckCircle2 className="h-3.5 w-3.5" />
                           Paid {reg.payment?.amountInPaise ? formatMoney(reg.payment.amountInPaise) : ""}
                         </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                          <Clock className="h-3.5 w-3.5" />
-                          Payment Pending
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* ── 4-STEP RUNNER JOURNEY TRACK ── */}
-                  <div className="p-4 sm:p-6 border-b border-(--line) bg-(--panel)">
-                    <p className="text-[0.65rem] sm:text-xs font-bold uppercase tracking-wider text-(--muted) mb-3">
-                      Event Progress Pipeline
-                    </p>
-
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-                      {/* Step 1: Registered & Paid */}
-                      <div
-                        className={cn(
-                          "rounded-2xl border p-3 transition-all",
-                          isPaid
-                            ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400"
-                            : "border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-400",
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={cn(
-                              "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
-                              isPaid ? "bg-emerald-500 text-white" : "bg-amber-500 text-slate-950",
-                            )}
-                          >
-                            1
-                          </span>
-                          <span className="text-xs font-bold">Registration</span>
-                        </div>
-                        <p className="mt-1.5 text-[0.65rem] sm:text-xs text-(--muted)">
-                          {isPaid ? "Confirmed & Bib Assigned" : "Payment Required"}
-                        </p>
                       </div>
+                    </div>
 
-                      {/* Step 2: GPS Proof Submission */}
-                      <div
-                        className={cn(
-                          "rounded-2xl border p-3 transition-all",
-                          isVerified
-                            ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400"
-                            : isProofSubmitted
-                              ? "border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-400"
+                    {/* ── 4-STEP RUNNER JOURNEY TRACK ── */}
+                    <div className="p-4 sm:p-6 border-b border-(--line) bg-(--panel)">
+                      <p className="text-[0.65rem] sm:text-xs font-bold uppercase tracking-wider text-(--muted) mb-3">
+                        Event Progress Pipeline
+                      </p>
+
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+                        {/* Step 1: Registered & Paid */}
+                        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400 p-3 transition-all">
+                          <div className="flex items-center gap-2">
+                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold bg-emerald-500 text-white">
+                              ✓
+                            </span>
+                            <span className="text-xs font-bold">1. Registered</span>
+                          </div>
+                          <p className="mt-1.5 text-[0.65rem] sm:text-xs opacity-80">
+                            Bib #{reg.bibNumber} confirmed
+                          </p>
+                        </div>
+
+                        {/* Step 2: Run & Proof */}
+                        <div
+                          className={cn(
+                            "rounded-2xl border p-3 transition-all",
+                            isVerified
+                              ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400"
+                              : isProofSubmitted
+                                ? "border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-400"
+                                : "border-(--line) bg-(--panel-soft) text-(--muted)",
+                          )}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={cn(
+                                "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
+                                isVerified
+                                  ? "bg-emerald-500 text-white"
+                                  : isProofSubmitted
+                                    ? "bg-amber-500 text-slate-950"
+                                    : "bg-(--line) text-(--muted)",
+                              )}
+                            >
+                              {isVerified ? "✓" : isProofSubmitted ? "⏳" : "2"}
+                            </span>
+                            <span className="text-xs font-bold">2. Run Proof</span>
+                          </div>
+                          <p className="mt-1.5 text-[0.65rem] sm:text-xs opacity-80">
+                            {isVerified
+                              ? "Approved & verified"
+                              : isProofSubmitted
+                                ? "Under admin review"
+                                : isBeforeSubmission
+                                  ? `Opens ${submissionOpensAtStr}`
+                                  : "Submit GPS screenshot"}
+                          </p>
+                        </div>
+
+                        {/* Step 3: Certificate */}
+                        <div
+                          className={cn(
+                            "rounded-2xl border p-3 transition-all",
+                            isCertReady
+                              ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400"
                               : "border-(--line) bg-(--panel-soft) text-(--muted)",
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={cn(
-                              "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
-                              isVerified
-                                ? "bg-emerald-500 text-white"
-                                : isProofSubmitted
-                                  ? "bg-amber-500 text-slate-950"
-                                  : "bg-(--line) text-(--muted)",
-                            )}
-                          >
-                            2
-                          </span>
-                          <span className="text-xs font-bold">GPS Activity</span>
-                        </div>
-                        <p className="mt-1.5 text-[0.65rem] sm:text-xs text-(--muted)">
-                          {isVerified
-                            ? "Proof Approved"
-                            : isProofSubmitted
-                              ? "Under Review (24-48h)"
-                              : "Pending Run Upload"}
-                        </p>
-                      </div>
-
-                      {/* Step 3: Verified Timing */}
-                      <div
-                        className={cn(
-                          "rounded-2xl border p-3 transition-all",
-                          isVerified
-                            ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400"
-                            : "border-(--line) bg-(--panel-soft) text-(--muted)",
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={cn(
-                              "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
-                              isVerified ? "bg-emerald-500 text-white" : "bg-(--line) text-(--muted)",
-                            )}
-                          >
-                            3
-                          </span>
-                          <span className="text-xs font-bold">Official Time</span>
-                        </div>
-                        <p className="mt-1.5 text-[0.65rem] sm:text-xs font-mono font-bold text-foreground">
-                          {isVerified && reg.finishTimeSeconds
-                            ? formatDuration(reg.finishTimeSeconds)
-                            : "Awaiting Verification"}
-                        </p>
-                      </div>
-
-                      {/* Step 4: Certificate & Rewards */}
-                      <div
-                        className={cn(
-                          "rounded-2xl border p-3 transition-all",
-                          isCertReady
-                            ? "border-amber-500/40 bg-amber-500/5 text-amber-700 dark:text-amber-400"
-                            : "border-(--line) bg-(--panel-soft) text-(--muted)",
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={cn(
-                              "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
-                              isCertReady ? "bg-amber-500 text-slate-950" : "bg-(--line) text-(--muted)",
-                            )}
-                          >
-                            4
-                          </span>
-                          <span className="text-xs font-bold">Rewards Kit</span>
-                        </div>
-                        <p className="mt-1.5 text-[0.65rem] sm:text-xs text-(--muted)">
-                          {isCertReady
-                            ? isMedalDispatched
-                              ? "Medal On The Way"
-                              : "Certificate Ready"
-                            : "Unlocked on Finish"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ── SUBMITTED PROOF GALLERY PREVIEW ── */}
-                  {reg.proofUpload?.activityImageUrl && (
-                    <div className="mx-4 sm:mx-6 my-2 p-3.5 rounded-2xl border border-(--line) bg-(--panel-soft)/40">
-                      <div className="flex items-center justify-between text-xs mb-2.5">
-                        <span className="font-bold text-foreground flex items-center gap-1.5">
-                          <MapPin className="h-3.5 w-3.5 text-(--sage)" /> GPS Activity Proof
-                          <span className="rounded-md bg-(--sage)/15 text-(--sage) px-1.5 py-0.5 text-[0.65rem] font-bold">
-                            {parseProofImages(reg.proofUpload.activityImageUrl).length} Photo
-                            {parseProofImages(reg.proofUpload.activityImageUrl).length > 1 ? "s" : ""}
-                          </span>
-                        </span>
-                        <span className="text-[0.7rem] text-(--muted)">
-                          Via {reg.proofUpload.sourceApp || "GPS"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2.5 overflow-x-auto pb-1">
-                        {parseProofImages(reg.proofUpload.activityImageUrl).map((url, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() =>
-                              setViewingGallery({
-                                images: parseProofImages(reg.proofUpload?.activityImageUrl),
-                                initialIndex: idx,
-                              })
-                            }
-                            className="relative h-14 w-14 shrink-0 rounded-xl overflow-hidden border border-(--line) hover:border-(--sage) hover:scale-105 transition cursor-pointer group shadow-sm bg-black/40"
-                            title="Click to view full photo"
-                          >
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={url}
-                              alt={`Proof ${idx + 1}`}
-                              className="h-full w-full object-cover select-none"
-                            />
-                            <span className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition">
-                              <ZoomIn className="h-4 w-4" />
-                            </span>
-                            <span className="absolute bottom-0.5 right-0.5 rounded bg-black/70 px-1 text-[0.55rem] font-mono text-white/90">
-                              #{idx + 1}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                      {reg.proofUpload.reviewerNote && (
-                        <p className="mt-2 text-[0.7rem] text-(--muted) italic border-t border-(--line) pt-2">
-                          Note: {reg.proofUpload.reviewerNote}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* ── ACTION HUB BAR ── */}
-                  <div className="p-4 sm:p-5 bg-(--panel-soft)/30 flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Link
-                        className="btn btn-secondary h-9 px-3.5 text-xs inline-flex items-center gap-1.5"
-                        href={`/events/${reg.event.slug}`}
-                      >
-                        Event Page <ExternalLink className="h-3 w-3" />
-                      </Link>
-
-                      <Link
-                        className="btn btn-secondary h-9 px-3.5 text-xs inline-flex items-center gap-1.5"
-                        href={`/leaderboard?event=${reg.event.slug}&distance=${encodeURIComponent(reg.distance)}`}
-                      >
-                        Leaderboard <Trophy className="h-3.5 w-3.5 text-amber-500" />
-                      </Link>
-
-                      {isCertReady && (
-                        <Link
-                          className="btn btn-primary h-9 px-3.5 text-xs inline-flex items-center gap-1.5"
-                          href={`/certificates/${reg.certificate!.certificateNumber}`}
+                          )}
                         >
-                          <Award className="h-3.5 w-3.5" /> View Certificate
-                        </Link>
-                      )}
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={cn(
+                                "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
+                                isCertReady ? "bg-emerald-500 text-white" : "bg-(--line) text-(--muted)",
+                              )}
+                            >
+                              {isCertReady ? "✓" : "3"}
+                            </span>
+                            <span className="text-xs font-bold">3. Certificate</span>
+                          </div>
+                          <p className="mt-1.5 text-[0.65rem] sm:text-xs opacity-80">
+                            {isCertReady ? "Ready to download" : "Generated on approval"}
+                          </p>
+                        </div>
 
-                      {reg.medalDelivery?.trackingNumber && (
-                        <span className="inline-flex items-center gap-1.5 rounded-xl border border-(--line) bg-(--panel) px-3 py-1.5 text-xs text-(--muted)">
-                          <Truck className="h-3.5 w-3.5 text-(--sage)" />
-                          Tracking: <span className="font-mono font-bold text-foreground">{reg.medalDelivery.trackingNumber}</span>
-                        </span>
-                      )}
+                        {/* Step 4: Medal Dispatch */}
+                        <div
+                          className={cn(
+                            "rounded-2xl border p-3 transition-all",
+                            isMedalDispatched
+                              ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400"
+                              : "border-(--line) bg-(--panel-soft) text-(--muted)",
+                          )}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={cn(
+                                "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
+                                isMedalDispatched ? "bg-emerald-500 text-white" : "bg-(--line) text-(--muted)",
+                              )}
+                            >
+                              {isMedalDispatched ? "✓" : "4"}
+                            </span>
+                            <span className="text-xs font-bold">4. Medal</span>
+                          </div>
+                          <p className="mt-1.5 text-[0.65rem] sm:text-xs opacity-80">
+                            {isMedalDispatched ? "Dispatched / In-transit" : "Dispatched after run"}
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Primary Action Button */}
-                    <div>
-                      {!isPaid ? (
-                        <Link
-                          className="btn btn-primary h-9 px-4 text-xs font-bold"
-                          href={`/register?event=${reg.event?.slug || 'sports-day-celebration'}&distance=${encodeURIComponent(reg.distance)}`}
-                        >
-                          Complete Payment →
-                        </Link>
-                      ) : canUpload(reg) ? (
-                        isSubmissionWindowOpen ? (
-                          <button
-                            onClick={() => {
-                              const willOpen = !formOpen;
-                              setProofRegId(willOpen ? reg.id : null);
-                              setProofMessage(null);
-                              setProofError(null);
-                              if (willOpen) {
+                    {/* ── CARD BODY: ACTION BUTTONS & DETAILED STATUS ── */}
+                    <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      {/* Left Status Info */}
+                      <div className="space-y-1">
+                        {reg.proofStatus === "REJECTED" && (
+                          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-600 dark:text-red-400">
+                            <span className="font-bold">Proof Rejected:</span>{" "}
+                            {reg.proofUpload?.reviewerNote || "GPS data was unclear. Please upload a clear activity screenshot."}
+                          </div>
+                        )}
+
+                        {isVerified && reg.finishTimeSeconds && (
+                          <p className="text-xs font-semibold text-(--sage) flex items-center gap-1.5">
+                            <Trophy className="h-3.5 w-3.5" />
+                            Official Finish Time: {formatDuration(reg.finishTimeSeconds)}
+                          </p>
+                        )}
+
+                        {reg.proofUpload?.activityImageUrl && (
+                          <div className="pt-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--muted)">
+                                Attached Proofs:
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                {parseProofImages(reg.proofUpload.activityImageUrl).map((url, idx, allImgs) => (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => setViewingGallery({ images: allImgs, initialIndex: idx })}
+                                    className="h-7 w-7 rounded-lg overflow-hidden border border-(--line) hover:border-(--sage) cursor-pointer transition relative group shrink-0"
+                                    title={`View screenshot #${idx + 1}`}
+                                  >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={url} alt={`Proof ${idx + 1}`} className="h-full w-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                      <ZoomIn className="h-3 w-3 text-white" />
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right Action Buttons */}
+                      <div className="flex flex-wrap items-center gap-2 shrink-0">
+                        {isVerified ? (
+                          <>
+                            {reg.certificate ? (
+                              <Link
+                                className="btn btn-secondary h-9 px-3.5 text-xs font-bold inline-flex items-center gap-1.5 hover:border-(--sage) hover:text-(--sage)"
+                                href={`/certificates/${reg.certificate.certificateNumber}`}
+                              >
+                                <Award className="h-3.5 w-3.5 text-(--sage)" /> View Certificate
+                              </Link>
+                            ) : null}
+
+                            {reg.medalDelivery?.trackingNumber && (
+                              <a
+                                className="btn btn-secondary h-9 px-3.5 text-xs font-bold inline-flex items-center gap-1.5"
+                                href={`https://www.indiapost.gov.in/_layouts/15/dpt.cpt.application.tracking/tracking.aspx`}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                <Truck className="h-3.5 w-3.5 text-amber-500" /> Track Medal: {reg.medalDelivery.trackingNumber}
+                              </a>
+                            )}
+                          </>
+                        ) : reg.proofStatus === "NOT_SUBMITTED" || reg.proofStatus === "REJECTED" ? (
+                          isSubmissionWindowOpen ? (
+                            <button
+                              className="btn btn-primary h-9 px-4 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-md shadow-(--sage)/20"
+                              onClick={() => {
+                                setProofRegId(reg.id);
                                 setProofPhotos([]);
+                                setProofError(null);
+                                setProofMessage(null);
+                              }}
+                              type="button"
+                            >
+                              <UploadCloud className="h-3.5 w-3.5" />
+                              {reg.proofStatus === "REJECTED" ? "Re-upload Proof" : "Submit GPS Proof"}
+                            </button>
+                          ) : isBeforeSubmission ? (
+                            <div className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                              <Clock className="h-3.5 w-3.5" />
+                              <span>Proof upload opens {submissionOpensAtStr}</span>
+                            </div>
+                          ) : (
+                            <div className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-1.5 text-xs font-bold text-red-600 dark:text-red-400">
+                              <Clock className="h-3.5 w-3.5" />
+                              <span>Event window closed</span>
+                            </div>
+                          )
+                        ) : isProofSubmitted ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+                            <Clock className="h-3.5 w-3.5" /> Proof Under Review
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    {/* ── INLINE GPS PROOF SUBMISSION DRAWER (UP TO 5 PHOTOS) ── */}
+                    {formOpen && (
+                      <form
+                        className="border-t border-(--line) bg-(--panel-soft) p-4 sm:p-6 transition-all"
+                        onSubmit={submitProof}
+                        noValidate
+                      >
+                        <div className="space-y-4 max-w-3xl">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
+                                <UploadCloud className="h-4 w-4 text-(--sage)" />
+                                Submit GPS Proof &bull; {reg.event.title} ({reg.distance})
+                              </h3>
+                              <p className="text-xs text-(--muted) mt-0.5">
+                                Attach up to 5 photos: GPS route map, pace/elevation stats, splits, watch screenshot, or selfie!
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setProofRegId(null);
+                                setProofPhotos([]);
+                              }}
+                              className="text-(--muted) hover:text-foreground cursor-pointer p-1 rounded-lg hover:bg-(--panel)"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+
+                          {proofError && (
+                            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-2">
+                              <AlertCircle className="h-4 w-4 shrink-0" />
+                              {proofError}
+                            </div>
+                          )}
+
+                          {/* Drag & Drop Upload Zone */}
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              void onPickFiles(e.target.files);
+                              e.target.value = "";
+                            }}
+                          />
+
+                          <div
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              setIsDragging(true);
+                            }}
+                            onDragLeave={(e) => {
+                              e.preventDefault();
+                              setIsDragging(false);
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              setIsDragging(false);
+                              if (e.dataTransfer.files) {
+                                void onPickFiles(e.dataTransfer.files);
+                              }
+                            }}
+                            onClick={() => {
+                              if (proofPhotos.length < MAX_PROOF_PHOTOS) {
+                                fileInputRef.current?.click();
                               }
                             }}
                             className={cn(
-                              "h-9 px-4 text-xs font-bold rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5",
-                              formOpen
-                                ? "border border-(--line) bg-(--panel) text-(--muted)"
-                                : "btn btn-primary shadow-md shadow-(--sage)/20",
+                              "rounded-2xl border-2 border-dashed p-6 text-center transition-all cursor-pointer select-none",
+                              isDragging
+                                ? "border-(--sage) bg-(--sage)/10 scale-[1.01]"
+                                : proofPhotos.length >= MAX_PROOF_PHOTOS
+                                  ? "border-(--line) bg-(--panel)/40 cursor-not-allowed"
+                                  : "border-(--line) bg-(--panel) hover:border-(--sage)/60 hover:bg-(--sage)/5",
                             )}
-                            type="button"
                           >
-                            <UploadCloud className="h-4 w-4" />
-                            {formOpen ? "Close Uploader" : "Upload GPS Run Proof (Up to 5 Photos)"}
-                          </button>
-                        ) : isBeforeSubmission ? (
-                          <div className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                            <Clock className="h-3.5 w-3.5" /> 
-                            <span>Proof upload opens {submissionOpensAtStr}</span>
-                          </div>
-                        ) : (
-                          <div className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-1.5 text-xs font-bold text-red-600 dark:text-red-400">
-                            <Clock className="h-3.5 w-3.5" /> 
-                            <span>Event window closed</span>
-                          </div>
-                        )
-                      ) : isProofSubmitted ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
-                          <Clock className="h-3.5 w-3.5" /> Proof Under Review
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  {/* ── INLINE GPS PROOF SUBMISSION DRAWER (UP TO 5 PHOTOS) ── */}
-                  {formOpen && (
-                    <form
-                      className="border-t border-(--line) bg-(--panel-soft) p-4 sm:p-6 transition-all"
-                      onSubmit={submitProof}
-                      noValidate
-                    >
-                      <div className="space-y-4 max-w-3xl">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
-                              <UploadCloud className="h-4 w-4 text-(--sage)" />
-                              Submit GPS Proof &bull; {reg.event.title} ({reg.distance})
-                            </h3>
-                            <p className="text-xs text-(--muted) mt-0.5">
-                              Attach up to 5 photos: GPS route map, pace/elevation stats, splits, watch screenshot, or selfie!
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setProofRegId(null);
-                              setProofPhotos([]);
-                            }}
-                            className="text-(--muted) hover:text-foreground cursor-pointer p-1 rounded-lg hover:bg-(--panel)"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-
-                        {proofError && (
-                          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-2">
-                            <AlertCircle className="h-4 w-4 shrink-0" />
-                            {proofError}
-                          </div>
-                        )}
-
-                        {/* Drag & Drop Upload Zone */}
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            void onPickFiles(e.target.files);
-                            e.target.value = "";
-                          }}
-                        />
-
-                        <div
-                          onDragOver={(e) => {
-                            e.preventDefault();
-                            setIsDragging(true);
-                          }}
-                          onDragLeave={() => setIsDragging(false)}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            setIsDragging(false);
-                            void onPickFiles(e.dataTransfer.files);
-                          }}
-                          onClick={() => {
-                            if (proofPhotos.length < MAX_PROOF_PHOTOS && !proofBusy) {
-                              fileInputRef.current?.click();
-                            }
-                          }}
-                          className={cn(
-                            "relative rounded-2xl border-2 border-dashed p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2.5",
-                            isDragging
-                              ? "border-(--sage) bg-(--sage)/15 scale-[1.01]"
-                              : "border-(--line) bg-(--panel)/70 hover:border-(--sage)/70 hover:bg-(--panel)",
-                            proofPhotos.length >= MAX_PROOF_PHOTOS && "opacity-75 cursor-default",
-                          )}
-                        >
-                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-(--sage)/15 text-(--sage)">
-                            <Camera className="h-6 w-6" />
-                          </div>
-                          <div>
-                            <p className="text-xs sm:text-sm font-bold text-foreground">
-                              {proofPhotos.length >= MAX_PROOF_PHOTOS
-                                ? "Maximum 5 photos reached"
-                                : "Click to select or drag & drop run proof photos"}
-                            </p>
-                            <p className="text-[0.7rem] text-(--muted) mt-0.5">
-                              JPEG, PNG, WebP up to 15 MB &bull; {proofPhotos.length}/5 photos attached
-                            </p>
-                          </div>
-                          {proofPhotos.length < MAX_PROOF_PHOTOS && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                fileInputRef.current?.click();
-                              }}
-                              className="btn btn-secondary h-8 px-3.5 text-xs font-semibold rounded-xl inline-flex items-center gap-1.5 shadow-sm"
-                            >
-                              <Plus className="h-3.5 w-3.5 text-(--sage)" /> Browse Photos
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Selected Photos Gallery Grid */}
-                        {proofPhotos.length > 0 && (
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between text-xs text-(--muted)">
-                              <span className="font-semibold text-foreground">
-                                Attached Photos ({proofPhotos.length}/5)
-                              </span>
-                              <span className="text-[0.7rem]">Click thumbnail to inspect</span>
+                            <div className="flex flex-col items-center justify-center gap-2">
+                              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-(--sage-soft) text-(--sage)">
+                                <Camera className="h-6 w-6" />
+                              </div>
+                              <div>
+                                <p className="text-xs sm:text-sm font-bold text-foreground">
+                                  {proofPhotos.length === 0
+                                    ? "Click or drag & drop GPS activity screenshots here"
+                                    : `Attached ${proofPhotos.length} of ${MAX_PROOF_PHOTOS} photos`}
+                                </p>
+                                <p className="text-[0.7rem] text-(--muted) mt-0.5">
+                                  Supports JPG, PNG, WebP up to 15MB each (Max 5 photos)
+                                </p>
+                              </div>
                             </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                              {proofPhotos.map((photo, idx) => {
-                                const tagLabels = [
-                                  "Primary Map",
-                                  "Pace / Splits",
-                                  "Elevation / HR",
-                                  "Watch / Selfie",
-                                  "Additional Proof",
-                                ];
-                                return (
-                                  <div
-                                    key={photo.id}
-                                    className="group relative rounded-xl border border-(--line) bg-(--panel) p-1.5 shadow-sm overflow-hidden flex flex-col justify-between"
-                                  >
+                          </div>
+
+                          {/* Photo Previews Grid */}
+                          {proofPhotos.length > 0 && (
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-bold uppercase tracking-wider text-(--muted)">
+                                  Attached Screenshots ({proofPhotos.length}/{MAX_PROOF_PHOTOS})
+                                </span>
+                                <span className="text-[0.65rem] text-(--sage) font-semibold">
+                                  Click any image to zoom
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                {proofPhotos.map((photo, idx) => {
+                                  const tagLabels = [
+                                    "#1 Primary Map",
+                                    "#2 Pace / Splits",
+                                    "#3 Elevation / HR",
+                                    "#4 Watch / Selfie",
+                                    "#5 Additional Proof",
+                                  ];
+                                  return (
                                     <div
-                                      onClick={() =>
-                                        setViewingGallery({
-                                          images: proofPhotos.map((p) => p.previewUrl),
-                                          initialIndex: idx,
-                                        })
-                                      }
-                                      className="relative aspect-square w-full rounded-lg overflow-hidden bg-black/60 cursor-pointer"
+                                      key={photo.id}
+                                      className="group relative rounded-xl border border-(--line) bg-(--panel) overflow-hidden aspect-square flex flex-col justify-between p-1.5 shadow-xs"
                                     >
                                       {/* eslint-disable-next-line @next/next/no-img-element */}
                                       <img
                                         src={photo.previewUrl}
                                         alt={photo.name}
-                                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                                        className="absolute inset-0 h-full w-full object-cover cursor-pointer"
+                                        onClick={() =>
+                                          setViewingGallery({
+                                            images: proofPhotos.map((p) => p.previewUrl),
+                                            initialIndex: idx,
+                                          })
+                                        }
                                       />
-                                      <span className="absolute top-1 left-1 rounded bg-black/75 px-1.5 py-0.5 text-[0.6rem] font-bold text-white">
-                                        #{idx + 1}
-                                      </span>
-                                      <span className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition">
-                                        <ZoomIn className="h-4 w-4" />
-                                      </span>
-                                    </div>
-
-                                    <div className="mt-1.5 flex items-center justify-between gap-1 px-1">
-                                      <div className="min-w-0 flex-1">
-                                        <p className="truncate text-[0.65rem] font-bold text-foreground" title={photo.name}>
-                                          {tagLabels[idx] || `Photo #${idx + 1}`}
-                                        </p>
-                                        <p className="text-[0.6rem] text-(--muted)">
-                                          {(photo.size / (1024 * 1024)).toFixed(1)} MB
-                                        </p>
+                                      <div className="relative z-10 flex items-center justify-between">
+                                        <span className="rounded-md bg-black/70 px-1.5 py-0.5 text-[0.6rem] font-bold text-white backdrop-blur-xs">
+                                          {tagLabels[idx] || `#${idx + 1}`}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            removePhoto(photo.id);
+                                          }}
+                                          className="flex h-5 w-5 items-center justify-center rounded-md bg-red-600/90 text-white hover:bg-red-700 transition cursor-pointer shadow-xs"
+                                          title="Remove photo"
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </button>
                                       </div>
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          removePhoto(photo.id);
-                                        }}
-                                        disabled={proofBusy}
-                                        title="Remove photo"
-                                        className="rounded-lg p-1 text-(--muted) hover:bg-red-500/10 hover:text-red-500 transition cursor-pointer"
-                                      >
-                                        <Trash2 className="h-3.5 w-3.5" />
-                                      </button>
+                                      <div className="relative z-10 flex items-center justify-between">
+                                        <span className="rounded-md bg-black/70 px-1 py-0.5 text-[0.55rem] font-mono text-zinc-300 backdrop-blur-xs">
+                                          {(photo.size / (1024 * 1024)).toFixed(1)} MB
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            setViewingGallery({
+                                              images: proofPhotos.map((p) => p.previewUrl),
+                                              initialIndex: idx,
+                                            })
+                                          }
+                                          className="flex h-5 w-5 items-center justify-center rounded-md bg-black/60 text-white opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                                          title="Zoom"
+                                        >
+                                          <ZoomIn className="h-3 w-3" />
+                                        </button>
+                                      </div>
                                     </div>
-                                  </div>
-                                );
-                              })}
+                                  );
+                                })}
 
-                              {proofPhotos.length < MAX_PROOF_PHOTOS && (
-                                <button
-                                  type="button"
-                                  onClick={() => fileInputRef.current?.click()}
-                                  className="aspect-square rounded-xl border border-dashed border-(--line) hover:border-(--sage) hover:bg-(--sage)/5 flex flex-col items-center justify-center gap-1 text-(--muted) hover:text-(--sage) transition cursor-pointer p-2"
-                                >
-                                  <Plus className="h-5 w-5" />
-                                  <span className="text-[0.65rem] font-semibold text-center leading-tight">
-                                    Add Photo ({5 - proofPhotos.length} left)
-                                  </span>
-                                </button>
-                              )}
+                                {proofPhotos.length < MAX_PROOF_PHOTOS && (
+                                  <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="aspect-square rounded-xl border border-dashed border-(--line) hover:border-(--sage) hover:bg-(--sage)/5 flex flex-col items-center justify-center gap-1 text-(--muted) hover:text-(--sage) transition cursor-pointer p-2"
+                                  >
+                                    <Plus className="h-5 w-5" />
+                                    <span className="text-[0.65rem] font-semibold text-center leading-tight">
+                                      Add Photo ({5 - proofPhotos.length} left)
+                                    </span>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 pt-1">
+                            <label className="block">
+                              <span className="block text-xs font-bold uppercase tracking-wider text-(--muted) mb-1.5">
+                                Tracking App
+                              </span>
+                              <select
+                                className="input w-full text-xs font-medium"
+                                onChange={(e) => setSourceApp(e.target.value)}
+                                required
+                                value={sourceApp}
+                              >
+                                {SOURCE_APPS.map((a) => (
+                                  <option key={a} value={a}>
+                                    {a}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+
+                            <div>
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className="block text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                                  <Clock className="h-3.5 w-3.5 text-(--sage)" /> Official Finish Time <span className="text-red-500 font-black">*</span>
+                                </span>
+                                <span className="text-[0.62rem] font-bold uppercase tracking-wider text-(--sage)">
+                                  Required for Certificate
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <input
+                                  ref={hoursInputRef}
+                                  aria-label="Hours"
+                                  className="input text-center font-mono text-xs font-bold h-10 w-16"
+                                  max={23}
+                                  min={0}
+                                  required
+                                  onPaste={handleTimePaste}
+                                  onChange={(e) => {
+                                    const val = e.target.value.slice(0, 2);
+                                    setFinishHours(val);
+                                    if (val.length === 2 && minutesInputRef.current) {
+                                      minutesInputRef.current.focus();
+                                    }
+                                  }}
+                                  placeholder="HH"
+                                  type="number"
+                                  value={finishHours}
+                                />
+                                <span className="font-mono text-sm text-(--muted)">:</span>
+                                <input
+                                  ref={minutesInputRef}
+                                  aria-label="Minutes"
+                                  className="input text-center font-mono text-xs font-bold h-10 w-16"
+                                  max={59}
+                                  min={0}
+                                  required
+                                  onPaste={handleTimePaste}
+                                  onChange={(e) => {
+                                    const val = e.target.value.slice(0, 2);
+                                    setFinishMinutes(val);
+                                    if (val.length === 2 && secondsInputRef.current) {
+                                      secondsInputRef.current.focus();
+                                    }
+                                  }}
+                                  placeholder="MM"
+                                  type="number"
+                                  value={finishMinutes}
+                                />
+                                <span className="font-mono text-sm text-(--muted)">:</span>
+                                <input
+                                  ref={secondsInputRef}
+                                  aria-label="Seconds"
+                                  className="input text-center font-mono text-xs font-bold h-10 w-16"
+                                  max={59}
+                                  min={0}
+                                  required
+                                  onPaste={handleTimePaste}
+                                  onChange={(e) => {
+                                    setFinishSeconds(e.target.value.slice(0, 2));
+                                  }}
+                                  placeholder="SS"
+                                  type="number"
+                                  value={finishSeconds}
+                                />
+                              </div>
+                              <p className="text-[0.68rem] text-(--muted) mt-1">
+                                Enter the total duration shown on your GPS activity screenshot.
+                              </p>
                             </div>
                           </div>
-                        )}
 
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 pt-1">
-                          <label className="block">
-                            <span className="block text-xs font-bold uppercase tracking-wider text-(--muted) mb-1.5">
-                              Tracking App
-                            </span>
-                            <select
-                              className="input w-full text-xs font-medium"
-                              onChange={(e) => setSourceApp(e.target.value)}
-                              required
-                              value={sourceApp}
+                          {formattedTimePreview ? (
+                            <div className="rounded-xl border border-(--sage)/30 bg-(--sage)/10 p-2.5 flex items-center justify-between text-xs">
+                              <div className="flex items-center gap-2">
+                                <Award className="h-4 w-4 text-(--sage)" />
+                                <span className="font-semibold text-foreground">
+                                  Certificate Timing: <span className="font-mono font-bold text-(--sage)">{formattedTimePreview.digital}</span> ({formattedTimePreview.label})
+                                </span>
+                              </div>
+                              <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--sage) bg-(--sage)/20 px-2 py-0.5 rounded-full">
+                                Official
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-[0.72rem] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-2">
+                              <span>⚠️</span>
+                              <span>Enter your activity finish time above so your certificate is issued with accurate timing.</span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-3 pt-2">
+                            <button
+                              className="btn btn-primary h-10 px-5 text-xs font-bold cursor-pointer inline-flex items-center gap-2 shadow-lg shadow-(--sage)/20"
+                              disabled={proofBusy || proofPhotos.length === 0}
+                              type="submit"
                             >
-                              {SOURCE_APPS.map((a) => (
-                                <option key={a} value={a}>
-                                  {a}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
+                              {proofBusy ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  <span>{uploadProgressText || "Submitting..."}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <UploadCloud className="h-4 w-4" />
+                                  <span>
+                                    Submit {proofPhotos.length > 0 ? `${proofPhotos.length} Proof Photo${proofPhotos.length > 1 ? "s" : ""}` : "GPS Proof"}
+                                  </span>
+                                </>
+                              )}
+                            </button>
+                            <button
+                              className="btn btn-secondary h-10 px-4 text-xs cursor-pointer"
+                              onClick={() => {
+                                setProofRegId(null);
+                                setProofPhotos([]);
+                                setProofError(null);
+                              }}
+                              type="button"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                );
+              })}
 
-                          <div>
-                            <div className="flex items-center justify-between mb-1.5">
-                              <span className="block text-xs font-bold uppercase tracking-wider text-(--foreground) flex items-center gap-1.5">
-                                <Clock className="h-3.5 w-3.5 text-(--sage)" /> Official Finish Time <span className="text-red-500 font-black">*</span>
+              {/* ── DISCOVER NEXT CHALLENGE / UPCOMING EVENTS SHOWCASE ── */}
+              {upcomingEventsToExplore.length > 0 && (
+                <div className="mt-8 rounded-3xl border border-(--line) bg-gradient-to-br from-(--panel) via-(--panel-soft)/50 to-(--sage)/5 p-5 sm:p-7 shadow-xs overflow-hidden">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-(--line)/60 pb-5">
+                    <div>
+                      <div className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.68rem] font-black uppercase tracking-wider bg-(--sage)/15 text-(--sage) border border-(--sage)/30 mb-2">
+                        <Sparkles className="h-3 w-3" /> Ready For Your Next Milestone?
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-black tracking-tight text-foreground">
+                        Explore Upcoming Virtual Runs & Challenges
+                      </h3>
+                      <p className="text-xs sm:text-sm text-(--muted) mt-0.5 max-w-xl">
+                        Keep your momentum alive! Earn exclusive heavyweight 3D finisher medals, personalized bibs, and verifiable certificates.
+                      </p>
+                    </div>
+                    <Link
+                      href="/events"
+                      className="btn btn-secondary h-9 px-4 text-xs font-bold shrink-0 self-start md:self-auto inline-flex items-center gap-1.5 hover:border-(--sage) hover:text-(--sage)"
+                    >
+                      View All Events <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+
+                  {/* Horizontal event showcase cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
+                    {upcomingEventsToExplore.slice(0, 3).map((ev) => (
+                      <div
+                        key={ev.slug}
+                        className="group rounded-2xl border border-(--line) bg-(--panel) p-4.5 flex flex-col justify-between transition-all hover:border-(--sage)/50 hover:shadow-md"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[0.65rem] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              Registration Open
+                            </span>
+                            <span className="font-mono text-xs font-black text-foreground">
+                              {ev.price}
+                            </span>
+                          </div>
+                          <h4 className="font-bold text-sm text-foreground group-hover:text-(--sage) transition-colors line-clamp-1">
+                            {ev.name}
+                          </h4>
+                          <p className="text-[0.72rem] text-(--muted) mt-1 line-clamp-2 leading-relaxed">
+                            {ev.description}
+                          </p>
+                          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                            {ev.distance.split("/").slice(0, 3).map((d) => (
+                              <span
+                                key={d}
+                                className="rounded-lg bg-(--panel-soft) px-2 py-0.5 text-[0.65rem] font-mono font-semibold text-(--muted)"
+                              >
+                                {d.trim()}
                               </span>
-                              <span className="text-[0.62rem] font-bold uppercase tracking-wider text-(--sage)">
-                                Required for Certificate
+                            ))}
+                            {ev.distance.split("/").length > 3 && (
+                              <span className="text-[0.65rem] text-(--muted) font-medium">
+                                +{ev.distance.split("/").length - 3} more
                               </span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <input
-                                ref={hoursInputRef}
-                                aria-label="Hours"
-                                className="input text-center font-mono text-xs font-bold h-10 w-16"
-                                max={23}
-                                min={0}
-                                required
-                                onPaste={handleTimePaste}
-                                onChange={(e) => {
-                                  const val = e.target.value.slice(0, 2);
-                                  setFinishHours(val);
-                                  if (val.length === 2 && minutesInputRef.current) {
-                                    minutesInputRef.current.focus();
-                                  }
-                                }}
-                                placeholder="HH"
-                                type="number"
-                                value={finishHours}
-                              />
-                              <span className="font-mono text-sm text-(--muted)">:</span>
-                              <input
-                                ref={minutesInputRef}
-                                aria-label="Minutes"
-                                className="input text-center font-mono text-xs font-bold h-10 w-16"
-                                max={59}
-                                min={0}
-                                required
-                                onPaste={handleTimePaste}
-                                onChange={(e) => {
-                                  const val = e.target.value.slice(0, 2);
-                                  setFinishMinutes(val);
-                                  if (val.length === 2 && secondsInputRef.current) {
-                                    secondsInputRef.current.focus();
-                                  }
-                                }}
-                                placeholder="MM"
-                                type="number"
-                                value={finishMinutes}
-                              />
-                              <span className="font-mono text-sm text-(--muted)">:</span>
-                              <input
-                                ref={secondsInputRef}
-                                aria-label="Seconds"
-                                className="input text-center font-mono text-xs font-bold h-10 w-16"
-                                max={59}
-                                min={0}
-                                required
-                                onPaste={handleTimePaste}
-                                onChange={(e) => {
-                                  setFinishSeconds(e.target.value.slice(0, 2));
-                                }}
-                                placeholder="SS"
-                                type="number"
-                                value={finishSeconds}
-                              />
-                            </div>
-                            <p className="text-[0.68rem] text-(--muted) mt-1">
-                              Enter the total duration shown on your GPS activity screenshot.
-                            </p>
+                            )}
                           </div>
                         </div>
 
-                        {formattedTimePreview ? (
-                          <div className="rounded-xl border border-(--sage)/30 bg-(--sage)/10 p-2.5 flex items-center justify-between text-xs">
-                            <div className="flex items-center gap-2">
-                              <Award className="h-4 w-4 text-(--sage)" />
-                              <span className="font-semibold text-(--foreground)">
-                                Certificate Timing: <span className="font-mono font-bold text-(--sage)">{formattedTimePreview.digital}</span> ({formattedTimePreview.label})
-                              </span>
-                            </div>
-                            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-(--sage) bg-(--sage)/20 px-2 py-0.5 rounded-full">
-                              Official
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-[0.72rem] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-2">
-                            <span>⚠️</span>
-                            <span>Enter your activity finish time above so your certificate is issued with accurate timing.</span>
-                          </div>
-                        )}
-
-                        <div className="flex items-center gap-3 pt-2">
-                          <button
-                            className="btn btn-primary h-10 px-5 text-xs font-bold cursor-pointer inline-flex items-center gap-2 shadow-lg shadow-(--sage)/20"
-                            disabled={proofBusy || proofPhotos.length === 0}
-                            type="submit"
+                        <div className="mt-4 pt-3 border-t border-(--line)/50 flex items-center justify-between">
+                          <span className="text-[0.68rem] text-(--muted) flex items-center gap-1">
+                            <Medal className="h-3 w-3 text-amber-500" /> 3D Medal Included
+                          </span>
+                          <Link
+                            href={`/events/${ev.slug}`}
+                            className="btn btn-primary h-7 px-3 text-[0.68rem] font-bold inline-flex items-center gap-1 shadow-xs"
                           >
-                            {proofBusy ? (
-                              <>
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                <span>{uploadProgressText || "Submitting..."}</span>
-                              </>
-                            ) : (
-                              <>
-                                <UploadCloud className="h-4 w-4" />
-                                <span>
-                                  Submit {proofPhotos.length > 0 ? `${proofPhotos.length} Proof Photo${proofPhotos.length > 1 ? "s" : ""}` : "GPS Proof"}
-                                </span>
-                              </>
-                            )}
-                          </button>
-                          <button
-                            className="btn btn-secondary h-10 px-4 text-xs cursor-pointer"
-                            onClick={() => {
-                              setProofRegId(null);
-                              setProofPhotos([]);
-                              setProofError(null);
-                            }}
-                            type="button"
-                          >
-                            Cancel
-                          </button>
+                            Register Now <ArrowRight className="h-3 w-3" />
+                          </Link>
                         </div>
                       </div>
-                    </form>
-                  )}
+                    ))}
+                  </div>
                 </div>
-              );
-            })
+              )}
+            </>
           )}
         </div>
       )}
