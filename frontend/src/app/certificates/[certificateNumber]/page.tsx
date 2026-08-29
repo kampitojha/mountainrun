@@ -140,7 +140,12 @@ export default function CertificateVerifyPage() {
   const [loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState("");
   const [overrideQuery, setOverrideQuery] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"landscape" | "portrait">("landscape");
+  const [viewMode, setViewMode] = useState<"landscape" | "portrait">(() => {
+    if (typeof window !== "undefined" && window.innerWidth >= 640) {
+      return "landscape";
+    }
+    return "portrait";
+  });
   const [isDownloading, setIsDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const certRef = useRef<HTMLElement>(null);
@@ -343,7 +348,7 @@ export default function CertificateVerifyPage() {
               {viewMode === "landscape" && (
                 <div className="sm:hidden mb-2 text-center">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/20 text-[0.65rem] font-bold text-[#c9a227]">
-                    🔄 Tip: Pinch to zoom or switch to "Mobile Fit" for vertical view
+                    🔄 Tip: Pinch to zoom or switch to &quot;Mobile Fit&quot; for vertical view
                   </span>
                 </div>
               )}
