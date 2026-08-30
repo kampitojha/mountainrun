@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, Trophy } from "lucide-react";
 import { PageShell } from "../../components/app-shell";
 import { allPublicEvents } from "../../data/events";
 import { fetchEventBySlug } from "../../../lib/events-api";
@@ -229,10 +229,19 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   </span>
                   <h2 className="heading text-(--foreground)">{event.name} recap</h2>
                   <p className="lede max-w-lg">{event.highlight}</p>
-                  <Link className="btn btn-gold gap-2 text-sm" href="/events">
-                    Join the next event
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <Link
+                      className="btn btn-secondary gap-2 text-sm font-bold"
+                      href={`/leaderboard?event=${encodeURIComponent(event.slug)}`}
+                    >
+                      <Trophy className="h-4 w-4 text-amber-500" />
+                      View Official Leaderboard
+                    </Link>
+                    <Link className="btn btn-gold gap-2 text-sm" href="/events">
+                      Join the next event
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </div>
                 </div>
               </Reveal>
             </div>

@@ -225,7 +225,15 @@ function PodiumCard({
   );
 }
 
-export function LeaderboardClient() {
+export function LeaderboardClient({
+  initialSlug,
+  initialDistance,
+  hideHero = false,
+}: {
+  initialSlug?: string;
+  initialDistance?: string;
+  hideHero?: boolean;
+} = {}) {
   const searchParams = useSearchParams();
   const initialEventParam = searchParams.get("event") || "";
   const initialDistanceParam = searchParams.get("distance") || "";
@@ -236,7 +244,7 @@ export function LeaderboardClient() {
   const currentClerkId = user?.id ?? null;
 
   const [events, setEvents] = useState<EventOption[]>(
-    publicEvents.map((e) => ({
+    allPublicEvents.map((e) => ({
       slug: e.slug,
       name: e.name,
       distances: e.distance
@@ -246,10 +254,10 @@ export function LeaderboardClient() {
   );
 
   const [selectedSlug, setSelectedSlug] = useState<string>(
-    initialEventParam || publicEvents[0]?.slug || "sports-day-celebration",
+    initialSlug || initialEventParam || allPublicEvents[0]?.slug || "sports-day-celebration",
   );
   const [selectedDistance, setSelectedDistance] = useState<string>(
-    initialDistanceParam || "5 km",
+    initialDistance || initialDistanceParam || "5 km",
   );
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -407,44 +415,47 @@ export function LeaderboardClient() {
     };
   }, [currentClerkId, entries, isSignedIn, selectedDistance, user, userRegistrations]);
 
+
   return (
     <div className="min-w-0 pb-16 px-1 sm:px-0">
       {/* ── HERO ──────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden border-b border-(--line)">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10"
-          style={{
-            background: [
-              "radial-gradient(ellipse 80% 50% at 0% 0%, color-mix(in srgb, var(--sage) 14%, transparent) 0%, transparent 60%)",
-              "radial-gradient(ellipse 60% 40% at 100% 100%, color-mix(in srgb, #eab308 10%, transparent) 0%, transparent 50%)",
-              "var(--background)",
-            ].join(", "),
-          }}
-        />
+      {!hideHero && (
+        <section className="relative overflow-hidden border-b border-(--line)">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -z-10"
+            style={{
+              background: [
+                "radial-gradient(ellipse 80% 50% at 0% 0%, color-mix(in srgb, var(--sage) 14%, transparent) 0%, transparent 60%)",
+                "radial-gradient(ellipse 60% 40% at 100% 100%, color-mix(in srgb, #eab308 10%, transparent) 0%, transparent 50%)",
+                "var(--background)",
+              ].join(", "),
+            }}
+          />
 
-        <div className="container-page py-8 sm:py-12 md:py-14">
-          <motion.div
-            className="mx-auto max-w-2xl text-center"
-            initial={reduce ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-(--sage)/30 bg-(--sage-soft) px-2.5 py-0.5 sm:px-3 sm:py-1 text-[0.65rem] sm:text-xs font-bold uppercase tracking-wider text-(--sage)">
-              <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Official Event Leaderboard
-            </div>
-            <h1 className="mt-2.5 sm:mt-3 text-3xl font-black leading-[1.1] tracking-tight text-foreground sm:text-5xl">
-              Verified Race Rankings
-            </h1>
-            <p className="lede mx-auto mt-2.5 sm:mt-3 max-w-lg text-xs sm:text-base">
-              Explore real-time standings across all distance categories. Every finish is verified with GPS tracking.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+          <div className="container-page py-8 sm:py-12 md:py-14">
+            <motion.div
+              className="mx-auto max-w-2xl text-center"
+              initial={reduce ? false : { opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-(--sage)/30 bg-(--sage-soft) px-2.5 py-0.5 sm:px-3 sm:py-1 text-[0.65rem] sm:text-xs font-bold uppercase tracking-wider text-(--sage)">
+                <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Official Event Leaderboard
+              </div>
+              <h1 className="mt-2.5 sm:mt-3 text-3xl font-black leading-[1.1] tracking-tight text-foreground sm:text-5xl">
+                Verified Race Rankings
+              </h1>
+              <p className="lede mx-auto mt-2.5 sm:mt-3 max-w-lg text-xs sm:text-base">
+                Explore real-time standings across all distance categories. Every finish is verified with GPS tracking.
+              </p>
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* ── CONTROLS & FILTERS ─────────────────────────────────── */}
-      <section className="section pt-5 sm:pt-8">
+      <section className={cn("section", hideHero ? "pt-2 sm:pt-4" : "pt-5 sm:pt-8")}>
         <div className="container-page">
           <div className="flex flex-col gap-4 sm:gap-5">
             {/* Event Selector & Search Bar */}
