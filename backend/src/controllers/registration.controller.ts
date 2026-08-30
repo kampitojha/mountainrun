@@ -867,6 +867,11 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
     typeof request.query.distance === "string" && request.query.distance.trim()
       ? request.query.distance.trim().slice(0, 50)
       : undefined;
+  
+  const searchQuery =
+    typeof request.query.search === "string" && request.query.search.trim()
+      ? request.query.search.trim().toLowerCase().slice(0, 50)
+      : undefined;
 
   await ensureDefaultEvents();
 
@@ -948,15 +953,33 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
     take: 500,
   });
 
-  // Filter approved finishers by matching distance (normalized)
+  // Filter approved finishers by matching distance (normalized) and search query
   const matchingRegistrations = realApprovedRegistrations.filter((reg) => {
-    if (!distanceQuery || distanceQuery === "all") return true;
-    const regKm = parseDistanceKm(reg.distance);
-    const targetKm = parseDistanceKm(activeDistance);
-    if (Math.abs(regKm - targetKm) < 0.1) return true;
-    const cleanReg = reg.distance.toLowerCase().replace(/\s+/g, "");
-    const cleanTarget = activeDistance.toLowerCase().replace(/\s+/g, "");
-    return cleanReg === cleanTarget || cleanReg.includes(cleanTarget) || cleanTarget.includes(cleanReg);
+    let matchesDistance = false;
+    if (!distanceQuery || distanceQuery.toLowerCase() === "all" || distanceQuery.toLowerCase() === "alldistances") {
+      matchesDistance = true;
+    } else {
+      const regKm = parseDistanceKm(reg.distance);
+      const targetKm = parseDistanceKm(activeDistance);
+      if (Math.abs(regKm - targetKm) < 0.1) {
+        matchesDistance = true;
+      } else {
+        const cleanReg = reg.distance.toLowerCase().replace(/\s+/g, "");
+        const cleanTarget = activeDistance.toLowerCase().replace(/\s+/g, "");
+        matchesDistance = cleanReg === cleanTarget || cleanReg.includes(cleanTarget) || cleanTarget.includes(cleanReg);
+      }
+    }
+
+    // If there's a search query, bypass the distance filter but enforce the search query
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase().trim();
+      const nameMatch = reg.user.name.toLowerCase().includes(q);
+      const bibMatch = reg.bibNumber && reg.bibNumber.toLowerCase().includes(q);
+      const cityMatch = reg.shippingCity && reg.shippingCity.toLowerCase().includes(q);
+      return nameMatch || bibMatch || cityMatch;
+    }
+
+    return matchesDistance;
   });
 
   // Fetch all registered participants for the Event Roster tab
@@ -1056,7 +1079,7 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
   }
 
   const mergedRows = [...realLeaderboardRows];
-  if (mergedRows.length < 50) {
+  if (mergedRows.length < 50 && !searchQuery) {
     const paddedRows = generatePaddedLeaderboard(event.slug, activeDistance, 50, mergedRows.length, lastRealPace);
     for (const dummy of paddedRows) {
       if (mergedRows.length >= 50) break;

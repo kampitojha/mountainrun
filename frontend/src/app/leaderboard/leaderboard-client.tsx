@@ -260,6 +260,14 @@ export function LeaderboardClient({
     initialDistance || initialDistanceParam || "5 km",
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [userRegistrations, setUserRegistrations] = useState<UserReg[]>([]);
@@ -332,9 +340,10 @@ export function LeaderboardClient({
     setError(null);
 
     try {
-      const distQuery = selectedDistance ? `?distance=${encodeURIComponent(selectedDistance)}` : "";
+      const distQuery = selectedDistance ? `distance=${encodeURIComponent(selectedDistance)}` : "";
+      const searchQueryParam = debouncedSearchQuery ? `&search=${encodeURIComponent(debouncedSearchQuery)}` : "";
       const response = await fetch(
-        getApiUrl(`/api/registrations/leaderboard/${encodeURIComponent(selectedSlug)}${distQuery}`),
+        getApiUrl(`/api/registrations/leaderboard/${encodeURIComponent(selectedSlug)}?${distQuery}${searchQueryParam}`),
       );
 
       if (!response.ok) {
@@ -356,7 +365,7 @@ export function LeaderboardClient({
     } finally {
       setLoading(false);
     }
-  }, [selectedDistance, selectedSlug]);
+  }, [selectedDistance, selectedSlug, debouncedSearchQuery]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -370,7 +379,7 @@ export function LeaderboardClient({
       void loadLeaderboard();
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [loadLeaderboard]);
+  }, [loadLeaderboard, debouncedSearchQuery]);
 
   // Filtered entries based on search
   const filteredEntries = useMemo(() => {
