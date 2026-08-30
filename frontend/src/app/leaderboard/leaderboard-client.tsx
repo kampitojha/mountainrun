@@ -588,6 +588,29 @@ export function LeaderboardClient({
                     View in Dashboard
                   </Link>
                 </motion.div>
+              ) : userStanding?.currentDistanceReg ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex flex-col gap-2 rounded-2xl border border-(--line) bg-(--panel-soft) p-3.5 sm:flex-row sm:items-center sm:justify-between sm:p-4"
+                >
+                  <div>
+                    <p className="text-xs sm:text-sm font-bold text-foreground">
+                      You are registered for <span className="text-(--sage)">{userStanding.currentDistanceReg.distance}</span> (Bib: {userStanding.currentDistanceReg.bibNumber})
+                    </p>
+                    <p className="text-[0.7rem] sm:text-xs text-(--muted) mt-0.5">
+                      {userStanding.currentDistanceReg.proofStatus === "SUBMITTED"
+                        ? "Your run proof has been submitted and is currently under review. Your rank will appear here once approved."
+                        : "You haven't submitted your run proof yet. Complete your run and upload your GPS screenshot to claim your rank & certificate."}
+                    </p>
+                  </div>
+                  <Link
+                    href="/dashboard"
+                    className="btn btn-secondary text-xs w-full sm:w-fit py-1.5 px-3 text-center shrink-0"
+                  >
+                    {userStanding.currentDistanceReg.proofStatus === "SUBMITTED" ? "View Dashboard" : "Upload Run Proof →"}
+                  </Link>
+                </motion.div>
               ) : userStanding?.otherDistanceReg ? (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}

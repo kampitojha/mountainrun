@@ -937,22 +937,20 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
   const activeKm = parseDistanceKm(activeDistance);
   const minRealisticSeconds = Math.round(activeKm * 150); // Min ~2:30/km world record pace
 
-  // Fetch real approved & confirmed registrations for this event
-  const realRegistrations = await prisma.registration.findMany({
+  // Fetch ONLY real approved finishers with verified finish times for the leaderboard
+  const realApprovedRegistrations = await prisma.registration.findMany({
     where: {
       eventId: { in: matchingEventIds },
-      OR: [
-        { proofStatus: { in: ["APPROVED", "SUBMITTED"] } },
-        { status: { in: ["CONFIRMED", "COMPLETED"] } },
-      ],
+      proofStatus: "APPROVED",
+      finishTimeSeconds: { not: null, gt: 0 },
     },
-    orderBy: [{ registeredAt: "asc" }],
-    include: { user: true, event: true, proofUpload: true },
+    orderBy: [{ finishTimeSeconds: "asc" }],
+    include: { user: true, event: true },
     take: 500,
   });
 
-  // Filter registrations by matching distance (normalized)
-  const matchingRegistrations = realRegistrations.filter((reg) => {
+  // Filter approved finishers by matching distance (normalized)
+  const matchingRegistrations = realApprovedRegistrations.filter((reg) => {
     if (!distanceQuery || distanceQuery === "all") return true;
     const regKm = parseDistanceKm(reg.distance);
     const targetKm = parseDistanceKm(activeDistance);
@@ -1015,19 +1013,13 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
     }
   }
 
-  // Transform real approved/confirmed runners with deterministic time verification
+  // Transform real verified approved finishers
   const realLeaderboardRows = matchingRegistrations.map((reg) => {
-    let validSeconds = reg.finishTimeSeconds;
-
+    let validSeconds = reg.finishTimeSeconds!;
     const regKm = parseDistanceKm(reg.distance) || activeKm;
     const minPaceSeconds = Math.round(regKm * 180); // 3:00 / km min
 
-    // If missing or unparsed, assign a realistic finish time (5m00s - 6m30s per km)
-    if (validSeconds == null || validSeconds <= 0) {
-      const hash = reg.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-      const pacePerKm = 300 + (hash % 90);
-      validSeconds = Math.round(regKm * pacePerKm);
-    } else if (validSeconds < minPaceSeconds) {
+    if (validSeconds < minPaceSeconds) {
       if (validSeconds * 60 >= minPaceSeconds && validSeconds * 60 <= regKm * 600) {
         validSeconds = validSeconds * 60;
       } else {
@@ -1049,7 +1041,7 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
     };
   });
 
-  // Highest preference to real users: Real runners lead and take top spots!
+  // Highest preference to real users: Real verified runners lead and take top spots!
   realLeaderboardRows.sort((a, b) => (a.finishTimeSeconds ?? 999999) - (b.finishTimeSeconds ?? 999999));
 
   // Determine starting baseline pace for padded finishers so real users stay comfortably in top preference
