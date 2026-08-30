@@ -91,29 +91,48 @@ app.use((_request, _response, next) => {
   next(new ApiError(404, "Route not found"));
 });
 
-app.use((error: Error, request: Request, response: Response, _next: NextFunction) => {
+app.use((error: any, request: Request, response: Response, _next: NextFunction) => {
   void _next;
-  const statusCode = error instanceof ApiError ? error.statusCode : 500;
-  if (statusCode === 500) {
+
+  const rawStatus = error?.statusCode ?? error?.status;
+  const isAborted =
+    error?.type === "request.aborted" ||
+    error?.message === "request aborted" ||
+    error?.code === "ECONNABORTED";
+
+  const statusCode =
+    error instanceof ApiError
+      ? error.statusCode
+      : isAborted
+        ? 400
+        : typeof rawStatus === "number" && rawStatus >= 400 && rawStatus < 600
+          ? rawStatus
+          : 500;
+
+  if (statusCode >= 500) {
     console.error("[Unhandled Server Error]", error);
     void sendTelegramAlert({
       title: "Unhandled 500 Server Error",
       level: "CRITICAL",
       service: "Express API",
-      message: error.message || "Internal Server Error",
+      message: error?.message || "Internal Server Error",
       details: {
         method: request.method,
         path: request.originalUrl || request.url,
         ip: request.ip,
       },
-      error,
+      error: error instanceof Error ? error : new Error(String(error)),
       link: `${env.frontendUrl}/admin`,
     });
   }
 
+  if (response.headersSent) {
+    return;
+  }
+
   response.status(statusCode).json({
     error: {
-      message: statusCode === 500 ? "Internal server error" : error.message,
+      message: statusCode >= 500 ? "Internal server error" : (error?.message || "Request failed"),
     },
   });
 });
