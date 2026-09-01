@@ -151,7 +151,7 @@ export async function lookupPrizeByBib(request: AuthenticatedRequest, response: 
   response.json({
     data: {
       runner: {
-        name: registration.user.name,
+        name: registration.shippingName || registration.user.name,
         bibNumber: registration.bibNumber,
       },
       event: {

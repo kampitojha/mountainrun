@@ -142,8 +142,8 @@ export async function createRegistration(request: AuthenticatedRequest, response
         distance: payload.distance,
         activityType: selectedType,
         status: freeEntry ? "CONFIRMED" : "PENDING_PAYMENT",
-        shippingName: payload.shippingName,
-        shippingPhone: payload.shippingPhone,
+        shippingName: (payload.name || payload.shippingName).trim(),
+        shippingPhone: (payload.phone || payload.shippingPhone).trim(),
         shippingLine1: payload.shippingLine1,
         shippingLine2: payload.shippingLine2,
         shippingCity: payload.shippingCity,
@@ -973,7 +973,7 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
     // If there's a search query, bypass the distance filter but enforce the search query
     if (searchQuery) {
       const q = searchQuery.toLowerCase().trim();
-      const nameMatch = reg.user.name.toLowerCase().includes(q);
+      const nameMatch = (reg.shippingName || reg.user.name).toLowerCase().includes(q);
       const bibMatch = reg.bibNumber && reg.bibNumber.toLowerCase().includes(q);
       const cityMatch = reg.shippingCity && reg.shippingCity.toLowerCase().includes(q);
       return nameMatch || bibMatch || cityMatch;
@@ -1055,7 +1055,7 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
     }
 
     return {
-      runnerName: reg.user.name,
+      runnerName: reg.shippingName || reg.user.name,
       city: reg.shippingCity || "India",
       state: reg.shippingState || "",
       distance: reg.distance,
@@ -1101,7 +1101,7 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
   // Transform participants list (Event Roster)
   const participantRoster = filteredParticipants.map((p, idx) => ({
     rosterNumber: idx + 1,
-    runnerName: p.user.name,
+    runnerName: p.shippingName || p.user.name,
     city: p.shippingCity || "India",
     state: p.shippingState || "",
     distance: p.distance,

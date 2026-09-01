@@ -753,7 +753,7 @@ export async function adminMarkRegistrationPaid(
 
   const emailResult = await sendRegistrationConfirmationEmail({
     to: registration.user.email,
-    runnerName: registration.user.name,
+    runnerName: registration.shippingName || registration.user.name,
     eventTitle: registration.event.title,
     distance: registration.distance,
     bibNumber: registration.bibNumber,
@@ -937,7 +937,7 @@ export async function adminUpdatePayment(request: AuthenticatedRequest, response
 
     await sendRegistrationConfirmationEmail({
       to: registration.user.email,
-      runnerName: registration.user.name,
+      runnerName: registration.shippingName || registration.user.name,
       eventTitle: registration.event.title,
       distance: registration.distance,
       bibNumber: registration.bibNumber,
@@ -1012,7 +1012,7 @@ export async function adminSyncPayments(request: AuthenticatedRequest, response:
 
       await sendRegistrationConfirmationEmail({
         to: payment.registration.user.email,
-        runnerName: payment.registration.user.name,
+        runnerName: payment.registration.shippingName || payment.registration.user.name,
         eventTitle: payment.registration.event.title,
         distance: payment.registration.distance,
         bibNumber: payment.registration.bibNumber,
@@ -1869,7 +1869,7 @@ export async function adminCertificateEmailPreview(
 
   const render = toCertificateRenderData({
     certificateNumber: cert.certificateNumber,
-    runnerName: cert.registration.user.name,
+    runnerName: cert.registration.shippingName || cert.registration.user.name,
     eventTitle: cert.registration.event.title,
     distance: cert.registration.distance,
     bibNumber: cert.registration.bibNumber,

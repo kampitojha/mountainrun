@@ -60,9 +60,9 @@ export async function createPaymentOrder(request: Request, response: Response) {
       registrationId: registration.id,
       bibNumber: registration.bibNumber,
       runner: {
-        name: registration.user.name,
+        name: registration.shippingName || registration.user.name,
         email: registration.user.email,
-        phone: registration.user.phone,
+        phone: registration.shippingPhone || registration.user.phone,
       },
       payment,
     },
@@ -115,7 +115,7 @@ export async function verifyPayment(request: Request, response: Response) {
 
     const emailResult = await sendRegistrationConfirmationEmail({
       to: registration.user.email,
-      runnerName: registration.user.name,
+      runnerName: registration.shippingName || registration.user.name,
       eventTitle: registration.event.title,
       distance: registration.distance,
       bibNumber: registration.bibNumber,
@@ -219,7 +219,7 @@ export async function handleRazorpayWebhook(request: Request, response: Response
 
       await sendRegistrationConfirmationEmail({
         to: registration.user.email,
-        runnerName: registration.user.name,
+        runnerName: registration.shippingName || registration.user.name,
         eventTitle: registration.event.title,
         distance: registration.distance,
         bibNumber: registration.bibNumber,

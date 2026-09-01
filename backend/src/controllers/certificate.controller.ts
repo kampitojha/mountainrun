@@ -121,7 +121,7 @@ export async function verifyCertificate(request: Request, response: Response) {
     data: {
       certificateNumber: certificate.certificateNumber,
       status: certificate.status,
-      runnerName: certificate.registration.user.name,
+      runnerName: certificate.registration.shippingName || certificate.registration.user.name,
       event: certificate.registration.event.title,
       distance: certificate.registration.distance,
       bibNumber: certificate.registration.bibNumber,

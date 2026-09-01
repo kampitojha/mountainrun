@@ -35,6 +35,7 @@ DB_URL = ENV.get("DATABASE_URL")
 conn = psycopg2.connect(DB_URL)
 cur = conn.cursor(cursor_factory=RealDictCursor)
 
+bib_arg = sys.argv[1] if len(sys.argv) > 1 else '410349'
 cur.execute("""
     SELECT 
         r.*,
@@ -51,9 +52,10 @@ cur.execute("""
     LEFT JOIN "ProofUpload" pu ON pu."registrationId" = r.id
     LEFT JOIN "MedalDelivery" m ON m."registrationId" = r.id
     LEFT JOIN "Certificate" c ON c."registrationId" = r.id
-    WHERE r."bibNumber" ILIKE '%662712%'
-""")
+    WHERE r."bibNumber" ILIKE %s
+""", (f'%{bib_arg}%',))
 res = cur.fetchall()
 print(json.dumps([dict(r) for r in res], default=str, indent=2))
 
 conn.close()
+

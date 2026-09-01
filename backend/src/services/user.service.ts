@@ -26,8 +26,9 @@ export async function upsertUserFromClerk(input: SyncUserInput) {
     throw new ApiError(400, "clerkId is required");
   }
 
+  const preferredName = input.name?.trim();
   let email = input.email?.trim().toLowerCase();
-  let name = input.name?.trim();
+  let name = preferredName;
   let username = input.username?.trim() || null;
   let phone = input.phone?.trim() || null;
   let avatarUrl = input.avatarUrl?.trim() || null;
@@ -44,16 +45,21 @@ export async function upsertUserFromClerk(input: SyncUserInput) {
           ?.phoneNumber ?? clerkUser.phoneNumbers[0]?.phoneNumber;
 
       email = primaryEmail?.toLowerCase() ?? email;
-      name =
+      const clerkName =
         [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ").trim() ||
-        clerkUser.username ||
-        name;
+        clerkUser.username;
+      
+      // If user provided a specific name in the form, use that; otherwise fall back to Clerk profile name
+      name = preferredName || clerkName || name;
       username = clerkUser.username ?? username;
-      phone = primaryPhone ?? phone;
+      phone = input.phone?.trim() || primaryPhone || phone;
       avatarUrl = clerkUser.imageUrl ?? avatarUrl;
     } catch {
       // Fall back to client-provided fields if Clerk fetch fails.
+      name = preferredName || name;
     }
+  } else {
+    name = preferredName || name;
   }
 
   if (!email) {
@@ -100,9 +106,9 @@ export async function upsertUserFromClerk(input: SyncUserInput) {
       data: {
         clerkId: existing.clerkId ?? clerkId,
         email,
-        name: name || existing.name,
+        name: preferredName || existing.name || name,
         username: nextUsername,
-        phone: phone ?? existing.phone,
+        phone: input.phone?.trim() || existing.phone || phone,
         avatarUrl: avatarUrl ?? existing.avatarUrl,
       },
     });

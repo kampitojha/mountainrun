@@ -85,7 +85,7 @@ export async function emailCertificate(certificateId: string) {
 
   const render = toCertificateRenderData({
     certificateNumber: certificate.certificateNumber,
-    runnerName: certificate.registration.user.name,
+    runnerName: certificate.registration.shippingName || certificate.registration.user.name,
     eventTitle: certificate.registration.event.title,
     distance: certificate.registration.distance,
     bibNumber: certificate.registration.bibNumber,

@@ -76,7 +76,7 @@ def get_courier_info(raw_courier, tracking_number):
     else:
         return {
             "name": "DTDC Express",
-            "url": f"https://track.dtdc.com/ctrk-tracking/tracker?awbNo={t_str}"
+            "url": "https://www.dtdc.com/track-your-shipment/"
         }
 
 # ---------------------------------------------------------
@@ -91,7 +91,7 @@ def build_medal_dispatch_html(payload):
 
     tracking_num = str(payload.get("trackingNumber", "")).strip()
     courier_name = payload.get("courier", "DTDC Express")
-    tracking_url = payload.get("trackingUrl") or f"https://track.dtdc.com/ctrk-tracking/tracker?awbNo={tracking_num}"
+    tracking_url = payload.get("trackingUrl") or "https://www.dtdc.com/track-your-shipment/"
 
     address_parts = [
         payload.get("shippingLine1"),

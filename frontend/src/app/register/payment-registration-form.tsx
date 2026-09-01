@@ -636,7 +636,7 @@ function PaymentRegistrationFormInner() {
           </div>
 
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-            <Field label="Full Name" required>
+            <Field label="Full Name (for Certificate & Bib)" required>
               <input
                 aria-invalid={Boolean(errors.name)}
                 autoComplete="name"
