@@ -50,6 +50,8 @@ export const allPublicEvents: PublicEvent[] = [
       "Join the amazing Rise and Run virtual challenge. Push your limits by running, walking, or cycling! A perfect opportunity to stay fit and earn a stunning finisher's medal.",
     highlight: "Earn a massive high-quality metal medal!",
     banner: "Open event",
+    bannerImageUrl:
+      "https://res.cloudinary.com/yppcqzt6/image/upload/v1788419315/mountainrun/banners/z3irhiy27sznnx99tksm.jpg",
     medalImageUrl:
       "https://res.cloudinary.com/yppcqzt6/image/upload/v1788418227/mountainrun/medals/xhuqaapggiy90hlydcg2.jpg",
     reward: "Physical Finisher Medal & E-Certificate",

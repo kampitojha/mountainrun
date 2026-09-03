@@ -13,6 +13,7 @@ import { EventCompare } from "./event-compare";
 import { EventFaq } from "./faq-accordion";
 import { EventStickyCta } from "./sticky-cta-bar";
 import { Reveal, SectionHeader } from "./reveal";
+import { EventBanner } from "./event-banner";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mountainrun.in";
 
@@ -250,6 +251,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       ) : (
         <>
           <EventHero event={event} isPast={false} />
+          {event.bannerImageUrl && <EventBanner imageUrl={event.bannerImageUrl} altText={`${event.name} Banner`} />}
           <EventSelect event={event} />
           <EventStats />
           <EventHow event={event} />
