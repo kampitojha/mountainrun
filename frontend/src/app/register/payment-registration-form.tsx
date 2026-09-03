@@ -464,6 +464,7 @@ function PaymentRegistrationFormInner() {
       city: cityVal,
       state: stateValue,
       pincode: pincodeVal,
+      bibNumber: previewBibNumber,
     };
 
     setStatus("creating");

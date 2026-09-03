@@ -149,7 +149,7 @@ export async function createRegistration(request: AuthenticatedRequest, response
         shippingCity: payload.shippingCity,
         shippingState: payload.shippingState,
         shippingPincode: payload.shippingPincode,
-        bibNumber: createBibNumber(event.slug),
+        bibNumber: payload.bibNumber || createBibNumber(event.slug),
       },
       include: {
         event: true,
