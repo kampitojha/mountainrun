@@ -45,7 +45,7 @@ export const allPublicEvents: PublicEvent[] = [
     slug: "rise-and-run",
     date: "13-18 Sep 2026",
     distance: "2 km / 5 km / 10 km / 21 km / 50 km / 100 km",
-    price: "Rs. 499",
+    price: "Rs. 399",
     description:
       "Join the amazing Rise and Run virtual challenge. Push your limits by running, walking, or cycling! A perfect opportunity to stay fit and earn a stunning finisher's medal.",
     highlight: "Earn a massive high-quality metal medal!",
@@ -54,7 +54,7 @@ export const allPublicEvents: PublicEvent[] = [
       "https://res.cloudinary.com/yppcqzt6/image/upload/v1788418227/mountainrun/medals/xhuqaapggiy90hlydcg2.jpg",
     reward: "Physical Finisher Medal & E-Certificate",
     status: "upcoming",
-    compareAtPrice: "Rs. 899",
+    compareAtPrice: "Rs. 799",
     activityTypes: ["running", "cycling", "walking"],
     finishers: 0,
     verifiedResults: 0,
