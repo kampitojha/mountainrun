@@ -198,6 +198,7 @@ export async function adminOverview(request: AuthenticatedRequest, response: Res
         ...(eventFilter ? { eventId: eventFilter } : {}),
       },
     }),
+    // For loyalty: always fetch all confirmed registrations grouped by user (global)
     prisma.registration.groupBy({
       by: ["userId"],
       where: {
@@ -208,7 +209,7 @@ export async function adminOverview(request: AuthenticatedRequest, response: Res
     prisma.certificate.count({ where: eventFilter ? { registration: { eventId: eventFilter } } : undefined }),
     prisma.registration.findMany({
       where: regWhere,
-      select: { id: true, status: true, eventId: true },
+      select: { id: true, status: true, eventId: true, userId: true },
     }),
     prisma.payment.findMany({
       where: paymentWhere,
@@ -240,9 +241,28 @@ export async function adminOverview(request: AuthenticatedRequest, response: Res
   ]);
 
   // Runner Loyalty & Multi-Event Breakdown
-  const repeatRunners = userRegGroups.filter((g) => g._count.id > 1).length;
-  const newRunners = userRegGroups.filter((g) => g._count.id === 1).length;
-  const repeatRate = userRegGroups.length > 0 ? Math.round((repeatRunners / userRegGroups.length) * 100) : 0;
+  // Build a set of userIds who have >1 registration across ALL events (returning runners)
+  const returningUserIds = new Set(
+    userRegGroups.filter((g) => g._count.id > 1).map((g) => g.userId)
+  );
+
+  let repeatRunners: number;
+  let newRunners: number;
+  let repeatRate: number;
+
+  if (eventFilter) {
+    // Event-specific loyalty: among runners registered for THIS event,
+    // how many had previously registered for any other event?
+    const thisEventUserIds = new Set(filteredRegs.map((r) => r.userId));
+    repeatRunners = [...thisEventUserIds].filter((uid) => returningUserIds.has(uid)).length;
+    newRunners = thisEventUserIds.size - repeatRunners;
+    repeatRate = thisEventUserIds.size > 0 ? Math.round((repeatRunners / thisEventUserIds.size) * 100) : 0;
+  } else {
+    // Global loyalty: runners with >1 event overall
+    repeatRunners = userRegGroups.filter((g) => g._count.id > 1).length;
+    newRunners = userRegGroups.filter((g) => g._count.id === 1).length;
+    repeatRate = userRegGroups.length > 0 ? Math.round((repeatRunners / userRegGroups.length) * 100) : 0;
+  }
 
   // Overall calculations for the active scope
   const totalRevenueInPaise = filteredPayments.reduce((acc, p) => acc + p.amountInPaise, 0);
