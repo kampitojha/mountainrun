@@ -44,7 +44,7 @@ export const allPublicEvents: PublicEvent[] = [
     name: "Rise and Run",
     slug: "rise-and-run",
     date: "13-18 Sep 2026",
-    distance: "2 km / 5 km / 10 km / 21 km / 50 km / 100 km",
+    distance: "1.6 km / 3.2 km / 5 km / 10 km / 21 km",
     price: "Rs. 399",
     description:
       "Join the amazing Rise and Run virtual challenge. Push your limits by running, walking, or cycling! A perfect opportunity to stay fit and earn a stunning finisher's medal.",
