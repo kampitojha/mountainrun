@@ -41,6 +41,28 @@ export type PublicEvent = {
 
 export const allPublicEvents: PublicEvent[] = [
   {
+    name: "Rise and Run",
+    slug: "rise-and-run",
+    date: "13-18 Sep 2026",
+    distance: "2 km / 5 km / 10 km / 21 km / 50 km / 100 km",
+    price: "Rs. 499",
+    description:
+      "Join the amazing Rise and Run virtual challenge. Push your limits by running, walking, or cycling! A perfect opportunity to stay fit and earn a stunning finisher's medal.",
+    highlight: "Earn a massive high-quality metal medal!",
+    banner: "Open event",
+    medalImageUrl:
+      "https://res.cloudinary.com/yppcqzt6/image/upload/v1788418227/mountainrun/medals/xhuqaapggiy90hlydcg2.jpg",
+    reward: "Physical Finisher Medal & E-Certificate",
+    status: "upcoming",
+    compareAtPrice: "Rs. 899",
+    activityTypes: ["running", "cycling", "walking"],
+    finishers: 0,
+    verifiedResults: 0,
+    cities: 0,
+    startsAt: "2026-09-13T00:00:00+05:30",
+    endsAt: "2026-09-18T23:59:59+05:30",
+  },
+  {
     name: "Sports Day Celebration",
     slug: "sports-day-celebration",
     date: "29 Aug – 3 Sep 2026",
