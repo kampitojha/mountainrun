@@ -410,9 +410,25 @@ function PaymentRegistrationFormInner() {
   // Live Bib Number Generator Preview
   const previewBibNumber = useMemo(() => {
     if (currentPendingReg?.bibNumber) return currentPendingReg.bibNumber;
-    const distNum = selectedDistance.match(/[0-9]+/)?.[0] || "5";
-    return `MR-${distNum}K-${Math.floor(100 + (runnerName.length * 17) % 899)}`;
-  }, [selectedDistance, runnerName, currentPendingReg]);
+    
+    const eventCode = (selectedEvent || "event")
+      .split("-")
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 4)
+      .toUpperCase()
+      .padEnd(3, "R");
+
+    const str = `${runnerName}-${selectedDistance}-${selectedEvent}`;
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash << 5) - hash + str.charCodeAt(i);
+      hash |= 0;
+    }
+    const uniqueNum = 100000 + (Math.abs(hash) % 900000);
+
+    return `${eventCode}-${uniqueNum}`;
+  }, [selectedDistance, runnerName, selectedEvent, currentPendingReg]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
