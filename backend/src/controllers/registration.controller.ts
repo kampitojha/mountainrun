@@ -961,13 +961,9 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
     } else {
       const regKm = parseDistanceKm(reg.distance);
       const targetKm = parseDistanceKm(activeDistance);
-      if (Math.abs(regKm - targetKm) < 0.1) {
-        matchesDistance = true;
-      } else {
-        const cleanReg = reg.distance.toLowerCase().replace(/\s+/g, "");
-        const cleanTarget = activeDistance.toLowerCase().replace(/\s+/g, "");
-        matchesDistance = cleanReg === cleanTarget || cleanReg.includes(cleanTarget) || cleanTarget.includes(cleanReg);
-      }
+      const cleanReg = reg.distance.toLowerCase().replace(/\s+/g, "");
+      const cleanTarget = activeDistance.toLowerCase().replace(/\s+/g, "");
+      matchesDistance = Math.abs(regKm - targetKm) < 0.05 || cleanReg === cleanTarget;
     }
 
     // If there's a search query, bypass the distance filter but enforce the search query
@@ -997,10 +993,9 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
     if (!distanceQuery || distanceQuery === "all") return true;
     const pKm = parseDistanceKm(p.distance);
     const targetKm = parseDistanceKm(activeDistance);
-    if (Math.abs(pKm - targetKm) < 0.1) return true;
     const cleanReg = p.distance.toLowerCase().replace(/\s+/g, "");
     const cleanTarget = activeDistance.toLowerCase().replace(/\s+/g, "");
-    return cleanReg === cleanTarget || cleanReg.includes(cleanTarget) || cleanTarget.includes(cleanReg);
+    return Math.abs(pKm - targetKm) < 0.05 || cleanReg === cleanTarget;
   });
 
   // Check if current authenticated user has registration(s) in this event
