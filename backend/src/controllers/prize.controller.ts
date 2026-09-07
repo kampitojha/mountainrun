@@ -211,3 +211,175 @@ export async function myPrizes(request: AuthenticatedRequest, response: Response
 
   response.json({ data });
 }
+
+export async function getWinnerClaimDetails(request: AuthenticatedRequest, response: Response) {
+  const rawBib = routeParam(request, "bibNumber");
+  const bibNumber = rawBib?.trim();
+
+  if (!bibNumber) {
+    throw new ApiError(400, "BIB number is required");
+  }
+
+  const registration = await prisma.registration.findFirst({
+    where: {
+      bibNumber: {
+        equals: bibNumber,
+        mode: "insensitive",
+      },
+    },
+    include: {
+      user: { select: { name: true, email: true, phone: true } },
+      event: { select: { id: true, title: true, slug: true, distances: true } },
+    },
+  });
+
+  if (!registration) {
+    throw new ApiError(404, "No registration found with BIB number " + bibNumber);
+  }
+
+  // Calculate official rank in category
+  const categoryFinishers = await prisma.registration.findMany({
+    where: {
+      eventId: registration.eventId,
+      distance: registration.distance,
+      proofStatus: "APPROVED",
+    },
+    orderBy: {
+      finishTimeSeconds: "asc",
+    },
+    select: {
+      id: true,
+      bibNumber: true,
+      finishTimeSeconds: true,
+    },
+  });
+
+  const finisherIndex = categoryFinishers.findIndex((f) => f.id === registration.id);
+  let rankLabel = "Official Finisher";
+  if (finisherIndex === 0) rankLabel = "🥇 1st Place (Winner)";
+  else if (finisherIndex === 1) rankLabel = "🥈 2nd Place";
+  else if (finisherIndex === 2) rankLabel = "🥉 3rd Place";
+  else if (finisherIndex > 2) rankLabel = `#${finisherIndex + 1} Podium Finisher`;
+
+  // Format finish time
+  const sec = registration.finishTimeSeconds;
+  let formattedTime = "Verified Finisher";
+  if (sec && sec > 0) {
+    const hours = Math.floor(sec / 3600);
+    const minutes = Math.floor((sec % 3600) / 60);
+    const seconds = sec % 60;
+    if (hours > 0) {
+      formattedTime = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    } else {
+      formattedTime = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+  }
+
+  response.json({
+    data: {
+      registrationId: registration.id,
+      bibNumber: registration.bibNumber,
+      runnerName: registration.shippingName || registration.user.name,
+      userEmail: registration.user.email,
+      phone: registration.shippingPhone || registration.user.phone,
+      eventTitle: registration.event.title,
+      eventSlug: registration.event.slug,
+      category: registration.distance,
+      rank: rankLabel,
+      finishTime: formattedTime,
+      tshirtSize: (registration as any).tshirtSize ?? null,
+      tshirtSubmittedAt: (registration as any).tshirtSubmittedAt ?? null,
+      shipping: {
+        name: registration.shippingName,
+        phone: registration.shippingPhone,
+        line1: registration.shippingLine1,
+        line2: registration.shippingLine2 || "",
+        city: registration.shippingCity,
+        state: registration.shippingState,
+        pincode: registration.shippingPincode,
+      },
+    },
+  });
+}
+
+export async function submitWinnerClaim(request: AuthenticatedRequest, response: Response) {
+  const rawBib = routeParam(request, "bibNumber");
+  const bibNumber = rawBib?.trim();
+
+  if (!bibNumber) {
+    throw new ApiError(400, "BIB number is required");
+  }
+
+  const {
+    tshirtSize,
+    shippingName,
+    shippingPhone,
+    shippingLine1,
+    shippingLine2,
+    shippingCity,
+    shippingState,
+    shippingPincode,
+  } = request.body || {};
+
+  const validSizes = ["S", "M", "L", "XL", "XXL", "XXXL"];
+  const cleanSize = typeof tshirtSize === "string" ? tshirtSize.trim().toUpperCase() : "";
+
+  if (!cleanSize || !validSizes.includes(cleanSize)) {
+    throw new ApiError(400, "Please select a valid T-Shirt size: S, M, L, XL, XXL");
+  }
+
+  const registration = await prisma.registration.findFirst({
+    where: {
+      bibNumber: {
+        equals: bibNumber,
+        mode: "insensitive",
+      },
+    },
+    include: {
+      user: { select: { name: true, email: true } },
+      event: { select: { title: true } },
+    },
+  });
+
+  if (!registration) {
+    throw new ApiError(404, "Registration not found with BIB number " + bibNumber);
+  }
+
+  const updated = await prisma.registration.update({
+    where: { id: registration.id },
+    data: {
+      tshirtSize: cleanSize,
+      tshirtSubmittedAt: new Date(),
+      ...(shippingName && typeof shippingName === "string" ? { shippingName: shippingName.trim() } : {}),
+      ...(shippingPhone && typeof shippingPhone === "string" ? { shippingPhone: shippingPhone.trim() } : {}),
+      ...(shippingLine1 && typeof shippingLine1 === "string" ? { shippingLine1: shippingLine1.trim() } : {}),
+      ...(shippingLine2 !== undefined && typeof shippingLine2 === "string" ? { shippingLine2: shippingLine2.trim() } : {}),
+      ...(shippingCity && typeof shippingCity === "string" ? { shippingCity: shippingCity.trim() } : {}),
+      ...(shippingState && typeof shippingState === "string" ? { shippingState: shippingState.trim() } : {}),
+      ...(shippingPincode && typeof shippingPincode === "string" ? { shippingPincode: shippingPincode.trim() } : {}),
+    } as any,
+  });
+
+  // Trigger admin alert via Telegram
+  try {
+    const { sendTelegramAlert } = await import("../services/alert.service.js");
+    await sendTelegramAlert({
+      title: "👕 T-Shirt Size Submitted!",
+      level: "INFO",
+      service: "TshirtClaim",
+      message: `<b>${updated.shippingName}</b> (BIB: <code>${updated.bibNumber}</code>) submitted T-Shirt Size: <b>${cleanSize}</b>\n\n<b>Event:</b> ${registration.event.title}\n<b>Category:</b> ${registration.distance}\n<b>Shipping to:</b> ${updated.shippingLine1}, ${updated.shippingCity}, ${updated.shippingState} - ${updated.shippingPincode}\n<b>Phone:</b> ${updated.shippingPhone}`,
+    });
+  } catch (err) {
+    console.warn("Could not send Telegram notification for t-shirt claim:", err);
+  }
+
+  response.json({
+    success: true,
+    message: "T-Shirt size confirmed successfully!",
+    data: {
+      bibNumber: updated.bibNumber,
+      tshirtSize: (updated as any).tshirtSize,
+      tshirtSubmittedAt: (updated as any).tshirtSubmittedAt,
+    },
+  });
+}

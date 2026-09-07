@@ -75,6 +75,8 @@ model Registration {
   shippingCity      String
   shippingState     String
   shippingPincode   String
+  tshirtSize        String?
+  tshirtSubmittedAt DateTime?
   adminNote         String?
   certificate       Certificate?
   medalDelivery     MedalDelivery?
