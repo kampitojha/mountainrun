@@ -15,7 +15,7 @@ export function EventBanner({ imageUrl, altText }: { imageUrl: string; altText: 
           transition={{ duration: 0.6 }}
           className="relative w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-(--line) shadow-2xl bg-(--panel)"
         >
-          <div className="relative aspect-video w-full md:aspect-21/9">
+          <div className="relative aspect-video w-full">
             <Image
               src={imageUrl}
               alt={altText}
