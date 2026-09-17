@@ -71,7 +71,7 @@ export function EventHero({ event, isPast }: { event: PublicEvent; isPast: boole
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <p className="inline-flex items-center gap-2 rounded-full border border-(--gold-line) bg-(--gold-soft) px-3.5 py-1.5 text-[0.65rem] font-bold uppercase tracking-widest text-(--gold-deep) shadow-sm">
                   <Sparkles className="h-3.5 w-3.5 text-(--gold-deep)" />
-                  National Sports Day 2026 Virtual Run
+                  {event.name}
                 </p>
                 <span className="inline-flex items-center gap-1 rounded-full border border-(--line) bg-(--panel-soft) px-3 py-1 text-[0.65rem] font-semibold text-(--muted)">
                   <CalendarDays className="h-3 w-3 text-(--sage)" />
@@ -258,7 +258,7 @@ export function EventHero({ event, isPast }: { event: PublicEvent; isPast: boole
                 <div className="flex flex-wrap items-center justify-start gap-2">
                   <p className="inline-flex items-center gap-2 rounded-full border border-(--gold-line) bg-(--gold-soft) px-3.5 py-1.5 text-[0.65rem] font-bold uppercase tracking-widest text-(--gold-deep) shadow-sm sm:text-xs">
                     <Sparkles className="h-3.5 w-3.5 text-(--gold-deep)" />
-                    National Sports Day 2026 Virtual Run
+                    {event.name}
                   </p>
                   <span className="inline-flex items-center gap-1 rounded-full border border-(--line) bg-(--panel-soft) px-3 py-1 text-[0.65rem] font-semibold text-(--muted)">
                     <CalendarDays className="h-3 w-3 text-(--sage)" />

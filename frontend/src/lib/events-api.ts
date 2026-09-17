@@ -39,15 +39,19 @@ export type ApiEvent = {
 function formatDateRange(startsAt: string, endsAt: string) {
   const start = new Date(startsAt);
   const end = new Date(endsAt);
-  const sameMonth =
-    start.getUTCFullYear() === end.getUTCFullYear() &&
-    start.getUTCMonth() === end.getUTCMonth();
+  const tz = "Asia/Kolkata";
 
-  const day = new Intl.DateTimeFormat("en-GB", { day: "numeric", timeZone: "UTC" });
+  const startYear = new Intl.DateTimeFormat("en-GB", { year: "numeric", timeZone: tz }).format(start);
+  const endYear = new Intl.DateTimeFormat("en-GB", { year: "numeric", timeZone: tz }).format(end);
+  const startMonth = new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: tz }).format(start);
+  const endMonth = new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: tz }).format(end);
+  const sameMonth = startYear === endYear && startMonth === endMonth;
+
+  const day = new Intl.DateTimeFormat("en-GB", { day: "numeric", timeZone: tz });
   const monthYear = new Intl.DateTimeFormat("en-GB", {
     month: "short",
     year: "numeric",
-    timeZone: "UTC",
+    timeZone: tz,
   });
 
   if (sameMonth) {
@@ -58,7 +62,7 @@ function formatDateRange(startsAt: string, endsAt: string) {
     day: "numeric",
     month: "short",
     year: "numeric",
-    timeZone: "UTC",
+    timeZone: tz,
   });
   return `${full.format(start)} – ${full.format(end)}`;
 }

@@ -41,6 +41,30 @@ export type PublicEvent = {
 
 export const allPublicEvents: PublicEvent[] = [
   {
+    name: "Gandhi Jayanti Victory Run 2026",
+    slug: "gandhi-jayanti-victory-run-2026",
+    date: "2-6 Oct 2026",
+    distance: "1.6 km / 3.2 km / 5 km / 10 km / 21 km",
+    price: "Rs. 449",
+    description:
+      "Celebrate Mahatma Gandhi Jayanti with India's premier virtual fitness challenge — the Gandhi Jayanti Victory Run 2026! Walk, run, or cycle anywhere across India between 2nd to 6th October. Embody the timeless spirit of 'Full Effort • Full Victory', peace, and a Cleaner, Greener, Healthier India. Choose your distance, submit your activity proof, and earn the exclusive heavyweight 3D antique bronze Gandhi Jayanti Finisher Medal with the tricolor ribbon delivered to your doorstep with free shipping.",
+    highlight: "Full Effort • Full Victory · Limited Edition 3D Bronze Finisher Medal!",
+    banner: "Open event",
+    bannerImageUrl:
+      "https://res.cloudinary.com/yppcqzt6/image/upload/v1789684985/mountainrun/banners/gandhi_jayanti_victory_run_2026_banner.jpg",
+    medalImageUrl:
+      "https://res.cloudinary.com/yppcqzt6/image/upload/v1789684982/mountainrun/medals/gandhi_jayanti_victory_run_2026_medal.jpg",
+    reward: "Heavyweight 3D Finisher Medal & E-Certificate",
+    status: "upcoming",
+    compareAtPrice: "Rs. 899",
+    activityTypes: ["running", "cycling", "walking"],
+    finishers: 0,
+    verifiedResults: 0,
+    cities: 0,
+    startsAt: "2026-10-02T00:00:00+05:30",
+    endsAt: "2026-10-06T23:59:59+05:30",
+  },
+  {
     name: "Rise and Run",
     slug: "rise-and-run",
     date: "13-18 Sep 2026",
@@ -48,21 +72,20 @@ export const allPublicEvents: PublicEvent[] = [
     price: "Rs. 399",
     description:
       "Join the amazing Rise and Run virtual challenge. Push your limits by running, walking, or cycling! A perfect opportunity to stay fit and earn a stunning finisher's medal.",
-    highlight: "Earn a massive high-quality metal medal!",
-    banner: "Open event",
+    highlight: "Completed · Over 350+ verified runners nationwide.",
+    banner: "Completed",
     bannerImageUrl:
       "https://res.cloudinary.com/yppcqzt6/image/upload/v1788419315/mountainrun/banners/z3irhiy27sznnx99tksm.jpg",
     medalImageUrl:
       "https://res.cloudinary.com/yppcqzt6/image/upload/v1788418227/mountainrun/medals/xhuqaapggiy90hlydcg2.jpg",
     reward: "Physical Finisher Medal & E-Certificate",
-    status: "upcoming",
-    compareAtPrice: "Rs. 799",
+    status: "past",
     activityTypes: ["running", "cycling", "walking"],
-    finishers: 0,
-    verifiedResults: 0,
-    cities: 0,
-    startsAt: "2026-09-13T00:00:00+05:30",
-    endsAt: "2026-09-18T23:59:59+05:30",
+    finishers: 362,
+    verifiedResults: 340,
+    cities: 41,
+    resultNote:
+      "Registration is closed. View what finishers received, then join the next open event.",
   },
   {
     name: "Sports Day Celebration",
@@ -72,21 +95,20 @@ export const allPublicEvents: PublicEvent[] = [
     price: "Rs. 399",
     description:
       "Celebrate the spirit of sports, fitness and fun! 🏆 Join the Sports Day Celebration and make every step count. Complete your chosen distance at your own pace.",
-    highlight: "Open for registration · Choose distance and join.",
-    banner: "Open event",
+    highlight: "Completed · Over 2,300+ verified runners nationwide.",
+    banner: "Completed",
     bannerImageUrl:
       "https://res.cloudinary.com/yppcqzt6/image/upload/v1787133746/mountainrun/admin/qqrxyzirjkj6yshgkwgg.png",
     medalImageUrl:
       "https://res.cloudinary.com/yppcqzt6/image/upload/v1788010016/mountainrun/newsletter/tumjbluryk13dbxl4adt.jpg",
     reward: "Heavyweight 3D medal + e-certificate",
-    status: "upcoming",
-    compareAtPrice: "Rs. 799",
+    status: "past",
     activityTypes: ["running", "cycling", "walking"],
     finishers: 2356,
     verifiedResults: 2245,
     cities: 52,
-    startsAt: "2026-08-29T00:00:00+05:30",
-    endsAt: "2026-09-03T23:59:59+05:30",
+    resultNote:
+      "Registration is closed. View what finishers received, then join the next open event.",
   },
   {
     name: "Independence Day Virtual Run 2026 🇮🇳",

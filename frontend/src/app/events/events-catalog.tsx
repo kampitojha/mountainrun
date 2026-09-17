@@ -142,7 +142,9 @@ function EventCard({ event, variant = "upcoming" }: { event: PublicEvent; varian
             href={`/register?event=${encodeURIComponent(event.slug)}`}
           >
             <Medal className="h-3.5 w-3.5" />
-            <span>Register (₹399)</span>
+            <span>
+              Register ({event.price.toLowerCase().includes("free") ? "Free" : event.price.replace(/^Rs\.\s*/, "₹")})
+            </span>
           </Link>
         ) : (
           <Link className="btn btn-primary flex-1 group/btn text-xs sm:text-sm" href="/leaderboard">

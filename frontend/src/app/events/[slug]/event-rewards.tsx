@@ -175,7 +175,7 @@ export function EventRewards({
                     <Sparkles className="h-3.5 w-3.5" />
                     Physical Finisher Medal
                   </span>
-                  <p className="text-[0.65rem] text-(--muted)">Official Sports Day Celebration 2026</p>
+                  <p className="text-[0.65rem] text-(--muted)">Official {eventName}</p>
                 </div>
                 {hasMedalImage && (
                   <button
