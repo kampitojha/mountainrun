@@ -51,9 +51,9 @@ export const allPublicEvents: PublicEvent[] = [
     highlight: "Full Effort • Full Victory · Limited Edition 3D Bronze Finisher Medal!",
     banner: "Open event",
     bannerImageUrl:
-      "https://res.cloudinary.com/yppcqzt6/image/upload/v1789684985/mountainrun/banners/gandhi_jayanti_victory_run_2026_banner.jpg",
+      "https://res.cloudinary.com/yppcqzt6/image/upload/v1789686783/mountainrun/banners/gandhi_jayanti_2026_front_back_banner.jpg",
     medalImageUrl:
-      "https://res.cloudinary.com/yppcqzt6/image/upload/v1789684982/mountainrun/medals/gandhi_jayanti_victory_run_2026_medal.jpg",
+      "https://res.cloudinary.com/yppcqzt6/image/upload/v1789686778/mountainrun/medals/gandhi_jayanti_2026_front_back_medal.jpg",
     reward: "Heavyweight 3D Finisher Medal & E-Certificate",
     status: "upcoming",
     compareAtPrice: "Rs. 899",

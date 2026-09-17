@@ -90,7 +90,7 @@ export function EventHero({ event, isPast }: { event: PublicEvent; isPast: boole
               </p>
 
               {/* 🥇 Top Medal Showcase Card (Mobile Centerpiece) */}
-              <div className="relative my-3.5 w-full max-w-xs">
+              <div className="relative my-3.5 w-full max-w-sm xs:max-w-md sm:max-w-lg">
                 <div
                   aria-hidden
                   className="pointer-events-none absolute -inset-3 rounded-3xl opacity-75 blur-xl"
@@ -126,7 +126,7 @@ export function EventHero({ event, isPast }: { event: PublicEvent; isPast: boole
                       <img
                         src={medalImg}
                         alt={`${event.name} Finisher Medal`}
-                        className="max-h-[190px] xs:max-h-[220px] sm:max-h-[260px] w-auto max-w-full rounded-xl object-contain drop-shadow-[0_18px_25px_rgba(0,0,0,0.9)]"
+                        className="max-h-[220px] xs:max-h-[270px] sm:max-h-[340px] w-full max-w-full rounded-xl object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.95)]"
                       />
                       <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap">
                         <span className="glass-pill inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[0.65rem] font-bold text-white shadow-lg backdrop-blur-md">
@@ -247,7 +247,7 @@ export function EventHero({ event, isPast }: { event: PublicEvent; isPast: boole
             </div>
 
             {/* ─── Desktop-Split Hero View (lg+) ─── */}
-            <div className="mt-8 hidden lg:grid lg:grid-cols-[1.1fr_0.9fr] lg:gap-12 lg:items-center sm:mt-12">
+            <div className="mt-8 hidden lg:grid lg:grid-cols-[1fr_1.05fr] lg:gap-10 lg:items-center sm:mt-12">
               {/* Left Column: Event Details & Action */}
               <motion.div
                 initial={{ opacity: 0, x: -24 }}
@@ -389,7 +389,7 @@ export function EventHero({ event, isPast }: { event: PublicEvent; isPast: boole
                 />
 
                 {/* Showcase Card Shell */}
-                <div className="group relative overflow-hidden rounded-3xl border border-(--gold-line) bg-gradient-to-b from-[#181820] via-[#121216] to-[#0d0d10] p-6 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8),0_0_40px_rgba(201,162,39,0.18)] sm:p-8">
+                <div className="group relative overflow-hidden rounded-3xl border border-(--gold-line) bg-gradient-to-b from-[#181820] via-[#121216] to-[#0d0d10] p-5 sm:p-7 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8),0_0_40px_rgba(201,162,39,0.18)]">
                   {/* Header ribbon on card */}
                   <div className="flex items-center justify-between border-b border-(--line) pb-3">
                     <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-(--gold)">
@@ -421,7 +421,7 @@ export function EventHero({ event, isPast }: { event: PublicEvent; isPast: boole
                       <img
                         src={medalImg}
                         alt={`${event.name} Finisher Medal`}
-                        className="max-h-[340px] w-auto max-w-full rounded-2xl object-contain drop-shadow-[0_25px_35px_rgba(0,0,0,0.85)]"
+                        className="max-h-[380px] lg:max-h-[440px] xl:max-h-[500px] w-full max-w-full rounded-2xl object-contain drop-shadow-[0_25px_40px_rgba(0,0,0,0.9)]"
                       />
 
                       {/* Magnifier Hover Icon Overlay */}
@@ -449,7 +449,7 @@ export function EventHero({ event, isPast }: { event: PublicEvent; isPast: boole
                         Reverse Engraved
                       </p>
                       <p className="mt-0.5 text-[0.6rem] text-(--muted)">
-                        Laurel &amp; Legacy Quote
+                        Same Path • Higher Purpose
                       </p>
                     </div>
                   </div>
