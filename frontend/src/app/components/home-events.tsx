@@ -162,7 +162,7 @@ function EventCard({ event, index }: { event: PublicEvent; index: number }) {
 
             <div className="flex items-baseline gap-1.5">
               <span className="text-xs text-(--muted-soft) line-through font-mono">
-                ₹799
+                {event.compareAtPrice ? event.compareAtPrice.replace(/^Rs\.\s*/, "₹") : "₹500"}
               </span>
               <span className="font-mono text-base font-black text-(--gold)">
                 {event.price.replace(/^Rs\.\s*/, "").replace(/^₹/, "₹")}

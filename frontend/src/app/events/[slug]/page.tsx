@@ -274,7 +274,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             </div>
           </section>
 
-          <EventStickyCta price={event.price} compareAtPrice={event.compareAtPrice || "Rs. 799"} slug={event.slug} />
+          <EventStickyCta price={event.price} compareAtPrice={event.compareAtPrice || "Rs. 500"} slug={event.slug} />
         </>
       )}
     </PageShell>

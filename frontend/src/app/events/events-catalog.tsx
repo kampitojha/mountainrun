@@ -79,7 +79,7 @@ function EventCard({ event, variant = "upcoming" }: { event: PublicEvent; varian
             <div className="flex items-baseline gap-1.5">
               {!isPast && (
                 <span className="text-xs text-(--muted-soft) line-through font-mono">
-                  ₹799
+                  {event.compareAtPrice ? event.compareAtPrice.replace(/^Rs\.\s*/, "₹") : "₹500"}
                 </span>
               )}
               <span className="inline-flex items-center text-base font-black text-(--gold)">

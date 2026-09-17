@@ -69,6 +69,7 @@ function formatDateRange(startsAt: string, endsAt: string) {
 
 function deriveCompareAtPrice(priceInPaise: number): string | undefined {
   if (!priceInPaise || priceInPaise <= 0) return undefined;
+  if (priceInPaise === 44900) return "Rs. 500";
   const price = priceInPaise / 100;
   const raw = price * 1.71;
   const rounded = Math.max(Math.round(raw / 50) * 50, price + 100);
@@ -116,7 +117,7 @@ export function mapApiEventToPublic(
     startsAt: event.startsAt ?? undefined,
     endsAt: event.endsAt ?? undefined,
     registrations: event.stats?.registrations ?? event._count?.registrations ?? undefined,
-    compareAtPrice: isPast ? undefined : deriveCompareAtPrice(event.priceInPaise),
+    compareAtPrice: isPast ? undefined : (staticMatch?.compareAtPrice ?? deriveCompareAtPrice(event.priceInPaise)),
     finishers:
       event.finishers != null ? event.finishers
         : apiFinishers && apiFinishers > 0 ? apiFinishers

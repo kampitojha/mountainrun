@@ -56,7 +56,7 @@ export const allPublicEvents: PublicEvent[] = [
       "https://res.cloudinary.com/yppcqzt6/image/upload/v1789686778/mountainrun/medals/gandhi_jayanti_2026_front_back_medal.jpg",
     reward: "Heavyweight 3D Finisher Medal & E-Certificate",
     status: "upcoming",
-    compareAtPrice: "Rs. 899",
+    compareAtPrice: "Rs. 500",
     activityTypes: ["running", "cycling", "walking"],
     finishers: 0,
     verifiedResults: 0,

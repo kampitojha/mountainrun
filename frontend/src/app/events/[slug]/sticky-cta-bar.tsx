@@ -17,7 +17,13 @@ export function EventStickyCta({
   slug: string;
 }) {
   const amount = price.toLowerCase().includes("free") ? "Free" : formatPrice(price);
-  const mrp = compareAtPrice ? formatPrice(compareAtPrice) : "₹799";
+  const mrp = compareAtPrice ? formatPrice(compareAtPrice) : "₹500";
+  const numPrice = parseInt(price.replace(/\D/g, ""), 10);
+  const numMrp = parseInt(mrp.replace(/\D/g, ""), 10);
+  const discountPct =
+    !isNaN(numPrice) && !isNaN(numMrp) && numMrp > numPrice
+      ? Math.round(((numMrp - numPrice) / numMrp) * 100)
+      : null;
 
   return (
     <>
@@ -39,9 +45,11 @@ export function EventStickyCta({
               <span className="text-xs font-semibold text-zinc-400 line-through decoration-zinc-400/80">
                 {mrp}
               </span>
-              <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[0.6rem] font-black text-emerald-400 border border-emerald-500/30">
-                50% OFF
-              </span>
+              {discountPct ? (
+                <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[0.6rem] font-black text-emerald-400 border border-emerald-500/30">
+                  {discountPct}% OFF
+                </span>
+              ) : null}
             </div>
             <p className="mt-0.5 flex items-center gap-1 truncate text-[0.62rem] font-bold uppercase tracking-wider text-amber-400">
               <Sparkles className="h-2.5 w-2.5 shrink-0" />
