@@ -18,12 +18,12 @@ cloudinary.config({
 
 async function main() {
   try {
-    const bannerPath = "C:\\Users\\91991\\.gemini\\antigravity-ide\\brain\\031133ef-b2a6-40fd-831c-533d2b094a6f\\gandhi_jayanti_banner_1789687054756.jpg";
+    const bannerPath = "C:\\Users\\91991\\.gemini\\antigravity-ide\\brain\\031133ef-b2a6-40fd-831c-533d2b094a6f\\gandhi_victory_banner_1789689125433.jpg";
 
-    console.log("1. Uploading 16:9 Landscape Banner to Cloudinary (mountainrun/banners)...");
+    console.log("1. Uploading new Cinematic Poster Banner to Cloudinary (mountainrun/banners)...");
     const bannerUpload = await cloudinary.uploader.upload(bannerPath, {
       folder: "mountainrun/banners",
-      public_id: "gandhi_jayanti_victory_run_2026_landscape_banner",
+      public_id: "gandhi_jayanti_victory_run_2026_cinematic_poster",
       overwrite: true
     });
     const bannerImageUrl = bannerUpload.secure_url;

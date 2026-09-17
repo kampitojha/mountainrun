@@ -99,12 +99,14 @@ function EventCard({ event, index }: { event: PublicEvent; index: number }) {
           </div>
 
           {/* Reward / Medal Highlight Strip */}
-          <div className="absolute bottom-3 left-4 right-4 z-10">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-white drop-shadow-md">
-              <Medal className="h-4 w-4 text-amber-400 shrink-0" />
-              <span className="truncate">{event.reward}</span>
+          {!hasBannerImage && (
+            <div className="absolute bottom-3 left-4 right-4 z-10">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-white drop-shadow-md">
+                <Medal className="h-4 w-4 text-amber-400 shrink-0" />
+                <span className="truncate">{event.reward}</span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Body Content */}

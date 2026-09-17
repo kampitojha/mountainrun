@@ -66,7 +66,9 @@ function EventCard({ event, variant = "upcoming" }: { event: PublicEvent; varian
                 </span>
               )}
             </div>
-            <p className="mt-1 text-xs font-bold text-white drop-shadow-md">{event.reward}</p>
+            {!hasBannerImage && (
+              <p className="mt-1 text-xs font-bold text-white drop-shadow-md">{event.reward}</p>
+            )}
           </div>
         </div>
 
