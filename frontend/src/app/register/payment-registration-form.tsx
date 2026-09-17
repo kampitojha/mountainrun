@@ -9,7 +9,6 @@ import {
   MapPin,
   RefreshCw,
   ShieldCheck,
-  Shirt,
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
@@ -19,7 +18,6 @@ import { Field, inputClass } from "../components/app-shell";
 import { PhoneInput } from "../components/phone-input";
 import { SearchableSelect } from "../components/searchable-select";
 import { authHeaders, getApiUrl, readApiError } from "../../lib/api";
-import { cn } from "../../lib/cn";
 import { INDIAN_STATES } from "../../lib/indian-states";
 import {
   asString,
@@ -62,14 +60,6 @@ type ExistingReg = {
   event: { slug: string; title: string };
   payment?: { status: string } | null;
 };
-
-const TSHIRT_SIZES = [
-  { size: "S", chest: "38 in" },
-  { size: "M", chest: "40 in" },
-  { size: "L", chest: "42 in" },
-  { size: "XL", chest: "44 in" },
-  { size: "XXL", chest: "46 in" },
-];
 
 const fallbackEvents: RegisterEventOption[] = [
   {
@@ -198,7 +188,6 @@ function PaymentRegistrationFormInner() {
   );
   const [selectedDistance, setSelectedDistance] = useState(distanceFromQuery || "");
   const [selectedActivity, setSelectedActivity] = useState("running");
-  const [selectedTshirt, setSelectedTshirt] = useState("L");
   const [runnerName, setRunnerName] = useState("");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [existingRegs, setExistingRegs] = useState<ExistingReg[]>([]);
@@ -442,7 +431,6 @@ function PaymentRegistrationFormInner() {
     if (city) formData.set("city", city);
     if (stateVal) formData.set("state", stateVal);
     if (pincode) formData.set("pincode", pincode);
-    if (selectedTshirt) formData.set("tshirtSize", selectedTshirt);
 
     const validationErrors = validateRegistrationForm(formData);
     if (Object.keys(validationErrors).length > 0) {
@@ -468,7 +456,6 @@ function PaymentRegistrationFormInner() {
       eventSlug: selectedEvent,
       distance: selectedDistance,
       activityType: selectedActivity,
-      tshirtSize: selectedTshirt,
       shippingName: fullName,
       shippingPhone: phoneVal,
       shippingLine1: streetAddress,
@@ -733,34 +720,6 @@ function PaymentRegistrationFormInner() {
             </Field>
           </div>
 
-          {/* T-Shirt Size Selector */}
-          <div className="border-t border-(--line) pt-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-(--muted) flex items-center gap-1.5">
-                <Shirt className="h-3.5 w-3.5 text-(--sage)" /> Runner T-Shirt Size
-              </span>
-              <span className="text-[0.65rem] text-(--muted)">Included in entry kit</span>
-            </div>
-            <div className="grid grid-cols-5 gap-2">
-              {TSHIRT_SIZES.map((t) => (
-                <button
-                  key={t.size}
-                  type="button"
-                  onClick={() => setSelectedTshirt(t.size)}
-                  className={cn(
-                    "flex flex-col items-center justify-center rounded-xl p-2 border transition-all cursor-pointer",
-                    selectedTshirt === t.size
-                      ? "border-(--sage) bg-(--sage-soft) text-(--sage) font-black shadow-xs ring-2 ring-(--sage)/20"
-                      : "border-(--line) bg-(--panel-soft) text-(--muted) hover:text-foreground",
-                  )}
-                >
-                  <span className="text-xs font-black">{t.size}</span>
-                  <span className="text-[0.55rem]">{t.chest}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Shipping Address with Instant Pincode Lookup */}
           <div className="border-t border-(--line) pt-4 space-y-3.5">
             <div className="flex items-center justify-between">
@@ -933,18 +892,12 @@ function PaymentRegistrationFormInner() {
             </div>
 
             {/* Bottom Kit Specs */}
-            <div className="mt-6 grid grid-cols-3 gap-2 border-t border-white/10 pt-3 text-center">
+            <div className="mt-6 grid grid-cols-2 gap-2 border-t border-white/10 pt-3 text-center">
               <div>
                 <p className="text-[0.55rem] font-bold uppercase tracking-wider text-white/50">
                   DISTANCE
                 </p>
                 <p className="font-mono text-xs font-black text-white">{selectedDistance || "5 KM"}</p>
-              </div>
-              <div>
-                <p className="text-[0.55rem] font-bold uppercase tracking-wider text-white/50">
-                  T-SHIRT
-                </p>
-                <p className="font-mono text-xs font-black text-amber-400">{selectedTshirt} FIT</p>
               </div>
               <div>
                 <p className="text-[0.55rem] font-bold uppercase tracking-wider text-white/50">
@@ -966,7 +919,7 @@ function PaymentRegistrationFormInner() {
             </p>
             <p className="flex items-center gap-2">
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-              <span>Custom Dri-Fit Performance Running T-Shirt</span>
+              <span>Free All-India Doorstep Courier Delivery</span>
             </p>
             <p className="flex items-center gap-2">
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />

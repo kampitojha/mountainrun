@@ -7,7 +7,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mountainrun.in";
 export const metadata: Metadata = {
   title: "Virtual Run & Marathon Registration India 2026 | Register Online — Mountain Run",
   description:
-    "Register for virtual marathons, 5K, 10K, and 21K Half Marathon challenges across India. Instant online registration with UPI/cards, authentic finisher medals, custom DRI-FIT t-shirts, and instant E-certificates.",
+    "Register for virtual marathons, 5K, 10K, and 21K Half Marathon challenges across India. Instant online registration with UPI/cards, authentic finisher medals, and instant E-certificates.",
   keywords: [
     "virtual run registration",
     "virtual run registration India",
