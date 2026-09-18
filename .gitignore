@@ -59,9 +59,15 @@ env/
 # sensitive data, sheets, exports, database backups
 *.xlsx
 *.xls
+*.xlsm
+*.xlsb
+*.xltx
+*.xltm
 *.csv
 *.tsv
 *.ods
+*.numbers
+*.pdf
 *.db
 *.sqlite
 *.sqlite3
@@ -69,9 +75,15 @@ env/
 *.bak
 *.backup
 *.jsonl
+*_results.json
+*dispatch_results*.json
+*broadcast_results*.json
+*-preview.html
+*-preview*.html
 /data/
 /exports/
 /reports/
 /backups/
 /temp/
 /tmp/
+

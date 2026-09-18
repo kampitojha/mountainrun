@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 
 const PHONE = "+917518418960";
 const WHATSAPP = "https://wa.me/917518418960";
+const WHATSAPP_CHANNEL = "https://whatsapp.com/channel/0029Vb8spzJ2UPBIZM3JUu07";
 
 function PhoneIcon() {
   return (
@@ -37,8 +39,6 @@ function CloseIcon() {
     </svg>
   );
 }
-
-import { usePathname } from "next/navigation";
 
 export function FloatingContact() {
   const pathname = usePathname();
@@ -74,6 +74,16 @@ export function FloatingContact() {
             exit={{ opacity: 0, y: 16, scale: 0.9 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
           >
+            <a
+              href={WHATSAPP_CHANNEL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="group flex items-center gap-2.5 rounded-full bg-[#25D366] px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-[#25D366]/25 transition-all hover:bg-[#1ebe5d] hover:shadow-xl hover:shadow-[#25D366]/30 active:scale-95"
+            >
+              <WhatsAppIcon />
+              <span>Join WhatsApp Channel</span>
+            </a>
             <a
               href={`tel:${PHONE}`}
               onClick={() => setOpen(false)}
