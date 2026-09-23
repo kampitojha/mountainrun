@@ -24,6 +24,7 @@ import {
   type FieldErrors,
   validateRegistrationForm,
 } from "../../lib/validation";
+import { allPublicEvents } from "../data/events";
 
 type CheckoutResponse = {
   razorpay_order_id: string;
@@ -61,29 +62,48 @@ type ExistingReg = {
   payment?: { status: string } | null;
 };
 
-const fallbackEvents: RegisterEventOption[] = [
-  {
-    label: "Monsoon Mountain Miles",
-    value: "monsoon-mountain-miles",
-    amount: "₹499",
-    distances: ["3 km", "5 km", "10 km", "21 km"],
-    activityTypes: ["running", "cycling", "walking"],
-  },
-  {
-    label: "Independence Endurance Run",
-    value: "independence-endurance-run",
-    amount: "₹649",
-    distances: ["5 km", "10 km", "25 km"],
-    activityTypes: ["running", "cycling", "walking"],
-  },
-  {
-    label: "Himalayan Winter Sprint",
-    value: "himalayan-winter-sprint",
-    amount: "₹399",
-    distances: ["2 km", "5 km", "10 km"],
-    activityTypes: ["running", "cycling", "walking"],
-  },
-];
+function getInitialEvents(querySlug?: string | null): RegisterEventOption[] {
+  const openEvents = allPublicEvents
+    .filter((e) => e.status === "upcoming")
+    .map((e) => {
+      const dists = e.distance ? e.distance.split("/").map((d) => d.trim()).filter(Boolean) : ["5 km"];
+      const rawPrice = e.price?.replace(/[^\d]/g, "") || "449";
+      return {
+        label: e.name,
+        value: e.slug,
+        amount: `₹${rawPrice}`,
+        distances: dists.length > 0 ? dists : ["5 km"],
+        activityTypes: e.activityTypes ?? ["running", "cycling", "walking"],
+      };
+    });
+
+  if (querySlug && !openEvents.some((e) => e.value === querySlug)) {
+    const matched = allPublicEvents.find((e) => e.slug === querySlug);
+    if (matched) {
+      const dists = matched.distance ? matched.distance.split("/").map((d) => d.trim()).filter(Boolean) : ["5 km"];
+      const rawPrice = matched.price?.replace(/[^\d]/g, "") || "449";
+      openEvents.unshift({
+        label: matched.name,
+        value: matched.slug,
+        amount: `₹${rawPrice}`,
+        distances: dists.length > 0 ? dists : ["5 km"],
+        activityTypes: matched.activityTypes ?? ["running", "cycling", "walking"],
+      });
+    }
+  }
+
+  return openEvents.length > 0
+    ? openEvents
+    : [
+        {
+          label: "Gandhi Jayanti Victory Run 2026",
+          value: "gandhi-jayanti-victory-run-2026",
+          amount: "₹449",
+          distances: ["1.6 km", "3.2 km", "5 km", "10 km", "21 km"],
+          activityTypes: ["running", "cycling", "walking"],
+        },
+      ];
+}
 
 async function loadRazorpayScript() {
   if (window.Razorpay) return true;
@@ -97,10 +117,22 @@ async function loadRazorpayScript() {
 }
 
 function getFriendlyErrorMessage(error: unknown) {
-  if (error instanceof TypeError && error.message === "Failed to fetch") {
-    return `Could not connect to the API at ${getApiUrl()}. Start backend with npm run dev.`;
+  if (
+    error instanceof TypeError &&
+    (error.message === "Failed to fetch" ||
+      error.message === "Load failed" ||
+      error.message.includes("NetworkError") ||
+      error.message.includes("network"))
+  ) {
+    return "Network connection issue. Please check your internet connection or try opening the link in Safari / Chrome.";
   }
-  return error instanceof Error ? error.message : "Something went wrong";
+  if (error instanceof Error) {
+    if (error.message.toLowerCase().includes("load failed")) {
+      return "Network connection issue. Please check your internet connection or try opening the link in Safari / Chrome.";
+    }
+    return error.message;
+  }
+  return "Something went wrong. Please try again.";
 }
 
 function FieldError({ message }: { message?: string }) {
@@ -182,10 +214,14 @@ function PaymentRegistrationFormInner() {
   const [countdown, setCountdown] = useState(0);
   const paidRef = useRef(false);
   const failedRef = useRef(false);
-  const [events, setEvents] = useState<RegisterEventOption[]>(fallbackEvents);
-  const [selectedEvent, setSelectedEvent] = useState(
-    eventFromQuery || fallbackEvents[0].value,
-  );
+  const [events, setEvents] = useState<RegisterEventOption[]>(() => getInitialEvents(eventFromQuery));
+  const [selectedEvent, setSelectedEvent] = useState(() => {
+    const list = getInitialEvents(eventFromQuery);
+    if (eventFromQuery && list.some((e) => e.value === eventFromQuery)) {
+      return eventFromQuery;
+    }
+    return list[0]?.value || "gandhi-jayanti-victory-run-2026";
+  });
   const [selectedDistance, setSelectedDistance] = useState(distanceFromQuery || "");
   const [selectedActivity, setSelectedActivity] = useState("running");
   const [runnerName, setRunnerName] = useState("");

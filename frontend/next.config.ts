@@ -44,10 +44,16 @@ const nextConfig: NextConfig = {
       },
     ];
     if (apiUrl) {
-      list.push({
-        source: "/api/payments/webhook",
-        destination: `${apiUrl.replace(/\/+$/, "")}/api/payments/webhook`,
-      });
+      list.push(
+        {
+          source: "/api/payments/webhook",
+          destination: `${apiUrl.replace(/\/+$/, "")}/api/payments/webhook`,
+        },
+        {
+          source: "/api/:path*",
+          destination: `${apiUrl.replace(/\/+$/, "")}/api/:path*`,
+        },
+      );
     }
     return list;
   },
