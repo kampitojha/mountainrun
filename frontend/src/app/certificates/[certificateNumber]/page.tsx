@@ -198,9 +198,10 @@ function GandhiCertificateCanvas({
         if (isCancelled) return;
         ctx.drawImage(templateImg, 0, 0, 1000, 700);
 
-        // 2. Wait for web fonts if supported
+        // 2. Wait for Alex Brush cursive calligraphy font
         if (typeof document !== "undefined" && document.fonts) {
           try {
+            await document.fonts.load("60px 'Alex Brush'");
             await document.fonts.ready;
           } catch {
             // Proceed
