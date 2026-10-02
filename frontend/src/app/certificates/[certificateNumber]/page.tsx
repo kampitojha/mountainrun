@@ -135,321 +135,442 @@ function LuxuryWaxSeal() {
 
 function GandhiCertificateCanvas({
   data,
-  viewMode,
+  viewMode = "landscape",
   certRef,
   onDownload,
+  isDownloading,
+  onShare,
+  copied,
 }: {
   data: CertificateData;
-  viewMode: "landscape" | "portrait";
+  viewMode?: "landscape" | "portrait";
   certRef: React.RefObject<HTMLElement | null>;
   onDownload: () => void;
+  isDownloading: boolean;
+  onShare?: () => void;
+  copied?: boolean;
 }) {
-  const gandhiPortraitUrl = "/images/certificates/gandhi-portrait.jpg";
-  const skylineUrl = "/images/certificates/india-skyline.jpg";
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [renderedImageUrl, setRenderedImageUrl] = useState<string | null>(null);
+
+  // Check if data.pdfUrl is a valid image URL (e.g. Cloudinary or image file)
+  const isDirectImage = Boolean(
+    data.pdfUrl &&
+      (data.pdfUrl.startsWith("http://") || data.pdfUrl.startsWith("https://")) &&
+      (data.pdfUrl.includes("cloudinary.com") ||
+        data.pdfUrl.endsWith(".png") ||
+        data.pdfUrl.endsWith(".jpg") ||
+        data.pdfUrl.endsWith(".jpeg") ||
+        data.pdfUrl.endsWith(".webp")),
+  );
+
+  const isKampitRecord = Boolean(
+    data.certificateNumber === "MR-2026-GJVR-109452" ||
+      data.bibNumber === "GJVR-109452" ||
+      (data.runnerName && data.runnerName.toLowerCase().includes("kampit")),
+  );
+
+  const initialImgSrc = isDirectImage
+    ? data.pdfUrl!
+    : isKampitRecord
+      ? "/images/certificates/gandhi-kampit-cert.png"
+      : "/images/certificates/gandhi-master-template.png";
+
+  useEffect(() => {
+    // If it's already an exact pre-rendered image or Kampit's record, use the master image directly
+    if (isDirectImage || isKampitRecord) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    // Dynamically synthesize certificate on HTML5 Canvas for any participant
+    async function generateCustomCertificate() {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = 1000;
+        canvas.height = 700;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        // 1. Draw Master Template
+        const templateImg = new Image();
+        templateImg.crossOrigin = "anonymous";
+        templateImg.src = "/images/certificates/gandhi-master-template.png";
+
+        await new Promise<void>((resolve, reject) => {
+          templateImg.onload = () => resolve();
+          templateImg.onerror = () => reject(new Error("Template load failed"));
+        });
+
+        if (isCancelled) return;
+        ctx.drawImage(templateImg, 0, 0, 1000, 700);
+
+        // 2. Wait for web fonts if supported
+        if (typeof document !== "undefined" && document.fonts) {
+          try {
+            await document.fonts.ready;
+          } catch {
+            // Proceed if font loading promise fails
+          }
+        }
+
+        // 3. Draw Runner Name in Cursive Calligraphy
+        ctx.textAlign = "center";
+        ctx.textBaseline = "alphabetic";
+        ctx.fillStyle = "#0d2130"; // deep midnight navy
+        ctx.font = "60px 'Alex Brush', 'Great Vibes', cursive";
+        ctx.fillText(data.runnerName, 502, 328);
+
+        // 4. Stats: Distance & Time
+        ctx.font = "bold 15px 'Montserrat', -apple-system, sans-serif";
+        ctx.fillStyle = "#0f1928";
+        ctx.textAlign = "left";
+
+        const rawDist = (data.distance || "10 KM").toUpperCase();
+        const formattedDist = rawDist.endsWith("KM") ? rawDist : `${rawDist} KM`;
+        ctx.fillText(formattedDist, 328, 488);
+
+        const timeStr = formatFinishTime(data.finishTimeSeconds);
+        ctx.fillText(timeStr !== "—" ? timeStr : "00:58:24", 502, 488);
+
+        // 5. Draw QR Code in white box
+        const verifyUrl =
+          typeof window !== "undefined"
+            ? window.location.href
+            : `https://mountainrun.in/certificates/${data.certificateNumber}`;
+        const qrImg = new Image();
+        qrImg.crossOrigin = "anonymous";
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=0&color=000000&bgcolor=ffffff&data=${encodeURIComponent(verifyUrl)}`;
+
+        await new Promise<void>((resolve) => {
+          qrImg.onload = () => resolve();
+          qrImg.onerror = () => resolve();
+        });
+
+        if (!isCancelled) {
+          ctx.drawImage(qrImg, 49, 615, 50, 50);
+
+          // 6. Draw Certificate ID text
+          ctx.font = "bold 11px 'Montserrat', -apple-system, sans-serif";
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(`Certificate ID: ${data.certificateNumber}`, 115, 668);
+
+          const finalUrl = canvas.toDataURL("image/png", 0.98);
+          setRenderedImageUrl(finalUrl);
+        }
+      } catch (err) {
+        console.warn("Client canvas certificate synthesis notice:", err);
+        setRenderedImageUrl(initialImgSrc);
+      }
+    }
+
+    void generateCustomCertificate();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [data, isDirectImage, isKampitRecord, initialImgSrc]);
+
+  const displayImage = renderedImageUrl || initialImgSrc;
 
   return (
-    <article
-      ref={certRef}
-      id="certificate-print"
-      className={`relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-2xl transition-all mx-auto ${
-        viewMode === "landscape"
-          ? "w-[840px] sm:w-full max-w-4xl"
-          : "w-full max-w-lg"
-      }`}
-      style={{
-        background: "linear-gradient(135deg, #fdfbf7 0%, #faf6ec 45%, #f4ede0 100%)",
-        border: "3.5px solid #c9a227",
-        boxShadow: "0 22px 55px rgba(13,56,41,0.25), 0 0 0 1px rgba(201,162,39,0.45)",
-        color: "#0d3829",
-      }}
-    >
-      {/* Gold Filigree Corner Accents */}
-      <div className="absolute top-0 left-0 w-12 sm:w-16 h-12 sm:h-16 pointer-events-none border-t-3 sm:border-t-4 border-l-3 sm:border-l-4 border-[#c9a227] rounded-tl-xl sm:rounded-tl-2xl m-1.5 sm:m-2 z-10" />
-      <div className="absolute top-0 right-0 w-12 sm:w-16 h-12 sm:h-16 pointer-events-none border-t-3 sm:border-t-4 border-r-3 sm:border-r-4 border-[#c9a227] rounded-tr-xl sm:rounded-tr-2xl m-1.5 sm:m-2 z-10" />
-      <div className="absolute bottom-0 left-0 w-12 sm:w-16 h-12 sm:h-16 pointer-events-none border-b-3 sm:border-b-4 border-l-3 sm:border-l-4 border-[#c9a227] rounded-bl-xl sm:rounded-bl-2xl m-1.5 sm:m-2 z-10" />
-      <div className="absolute bottom-0 right-0 w-12 sm:w-16 h-12 sm:h-16 pointer-events-none border-b-3 sm:border-b-4 border-r-3 sm:border-r-4 border-[#c9a227] rounded-br-xl sm:rounded-br-2xl m-1.5 sm:m-2 z-10" />
+    <div className="w-full max-w-4xl mx-auto space-y-6">
+      {/* ── Main Certificate Showcase Container ── */}
+      <article
+        ref={certRef}
+        id="certificate-print"
+        className={`relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-2xl transition-all mx-auto border-2 sm:border-3 border-[#c9a227] bg-[#fcfaf5] ${
+          viewMode === "portrait" ? "max-w-lg" : "max-w-4xl"
+        }`}
+        style={{
+          boxShadow: "0 22px 55px rgba(13,56,41,0.22), 0 0 0 1px rgba(201,162,39,0.4)",
+        }}
+      >
+        {/* Top Indian Tricolor Strip */}
+        <div className="flex h-1.5 sm:h-2 w-full">
+          <div className="flex-1 bg-[#FF9933]" />
+          <div className="flex-1 bg-white" />
+          <div className="flex-1 bg-[#138808]" />
+        </div>
 
-      {/* Top Indian Tricolor Strip */}
-      <div className="flex h-1.5 sm:h-2 w-full">
-        <div className="flex-1 bg-[#FF9933]" />
-        <div className="flex-1 bg-white" />
-        <div className="flex-1 bg-[#138808]" />
-      </div>
-
-      <div className="relative px-4 py-5 sm:px-10 sm:py-8">
-
-        {/* ── HEADER: TRICOLOR ASHOKA CHAKRA EMBLEM + MOUNTAIN RUN LOGO + FIT INDIA ── */}
-        <div className="grid grid-cols-3 items-center gap-2 border-b border-[#d9cdb0]/80 pb-3 sm:pb-4">
-          {/* Left: Indian Tribute Ribbon & Chakra */}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-[#000080] flex items-center justify-center bg-white shadow-sm shrink-0">
-              <span className="text-base sm:text-xl text-[#000080] select-none leading-none">☸</span>
-            </div>
-            <div>
-              <p className="text-[0.5rem] sm:text-[0.65rem] font-black uppercase tracking-[0.15em] text-[#d97706] leading-none">
+        {/* ── Brand Header (Matching Email Design) ── */}
+        <div className="px-4 sm:px-8 py-3.5 sm:py-4 bg-gradient-to-b from-[#f7f3e8] to-[#fcfaf5] border-b border-[#d9cdb0]/80">
+          <div className="grid grid-cols-3 items-center gap-2">
+            {/* Left: National Tribute */}
+            <div className="text-left">
+              <p className="text-[0.55rem] sm:text-xs font-black tracking-widest uppercase text-[#e67300] leading-tight">
                 NATIONAL TRIBUTE
               </p>
-              <p className="text-[0.45rem] sm:text-[0.55rem] font-extrabold uppercase tracking-[0.1em] text-[#138808] leading-tight mt-0.5">
+              <p className="text-[0.5rem] sm:text-[0.65rem] font-extrabold tracking-wider uppercase text-[#138808] leading-tight mt-0.5">
                 GANDHI JAYANTI 2026
               </p>
             </div>
-          </div>
 
-          {/* Center: Mountain Run Logo */}
-          <div className="flex flex-col items-center text-center">
-            <div className="text-lg sm:text-2xl leading-none">⛰️</div>
-            <h3
-              className="text-base sm:text-2xl font-black uppercase tracking-[0.14em] text-[#0d3829] leading-tight mt-0.5"
-              style={{ fontFamily: "'Cinzel', Georgia, serif" }}
-            >
-              MOUNTAIN <span className="text-[#d97706]">RUN</span>
-            </h3>
-            <p className="text-[0.45rem] sm:text-[0.55rem] font-black uppercase tracking-[0.25em] text-[#7a6e5a] mt-0.5">
-              RUN • RIDE • WALK • EXPLORE
-            </p>
-          </div>
+            {/* Center: Mountain Run Logo & Tagline */}
+            <div className="text-center flex flex-col items-center">
+              <span className="text-lg sm:text-2xl leading-none">⛰️</span>
+              <p
+                className="text-xs sm:text-lg font-black uppercase tracking-wider text-[#0d3829] leading-tight mt-0.5"
+                style={{ fontFamily: "'Cinzel', Georgia, serif" }}
+              >
+                MOUNTAIN <span className="text-[#d97706]">RUN</span>
+              </p>
+              <p className="text-[0.4rem] sm:text-[0.55rem] font-bold uppercase tracking-[0.2em] text-[#7a6e5a] mt-0.5">
+                RUN &bull; RIDE &bull; WALK &bull; EXPLORE
+              </p>
+            </div>
 
-          {/* Right: National Fitness Motto */}
-          <div className="flex flex-col items-end text-right">
-            <p className="text-[0.45rem] sm:text-[0.6rem] font-black uppercase tracking-[0.16em] text-[#0d3829] leading-tight">
-              FIT INDIA
-            </p>
-            <p className="text-[0.4rem] sm:text-[0.55rem] font-extrabold uppercase tracking-[0.14em] text-[#c9a227] leading-tight">
-              HEALTHY INDIA
-            </p>
-            <p className="text-[0.38rem] sm:text-[0.5rem] font-bold uppercase tracking-[0.12em] text-[#7a6e5a] leading-tight">
-              STRONGER TOMORROW
-            </p>
-            <div className="h-0.5 w-12 sm:w-16 bg-gradient-to-l from-[#c9a227] to-transparent mt-1" />
+            {/* Right: Fit India Campaign */}
+            <div className="text-right">
+              <p className="text-[0.55rem] sm:text-xs font-black tracking-widest uppercase text-[#0d3829] leading-tight">
+                FIT INDIA
+              </p>
+              <p className="text-[0.5rem] sm:text-[0.65rem] font-extrabold tracking-wider uppercase text-[#c9a227] leading-tight mt-0.5">
+                HEALTHY INDIA
+              </p>
+              <p className="text-[0.45rem] sm:text-[0.55rem] font-medium tracking-wide uppercase text-[#7a6e5a] hidden sm:block">
+                STRONGER TOMORROW
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* ── MAIN BODY: 2-COLUMN HERO (GANDHI ART + CERTIFICATE TEXT) ── */}
-        <div className={`mt-4 sm:mt-6 ${viewMode === "landscape" ? "grid grid-cols-12 gap-5 items-center" : "flex flex-col items-center text-center"}`}>
-          
-          {/* Left Column: Mahatma Gandhi Portrait Artwork */}
-          <div className={viewMode === "landscape" ? "col-span-4 flex flex-col items-center justify-center" : "w-full max-w-[200px] mb-4 flex flex-col items-center"}>
-            <div
-              className="p-1 sm:p-1.5 rounded-2xl bg-white border-2 border-[#c9a227] shadow-xl overflow-hidden max-w-[190px] sm:max-w-[210px]"
-              style={{
-                boxShadow: "0 8px 24px rgba(13,56,41,0.18)",
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={gandhiPortraitUrl}
-                alt="Mahatma Gandhi Portrait"
-                className="w-full h-auto rounded-xl object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = "https://res.cloudinary.com/yppcqzt6/image/upload/v1790852436/mountainrun/certificates/gandhi_portrait_certificate_art.jpg";
-                }}
-              />
-            </div>
-            <div className="mt-2 text-center select-none">
-              <p className="text-[0.55rem] sm:text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#0d3829]">
-                MAHATMA GANDHI
-              </p>
-              <p className="text-[0.45rem] sm:text-[0.52rem] text-[#7a6e5a] font-serif italic">
-                1869 – 1948 • Father of the Nation
-              </p>
+        {/* ── Finisher Greeting Hero Banner ── */}
+        <div className="px-4 sm:px-8 py-4 sm:py-6 text-center bg-[#fcfaf5]">
+          <div className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-1 rounded-full bg-[#eef6f0] border border-[#c2e2c9] text-[#0d3829] text-[0.65rem] sm:text-xs font-black tracking-wider uppercase mb-2 sm:mb-3 shadow-xs">
+            <span>✓</span> OFFICIAL CREDENTIAL ISSUED &bull; VERIFIED FINISHER
+          </div>
+
+          <h2
+            className="text-xl sm:text-3xl lg:text-4xl font-black text-[#0d3829] leading-tight"
+            style={{ fontFamily: "'Cinzel', Georgia, serif" }}
+          >
+            Congratulations, {data.runnerName}!
+          </h2>
+          <p className="text-xs sm:text-sm text-[#4a4235] mt-1.5 max-w-lg mx-auto leading-relaxed">
+            Your official Certificate of Participation for the{" "}
+            <strong className="text-[#0d3829]">Gandhi Jayanti Victory Run 2026</strong> has been verified, authenticated, and generated.
+          </p>
+        </div>
+
+        {/* ── Official Master Graphic Certificate Showcase Frame (Deep Forest Green #0d3829) ── */}
+        <div className="p-3.5 sm:p-7 bg-[#0d3829] text-center border-y-2 border-[#c9a227]/40 shadow-inner">
+          <p className="text-[0.65rem] sm:text-xs font-black uppercase tracking-[0.2em] text-[#e5b83b] mb-2.5 sm:mb-3 flex items-center justify-center gap-1.5">
+            <span>★</span> OFFICIAL VERIFIED E-CERTIFICATE <span>★</span>
+          </p>
+
+          {/* Master Certificate Image Frame with Gold Border & Hover Elevation */}
+          <div
+            onClick={() => setIsModalOpen(true)}
+            className="group relative cursor-pointer rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 border-[#c9a227] shadow-2xl bg-white max-w-3xl mx-auto transition-transform duration-300 hover:scale-[1.01]"
+            style={{
+              boxShadow: "0 18px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,162,39,0.5)",
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={displayImage}
+              alt={`Official Finisher Certificate — ${data.runnerName}`}
+              className="w-full h-auto block select-none"
+            />
+            {/* Hover overlay hint */}
+            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+              <span className="px-4 py-2 rounded-full bg-black/80 text-[#e5b83b] text-xs font-bold shadow-lg backdrop-blur-xs flex items-center gap-1.5">
+                🔍 Click to Zoom &amp; View Fullscreen
+              </span>
             </div>
           </div>
 
-          {/* Right Column: Title, Recipient Name & Run Title */}
-          <div className={viewMode === "landscape" ? "col-span-8 text-center" : "w-full text-center"}>
-            <h2
-              className="text-xl sm:text-4xl lg:text-5xl font-black uppercase tracking-[0.1em] text-[#0d3829] leading-tight"
-              style={{ fontFamily: "'Cinzel', Georgia, serif" }}
+          <p className="text-[0.65rem] sm:text-xs text-[#e5b83b] font-bold mt-2.5 sm:mt-3 flex items-center justify-center gap-1">
+            <span>👆</span> Click certificate image to open full resolution &amp; zoom
+          </p>
+        </div>
+
+        {/* ── Primary Action Buttons ── */}
+        <div className="p-4 sm:p-6 bg-[#f7f3e8] border-b border-[#d9cdb0] flex flex-wrap items-center justify-center gap-3 print:hidden">
+          <button
+            type="button"
+            onClick={onDownload}
+            disabled={isDownloading}
+            className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-[#0d3829] to-[#134e3a] border-2 border-[#c9a227] text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-75"
+          >
+            {isDownloading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Preparing PNG...</span>
+              </>
+            ) : (
+              <>
+                <span>🏆</span>
+                <span>DOWNLOAD HIGH-RES CERTIFICATE (PNG)</span>
+              </>
+            )}
+          </button>
+
+          <a
+            href={displayImage}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-full bg-white border-2 border-[#b5a484] text-[#0d3829] font-extrabold text-xs sm:text-sm tracking-wide shadow-md hover:bg-[#fcfaf5] hover:scale-105 active:scale-95 transition-all"
+          >
+            <span>🔍</span>
+            <span>OPEN FULL RESOLUTION</span>
+          </a>
+
+          {onShare && (
+            <button
+              type="button"
+              onClick={onShare}
+              className="inline-flex items-center gap-2 px-4 sm:px-5 py-3 rounded-full bg-white/80 border-2 border-[#d9cdb0] text-[#0d3829] font-bold text-xs sm:text-sm shadow-sm hover:bg-white transition-all cursor-pointer"
             >
-              CERTIFICATE
-            </h2>
-            <div className="flex items-center justify-center gap-2 mt-0.5 sm:mt-1">
-              <span className="h-0.5 w-6 sm:w-16 bg-gradient-to-r from-transparent to-[#c9a227]" />
-              <p className="text-[0.55rem] sm:text-xs font-black uppercase tracking-[0.28em] text-[#c9a227]">
-                — OF PARTICIPATION —
+              <span>{copied ? "✓ Copied!" : "🔗 Share Credential"}</span>
+            </button>
+          )}
+        </div>
+
+        {/* ── Official Athlete Credential Summary Card ── */}
+        <div className="p-4 sm:p-6 bg-[#f7f3e8]">
+          <div className="rounded-xl border-2 border-[#d9cdb0] bg-white overflow-hidden shadow-sm">
+            <div className="bg-[#f2ede2] px-4 py-2.5 border-b border-[#d9cdb0]">
+              <p className="text-[0.6rem] sm:text-xs font-black uppercase tracking-wider text-[#0d3829] flex items-center gap-1.5">
+                <span>📝</span> OFFICIAL CREDENTIAL SUMMARY
               </p>
-              <span className="h-0.5 w-6 sm:w-16 bg-gradient-to-l from-transparent to-[#c9a227]" />
             </div>
 
-            <p className="text-[0.5rem] sm:text-[0.65rem] font-black uppercase tracking-[0.22em] text-[#7a6e5a] mt-3 sm:mt-4">
-              PROUDLY PRESENTED TO
-            </p>
-
-            {/* Runner Name in Royal Script */}
-            <div className="my-1.5 sm:my-2.5 inline-block">
-              <div
-                className="px-6 sm:px-14 py-0.5 sm:py-1"
-                style={{
-                  borderTop: "2px solid #c9a227",
-                  borderBottom: "2px solid #c9a227",
-                }}
-              >
-                <p
-                  className="text-2xl sm:text-5xl lg:text-6xl text-[#0d3829] font-bold"
-                  style={{
-                    fontFamily: "'Great Vibes', 'Dancing Script', 'Brush Script MT', cursive",
-                    lineHeight: 1.25,
-                    textShadow: "0 1px 2px rgba(0,0,0,0.06)",
-                  }}
-                >
+            <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#d9cdb0] text-center">
+              {/* Athlete */}
+              <div className="p-3 sm:p-4">
+                <p className="text-[0.55rem] sm:text-[0.65rem] font-extrabold uppercase tracking-wider text-[#7a6e5a]">
+                  ATHLETE
+                </p>
+                <p className="text-xs sm:text-sm font-black text-[#0d3829] mt-0.5 truncate">
                   {data.runnerName}
+                </p>
+              </div>
+
+              {/* Bib */}
+              <div className="p-3 sm:p-4">
+                <p className="text-[0.55rem] sm:text-[0.65rem] font-extrabold uppercase tracking-wider text-[#7a6e5a]">
+                  BIB NUMBER
+                </p>
+                <p className="text-xs sm:text-sm font-black text-[#0d3829] mt-0.5 font-mono">
+                  {data.bibNumber}
+                </p>
+              </div>
+
+              {/* Distance */}
+              <div className="p-3 sm:p-4">
+                <p className="text-[0.55rem] sm:text-[0.65rem] font-extrabold uppercase tracking-wider text-[#7a6e5a]">
+                  DISTANCE
+                </p>
+                <p className="text-xs sm:text-sm font-black text-[#0d3829] mt-0.5">
+                  {data.distance}
+                </p>
+              </div>
+
+              {/* Time */}
+              <div className="p-3 sm:p-4">
+                <p className="text-[0.55rem] sm:text-[0.65rem] font-extrabold uppercase tracking-wider text-[#7a6e5a]">
+                  FINISH TIME
+                </p>
+                <p className="text-xs sm:text-sm font-black text-[#0d3829] mt-0.5 font-mono">
+                  {formatFinishTime(data.finishTimeSeconds)}
                 </p>
               </div>
             </div>
 
-            <p className="text-[0.55rem] sm:text-xs text-[#3d362a] font-medium mt-1">
-              for successfully completing the
-            </p>
-
-            {/* Event Name & Tagline */}
-            <div className="mt-1">
-              <p className="text-sm sm:text-xl font-black uppercase tracking-wide text-[#d97706] font-serif">
-                GANDHI JAYANTI RUN 2026
-              </p>
-              <p className="text-[0.55rem] sm:text-[0.7rem] font-bold text-[#0d3829] mt-0.5">
-                Run for Peace • Run for a Healthier India
+            {/* Footer with Certificate ID & Issued */}
+            <div className="bg-[#faf7f0] px-4 py-2 border-t border-[#d9cdb0] text-center">
+              <p className="text-[0.55rem] sm:text-xs font-mono text-[#7a6e5a]">
+                CERTIFICATE ID: <strong className="text-[#0d3829] font-black">{data.certificateNumber}</strong> &nbsp;&bull;&nbsp; ISSUED:{" "}
+                <strong className="text-[#0d3829]">{formatIssuedAt(data.issuedAt)}</strong>
               </p>
             </div>
           </div>
         </div>
 
-        {/* ── 3-COLUMN NON-OVERLAPPING STATS CARDS ── */}
-        <div className="mt-4 sm:mt-6 rounded-xl sm:rounded-2xl border-1.5 sm:border-2 border-[#d9cdb0] bg-white/95 backdrop-blur-sm shadow-md overflow-hidden">
-          <div className="grid grid-cols-3 divide-x divide-[#d9cdb0] text-center">
-            {/* 1. Distance */}
-            <div className="p-2 sm:p-3.5 flex flex-col items-center">
-              <div className="text-base sm:text-xl mb-0.5">👟</div>
-              <p className="text-[0.45rem] sm:text-[0.55rem] font-black uppercase tracking-[0.16em] text-[#7a6e5a]">DISTANCE</p>
-              <p className="text-xs sm:text-base font-black text-[#0d3829] mt-0.5">{data.distance}</p>
+        {/* ── Heavyweight 3D Gandhi Medal Dispatch Update ── */}
+        <div className="px-4 sm:px-6 pb-6 bg-[#f7f3e8]">
+          <div className="rounded-xl border-2 border-[#c9a227] bg-gradient-to-r from-[#0d3829] to-[#061c14] p-3.5 sm:p-4 text-white shadow-md flex items-center gap-3 sm:gap-4">
+            <div className="text-2xl sm:text-3xl shrink-0 p-1.5 rounded-full bg-white/10 border border-[#c9a227]">
+              🎖️
             </div>
-
-            {/* 2. Completion Time */}
-            <div className="p-2 sm:p-3.5 flex flex-col items-center">
-              <div className="text-base sm:text-xl mb-0.5">⏱️</div>
-              <p className="text-[0.45rem] sm:text-[0.55rem] font-black uppercase tracking-[0.16em] text-[#7a6e5a]">TIME</p>
-              <p className="text-xs sm:text-base font-black text-[#0d3829] mt-0.5 font-mono">
-                {formatFinishTime(data.finishTimeSeconds)}
+            <div className="min-w-0">
+              <p className="text-[0.65rem] sm:text-xs font-black uppercase tracking-wider text-[#e5b83b] leading-tight">
+                ANTIQUE BRONZE FINISHER MEDAL &bull; FREE DOORSTEP DELIVERY
               </p>
-            </div>
-
-            {/* 3. Event Dates */}
-            <div className="p-2 sm:p-3.5 flex flex-col items-center">
-              <div className="text-base sm:text-xl mb-0.5">📅</div>
-              <p className="text-[0.45rem] sm:text-[0.55rem] font-black uppercase tracking-[0.16em] text-[#7a6e5a]">EVENT DATES</p>
-              <p className="text-xs sm:text-base font-black text-[#0d3829] mt-0.5">
-                2 Oct – 6 Oct 2026
+              <p className="text-[0.6rem] sm:text-xs text-[#fdfaf3]/90 leading-relaxed mt-0.5">
+                Your heavy 3D antique bronze finisher medal with custom tricolor ribbon is being prepared. Tracking ID will be emailed upon dispatch!
               </p>
             </div>
           </div>
         </div>
 
-        {/* ── INSPIRING PLEDGE QUOTE ── */}
-        <div className="mt-3 sm:mt-4 text-center">
-          <p className="text-[0.6rem] sm:text-xs text-[#554c3d] font-serif italic max-w-xl mx-auto leading-relaxed">
-            &ldquo;Thank you for being a part of this initiative and supporting a fitter, healthier and more active India.&rdquo;
+        {/* ── Official Verified Digital Credential Footer ── */}
+        <div className="bg-[#0d3829] py-3.5 px-4 text-center">
+          <p className="text-[0.55rem] sm:text-[0.65rem] font-bold uppercase tracking-widest text-white/85">
+            OFFICIAL VERIFIED DIGITAL CREDENTIAL &bull; MOUNTAIN RUN INDIA
           </p>
-          <div className="mt-1 sm:mt-2 h-0.5 w-24 sm:w-36 bg-gradient-to-r from-transparent via-[#c9a227] to-transparent mx-auto" />
+          <p className="text-[0.5rem] sm:text-[0.6rem] text-white/50 mt-0.5">
+            &copy; 2026 Mountain Run. All rights reserved. &bull; mountainrun.in
+          </p>
         </div>
 
-        {/* ── PANORAMIC MONUMENTS & RUNNERS SILHOUETTE BANNER ── */}
-        <div className="mt-3 sm:mt-4 rounded-xl overflow-hidden border border-[#d9cdb0] shadow-sm bg-white">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={skylineUrl}
-            alt="India Gate, Red Fort & Runners Skyline"
-            className="w-full h-auto max-h-[85px] sm:max-h-[120px] object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = "https://res.cloudinary.com/yppcqzt6/image/upload/v1790852524/mountainrun/certificates/india_skyline_certificate_art.jpg";
-            }}
-          />
+        {/* Bottom Indian Tricolor Strip */}
+        <div className="flex h-1 sm:h-1.5 w-full">
+          <div className="flex-1 bg-[#FF9933]" />
+          <div className="flex-1 bg-white" />
+          <div className="flex-1 bg-[#138808]" />
         </div>
+      </article>
 
-        {/* ── BOTTOM VERIFICATION QR, CATEGORY BADGES & SIGNATURE ── */}
-        <div className="mt-4 sm:mt-5 grid grid-cols-3 items-center gap-3 pt-3 sm:pt-4 border-t border-[#d9cdb0]/80">
-          {/* Left: Authentic QR Code */}
-          <div className="flex items-center gap-2 sm:gap-3">
+      {/* ── Fullscreen Zoom Lightbox Modal ── */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 print:hidden"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div className="relative max-w-5xl w-full max-h-[92vh] flex flex-col items-center">
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              className="absolute -top-10 right-0 text-white hover:text-[#e5b83b] text-sm font-bold flex items-center gap-1.5 cursor-pointer bg-white/10 px-3.5 py-1.5 rounded-full border border-white/20 transition-all hover:bg-white/20"
+            >
+              ✕ Close
+            </button>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=0&color=0d3829&bgcolor=fcfaf5&data=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : data.certificateNumber)}`}
-              alt="Certificate QR"
-              className="w-10 h-10 sm:w-14 sm:h-14 rounded-md sm:rounded-lg border border-[#d9cdb0] p-0.5 bg-white shadow-xs shrink-0"
+              src={displayImage}
+              alt={`Full Resolution Certificate — ${data.runnerName}`}
+              className="max-h-[82vh] w-auto max-w-full rounded-xl shadow-2xl border-2 sm:border-3 border-[#c9a227] object-contain"
+              onClick={(e) => e.stopPropagation()}
             />
-            <div className="min-w-0">
-              <p className="text-[0.45rem] sm:text-[0.55rem] font-black uppercase tracking-wider text-[#0d3829] leading-tight">
-                VERIFY CERTIFICATE
-              </p>
-              <p className="text-[0.38rem] sm:text-[0.48rem] text-[#7a6e5a] leading-tight mt-0.5">
-                Scan to verify authenticity
-              </p>
-              <p className="text-[0.36rem] sm:text-[0.45rem] font-mono text-[#0d3829] truncate mt-0.5 font-bold">
-                ID: {data.certificateNumber}
-              </p>
+            <div className="mt-3.5 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDownload();
+                }}
+                className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#0d3829] to-[#134e3a] border-2 border-[#c9a227] text-white text-xs sm:text-sm font-bold hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-lg"
+              >
+                🏆 Download High-Res PNG
+              </button>
+              <a
+                href={displayImage}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="px-5 py-2.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs sm:text-sm font-bold border border-white/30 transition-all shadow-md"
+              >
+                🔗 Open in New Tab
+              </a>
             </div>
           </div>
-
-          {/* Center: Disciplines */}
-          <div className="flex flex-col items-center justify-center text-center">
-            <p className="text-[0.4rem] sm:text-[0.5rem] font-black uppercase tracking-widest text-[#7a6e5a] mb-1">
-              OFFICIAL DISCIPLINES
-            </p>
-            <div className="flex items-center justify-center gap-2 sm:gap-3">
-              <div className="flex flex-col items-center">
-                <span className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d3829] text-white flex items-center justify-center text-xs sm:text-sm border border-[#c9a227]">🏃</span>
-                <span className="text-[0.38rem] sm:text-[0.45rem] font-extrabold text-[#0d3829] mt-0.5">RUN</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d3829] text-white flex items-center justify-center text-xs sm:text-sm border border-[#c9a227]">🚴</span>
-                <span className="text-[0.38rem] sm:text-[0.45rem] font-extrabold text-[#0d3829] mt-0.5">RIDE</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d3829] text-white flex items-center justify-center text-xs sm:text-sm border border-[#c9a227]">🚶</span>
-                <span className="text-[0.38rem] sm:text-[0.45rem] font-extrabold text-[#0d3829] mt-0.5">WALK</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Right: Signature */}
-          <div className="flex flex-col items-end text-right">
-            <p
-              className="text-base sm:text-2xl text-[#0d3829] font-bold"
-              style={{ fontFamily: "'Dancing Script', cursive" }}
-            >
-              Mountain Run
-            </p>
-            <div className="h-0.5 w-20 sm:w-28 bg-[#c9a227] my-0.5" />
-            <p className="text-[0.45rem] sm:text-[0.55rem] font-black uppercase tracking-[0.14em] text-[#0d3829]">
-              TEAM MOUNTAIN RUN
-            </p>
-            <p className="text-[0.38rem] sm:text-[0.45rem] text-[#7a6e5a]">Organizer • mountainrun.in</p>
-          </div>
         </div>
-
-        {/* Floating CTA in Web View */}
-        <div className="mt-5 flex justify-center print:hidden">
-          <button
-            type="button"
-            onClick={onDownload}
-            className="inline-flex items-center gap-2 px-6 sm:px-8 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#0d3829] to-[#134e3a] border-2 border-[#c9a227] text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-xl hover:scale-105 active:scale-95 transition-all"
-          >
-            🏆 Download High-Res PNG
-          </button>
-        </div>
-
-        {/* Monospace Footer Info */}
-        <div className="mt-3 pt-2 text-center border-t border-[#d9cdb0]/40">
-          <p className="text-[0.45rem] sm:text-[0.52rem] font-mono font-bold uppercase tracking-widest text-[#7a6e5a]">
-            CERTIFICATE NO: <span className="text-[#0d3829] font-black">{data.certificateNumber}</span> &nbsp;•&nbsp; BIB: <span className="text-[#0d3829] font-black">{data.bibNumber}</span>
-          </p>
-        </div>
-      </div>
-
-      {/* Bottom Indian Tricolor Strip */}
-      <div className="flex h-1 sm:h-1.5 w-full">
-        <div className="flex-1 bg-[#FF9933]" />
-        <div className="flex-1 bg-white" />
-        <div className="flex-1 bg-[#138808]" />
-      </div>
-    </article>
+      )}
+    </div>
   );
 }
 
@@ -509,6 +630,61 @@ export default function CertificateVerifyPage() {
   }
 
   async function handleDownloadImage() {
+    let directImgUrl: string | null = null;
+
+    if (data?.event.toLowerCase().includes("gandhi")) {
+      const isDirectImage = Boolean(
+        data.pdfUrl &&
+          (data.pdfUrl.startsWith("http://") || data.pdfUrl.startsWith("https://")) &&
+          (data.pdfUrl.includes("cloudinary.com") ||
+            data.pdfUrl.endsWith(".png") ||
+            data.pdfUrl.endsWith(".jpg") ||
+            data.pdfUrl.endsWith(".jpeg") ||
+            data.pdfUrl.endsWith(".webp")),
+      );
+      if (isDirectImage) {
+        directImgUrl = data.pdfUrl!;
+      } else if (
+        data.certificateNumber === "MR-2026-GJVR-109452" ||
+        data.bibNumber === "GJVR-109452" ||
+        (data.runnerName && data.runnerName.toLowerCase().includes("kampit"))
+      ) {
+        directImgUrl = "/images/certificates/gandhi-kampit-cert.png";
+      }
+    } else if (
+      data?.pdfUrl &&
+      (data.pdfUrl.includes("cloudinary.com") ||
+        data.pdfUrl.endsWith(".png") ||
+        data.pdfUrl.endsWith(".jpg") ||
+        data.pdfUrl.endsWith(".jpeg") ||
+        data.pdfUrl.endsWith(".webp"))
+    ) {
+      directImgUrl = data.pdfUrl;
+    }
+
+    if (directImgUrl) {
+      try {
+        setIsDownloading(true);
+        const res = await fetch(directImgUrl);
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `MountainRun-${data?.bibNumber || "Certificate"}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        return;
+      } catch (err) {
+        console.warn("Direct fetch download failed, opening in new window:", err);
+        window.open(directImgUrl, "_blank");
+        return;
+      } finally {
+        setIsDownloading(false);
+      }
+    }
+
     if (!certRef.current) return;
     try {
       setIsDownloading(true);
@@ -681,6 +857,9 @@ export default function CertificateVerifyPage() {
                     viewMode={viewMode}
                     certRef={certRef}
                     onDownload={handleDownloadImage}
+                    isDownloading={isDownloading}
+                    onShare={handleCopyShare}
+                    copied={copied}
                   />
                 ) : (
                 <article
@@ -946,7 +1125,7 @@ export default function CertificateVerifyPage() {
       {/* ── Print & Font Styles ── */}
       <style dangerouslySetInnerHTML={{
         __html: `
-          @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Dancing+Script:wght@700&family=Great+Vibes&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@700;900&family=Dancing+Script:wght@700&family=Great+Vibes&family=Montserrat:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
 
           @media print {
             @page {

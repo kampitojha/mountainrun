@@ -31,13 +31,25 @@ async function main() {
   fs.writeFileSync(previewPath, html, "utf-8");
   console.log(`Saved local preview to ${previewPath}`);
 
+  console.log("Loading certificate attachment from assets...");
+  const certAttachmentPath = path.resolve(__dirname_esm, "../../../backend/assets/kampit_gandhi_certificate_master.png");
+  const attachments = fs.existsSync(certAttachmentPath)
+    ? [
+        {
+          filename: `MountainRun_Gandhi_Jayanti_Certificate_${data.bibNumber}.png`,
+          content: fs.readFileSync(certAttachmentPath),
+        },
+      ]
+    : [];
+
   console.log("Sending email to itskampitojha@gmail.com via Resend...");
   const result = await resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL || "Mountain Run <certificate@mountainrun.in>",
+    from: process.env.RESEND_FROM_EMAIL || "Mountain Run <onboarding@mountainrun.in>",
     to: "itskampitojha@gmail.com",
     replyTo: "mountainrunofficial@gmail.com",
     subject: "Official Certificate of Participation 🏆 — Gandhi Jayanti Victory Run 2026 | Mountain Run",
     html,
+    attachments,
   });
 
   console.log("Resend Result:", JSON.stringify(result, null, 2));

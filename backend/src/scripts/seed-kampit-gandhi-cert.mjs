@@ -79,13 +79,15 @@ async function main() {
     });
   }
 
+  const cloudinaryCertUrl = "https://res.cloudinary.com/yppcqzt6/image/upload/v1790861807/mountainrun/certificates/gandhi_cert_kampit_ojha_1790861788.png";
+
   console.log("Upserting Certificate record...");
   const cert = await prisma.certificate.upsert({
     where: { registrationId: reg.id },
     create: {
       registrationId: reg.id,
       certificateNumber: certNumber,
-      pdfUrl: verifyUrl,
+      pdfUrl: cloudinaryCertUrl,
       qrPayload: JSON.stringify({
         issuer: "Mountain Run",
         certificateNumber: certNumber,
@@ -96,7 +98,7 @@ async function main() {
     },
     update: {
       certificateNumber: certNumber,
-      pdfUrl: verifyUrl,
+      pdfUrl: cloudinaryCertUrl,
       qrPayload: JSON.stringify({
         issuer: "Mountain Run",
         certificateNumber: certNumber,
