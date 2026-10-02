@@ -133,6 +133,59 @@ function LuxuryWaxSeal() {
   );
 }
 
+function CelebrationConfetti() {
+  const [active, setActive] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setActive(false), 4500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!active) return null;
+
+  const confettiPieces = Array.from({ length: 38 }).map((_, i) => {
+    const colors = ["#FF9933", "#ffffff", "#138808", "#e5b83b", "#c9a227", "#34d399"];
+    const color = colors[i % colors.length];
+    const left = (i * 2.6) % 100;
+    const animDelay = (i * 0.08) % 1.6;
+    const animDuration = 2.8 + (i % 5) * 0.4;
+    const size = 6 + (i % 4) * 2.5;
+    const isCircle = i % 3 === 0;
+
+    return (
+      <div
+        key={i}
+        className="fixed pointer-events-none z-50"
+        style={{
+          top: "-20px",
+          left: `${left}%`,
+          width: `${size}px`,
+          height: isCircle ? `${size}px` : `${size * 1.5}px`,
+          backgroundColor: color,
+          borderRadius: isCircle ? "50%" : "2px",
+          boxShadow: `0 0 8px ${color}`,
+          animation: `confettiFall ${animDuration}s ease-in forwards`,
+          animationDelay: `${animDelay}s`,
+          transform: `rotate(${(i * 37) % 360}deg)`,
+        }}
+      />
+    );
+  });
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden print:hidden">
+      <style>{`
+        @keyframes confettiFall {
+          0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+          75% { opacity: 0.9; }
+          100% { transform: translateY(105vh) rotate(720deg) scale(0.6); opacity: 0; }
+        }
+      `}</style>
+      {confettiPieces}
+    </div>
+  );
+}
+
 function GandhiCertificateCanvas({
   data,
   viewMode = "landscape",
@@ -201,7 +254,7 @@ function GandhiCertificateCanvas({
         // 2. Wait for Alex Brush cursive calligraphy font
         if (typeof document !== "undefined" && document.fonts) {
           try {
-            await document.fonts.load("60px 'Alex Brush'");
+            await document.fonts.load("68px 'Alex Brush'");
             await document.fonts.ready;
           } catch {
             // Proceed
@@ -211,9 +264,35 @@ function GandhiCertificateCanvas({
         // 3. Draw Runner Name in Cursive Calligraphy
         ctx.textAlign = "center";
         ctx.textBaseline = "alphabetic";
-        ctx.fillStyle = "#0d2130";
-        ctx.font = "60px 'Alex Brush', 'Great Vibes', cursive";
+        ctx.font = "68px 'Alex Brush', 'Great Vibes', cursive";
+
+        // Subtle soft drop shadow for depth
+        ctx.fillStyle = "#d2c3af";
+        ctx.fillText(data.runnerName, 503, 329);
+        ctx.fillStyle = "#0a1a28";
         ctx.fillText(data.runnerName, 502, 328);
+
+        // Subtle gold flourishes flanking the name
+        const textMetrics = ctx.measureText(data.runnerName);
+        const halfW = textMetrics.width / 2;
+        const leftX = 502 - halfW - 14;
+        const rightX = 502 + halfW + 14;
+        const flourishY = 320;
+
+        ctx.strokeStyle = "#c9a227";
+        ctx.lineWidth = 1;
+        if (leftX > 325) {
+          ctx.beginPath();
+          ctx.moveTo(leftX - 30, flourishY);
+          ctx.lineTo(leftX - 6, flourishY);
+          ctx.stroke();
+        }
+        if (rightX < 675) {
+          ctx.beginPath();
+          ctx.moveTo(rightX + 6, flourishY);
+          ctx.lineTo(rightX + 30, flourishY);
+          ctx.stroke();
+        }
 
         // 4. Stats: Distance & Time
         ctx.font = "bold 15px 'Montserrat', -apple-system, sans-serif";
@@ -294,18 +373,40 @@ function GandhiCertificateCanvas({
     }
   };
 
+  const handleWhatsAppShare = () => {
+    if (typeof window !== "undefined") {
+      const shareUrl = window.location.href;
+      const shareText = `🏅 Proud to share my official Certificate of Participation for the Gandhi Jayanti Victory Run 2026 (${data.distance || "10.00 KM"}) with Mountain Run!\n\nVerify certificate here: ${shareUrl}`;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, "_blank");
+    }
+  };
+
   return (
-    <div className={`w-full mx-auto space-y-6 transition-all duration-300 ${viewMode === "portrait" ? "max-w-xl" : "max-w-4xl"}`}>
-      {/* ── Direct Hero Certificate (Clean Centerpiece without Nested Frames) ── */}
+    <div className={`w-full mx-auto space-y-6 sm:space-y-8 transition-all duration-300 relative ${viewMode === "portrait" ? "max-w-xl" : "max-w-4xl"}`}>
+      <CelebrationConfetti />
+
+      {/* ── Ambient Radial Halo / Stage Lighting (Celebratory Glow) ── */}
+      <div className="absolute -inset-4 sm:-inset-10 rounded-[2.5rem] bg-gradient-to-tr from-[#ff9933]/15 via-[#c9a227]/20 to-[#138808]/15 blur-3xl opacity-75 pointer-events-none -z-10 animate-pulse duration-1000" />
+
+      {/* ── Direct Hero Certificate (Clean Centerpiece with Museum Depth) ── */}
       <div
         ref={certRef as React.RefObject<HTMLDivElement>}
         id="certificate-print"
-        className="relative group rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 hover:shadow-[0_25px_65px_rgba(0,0,0,0.6)] cursor-pointer bg-white"
+        className="relative group rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 hover:shadow-[0_30px_90px_rgba(0,0,0,0.85)] cursor-pointer bg-white border-2 sm:border-3 border-[#c9a227]/70"
         onClick={() => setIsModalOpen(true)}
         style={{
-          boxShadow: "0 22px 55px rgba(0,0,0,0.45), 0 0 0 1px rgba(201,162,39,0.35)",
+          boxShadow: "0 25px 65px -10px rgba(0,0,0,0.85), 0 0 45px rgba(201,162,39,0.22)",
         }}
       >
+        {/* Floating Top-Right Verified Badge */}
+        <div className="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-10 pointer-events-none">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/70 backdrop-blur-md border border-[#c9a227]/70 text-[#e5b83b] text-[0.6rem] sm:text-xs font-bold tracking-wide shadow-xl">
+            <span className="w-2 h-2 rounded-full bg-[#34d399] animate-pulse" />
+            <span>✓ OFFICIALLY VERIFIED</span>
+          </span>
+        </div>
+
+        {/* Certificate Image */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={displayImage}
@@ -314,20 +415,21 @@ function GandhiCertificateCanvas({
         />
 
         {/* Hover zoom hint */}
-        <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
           <span className="px-5 py-2.5 rounded-full bg-black/85 text-[#e5b83b] text-xs sm:text-sm font-bold shadow-2xl backdrop-blur-xs flex items-center gap-2 border border-[#c9a227]/50">
             🔍 Click to View Fullscreen / Zoom
           </span>
         </div>
       </div>
 
-      {/* ── Primary Action Buttons Directly Below Certificate ── */}
-      <div className="flex flex-wrap items-center justify-center gap-3 pt-1 print:hidden">
+      {/* ── Unified Luxury Action Dock Directly Below Certificate ── */}
+      <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3.5 pt-1 print:hidden">
+        {/* Primary Download PNG Button */}
         <button
           type="button"
           onClick={handleGandhiDownload}
           disabled={isDownloading}
-          className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-[#0d3829] to-[#134e3a] border-2 border-[#c9a227] text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-75"
+          className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-[#0d3829] via-[#134e3a] to-[#0d3829] border-2 border-[#c9a227] text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-75 hover:shadow-[0_0_25px_rgba(201,162,39,0.35)]"
         >
           {isDownloading ? (
             <>
@@ -337,27 +439,50 @@ function GandhiCertificateCanvas({
           ) : (
             <>
               <span>🏆</span>
-              <span>DOWNLOAD HIGH-RES CERTIFICATE (PNG)</span>
+              <span>DOWNLOAD HIGH-RES (PNG)</span>
             </>
           )}
         </button>
 
+        {/* PDF / Print Button */}
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="inline-flex items-center gap-2 px-4 sm:px-5 py-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/25 text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer"
+        >
+          <span>📄</span>
+          <span>PDF / Print</span>
+        </button>
+
+        {/* Fullscreen Button */}
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 border-2 border-white/20 text-white font-bold text-xs sm:text-sm tracking-wide shadow-md transition-all cursor-pointer"
+          className="inline-flex items-center gap-2 px-4 sm:px-5 py-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/25 text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer"
         >
           <span>🔍</span>
-          <span>VIEW FULLSCREEN</span>
+          <span>Fullscreen</span>
         </button>
 
+        {/* WhatsApp Share Button */}
+        <button
+          type="button"
+          onClick={handleWhatsAppShare}
+          className="inline-flex items-center gap-2 px-4 sm:px-5 py-3 rounded-full bg-[#25D366]/20 hover:bg-[#25D366]/30 border border-[#25D366]/50 text-[#25D366] hover:text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer"
+          title="Share on WhatsApp"
+        >
+          <span>💬</span>
+          <span>WhatsApp</span>
+        </button>
+
+        {/* Copy Share Link */}
         {onShare && (
           <button
             type="button"
             onClick={onShare}
-            className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-full bg-white/5 hover:bg-white/10 border-2 border-white/15 text-white/90 font-bold text-xs sm:text-sm shadow-sm transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 sm:px-5 py-3 rounded-full bg-white/5 hover:bg-white/10 border border-white/20 text-white/90 font-bold text-xs sm:text-sm shadow-sm transition-all cursor-pointer"
           >
-            <span>{copied ? "✓ Copied Link!" : "🔗 Share Certificate"}</span>
+            <span>{copied ? "✓ Copied Link!" : "🔗 Share Link"}</span>
           </button>
         )}
       </div>
@@ -441,7 +566,7 @@ function GandhiCertificateCanvas({
               className="max-h-[82vh] w-auto max-w-full rounded-2xl shadow-2xl border-2 border-[#c9a227] object-contain"
               onClick={(e) => e.stopPropagation()}
             />
-            <div className="mt-4 flex items-center gap-3">
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
               <button
                 type="button"
                 onClick={(e) => {
@@ -451,6 +576,16 @@ function GandhiCertificateCanvas({
                 className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#0d3829] to-[#134e3a] border-2 border-[#c9a227] text-white text-xs sm:text-sm font-bold hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-lg"
               >
                 🏆 Download PNG
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleWhatsAppShare();
+                }}
+                className="px-5 py-2.5 rounded-full bg-[#25D366]/20 hover:bg-[#25D366]/30 border border-[#25D366]/50 text-[#25D366] hover:text-white text-xs sm:text-sm font-bold transition-all shadow-md cursor-pointer"
+              >
+                💬 Share on WhatsApp
               </button>
             </div>
           </div>
@@ -596,23 +731,40 @@ export default function CertificateVerifyPage() {
       <section className="section pt-24 sm:pt-32 pb-12 sm:pb-16">
         <div className="container-page max-w-5xl">
           {/* Header controls (hidden on print) */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 print:hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 print:hidden">
             <div>
-              <p className="eyebrow text-[#c9a227]">Official Finisher Credential</p>
-              <h1 className="heading text-2xl sm:text-3xl mt-1">Certificate of Achievement</h1>
-              <p className="lede text-xs sm:text-sm mt-1">Verified Mountain Run finisher achievement.</p>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-[#FF9933]/15 via-white/5 to-[#138808]/15 border border-[#c9a227]/40 mb-2">
+                <span className="text-xs">🇮🇳</span>
+                <span className="text-[0.65rem] sm:text-xs font-black tracking-widest uppercase text-[#e5b83b]">
+                  NATIONAL FINISHER CREDENTIAL • GANDHI JAYANTI 2026
+                </span>
+              </div>
+              <h1 className="heading text-2xl sm:text-3xl font-black text-white tracking-tight">
+                Certificate of Participation
+              </h1>
+              <p className="text-xs sm:text-sm text-white/70 mt-1">
+                Awarded to <strong className="text-[#e5b83b] font-bold">{data?.runnerName || "Finisher"}</strong> for successfully completing <strong className="text-white">{data?.distance || "10.00 KM"}</strong>.
+              </p>
             </div>
 
             {data && (
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2.5 shrink-0">
+                {/* Official verified badge */}
+                <div className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#138808]/15 border border-[#138808]/40 text-[#34d399] text-xs font-bold shadow-sm">
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span>Verified Finisher</span>
+                </div>
+
                 {/* View Mode Toggle Switch */}
-                <div className="inline-flex rounded-xl bg-black/10 p-1 border border-white/15">
+                <div className="inline-flex rounded-xl bg-white/5 p-1 border border-white/15 backdrop-blur-sm shadow-sm">
                   <button
                     type="button"
                     onClick={() => setViewMode("landscape")}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                       viewMode === "landscape"
-                        ? "bg-[#0d3829] text-[#e5b83b] shadow-md"
+                        ? "bg-[#0d3829] text-[#e5b83b] shadow-md border border-[#c9a227]/40"
                         : "text-(--muted) hover:text-foreground"
                     }`}
                   >
@@ -623,53 +775,13 @@ export default function CertificateVerifyPage() {
                     onClick={() => setViewMode("portrait")}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                       viewMode === "portrait"
-                        ? "bg-[#0d3829] text-[#e5b83b] shadow-md"
+                        ? "bg-[#0d3829] text-[#e5b83b] shadow-md border border-[#c9a227]/40"
                         : "text-(--muted) hover:text-foreground"
                     }`}
                   >
                     📱 <span>Mobile Fit</span>
                   </button>
                 </div>
-
-                {/* 1-Click High-Res Download PNG Button */}
-                <button
-                  className="btn btn-primary gap-1.5 text-xs h-9 px-3.5 shadow-md"
-                  onClick={handleDownloadImage}
-                  disabled={isDownloading}
-                  type="button"
-                >
-                  {isDownloading ? (
-                    <>
-                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Saving...</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                      <span>Download PNG</span>
-                    </>
-                  )}
-                </button>
-
-                {/* Print / Save PDF Button */}
-                <button
-                  className="btn btn-secondary gap-1.5 text-xs h-9 px-3"
-                  onClick={() => window.print()}
-                  type="button"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9V2h12v7" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>
-                  <span>PDF / Print</span>
-                </button>
-
-                {/* Share Link Button */}
-                <button
-                  className="btn btn-ghost gap-1 text-xs h-9 px-2.5"
-                  onClick={handleCopyShare}
-                  type="button"
-                  title="Copy Certificate Link"
-                >
-                  {copied ? "✓ Copied!" : "🔗 Share"}
-                </button>
               </div>
             )}
           </div>
