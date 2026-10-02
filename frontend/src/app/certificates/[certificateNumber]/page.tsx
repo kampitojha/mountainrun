@@ -153,38 +153,30 @@ function GandhiCertificateCanvas({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [renderedImageUrl, setRenderedImageUrl] = useState<string | null>(null);
 
-  // Check if data.pdfUrl is a valid image URL (e.g. Cloudinary or image file)
-  const isDirectImage = Boolean(
-    data.pdfUrl &&
-      (data.pdfUrl.startsWith("http://") || data.pdfUrl.startsWith("https://")) &&
-      (data.pdfUrl.includes("cloudinary.com") ||
-        data.pdfUrl.endsWith(".png") ||
-        data.pdfUrl.endsWith(".jpg") ||
-        data.pdfUrl.endsWith(".jpeg") ||
-        data.pdfUrl.endsWith(".webp")),
-  );
-
+  // Priority: Local first-party certificate asset for Kampit, avoiding any raw Cloudinary URLs
   const isKampitRecord = Boolean(
     data.certificateNumber === "MR-2026-GJVR-109452" ||
       data.bibNumber === "GJVR-109452" ||
       (data.runnerName && data.runnerName.toLowerCase().includes("kampit")),
   );
 
-  const initialImgSrc = isDirectImage
-    ? data.pdfUrl!
-    : isKampitRecord
-      ? "/images/certificates/gandhi-kampit-cert.png"
+  const initialImgSrc = isKampitRecord
+    ? "/images/certificates/gandhi-kampit-cert.png"
+    : data.pdfUrl &&
+        !data.pdfUrl.includes("cloudinary.com") &&
+        (data.pdfUrl.endsWith(".png") || data.pdfUrl.endsWith(".jpg") || data.pdfUrl.endsWith(".webp"))
+      ? data.pdfUrl
       : "/images/certificates/gandhi-master-template.png";
 
   useEffect(() => {
-    // If it's already an exact pre-rendered image or Kampit's record, use the master image directly
-    if (isDirectImage || isKampitRecord) {
+    // If it's Kampit or already a local image, no need for canvas synthesis
+    if (isKampitRecord) {
       return;
     }
 
     let isCancelled = false;
 
-    // Dynamically synthesize certificate on HTML5 Canvas for any participant
+    // Dynamically synthesize certificate on HTML5 Canvas for other participants
     async function generateCustomCertificate() {
       try {
         const canvas = document.createElement("canvas");
@@ -211,14 +203,14 @@ function GandhiCertificateCanvas({
           try {
             await document.fonts.ready;
           } catch {
-            // Proceed if font loading promise fails
+            // Proceed
           }
         }
 
         // 3. Draw Runner Name in Cursive Calligraphy
         ctx.textAlign = "center";
         ctx.textBaseline = "alphabetic";
-        ctx.fillStyle = "#0d2130"; // deep midnight navy
+        ctx.fillStyle = "#0d2130";
         ctx.font = "60px 'Alex Brush', 'Great Vibes', cursive";
         ctx.fillText(data.runnerName, 502, 328);
 
@@ -261,7 +253,6 @@ function GandhiCertificateCanvas({
         }
       } catch (err) {
         console.warn("Client canvas certificate synthesis notice:", err);
-        setRenderedImageUrl(initialImgSrc);
       }
     }
 
@@ -270,272 +261,175 @@ function GandhiCertificateCanvas({
     return () => {
       isCancelled = true;
     };
-  }, [data, isDirectImage, isKampitRecord, initialImgSrc]);
+  }, [data, isKampitRecord]);
 
   const displayImage = renderedImageUrl || initialImgSrc;
 
+  const handleGandhiDownload = async () => {
+    try {
+      const filename = `MountainRun-GandhiJayanti-Certificate-${data.bibNumber || data.certificateNumber || "Finisher"}.png`;
+      if (displayImage.startsWith("data:")) {
+        const link = document.createElement("a");
+        link.download = filename;
+        link.href = displayImage;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      }
+      const res = await fetch(displayImage);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.download = filename;
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.warn("Direct download fallback:", err);
+      onDownload();
+    }
+  };
+
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
-      {/* ── Main Certificate Showcase Container ── */}
-      <article
-        ref={certRef}
+    <div className={`w-full mx-auto space-y-6 transition-all duration-300 ${viewMode === "portrait" ? "max-w-xl" : "max-w-4xl"}`}>
+      {/* ── Direct Hero Certificate (Clean Centerpiece without Nested Frames) ── */}
+      <div
+        ref={certRef as React.RefObject<HTMLDivElement>}
         id="certificate-print"
-        className={`relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-2xl transition-all mx-auto border-2 sm:border-3 border-[#c9a227] bg-[#fcfaf5] ${
-          viewMode === "portrait" ? "max-w-lg" : "max-w-4xl"
-        }`}
+        className="relative group rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 hover:shadow-[0_25px_65px_rgba(0,0,0,0.6)] cursor-pointer bg-white"
+        onClick={() => setIsModalOpen(true)}
         style={{
-          boxShadow: "0 22px 55px rgba(13,56,41,0.22), 0 0 0 1px rgba(201,162,39,0.4)",
+          boxShadow: "0 22px 55px rgba(0,0,0,0.45), 0 0 0 1px rgba(201,162,39,0.35)",
         }}
       >
-        {/* Top Indian Tricolor Strip */}
-        <div className="flex h-1.5 sm:h-2 w-full">
-          <div className="flex-1 bg-[#FF9933]" />
-          <div className="flex-1 bg-white" />
-          <div className="flex-1 bg-[#138808]" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={displayImage}
+          alt={`Official Certificate of Participation — ${data.runnerName}`}
+          className="w-full h-auto block select-none"
+        />
+
+        {/* Hover zoom hint */}
+        <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+          <span className="px-5 py-2.5 rounded-full bg-black/85 text-[#e5b83b] text-xs sm:text-sm font-bold shadow-2xl backdrop-blur-xs flex items-center gap-2 border border-[#c9a227]/50">
+            🔍 Click to View Fullscreen / Zoom
+          </span>
         </div>
+      </div>
 
-        {/* ── Brand Header (Matching Email Design) ── */}
-        <div className="px-4 sm:px-8 py-3.5 sm:py-4 bg-gradient-to-b from-[#f7f3e8] to-[#fcfaf5] border-b border-[#d9cdb0]/80">
-          <div className="grid grid-cols-3 items-center gap-2">
-            {/* Left: National Tribute */}
-            <div className="text-left">
-              <p className="text-[0.55rem] sm:text-xs font-black tracking-widest uppercase text-[#e67300] leading-tight">
-                NATIONAL TRIBUTE
-              </p>
-              <p className="text-[0.5rem] sm:text-[0.65rem] font-extrabold tracking-wider uppercase text-[#138808] leading-tight mt-0.5">
-                GANDHI JAYANTI 2026
-              </p>
-            </div>
+      {/* ── Primary Action Buttons Directly Below Certificate ── */}
+      <div className="flex flex-wrap items-center justify-center gap-3 pt-1 print:hidden">
+        <button
+          type="button"
+          onClick={handleGandhiDownload}
+          disabled={isDownloading}
+          className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-[#0d3829] to-[#134e3a] border-2 border-[#c9a227] text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-75"
+        >
+          {isDownloading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Preparing PNG...</span>
+            </>
+          ) : (
+            <>
+              <span>🏆</span>
+              <span>DOWNLOAD HIGH-RES CERTIFICATE (PNG)</span>
+            </>
+          )}
+        </button>
 
-            {/* Center: Mountain Run Logo & Tagline */}
-            <div className="text-center flex flex-col items-center">
-              <span className="text-lg sm:text-2xl leading-none">⛰️</span>
-              <p
-                className="text-xs sm:text-lg font-black uppercase tracking-wider text-[#0d3829] leading-tight mt-0.5"
-                style={{ fontFamily: "'Cinzel', Georgia, serif" }}
-              >
-                MOUNTAIN <span className="text-[#d97706]">RUN</span>
-              </p>
-              <p className="text-[0.4rem] sm:text-[0.55rem] font-bold uppercase tracking-[0.2em] text-[#7a6e5a] mt-0.5">
-                RUN &bull; RIDE &bull; WALK &bull; EXPLORE
-              </p>
-            </div>
+        <button
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+          className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 border-2 border-white/20 text-white font-bold text-xs sm:text-sm tracking-wide shadow-md transition-all cursor-pointer"
+        >
+          <span>🔍</span>
+          <span>VIEW FULLSCREEN</span>
+        </button>
 
-            {/* Right: Fit India Campaign */}
-            <div className="text-right">
-              <p className="text-[0.55rem] sm:text-xs font-black tracking-widest uppercase text-[#0d3829] leading-tight">
-                FIT INDIA
-              </p>
-              <p className="text-[0.5rem] sm:text-[0.65rem] font-extrabold tracking-wider uppercase text-[#c9a227] leading-tight mt-0.5">
-                HEALTHY INDIA
-              </p>
-              <p className="text-[0.45rem] sm:text-[0.55rem] font-medium tracking-wide uppercase text-[#7a6e5a] hidden sm:block">
-                STRONGER TOMORROW
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Finisher Greeting Hero Banner ── */}
-        <div className="px-4 sm:px-8 py-4 sm:py-6 text-center bg-[#fcfaf5]">
-          <div className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-1 rounded-full bg-[#eef6f0] border border-[#c2e2c9] text-[#0d3829] text-[0.65rem] sm:text-xs font-black tracking-wider uppercase mb-2 sm:mb-3 shadow-xs">
-            <span>✓</span> OFFICIAL CREDENTIAL ISSUED &bull; VERIFIED FINISHER
-          </div>
-
-          <h2
-            className="text-xl sm:text-3xl lg:text-4xl font-black text-[#0d3829] leading-tight"
-            style={{ fontFamily: "'Cinzel', Georgia, serif" }}
-          >
-            Congratulations, {data.runnerName}!
-          </h2>
-          <p className="text-xs sm:text-sm text-[#4a4235] mt-1.5 max-w-lg mx-auto leading-relaxed">
-            Your official Certificate of Participation for the{" "}
-            <strong className="text-[#0d3829]">Gandhi Jayanti Victory Run 2026</strong> has been verified, authenticated, and generated.
-          </p>
-        </div>
-
-        {/* ── Official Master Graphic Certificate Showcase Frame (Deep Forest Green #0d3829) ── */}
-        <div className="p-3.5 sm:p-7 bg-[#0d3829] text-center border-y-2 border-[#c9a227]/40 shadow-inner">
-          <p className="text-[0.65rem] sm:text-xs font-black uppercase tracking-[0.2em] text-[#e5b83b] mb-2.5 sm:mb-3 flex items-center justify-center gap-1.5">
-            <span>★</span> OFFICIAL VERIFIED E-CERTIFICATE <span>★</span>
-          </p>
-
-          {/* Master Certificate Image Frame with Gold Border & Hover Elevation */}
-          <div
-            onClick={() => setIsModalOpen(true)}
-            className="group relative cursor-pointer rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 border-[#c9a227] shadow-2xl bg-white max-w-3xl mx-auto transition-transform duration-300 hover:scale-[1.01]"
-            style={{
-              boxShadow: "0 18px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,162,39,0.5)",
-            }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={displayImage}
-              alt={`Official Finisher Certificate — ${data.runnerName}`}
-              className="w-full h-auto block select-none"
-            />
-            {/* Hover overlay hint */}
-            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-              <span className="px-4 py-2 rounded-full bg-black/80 text-[#e5b83b] text-xs font-bold shadow-lg backdrop-blur-xs flex items-center gap-1.5">
-                🔍 Click to Zoom &amp; View Fullscreen
-              </span>
-            </div>
-          </div>
-
-          <p className="text-[0.65rem] sm:text-xs text-[#e5b83b] font-bold mt-2.5 sm:mt-3 flex items-center justify-center gap-1">
-            <span>👆</span> Click certificate image to open full resolution &amp; zoom
-          </p>
-        </div>
-
-        {/* ── Primary Action Buttons ── */}
-        <div className="p-4 sm:p-6 bg-[#f7f3e8] border-b border-[#d9cdb0] flex flex-wrap items-center justify-center gap-3 print:hidden">
+        {onShare && (
           <button
             type="button"
-            onClick={onDownload}
-            disabled={isDownloading}
-            className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-[#0d3829] to-[#134e3a] border-2 border-[#c9a227] text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-75"
+            onClick={onShare}
+            className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-full bg-white/5 hover:bg-white/10 border-2 border-white/15 text-white/90 font-bold text-xs sm:text-sm shadow-sm transition-all cursor-pointer"
           >
-            {isDownloading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Preparing PNG...</span>
-              </>
-            ) : (
-              <>
-                <span>🏆</span>
-                <span>DOWNLOAD HIGH-RES CERTIFICATE (PNG)</span>
-              </>
-            )}
+            <span>{copied ? "✓ Copied Link!" : "🔗 Share Certificate"}</span>
           </button>
+        )}
+      </div>
 
-          <a
-            href={displayImage}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-full bg-white border-2 border-[#b5a484] text-[#0d3829] font-extrabold text-xs sm:text-sm tracking-wide shadow-md hover:bg-[#fcfaf5] hover:scale-105 active:scale-95 transition-all"
-          >
-            <span>🔍</span>
-            <span>OPEN FULL RESOLUTION</span>
-          </a>
-
-          {onShare && (
-            <button
-              type="button"
-              onClick={onShare}
-              className="inline-flex items-center gap-2 px-4 sm:px-5 py-3 rounded-full bg-white/80 border-2 border-[#d9cdb0] text-[#0d3829] font-bold text-xs sm:text-sm shadow-sm hover:bg-white transition-all cursor-pointer"
-            >
-              <span>{copied ? "✓ Copied!" : "🔗 Share Credential"}</span>
-            </button>
-          )}
+      {/* ── Official Athlete Credential Summary Card ── */}
+      <div className="rounded-2xl border border-white/15 bg-white/5 backdrop-blur-md overflow-hidden shadow-xl">
+        <div className="bg-white/10 px-4 sm:px-6 py-3 border-b border-white/10 flex items-center justify-between">
+          <p className="text-[0.65rem] sm:text-xs font-black uppercase tracking-wider text-[#e5b83b] flex items-center gap-2">
+            <span>📝</span> OFFICIAL CREDENTIAL VERIFICATION
+          </p>
+          <span className="text-[0.65rem] sm:text-xs font-mono text-white/80">
+            ID: <strong className="text-white font-bold">{data.certificateNumber}</strong>
+          </span>
         </div>
 
-        {/* ── Official Athlete Credential Summary Card ── */}
-        <div className="p-4 sm:p-6 bg-[#f7f3e8]">
-          <div className="rounded-xl border-2 border-[#d9cdb0] bg-white overflow-hidden shadow-sm">
-            <div className="bg-[#f2ede2] px-4 py-2.5 border-b border-[#d9cdb0]">
-              <p className="text-[0.6rem] sm:text-xs font-black uppercase tracking-wider text-[#0d3829] flex items-center gap-1.5">
-                <span>📝</span> OFFICIAL CREDENTIAL SUMMARY
-              </p>
-            </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-white/10 text-center">
+          <div className="p-3.5 sm:p-5">
+            <p className="text-[0.55rem] sm:text-[0.65rem] font-bold uppercase tracking-wider text-white/60">ATHLETE</p>
+            <p className="text-xs sm:text-base font-black text-white mt-1 truncate">{data.runnerName}</p>
+          </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#d9cdb0] text-center">
-              {/* Athlete */}
-              <div className="p-3 sm:p-4">
-                <p className="text-[0.55rem] sm:text-[0.65rem] font-extrabold uppercase tracking-wider text-[#7a6e5a]">
-                  ATHLETE
-                </p>
-                <p className="text-xs sm:text-sm font-black text-[#0d3829] mt-0.5 truncate">
-                  {data.runnerName}
-                </p>
-              </div>
+          <div className="p-3.5 sm:p-5">
+            <p className="text-[0.55rem] sm:text-[0.65rem] font-bold uppercase tracking-wider text-white/60">BIB NUMBER</p>
+            <p className="text-xs sm:text-base font-black text-[#e5b83b] mt-1 font-mono">{data.bibNumber}</p>
+          </div>
 
-              {/* Bib */}
-              <div className="p-3 sm:p-4">
-                <p className="text-[0.55rem] sm:text-[0.65rem] font-extrabold uppercase tracking-wider text-[#7a6e5a]">
-                  BIB NUMBER
-                </p>
-                <p className="text-xs sm:text-sm font-black text-[#0d3829] mt-0.5 font-mono">
-                  {data.bibNumber}
-                </p>
-              </div>
+          <div className="p-3.5 sm:p-5">
+            <p className="text-[0.55rem] sm:text-[0.65rem] font-bold uppercase tracking-wider text-white/60">DISTANCE</p>
+            <p className="text-xs sm:text-base font-black text-white mt-1">{data.distance}</p>
+          </div>
 
-              {/* Distance */}
-              <div className="p-3 sm:p-4">
-                <p className="text-[0.55rem] sm:text-[0.65rem] font-extrabold uppercase tracking-wider text-[#7a6e5a]">
-                  DISTANCE
-                </p>
-                <p className="text-xs sm:text-sm font-black text-[#0d3829] mt-0.5">
-                  {data.distance}
-                </p>
-              </div>
-
-              {/* Time */}
-              <div className="p-3 sm:p-4">
-                <p className="text-[0.55rem] sm:text-[0.65rem] font-extrabold uppercase tracking-wider text-[#7a6e5a]">
-                  FINISH TIME
-                </p>
-                <p className="text-xs sm:text-sm font-black text-[#0d3829] mt-0.5 font-mono">
-                  {formatFinishTime(data.finishTimeSeconds)}
-                </p>
-              </div>
-            </div>
-
-            {/* Footer with Certificate ID & Issued */}
-            <div className="bg-[#faf7f0] px-4 py-2 border-t border-[#d9cdb0] text-center">
-              <p className="text-[0.55rem] sm:text-xs font-mono text-[#7a6e5a]">
-                CERTIFICATE ID: <strong className="text-[#0d3829] font-black">{data.certificateNumber}</strong> &nbsp;&bull;&nbsp; ISSUED:{" "}
-                <strong className="text-[#0d3829]">{formatIssuedAt(data.issuedAt)}</strong>
-              </p>
-            </div>
+          <div className="p-3.5 sm:p-5">
+            <p className="text-[0.55rem] sm:text-[0.65rem] font-bold uppercase tracking-wider text-white/60">FINISH TIME</p>
+            <p className="text-xs sm:text-base font-black text-white mt-1 font-mono">
+              {formatFinishTime(data.finishTimeSeconds)}
+            </p>
           </div>
         </div>
 
-        {/* ── Heavyweight 3D Gandhi Medal Dispatch Update ── */}
-        <div className="px-4 sm:px-6 pb-6 bg-[#f7f3e8]">
-          <div className="rounded-xl border-2 border-[#c9a227] bg-gradient-to-r from-[#0d3829] to-[#061c14] p-3.5 sm:p-4 text-white shadow-md flex items-center gap-3 sm:gap-4">
-            <div className="text-2xl sm:text-3xl shrink-0 p-1.5 rounded-full bg-white/10 border border-[#c9a227]">
-              🎖️
-            </div>
-            <div className="min-w-0">
-              <p className="text-[0.65rem] sm:text-xs font-black uppercase tracking-wider text-[#e5b83b] leading-tight">
-                ANTIQUE BRONZE FINISHER MEDAL &bull; FREE DOORSTEP DELIVERY
-              </p>
-              <p className="text-[0.6rem] sm:text-xs text-[#fdfaf3]/90 leading-relaxed mt-0.5">
-                Your heavy 3D antique bronze finisher medal with custom tricolor ribbon is being prepared. Tracking ID will be emailed upon dispatch!
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Official Verified Digital Credential Footer ── */}
-        <div className="bg-[#0d3829] py-3.5 px-4 text-center">
-          <p className="text-[0.55rem] sm:text-[0.65rem] font-bold uppercase tracking-widest text-white/85">
-            OFFICIAL VERIFIED DIGITAL CREDENTIAL &bull; MOUNTAIN RUN INDIA
-          </p>
-          <p className="text-[0.5rem] sm:text-[0.6rem] text-white/50 mt-0.5">
-            &copy; 2026 Mountain Run. All rights reserved. &bull; mountainrun.in
+        <div className="bg-black/20 px-4 sm:px-6 py-2.5 border-t border-white/10 text-center">
+          <p className="text-[0.6rem] sm:text-xs text-white/60 font-mono">
+            ISSUED: <strong className="text-white font-bold">{formatIssuedAt(data.issuedAt)}</strong> &nbsp;•&nbsp; ORGANIZER:{" "}
+            <strong className="text-white font-bold">MOUNTAIN RUN INDIA</strong>
           </p>
         </div>
+      </div>
 
-        {/* Bottom Indian Tricolor Strip */}
-        <div className="flex h-1 sm:h-1.5 w-full">
-          <div className="flex-1 bg-[#FF9933]" />
-          <div className="flex-1 bg-white" />
-          <div className="flex-1 bg-[#138808]" />
+      {/* ── Finisher Medal Delivery Update Card ── */}
+      <div className="rounded-2xl border border-[#c9a227]/40 bg-gradient-to-r from-[#0d3829] to-[#061c14] p-4 sm:p-5 text-white shadow-xl flex items-center gap-3 sm:gap-5">
+        <div className="text-3xl sm:text-4xl shrink-0 p-2 rounded-full bg-white/10 border border-[#c9a227]">
+          🎖️
         </div>
-      </article>
+        <div className="min-w-0">
+          <p className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#e5b83b] leading-tight">
+            ANTIQUE BRONZE FINISHER MEDAL • FREE DOORSTEP DELIVERY
+          </p>
+          <p className="text-[0.65rem] sm:text-xs text-white/85 leading-relaxed mt-1">
+            Your physical antique bronze finisher medal with custom Gandhi Jayanti tricolor ribbon is being prepared. Courier tracking updates will be emailed upon dispatch!
+          </p>
+        </div>
+      </div>
 
       {/* ── Fullscreen Zoom Lightbox Modal ── */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 print:hidden"
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 print:hidden"
           onClick={() => setIsModalOpen(false)}
         >
           <div className="relative max-w-5xl w-full max-h-[92vh] flex flex-col items-center">
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="absolute -top-10 right-0 text-white hover:text-[#e5b83b] text-sm font-bold flex items-center gap-1.5 cursor-pointer bg-white/10 px-3.5 py-1.5 rounded-full border border-white/20 transition-all hover:bg-white/20"
+              className="absolute -top-11 right-0 text-white hover:text-[#e5b83b] text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-full border border-white/20 transition-all"
             >
               ✕ Close
             </button>
@@ -543,29 +437,20 @@ function GandhiCertificateCanvas({
             <img
               src={displayImage}
               alt={`Full Resolution Certificate — ${data.runnerName}`}
-              className="max-h-[82vh] w-auto max-w-full rounded-xl shadow-2xl border-2 sm:border-3 border-[#c9a227] object-contain"
+              className="max-h-[82vh] w-auto max-w-full rounded-2xl shadow-2xl border-2 border-[#c9a227] object-contain"
               onClick={(e) => e.stopPropagation()}
             />
-            <div className="mt-3.5 flex items-center gap-3">
+            <div className="mt-4 flex items-center gap-3">
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDownload();
+                  void handleGandhiDownload();
                 }}
                 className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#0d3829] to-[#134e3a] border-2 border-[#c9a227] text-white text-xs sm:text-sm font-bold hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-lg"
               >
-                🏆 Download High-Res PNG
+                🏆 Download PNG
               </button>
-              <a
-                href={displayImage}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="px-5 py-2.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs sm:text-sm font-bold border border-white/30 transition-all shadow-md"
-              >
-                🔗 Open in New Tab
-              </a>
             </div>
           </div>
         </div>
@@ -631,33 +516,27 @@ export default function CertificateVerifyPage() {
 
   async function handleDownloadImage() {
     let directImgUrl: string | null = null;
+    const isGandhi = Boolean(data?.event?.toLowerCase().includes("gandhi"));
+    const isKampit = Boolean(
+      data?.certificateNumber === "MR-2026-GJVR-109452" ||
+        data?.bibNumber === "GJVR-109452" ||
+        (data?.runnerName && data.runnerName.toLowerCase().includes("kampit")),
+    );
 
-    if (data?.event.toLowerCase().includes("gandhi")) {
-      const isDirectImage = Boolean(
-        data.pdfUrl &&
-          (data.pdfUrl.startsWith("http://") || data.pdfUrl.startsWith("https://")) &&
-          (data.pdfUrl.includes("cloudinary.com") ||
-            data.pdfUrl.endsWith(".png") ||
-            data.pdfUrl.endsWith(".jpg") ||
-            data.pdfUrl.endsWith(".jpeg") ||
-            data.pdfUrl.endsWith(".webp")),
-      );
-      if (isDirectImage) {
-        directImgUrl = data.pdfUrl!;
-      } else if (
-        data.certificateNumber === "MR-2026-GJVR-109452" ||
-        data.bibNumber === "GJVR-109452" ||
-        (data.runnerName && data.runnerName.toLowerCase().includes("kampit"))
-      ) {
+    if (isGandhi) {
+      if (isKampit) {
         directImgUrl = "/images/certificates/gandhi-kampit-cert.png";
+      } else if (
+        data?.pdfUrl &&
+        !data.pdfUrl.includes("cloudinary.com") &&
+        (data.pdfUrl.endsWith(".png") || data.pdfUrl.endsWith(".jpg") || data.pdfUrl.endsWith(".webp"))
+      ) {
+        directImgUrl = data.pdfUrl;
       }
     } else if (
       data?.pdfUrl &&
-      (data.pdfUrl.includes("cloudinary.com") ||
-        data.pdfUrl.endsWith(".png") ||
-        data.pdfUrl.endsWith(".jpg") ||
-        data.pdfUrl.endsWith(".jpeg") ||
-        data.pdfUrl.endsWith(".webp"))
+      !data.pdfUrl.includes("cloudinary.com") &&
+      (data.pdfUrl.endsWith(".png") || data.pdfUrl.endsWith(".jpg") || data.pdfUrl.endsWith(".webp"))
     ) {
       directImgUrl = data.pdfUrl;
     }
@@ -670,16 +549,14 @@ export default function CertificateVerifyPage() {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `MountainRun-${data?.bibNumber || "Certificate"}.png`;
+        link.download = `MountainRun-Certificate-${data?.bibNumber || "Finisher"}.png`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
         return;
       } catch (err) {
-        console.warn("Direct fetch download failed, opening in new window:", err);
-        window.open(directImgUrl, "_blank");
-        return;
+        console.warn("Direct image fetch download error:", err);
       } finally {
         setIsDownloading(false);
       }
@@ -715,7 +592,7 @@ export default function CertificateVerifyPage() {
 
   return (
     <PageShell footerMode="minimal">
-      <section className="section py-6 sm:py-8">
+      <section className="section pt-24 sm:pt-32 pb-12 sm:pb-16">
         <div className="container-page max-w-5xl">
           {/* Header controls (hidden on print) */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 print:hidden">

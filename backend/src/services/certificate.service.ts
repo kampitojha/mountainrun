@@ -519,13 +519,12 @@ export function buildGandhiJayantiCertificateEmailHtml(data: CertificateRenderDa
               <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;">
                 <tr>
                   <td align="center">
-                    <!-- Download PNG Button -->
-                    <a href="${certificateImgUrl}"
+                    <!-- View & Download Certificate Button -->
+                    <a href="${escapeHtml(data.verifyUrl)}"
                        target="_blank"
-                       download="MountainRun_Gandhi_Jayanti_Certificate_${escapeHtml(data.bibNumber)}.png"
                        class="cta-button"
                        style="display:inline-block;background:linear-gradient(135deg, ${DARK_GREEN} 0%, ${ACCENT_GREEN} 100%);color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:50px;font-size:13px;font-weight:900;letter-spacing:0.06em;border:2px solid ${GOLD};box-shadow:0 6px 18px rgba(13,56,41,0.28);margin:0 6px 8px;">
-                      &#127942; &nbsp;DOWNLOAD HIGH-RES CERTIFICATE (PNG)
+                      &#127942; &nbsp;VIEW &amp; DOWNLOAD CERTIFICATE (PNG)
                     </a>
 
                     <!-- Verify Online Button -->
