@@ -96,8 +96,8 @@ function getInitialEvents(querySlug?: string | null): RegisterEventOption[] {
     ? openEvents
     : [
         {
-          label: "Gandhi Jayanti Victory Run 2026",
-          value: "gandhi-jayanti-victory-run-2026",
+          label: "National Unity Day Virtual Run 2026",
+          value: "national-unity-day-2026",
           amount: "₹449",
           distances: ["1.6 km", "3.2 km", "5 km", "10 km", "21 km"],
           activityTypes: ["running", "cycling", "walking"],
@@ -220,7 +220,7 @@ function PaymentRegistrationFormInner() {
     if (eventFromQuery && list.some((e) => e.value === eventFromQuery)) {
       return eventFromQuery;
     }
-    return list[0]?.value || "gandhi-jayanti-victory-run-2026";
+    return list[0]?.value || "national-unity-day-2026";
   });
   const [selectedDistance, setSelectedDistance] = useState(distanceFromQuery || "");
   const [selectedActivity, setSelectedActivity] = useState("running");

@@ -41,6 +41,40 @@ export type PublicEvent = {
 
 export const allPublicEvents: PublicEvent[] = [
   {
+    name: "National Unity Day Virtual Run 2026",
+    slug: "national-unity-day-2026",
+    date: "31 Oct – 5 Nov 2026",
+    distance: "1.6 km / 3.2 km / 5 km / 10 km / 21 km",
+    price: "Rs. 449",
+    description:
+      "Celebrate National Unity Day (Rashtriya Ekta Diwas) with India's premier virtual fitness challenge — the National Unity Day Virtual Run 2026! Walk, run, or cycle anywhere across India between 31st October to 5th November. Honor the indomitable legacy of Iron Man Sardar Vallabhbhai Patel under the inspiring motto 'Different Paths • Same Nation • Stronger Together'. Choose your distance, record your GPS activity, and earn the exclusive heavyweight 3D antique bronze Sardar Patel & Statue of Unity Finisher Medal, official Mountain Run ribbon, verified digital certificate, and special event Dri-Fit T-Shirt for Top 3 in each category delivered straight to your doorstep with free pan-India shipping!",
+    highlight: "Different Paths • Same Nation • Stronger Together · Limited Edition 3D Bronze Finisher Medal!",
+    banner: "Open event",
+    bannerImageUrl:
+      "https://res.cloudinary.com/yppcqzt6/image/upload/v1791197322/mountainrun/banners/national_unity_day_2026_cinematic_poster.jpg",
+    medalImageUrl:
+      "https://res.cloudinary.com/yppcqzt6/image/upload/v1791197317/mountainrun/medals/national_unity_day_2026_front_back_medal.jpg",
+    reward: "Heavyweight 3D Finisher Medal & E-Certificate",
+    status: "upcoming",
+    compareAtPrice: "Rs. 500",
+    activityTypes: ["running", "cycling", "walking"],
+    finishers: 0,
+    verifiedResults: 0,
+    cities: 0,
+    startsAt: "2026-10-31T00:00:00+05:30",
+    endsAt: "2026-11-05T23:59:59+05:30",
+    benefits: [
+      "Exclusive Heavyweight 3D Antique Bronze Sardar Patel & Statue of Unity Finisher Medal",
+      "Mountain Run Official Custom Woven Neck Ribbon",
+      "Special Dri-Fit Event T-Shirt for Top 3 Finishers in Each Category",
+      "Free All-India Doorstep Courier Delivery",
+      "Personalized Digital E-Certificate with Instant QR Verification",
+      "GPS Proof Tracking with Strava, Nike Run Club, Garmin & Any Fitness App",
+      "All-India Live Leaderboard Ranking Across 5 Distance Categories",
+      "WhatsApp Athletes Community Group & Regular Race Updates",
+    ],
+  },
+  {
     name: "Gandhi Jayanti Victory Run 2026",
     slug: "gandhi-jayanti-victory-run-2026",
     date: "2-6 Oct 2026",
