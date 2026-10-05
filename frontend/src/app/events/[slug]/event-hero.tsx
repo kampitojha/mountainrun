@@ -126,7 +126,9 @@ export function EventHero({ event, isPast }: { event: PublicEvent; isPast: boole
                       <img
                         src={medalImg}
                         alt={`${event.name} Finisher Medal`}
-                        className="max-h-[220px] xs:max-h-[270px] sm:max-h-[340px] w-full max-w-full rounded-xl object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.95)]"
+                        loading="eager"
+                        decoding="async"
+                        className="max-h-[260px] xs:max-h-[310px] sm:max-h-[380px] w-full max-w-full rounded-xl object-contain drop-shadow-[0_20px_35px_rgba(0,0,0,0.95)]"
                       />
                       <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap">
                         <span className="glass-pill inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[0.65rem] font-bold text-white shadow-lg backdrop-blur-md">
@@ -141,7 +143,7 @@ export function EventHero({ event, isPast }: { event: PublicEvent; isPast: boole
                   <div className="mt-3 grid grid-cols-2 gap-1.5 border-t border-(--line) pt-2 text-center text-[0.65rem]">
                     <div className="rounded-lg border border-(--line) bg-(--panel-soft) py-1 px-1">
                       <p className="font-black text-(--gold)">Solid Heavy Metal</p>
-                      <p className="text-[0.6rem] text-(--muted)">3D Antique Gold</p>
+                      <p className="text-[0.6rem] text-(--muted)">3D Antique Bronze</p>
                     </div>
                     <div className="rounded-lg border border-(--line) bg-(--panel-soft) py-1 px-1">
                       <p className="font-black text-(--gold)">Custom Engraved</p>

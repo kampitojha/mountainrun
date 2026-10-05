@@ -53,7 +53,7 @@ export const allPublicEvents: PublicEvent[] = [
     bannerImageUrl:
       "https://res.cloudinary.com/yppcqzt6/image/upload/v1791197322/mountainrun/banners/national_unity_day_2026_cinematic_poster.jpg",
     medalImageUrl:
-      "https://res.cloudinary.com/yppcqzt6/image/upload/v1791197317/mountainrun/medals/national_unity_day_2026_front_back_medal.jpg",
+      "https://res.cloudinary.com/yppcqzt6/image/upload/v1791198647/mountainrun/medals/national_unity_day_2026_front_back_medal.jpg",
     reward: "Heavyweight 3D Finisher Medal & E-Certificate",
     status: "upcoming",
     compareAtPrice: "Rs. 500",
