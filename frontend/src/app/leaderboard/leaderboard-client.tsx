@@ -49,6 +49,7 @@ type EventOption = {
   slug: string;
   name: string;
   distances?: string[];
+  isUpcoming?: boolean;
 };
 
 function parseKm(distStr: string): number {
@@ -247,6 +248,7 @@ export function LeaderboardClient({
     allPublicEvents.map((e) => ({
       slug: e.slug,
       name: e.name,
+      isUpcoming: e.status === "upcoming" || e.slug === "national-unity-day-2026",
       distances: e.distance
         ? e.distance.split("/").map((d) => d.trim()).filter(Boolean)
         : ["1.5 km", "1.6 km", "3 km", "5 km", "10 km", "21 km"],
@@ -254,7 +256,7 @@ export function LeaderboardClient({
   );
 
   const [selectedSlug, setSelectedSlug] = useState<string>(
-    initialSlug || initialEventParam || allPublicEvents[0]?.slug || "sports-day-celebration",
+    initialSlug || initialEventParam || "gandhi-jayanti-victory-run-2026",
   );
   const [selectedDistance, setSelectedDistance] = useState<string>(
     initialDistance || initialDistanceParam || "5 km",
@@ -310,12 +312,14 @@ export function LeaderboardClient({
         slug: string;
         title: string;
         distances: string[];
+        phase?: string;
       }>;
       if (list.length > 0) {
         const mapped = list.map((e) => ({
           id: e.id,
           slug: e.slug,
           name: e.title,
+          isUpcoming: e.phase === "upcoming" || e.slug === "national-unity-day-2026",
           distances: e.distances?.length
             ? e.distances
             : ["1.5 km", "1.6 km", "3 km", "5 km", "10 km", "21 km"],
@@ -486,7 +490,7 @@ export function LeaderboardClient({
                 >
                   {events.map((ev) => (
                     <option key={ev.slug} value={ev.slug}>
-                      {ev.name}
+                      {ev.name}{ev.isUpcoming ? " (Upcoming · Starts 31 Oct)" : ""}
                     </option>
                   ))}
                 </select>

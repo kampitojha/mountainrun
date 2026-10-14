@@ -44,6 +44,14 @@ import {
   adminUpdateRegistration,
   adminUpdateUserRole,
   adminBulkUploadTracking,
+  adminCreateManualRegistration,
+  adminDispatchMedalEmail,
+  adminSubmitManualProof,
+  adminGetLeaderboardManager,
+  adminUpdateLeaderboardEntry,
+  adminGetTshirtManager,
+  adminUpdateTshirtSize,
+  adminSendTshirtReminderEmail,
 } from "../controllers/admin.controller.js";
 import { requireAdmin, requireClerkAuth } from "../middleware/clerk-auth.js";
 import { asyncHandler } from "../utils/async-handler.js";
@@ -111,3 +119,13 @@ adminRouter.delete("/coupons/:id", asyncHandler(adminDeleteCoupon));
 
 adminRouter.get("/subscribers", asyncHandler(adminListSubscribers));
 adminRouter.post("/newsletter/send", asyncHandler(adminSendNewsletter));
+
+// ── Organizer Command Center Hub Routes ───────────────────────
+adminRouter.post("/manual-registration", asyncHandler(adminCreateManualRegistration));
+adminRouter.post("/medals/dispatch-email", asyncHandler(adminDispatchMedalEmail));
+adminRouter.post("/manual-proof", asyncHandler(adminSubmitManualProof));
+adminRouter.get("/leaderboard-manager", asyncHandler(adminGetLeaderboardManager));
+adminRouter.patch("/leaderboard-manager/:id", asyncHandler(adminUpdateLeaderboardEntry));
+adminRouter.get("/tshirts", asyncHandler(adminGetTshirtManager));
+adminRouter.patch("/tshirts/:id", asyncHandler(adminUpdateTshirtSize));
+adminRouter.post("/tshirts/send-reminder", asyncHandler(adminSendTshirtReminderEmail));

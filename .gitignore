@@ -76,7 +76,9 @@ env/
 *.backup
 *.jsonl
 *_results.json
-*dispatch_results*.json
+*_log.json
+*dispatch_*.json
+top3_*.json
 *broadcast_results*.json
 *-preview.html
 *-preview*.html

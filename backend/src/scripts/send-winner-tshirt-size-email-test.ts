@@ -12,7 +12,9 @@ export function buildWinnerTshirtEmailHtml(payload: {
   shippingAddress: string;
   recipientEmail: string;
   claimUrl?: string;
+  eventName?: string;
 }) {
+  const eventName = payload.eventName || "Sports Day Celebration 2026";
   const claimLink =
     payload.claimUrl || `https://mountainrun.in/claim-jersey?bib=${encodeURIComponent(payload.bibNumber)}`;
   return `
@@ -37,7 +39,7 @@ export function buildWinnerTshirtEmailHtml(payload: {
           <tr>
             <td style="background: linear-gradient(90deg, #f59e0b, #eab308, #10b981); padding: 8px 16px; text-align: center;">
               <p style="margin: 0; font-size: 11px; font-weight: 800; color: #000000; letter-spacing: 1.5px; text-transform: uppercase;">
-                🏆 OFFICIAL PODIUM WINNER &bull; SPORTS DAY CELEBRATION 2026
+                🏆 OFFICIAL PODIUM WINNER &bull; ${eventName.toUpperCase()}
               </p>
             </td>
           </tr>
@@ -72,7 +74,7 @@ export function buildWinnerTshirtEmailHtml(payload: {
                 </span>
               </div>
               <h1 style="margin: 0 0 12px; font-size: 26px; font-weight: 900; line-height: 1.25; color: #ffffff; letter-spacing: -0.5px;">
-                You Placed in the <span style="color: #fbbf24;">Top 3</span> of <br>Sports Day Celebration 2026!
+                You Placed in the <span style="color: #fbbf24;">Top 3</span> of <br>${eventName}!
               </h1>
               <p style="margin: 0 auto; max-width: 480px; font-size: 14px; line-height: 1.6; color: #94a3b8;">
                 Dear <strong>${payload.runnerName}</strong>, your verified race submission has secured an official podium rank on the National Leaderboard. You have won an official <strong>Mountain Run DRI-FIT Running Jersey</strong>!

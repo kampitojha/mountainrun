@@ -259,7 +259,30 @@ export default function AdminOverviewPage() {
         </div>
       </div>
 
-      {/* ── FILTER TOOLBAR (Time Range & Event Filter) ───────── */}
+      {/* ── ORGANIZER HUB BANNER ── */}
+      <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/40 via-teal-950/30 to-transparent p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg">
+        <div className="flex items-start sm:items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center shrink-0">
+            <Sparkles className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="font-extrabold text-base text-(--foreground)">Organizer Command Center (9 Controls)</h2>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider">All-in-One</span>
+            </div>
+            <p className="text-xs text-(--muted) mt-0.5">
+              Quick access: Manual Registration, Certificate Fix, Tracking Email, Courier Excel, Event Settings, Leaderboard, Gallery, WhatsApp Proof, and T-Shirt Sizes.
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/admin/hub"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-900/40 shrink-0 cursor-pointer"
+        >
+          Open 9-in-1 Hub &rarr;
+        </Link>
+      </div>
+
       <div className="rounded-2xl border border-(--line) bg-(--panel) p-3 sm:p-4 shadow-xs">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           {/* Time Range Pills */}

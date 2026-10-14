@@ -19,7 +19,8 @@ import {
   buildCertificateEmailHtml,
   toCertificateRenderData,
 } from "../services/certificate.service.js";
-import { sendRegistrationConfirmationEmail } from "../services/email.service.js";
+import { sendRegistrationConfirmationEmail, sendMedalDispatchEmail } from "../services/email.service.js";
+import { createBibNumber } from "../services/bib.service.js";
 import { sendTelegramAlert } from "../services/alert.service.js";
 import { fetchPaymentsForOrder } from "../services/razorpay.service.js";
 import { ensureDefaultEvents } from "../services/event.service.js";
@@ -2246,3 +2247,602 @@ export async function adminResendRegistrationEmail(request: AuthenticatedRequest
     },
   });
 }
+
+// ── Shared helper for duration formatting ────────────────────
+function formatDurationSeconds(sec: number | null | undefined): string {
+  if (sec == null || sec <= 0) return "";
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+// ── 1. Manual Registration Controller ────────────────────────
+
+export const adminManualRegistrationSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  phone: z.string().min(8),
+  eventId: z.string().min(1),
+  distance: z.string().min(1),
+  activityType: z.string().optional().default("running"),
+  shippingName: z.string().optional(),
+  shippingPhone: z.string().optional(),
+  shippingLine1: z.string().min(3),
+  shippingLine2: z.string().optional().nullable(),
+  shippingCity: z.string().min(2),
+  shippingState: z.string().min(2),
+  shippingPincode: z.string().min(4),
+  amountInPaise: z.number().int().min(0).optional(),
+  adminNote: z.string().optional().nullable(),
+  sendEmail: z.boolean().optional().default(true),
+});
+
+export async function adminCreateManualRegistration(request: AuthenticatedRequest, response: Response) {
+  const payload = validateBody(adminManualRegistrationSchema, request);
+  const normalizedEmail = payload.email.toLowerCase().trim();
+
+  const event = await prisma.event.findUnique({
+    where: { id: payload.eventId },
+  });
+  if (!event) {
+    throw new ApiError(404, "Event not found");
+  }
+
+  // Upsert user
+  let user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+  if (user) {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        name: payload.name,
+        phone: payload.phone,
+      },
+    });
+  } else {
+    user = await prisma.user.create({
+      data: {
+        name: payload.name,
+        email: normalizedEmail,
+        phone: payload.phone,
+        role: "RUNNER",
+      },
+    });
+  }
+
+  // Check duplicate
+  const existing = await prisma.registration.findUnique({
+    where: {
+      userId_eventId_distance: {
+        userId: user.id,
+        eventId: event.id,
+        distance: payload.distance,
+      },
+    },
+  });
+  if (existing) {
+    throw new ApiError(409, `Runner is already registered for this event with BIB: ${existing.bibNumber}`);
+  }
+
+  // Generate unique bib
+  let bib = "";
+  for (let i = 0; i < 20; i++) {
+    const candidate = createBibNumber(event.slug);
+    const taken = await prisma.registration.findUnique({ where: { bibNumber: candidate } });
+    if (!taken) {
+      bib = candidate;
+      break;
+    }
+  }
+  if (!bib) {
+    throw new ApiError(500, "Failed to generate unique BIB");
+  }
+
+  const amountInPaise = payload.amountInPaise ?? event.priceInPaise;
+  const adminNote = payload.adminNote || `Manual payment of ₹${amountInPaise / 100} verified via admin panel on ${new Date().toISOString()}`;
+
+  const { registration, payment } = await prisma.$transaction(async (tx) => {
+    const reg = await tx.registration.create({
+      data: {
+        bibNumber: bib,
+        userId: user!.id,
+        eventId: event.id,
+        distance: payload.distance,
+        activityType: payload.activityType || "running",
+        status: "CONFIRMED",
+        proofStatus: "NOT_SUBMITTED",
+        shippingName: payload.shippingName || payload.name,
+        shippingPhone: payload.shippingPhone || payload.phone,
+        shippingLine1: payload.shippingLine1,
+        shippingLine2: payload.shippingLine2 || null,
+        shippingCity: payload.shippingCity,
+        shippingState: payload.shippingState,
+        shippingPincode: payload.shippingPincode,
+        adminNote,
+      },
+      include: { user: true, event: true },
+    });
+
+    const pay = await tx.payment.create({
+      data: {
+        registrationId: reg.id,
+        razorpayOrderId: `manual_${reg.id}_${Date.now()}`,
+        razorpayPaymentId: `manual_admin_${Date.now()}`,
+        amountInPaise,
+        status: "PAID",
+        paidAt: new Date(),
+      },
+    });
+
+    await tx.notification.create({
+      data: {
+        userId: user!.id,
+        channel: "email",
+        title: `Registration Confirmed — ${event.title}`,
+        body: `Your entry for ${event.title} (${payload.distance}) is confirmed with BIB ${bib}.`,
+      },
+    });
+
+    return { registration: reg, payment: pay };
+  });
+
+  let emailSent = false;
+  let emailId: string | undefined;
+  let emailError: string | undefined;
+
+  if (payload.sendEmail !== false) {
+    try {
+      const emailResult = await sendRegistrationConfirmationEmail({
+        to: normalizedEmail,
+        runnerName: registration.shippingName || user.name,
+        eventTitle: event.title,
+        distance: registration.distance,
+        bibNumber: bib,
+        amountInPaise,
+      });
+      emailSent = emailResult.sent;
+      emailId = emailResult.id;
+      emailError = emailResult.error;
+    } catch (e: any) {
+      emailError = e.message;
+    }
+  }
+
+  await writeAdminAudit(request, {
+    action: "registration.manual_create",
+    entityType: "Registration",
+    entityId: registration.id,
+    summary: `Manual registration for ${registration.shippingName} (${bib}) in ${event.title}`,
+  });
+
+  response.status(201).json({
+    message: "Registration created successfully",
+    data: {
+      registration,
+      payment,
+      bibNumber: bib,
+      emailSent,
+      emailId,
+      emailError,
+    },
+  });
+}
+
+// ── 3. Tracking ID Dispatch Email Controller ─────────────────
+
+const adminDispatchEmailSchema = z.object({
+  items: z.array(z.object({
+    bibNumber: z.string().optional(),
+    registrationId: z.string().optional(),
+    courier: z.string().min(1),
+    trackingNumber: z.string().min(1),
+    trackingUrl: z.string().optional().nullable(),
+  })).min(1),
+});
+
+export async function adminDispatchMedalEmail(request: AuthenticatedRequest, response: Response) {
+  const payload = validateBody(adminDispatchEmailSchema, request);
+  const results: any[] = [];
+  let sentCount = 0;
+  let failCount = 0;
+
+  for (const item of payload.items) {
+    try {
+      const reg = await prisma.registration.findFirst({
+        where: {
+          OR: [
+            ...(item.bibNumber ? [{ bibNumber: item.bibNumber.trim().toUpperCase() }] : []),
+            ...(item.registrationId ? [{ id: item.registrationId }] : []),
+          ],
+        },
+        include: { user: true, event: true, medalDelivery: true },
+      });
+
+      if (!reg) {
+        failCount++;
+        results.push({ item, success: false, error: "Registration not found" });
+        continue;
+      }
+
+      await prisma.medalDelivery.upsert({
+        where: { registrationId: reg.id },
+        create: {
+          registrationId: reg.id,
+          status: "DISPATCHED",
+          courier: item.courier,
+          trackingNumber: item.trackingNumber,
+          trackingUrl: item.trackingUrl || null,
+          dispatchedAt: new Date(),
+        },
+        update: {
+          status: "DISPATCHED",
+          courier: item.courier,
+          trackingNumber: item.trackingNumber,
+          trackingUrl: item.trackingUrl || undefined,
+          dispatchedAt: new Date(),
+        },
+      });
+
+      const emailResult = await sendMedalDispatchEmail({
+        to: reg.user.email,
+        runnerName: reg.shippingName || reg.user.name,
+        eventTitle: reg.event.title,
+        distance: `${reg.distance} Finisher`,
+        bibNumber: reg.bibNumber,
+        courier: item.courier,
+        trackingNumber: item.trackingNumber,
+        trackingUrl: item.trackingUrl || undefined,
+        shippingLine1: reg.shippingLine1,
+        shippingCity: reg.shippingCity,
+        shippingState: reg.shippingState,
+        shippingPincode: reg.shippingPincode,
+      });
+
+      if (emailResult.sent) {
+        sentCount++;
+        results.push({
+          bibNumber: reg.bibNumber,
+          runnerName: reg.shippingName,
+          email: reg.user.email,
+          success: true,
+          emailId: emailResult.id,
+        });
+      } else {
+        failCount++;
+        results.push({
+          bibNumber: reg.bibNumber,
+          runnerName: reg.shippingName,
+          email: reg.user.email,
+          success: false,
+          error: emailResult.error,
+        });
+      }
+    } catch (err: any) {
+      failCount++;
+      results.push({ item, success: false, error: err.message });
+    }
+  }
+
+  response.json({
+    message: `Dispatched ${sentCount} tracking emails (${failCount} failed)`,
+    data: { sentCount, failCount, results },
+  });
+}
+
+// ── 8. Manual WhatsApp Proof Submission Controller ────────────
+
+const adminManualProofSchema = z.object({
+  registrationId: z.string().optional(),
+  bibNumber: z.string().optional(),
+  finishTimeSeconds: z.number().int().positive().optional(),
+  finishTime: z.string().optional(), // "HH:MM:SS" or "MM:SS"
+  activityImageUrl: z.string().optional().nullable(),
+  sourceApp: z.string().optional().default("WhatsApp Screenshot"),
+  reviewerNote: z.string().optional().nullable(),
+  approveAndCertify: z.boolean().optional().default(true),
+});
+
+export async function adminSubmitManualProof(request: AuthenticatedRequest, response: Response) {
+  const payload = validateBody(adminManualProofSchema, request);
+
+  const reg = await prisma.registration.findFirst({
+    where: {
+      OR: [
+        ...(payload.bibNumber ? [{ bibNumber: payload.bibNumber.trim().toUpperCase() }] : []),
+        ...(payload.registrationId ? [{ id: payload.registrationId }] : []),
+      ],
+    },
+    include: { user: true, event: true, proofUpload: true },
+  });
+
+  if (!reg) {
+    throw new ApiError(404, "Registration not found");
+  }
+
+  // Parse finish time
+  let seconds = payload.finishTimeSeconds;
+  if (!seconds && payload.finishTime) {
+    const parts = payload.finishTime.split(":").map(Number);
+    if (parts.length === 3) {
+      seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+    } else if (parts.length === 2) {
+      seconds = parts[0] * 60 + parts[1];
+    }
+  }
+
+  if (!seconds) {
+    throw new ApiError(400, "Please provide finish time in seconds or format HH:MM:SS");
+  }
+
+  // Upsert ProofUpload
+  await prisma.proofUpload.upsert({
+    where: { registrationId: reg.id },
+    create: {
+      registrationId: reg.id,
+      activityImageUrl: payload.activityImageUrl || "https://mountainrun.in/proof-placeholder.png",
+      sourceApp: payload.sourceApp || "WhatsApp",
+      status: "APPROVED",
+      reviewedAt: new Date(),
+      reviewerNote: payload.reviewerNote || "Approved manual submission via admin panel",
+    },
+    update: {
+      activityImageUrl: payload.activityImageUrl || undefined,
+      sourceApp: payload.sourceApp || undefined,
+      status: "APPROVED",
+      reviewedAt: new Date(),
+      reviewerNote: payload.reviewerNote || "Approved manual submission via admin panel",
+    },
+  });
+
+  // Update Registration
+  const updatedReg = await prisma.registration.update({
+    where: { id: reg.id },
+    data: {
+      finishTimeSeconds: seconds,
+      proofStatus: "APPROVED",
+      status: reg.status === "PENDING_PAYMENT" ? "CONFIRMED" : reg.status,
+    },
+    include: { user: true, event: true, certificate: true, medalDelivery: true },
+  });
+
+  // Ensure Medal Delivery pending
+  await prisma.medalDelivery.upsert({
+    where: { registrationId: reg.id },
+    create: { registrationId: reg.id, status: "PENDING" },
+    update: {},
+  });
+
+  let certResult: any = null;
+  if (payload.approveAndCertify !== false) {
+    try {
+      certResult = await issueCertificateAfterApproval(reg.id);
+    } catch (e) {
+      console.error("[admin] manual proof certificate generation error:", e);
+    }
+  }
+
+  await writeAdminAudit(request, {
+    action: "proof.manual_submit",
+    entityType: "Registration",
+    entityId: reg.id,
+    summary: `Manual proof approved for ${reg.bibNumber} (${seconds}s)`,
+  });
+
+  response.json({
+    message: "Proof submitted and approved successfully",
+    data: {
+      registration: updatedReg,
+      certificate: certResult?.certificate || updatedReg.certificate,
+      emailSent: certResult?.email?.sent ?? false,
+    },
+  });
+}
+
+// ── 6. Leaderboard Manager Controllers ────────────────────────
+
+export async function adminGetLeaderboardManager(request: AuthenticatedRequest, response: Response) {
+  const eventId = q(request, "eventId");
+  const distance = q(request, "distance");
+
+  if (!eventId) {
+    throw new ApiError(400, "eventId is required");
+  }
+
+  const registrations = await prisma.registration.findMany({
+    where: {
+      eventId,
+      ...(distance && distance !== "ALL" ? { distance } : {}),
+      proofStatus: "APPROVED",
+      finishTimeSeconds: { not: null },
+    },
+    orderBy: { finishTimeSeconds: "asc" },
+    include: {
+      user: { select: { id: true, name: true, email: true, phone: true } },
+      certificate: { select: { id: true, certificateNumber: true, status: true, pdfUrl: true } },
+    },
+    take: 500,
+  });
+
+  const ranked = registrations.map((r, index) => ({
+    rank: index + 1,
+    id: r.id,
+    bibNumber: r.bibNumber,
+    runnerName: r.shippingName || r.user.name,
+    email: r.user.email,
+    phone: r.shippingPhone || r.user.phone,
+    distance: r.distance,
+    finishTimeSeconds: r.finishTimeSeconds,
+    finishTimeFormatted: formatDurationSeconds(r.finishTimeSeconds),
+    proofStatus: r.proofStatus,
+    certificate: r.certificate,
+  }));
+
+  response.json({ data: ranked });
+}
+
+export async function adminUpdateLeaderboardEntry(request: AuthenticatedRequest, response: Response) {
+  const id = routeParam(request, "id");
+  const schema = z.object({
+    finishTimeSeconds: z.number().int().positive().optional(),
+    proofStatus: z.enum(["NOT_SUBMITTED", "SUBMITTED", "APPROVED", "REJECTED"]).optional(),
+    distance: z.string().optional(),
+  });
+  const payload = validateBody(schema, request);
+
+  const reg = await prisma.registration.update({
+    where: { id },
+    data: {
+      ...(payload.finishTimeSeconds !== undefined ? { finishTimeSeconds: payload.finishTimeSeconds } : {}),
+      ...(payload.proofStatus ? { proofStatus: payload.proofStatus } : {}),
+      ...(payload.distance ? { distance: payload.distance } : {}),
+    },
+    include: { user: true, event: true },
+  });
+
+  await writeAdminAudit(request, {
+    action: "leaderboard.update_timing",
+    entityType: "Registration",
+    entityId: id,
+    summary: `Leaderboard timing updated for ${reg.bibNumber} -> ${payload.finishTimeSeconds}s`,
+  });
+
+  response.json({ message: "Leaderboard entry updated", data: reg });
+}
+
+// ── 9. T-Shirt Size Manager Controllers ───────────────────────
+
+export async function adminGetTshirtManager(request: AuthenticatedRequest, response: Response) {
+  const eventId = q(request, "eventId");
+  if (!eventId) {
+    throw new ApiError(400, "eventId is required");
+  }
+
+  const event = await prisma.event.findUnique({ where: { id: eventId } });
+  if (!event) {
+    throw new ApiError(404, "Event not found");
+  }
+
+  // Get all approved finishers for this event
+  const finishers = await prisma.registration.findMany({
+    where: {
+      eventId,
+      proofStatus: "APPROVED",
+      finishTimeSeconds: { not: null },
+    },
+    orderBy: { finishTimeSeconds: "asc" },
+    include: {
+      user: true,
+      medalDelivery: true,
+    },
+  });
+
+  // Group by distance
+  const byDistance: Record<string, typeof finishers> = {};
+  for (const f of finishers) {
+    if (!byDistance[f.distance]) byDistance[f.distance] = [];
+    byDistance[f.distance].push(f);
+  }
+
+  // Top 3 in each category
+  const winners: any[] = [];
+  for (const [dist, runners] of Object.entries(byDistance)) {
+    runners.slice(0, 3).forEach((r, idx) => {
+      winners.push({
+        id: r.id,
+        bibNumber: r.bibNumber,
+        category: dist,
+        rank: `Rank ${idx + 1}`,
+        runnerName: r.shippingName || r.user.name,
+        email: r.user.email,
+        phone: r.shippingPhone || r.user.phone,
+        finishTimeSeconds: r.finishTimeSeconds,
+        finishTimeFormatted: formatDurationSeconds(r.finishTimeSeconds),
+        tshirtSize: r.tshirtSize,
+        tshirtSubmittedAt: r.tshirtSubmittedAt,
+        shippingAddress: `${r.shippingLine1}, ${r.shippingCity}, ${r.shippingState} - ${r.shippingPincode}`,
+      });
+    });
+  }
+
+  response.json({ data: winners, eventTitle: event.title });
+}
+
+export async function adminUpdateTshirtSize(request: AuthenticatedRequest, response: Response) {
+  const id = routeParam(request, "id");
+  const schema = z.object({
+    tshirtSize: z.string().min(1),
+  });
+  const payload = validateBody(schema, request);
+
+  const reg = await prisma.registration.update({
+    where: { id },
+    data: {
+      tshirtSize: payload.tshirtSize,
+      tshirtSubmittedAt: new Date(),
+    },
+  });
+
+  await writeAdminAudit(request, {
+    action: "tshirt.update_size",
+    entityType: "Registration",
+    entityId: id,
+    summary: `T-Shirt size set to ${payload.tshirtSize} for ${reg.bibNumber}`,
+  });
+
+  response.json({ message: "T-shirt size updated", data: reg });
+}
+
+export async function adminSendTshirtReminderEmail(request: AuthenticatedRequest, response: Response) {
+  const schema = z.object({
+    registrationId: z.string(),
+  });
+  const payload = validateBody(schema, request);
+
+  const reg = await prisma.registration.findUnique({
+    where: { id: payload.registrationId },
+    include: { user: true, event: true },
+  });
+
+  if (!reg) {
+    throw new ApiError(404, "Registration not found");
+  }
+
+  const resendClient = env.resendApiKey ? new Resend(env.resendApiKey) : null;
+  if (!resendClient) {
+    throw new ApiError(500, "RESEND_API_KEY not configured");
+  }
+
+  const claimUrl = `${env.frontendUrl}/claim-jersey?bib=${reg.bibNumber}`;
+  const html = `<!DOCTYPE html><html><body style="font-family: Arial, sans-serif; background: #0f172a; color: #ffffff; padding: 32px 16px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #1e293b; border-radius: 14px; padding: 32px; border: 1px solid #334155;">
+      <h2 style="color: #fbbf24; margin-top: 0;">🎉 Congratulations Podium Winner!</h2>
+      <p style="font-size: 15px; color: #cbd5e1;">Dear <strong>${reg.shippingName || reg.user.name}</strong>,</p>
+      <p style="font-size: 14px; color: #94a3b8; line-height: 1.6;">
+        You have secured an official podium spot in the <strong>${reg.event.title} (${reg.distance})</strong> with BIB <strong>${reg.bibNumber}</strong>!
+        As a Top 3 Finisher, you have won an exclusive <strong>Mountain Run Dri-Fit Running T-Shirt</strong>!
+      </p>
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${claimUrl}" style="background: #10b981; color: #ffffff; font-weight: bold; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-size: 16px; display: inline-block;">
+          Claim Your Free T-Shirt Size &rarr;
+        </a>
+      </div>
+      <p style="font-size: 12px; color: #64748b; text-align: center;">
+        Direct link: <a href="${claimUrl}" style="color: #38bdf8;">${claimUrl}</a>
+      </p>
+    </div>
+  </body></html>`;
+
+  const emailRes = await resendClient.emails.send({
+    from: env.resendFromEmail,
+    to: reg.user.email,
+    replyTo: "mountainrunofficial@gmail.com",
+    subject: `Claim Your Winner T-Shirt! 🏆 — ${reg.event.title} (Bib ${reg.bibNumber})`,
+    html,
+  });
+
+  response.json({
+    message: "T-Shirt reminder email sent",
+    data: { emailId: emailRes.data?.id, email: reg.user.email },
+  });
+}
+

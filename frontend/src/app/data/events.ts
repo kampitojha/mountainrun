@@ -51,7 +51,7 @@ export const allPublicEvents: PublicEvent[] = [
     highlight: "Different Paths • Same Nation • Stronger Together · Limited Edition 3D Bronze Finisher Medal!",
     banner: "Open event",
     bannerImageUrl:
-      "https://res.cloudinary.com/yppcqzt6/image/upload/v1791197322/mountainrun/banners/national_unity_day_2026_cinematic_poster.jpg",
+      "https://res.cloudinary.com/yppcqzt6/image/upload/v1791290995/mountainrun/banners/national_unity_day_2026_cinematic_poster.jpg",
     medalImageUrl:
       "https://res.cloudinary.com/yppcqzt6/image/upload/v1791198647/mountainrun/medals/national_unity_day_2026_front_back_medal.jpg",
     reward: "Heavyweight 3D Finisher Medal & E-Certificate",
@@ -83,18 +83,18 @@ export const allPublicEvents: PublicEvent[] = [
     description:
       "Celebrate Mahatma Gandhi Jayanti with India's premier virtual fitness challenge — the Gandhi Jayanti Victory Run 2026! Walk, run, or cycle anywhere across India between 2nd to 6th October. Embody the timeless spirit of 'Full Effort • Full Victory', peace, and a Cleaner, Greener, Healthier India. Choose your distance, submit your activity proof, and earn the exclusive heavyweight 3D antique bronze Gandhi Jayanti Finisher Medal with the tricolor ribbon delivered to your doorstep with free shipping.",
     highlight: "Full Effort • Full Victory · Limited Edition 3D Bronze Finisher Medal!",
-    banner: "Open event",
+    banner: "Completed",
     bannerImageUrl:
       "https://res.cloudinary.com/yppcqzt6/image/upload/v1789689193/mountainrun/banners/gandhi_jayanti_victory_run_2026_cinematic_poster.jpg",
     medalImageUrl:
       "https://res.cloudinary.com/yppcqzt6/image/upload/v1789686778/mountainrun/medals/gandhi_jayanti_2026_front_back_medal.jpg",
     reward: "Heavyweight 3D Finisher Medal & E-Certificate",
-    status: "upcoming",
+    status: "past",
     compareAtPrice: "Rs. 500",
     activityTypes: ["running", "cycling", "walking"],
-    finishers: 0,
-    verifiedResults: 0,
-    cities: 0,
+    finishers: 150,
+    verifiedResults: 141,
+    cities: 65,
     startsAt: "2026-10-02T00:00:00+05:30",
     endsAt: "2026-10-06T23:59:59+05:30",
   },

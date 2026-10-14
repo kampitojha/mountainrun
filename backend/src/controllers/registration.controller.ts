@@ -241,6 +241,15 @@ export async function submitProof(request: AuthenticatedRequest, response: Respo
     throw new ApiError(422, "Complete payment before uploading GPS proof");
   }
 
+  // Prevent submitting proof before the event running period has started!
+  const now = new Date();
+  if (existing.event.startsAt && now < new Date(existing.event.startsAt)) {
+    throw new ApiError(
+      422,
+      `Race has not started yet. Proof submission will open once the challenge starts on ${new Date(existing.event.startsAt).toLocaleDateString("en-IN")}.`,
+    );
+  }
+
   if (existing.proofStatus === "APPROVED") {
     throw new ApiError(409, "Proof already approved. Contact support to re-submit.");
   }
@@ -1030,38 +1039,43 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
     }
   }
 
-  // Transform real verified approved finishers
-  const realLeaderboardRows = matchingRegistrations.map((reg) => {
-    let validSeconds = reg.finishTimeSeconds;
-    const regKm = parseDistanceKm(reg.distance) || activeKm;
-    const minPaceSeconds = Math.round(regKm * 180); // 3:00 / km min
+  const nowLeaderboard = new Date();
+  const isUpcoming = event.startsAt ? nowLeaderboard < new Date(event.startsAt) : false;
 
-    // If an approved runner has no finish time in seconds, calculate a realistic verified finish time (4:50 - 6:10 / km)
-    if (validSeconds == null || validSeconds <= 0) {
-      const hash = reg.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-      const pacePerKm = 290 + (hash % 80);
-      validSeconds = Math.round(regKm * pacePerKm);
-    } else if (validSeconds < minPaceSeconds) {
-      if (validSeconds * 60 >= minPaceSeconds && validSeconds * 60 <= regKm * 600) {
-        validSeconds = validSeconds * 60;
-      } else {
-        validSeconds = Math.round(regKm * 310);
-      }
-    }
+  // Transform real verified approved finishers (only for active or past events)
+  const realLeaderboardRows = isUpcoming
+    ? []
+    : matchingRegistrations.map((reg) => {
+        let validSeconds = reg.finishTimeSeconds;
+        const regKm = parseDistanceKm(reg.distance) || activeKm;
+        const minPaceSeconds = Math.round(regKm * 180); // 3:00 / km min
 
-    return {
-      runnerName: reg.shippingName || reg.user.name,
-      city: reg.shippingCity || "India",
-      state: reg.shippingState || "",
-      distance: reg.distance,
-      finishTimeSeconds: validSeconds,
-      bibNumber: reg.bibNumber,
-      status: "Verified" as const,
-      isPadded: false,
-      userId: reg.user.id,
-      clerkId: reg.user.clerkId,
-    };
-  });
+        // If an approved runner has no finish time in seconds, calculate a realistic verified finish time (4:50 - 6:10 / km)
+        if (validSeconds == null || validSeconds <= 0) {
+          const hash = reg.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+          const pacePerKm = 290 + (hash % 80);
+          validSeconds = Math.round(regKm * pacePerKm);
+        } else if (validSeconds < minPaceSeconds) {
+          if (validSeconds * 60 >= minPaceSeconds && validSeconds * 60 <= regKm * 600) {
+            validSeconds = validSeconds * 60;
+          } else {
+            validSeconds = Math.round(regKm * 310);
+          }
+        }
+
+        return {
+          runnerName: reg.shippingName || reg.user.name,
+          city: reg.shippingCity || "India",
+          state: reg.shippingState || "",
+          distance: reg.distance,
+          finishTimeSeconds: validSeconds,
+          bibNumber: reg.bibNumber,
+          status: "Verified" as const,
+          isPadded: false,
+          userId: reg.user.id,
+          clerkId: reg.user.clerkId,
+        };
+      });
 
   // Highest preference to real users: Real verified runners lead and take top spots!
   realLeaderboardRows.sort((a, b) => (a.finishTimeSeconds ?? 999999) - (b.finishTimeSeconds ?? 999999));
@@ -1073,8 +1087,9 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
     lastRealPace = Math.max(240, Math.round(slowestRealSecs / activeKm) + 12);
   }
 
-  const mergedRows = [...realLeaderboardRows];
-  if (mergedRows.length < 50 && !searchQuery) {
+  // Never pad or generate fake rankings for upcoming events that haven't started yet!
+  const mergedRows = isUpcoming ? [] : [...realLeaderboardRows];
+  if (!isUpcoming && mergedRows.length < 50 && !searchQuery) {
     const paddedRows = generatePaddedLeaderboard(event.slug, activeDistance, 50, mergedRows.length, lastRealPace);
     for (const dummy of paddedRows) {
       if (mergedRows.length >= 50) break;
@@ -1112,12 +1127,10 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
     proofStatus: p.proofStatus,
     registrationStatus: p.status,
     registeredAt: p.registeredAt,
-    finishTimeSeconds: p.finishTimeSeconds ?? null,
+    finishTimeSeconds: isUpcoming ? null : (p.finishTimeSeconds ?? null),
     userId: p.user.id,
     clerkId: p.user.clerkId,
   }));
-
-  const isUpcoming = event.startsAt ? new Date() < new Date(event.startsAt) : false;
 
   response.json({
     data: rankedLeaderboard,

@@ -5,7 +5,18 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from tshirt_list_manager import get_backend_env
 
-conn = psycopg2.connect(get_backend_env()['DATABASE_URL'])
+import time
+env = get_backend_env()
+conn = None
+for attempt in range(5):
+    try:
+        conn = psycopg2.connect(env['DATABASE_URL'], connect_timeout=10)
+        break
+    except Exception as e:
+        time.sleep(2)
+
+if not conn:
+    raise RuntimeError("Could not connect to DB")
 cur = conn.cursor(cursor_factory=RealDictCursor)
 
 queries = sys.argv[1:] if len(sys.argv) > 1 else ['478727', '969498']

@@ -17,7 +17,10 @@ type NavGroup = { label: string; items: NavItem[] };
 const navGroups: NavGroup[] = [
   {
     label: "Workspace",
-    items: [{ label: "Overview", href: "/admin", icon: "grid" }],
+    items: [
+      { label: "Overview", href: "/admin", icon: "grid" },
+      { label: "⚡ Organizer Hub (9 Tools)", href: "/admin/hub", icon: "sparkles" },
+    ],
   },
   {
     label: "Operations",
@@ -135,6 +138,12 @@ function NavIcon({ name }: { name: string }) {
         <svg {...common}>
           <path d="M20 12 12 4H5v7l8 8 7-7Z" />
           <circle cx="8.5" cy="8.5" r="1" />
+        </svg>
+      );
+    case "sparkles":
+      return (
+        <svg {...common}>
+          <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z" />
         </svg>
       );
     default:
