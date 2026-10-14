@@ -102,22 +102,22 @@ type TabId =
 interface TabMeta {
   id: TabId;
   label: string;
-  hindi: string;
+  sub: string;
   icon: any;
   color: string;
   badge?: string;
 }
 
 const TABS: TabMeta[] = [
-  { id: "manual-reg",    label: "1. Manual Reg",     hindi: "मैन्युअल रजिस्ट्रेशन", icon: UserPlus,        color: "#10b981" },
-  { id: "certificate",   label: "2. e-Certificate",  hindi: "सर्टिफिकेट सुधार",   icon: FileCheck2,      color: "#3b82f6" },
-  { id: "tracking",      label: "3. Tracking Email", hindi: "ट्रैकिंग ईमेल भेजें", icon: Truck,           color: "#8b5cf6" },
-  { id: "courier-excel", label: "4. Courier Excel",  hindi: "डिलीवरी शीट (.csv)",  icon: FileSpreadsheet, color: "#06b6d4" },
-  { id: "events",        label: "5. Events",         hindi: "नया व एडिट इवेंट",   icon: Calendar,        color: "#f59e0b" },
-  { id: "leaderboard",   label: "6. Leaderboard",    hindi: "रैंकिंग व टाइमिंग",  icon: Trophy,          color: "#eab308" },
-  { id: "gallery",       label: "7. Gallery",        hindi: "फोटो गैलरी",          icon: ImageIcon,       color: "#ec4899" },
-  { id: "proof",         label: "8. WhatsApp Proof", hindi: "मैन्युअल प्रूफ",      icon: CheckCircle2,    color: "#14b8a6" },
-  { id: "tshirts",       label: "9. T-Shirt Sizes",  hindi: "विनर टी-शर्ट साइज",  icon: Shirt,           color: "#f97316" },
+  { id: "manual-reg",    label: "1. Manual Reg",     sub: "Offline & UPI Entry",     icon: UserPlus,        color: "#10b981" },
+  { id: "certificate",   label: "2. e-Certificate",  sub: "Edit Details & Resend",   icon: FileCheck2,      color: "#3b82f6" },
+  { id: "tracking",      label: "3. Tracking Email", sub: "Dispatch Notifications",  icon: Truck,           color: "#8b5cf6" },
+  { id: "courier-excel", label: "4. Courier Excel",  sub: "Delivery Manifest (.csv)", icon: FileSpreadsheet, color: "#06b6d4" },
+  { id: "events",        label: "5. Events",         sub: "Posters, Pricing & Setup", icon: Calendar,        color: "#f59e0b" },
+  { id: "leaderboard",   label: "6. Leaderboard",    sub: "Ranks & Finish Times",    icon: Trophy,          color: "#eab308" },
+  { id: "gallery",       label: "7. Gallery",        sub: "Community Showcase",      icon: ImageIcon,       color: "#ec4899" },
+  { id: "proof",         label: "8. WhatsApp Proof", sub: "Manual Verification",     icon: CheckCircle2,    color: "#14b8a6" },
+  { id: "tshirts",       label: "9. T-Shirt Sizes",  sub: "Podium Winner Claims",    icon: Shirt,           color: "#f97316" },
 ];
 
 export default function AdminHubPage() {
@@ -161,7 +161,7 @@ export default function AdminHubPage() {
               Admin Command Center • 9 Controls
             </h1>
             <p className="text-sm text-[var(--muted)] mt-1 max-w-2xl">
-              यहीं से आप मैनुअल रजिस्ट्रेशन, सर्टिफिकेट सुधार, ट्रैकिंग ईमेल, कूरियर एक्सेल, इवेंट सेटिंग्स, लीडरबोर्ड, गैलरी, व्हाट्सएप प्रूफ और टी-शर्ट साइज एक ही जगह से कंट्रोल कर सकते हैं।
+              All 9 essential organizer tools in one unified dashboard: manual registrations, certificate corrections, tracking emails, courier manifests, event setup, leaderboard ranks, gallery, WhatsApp proof verification, and winner jersey sizes.
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -202,7 +202,7 @@ export default function AdminHubPage() {
                 />
                 <div className="flex flex-col text-left">
                   <span className="leading-tight font-bold">{tab.label}</span>
-                  <span className="text-[10px] opacity-75 font-normal">{tab.hindi}</span>
+                  <span className="text-[10px] opacity-75 font-normal">{tab.sub}</span>
                 </div>
               </button>
             );
@@ -245,7 +245,7 @@ export default function AdminHubPage() {
 }
 
 /* =====================================================================
-   TAB 1: 📝 MANUAL REGISTRATION (मैन्युअल रजिस्ट्रेशन)
+   TAB 1: 📝 MANUAL REGISTRATION
 ===================================================================== */
 function TabManualRegistration({
   events,
@@ -364,10 +364,10 @@ function TabManualRegistration({
           </div>
           <div>
             <h2 className="text-lg font-bold text-[var(--foreground)]">
-              Manual Runner Registration (मैन्युअल रजिस्ट्रेशन फॉर्म)
+              Manual Runner Registration
             </h2>
             <p className="text-xs text-[var(--muted)]">
-              जिन लोगों ने WhatsApp या UPI पर पेमेंट किया है, उनकी पूरी डिटेल यहाँ भरें। BIB ऑटो-जनरेट होगा और ईमेल तुरंत चला जाएगा।
+              Register runners who paid offline via UPI or WhatsApp. Unique BIB is assigned, registration is confirmed in database, and a confirmation email is dispatched immediately.
             </p>
           </div>
         </div>
@@ -411,7 +411,7 @@ function TabManualRegistration({
 
               <div>
                 <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                  Full Name (धावक का नाम) *
+                  Full Name *
                 </label>
                 <input
                   type="text"
@@ -426,7 +426,7 @@ function TabManualRegistration({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                    Email Address (ईमेल) *
+                    Email Address *
                   </label>
                   <input
                     type="email"
@@ -439,7 +439,7 @@ function TabManualRegistration({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                    Mobile Number (मोबाइल / वॉट्सऐप) *
+                    Mobile / WhatsApp Number *
                   </label>
                   <input
                     type="tel"
@@ -454,7 +454,7 @@ function TabManualRegistration({
 
               <div>
                 <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                  Select Event (इवेंट चुनें) *
+                  Select Event *
                 </label>
                 <select
                   value={eventId}
@@ -472,7 +472,7 @@ function TabManualRegistration({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                    Distance (दूरी) *
+                    Distance Category *
                   </label>
                   <select
                     value={distance}
@@ -538,7 +538,7 @@ function TabManualRegistration({
 
               <div>
                 <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                  Address Line 1 (मकान नंबर, गली, लैंडमार्क) *
+                  Address Line 1 (House No, Street, Landmark) *
                 </label>
                 <textarea
                   rows={2}
@@ -552,7 +552,7 @@ function TabManualRegistration({
 
               <div>
                 <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                  Address Line 2 (Optional एरिया या कॉलोनी)
+                  Address Line 2 (Optional Area / Locality)
                 </label>
                 <input
                   type="text"
@@ -566,7 +566,7 @@ function TabManualRegistration({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                    City (शहर) *
+                    City *
                   </label>
                   <input
                     type="text"
@@ -579,7 +579,7 @@ function TabManualRegistration({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                    State (राज्य) *
+                    State *
                   </label>
                   <input
                     type="text"
@@ -592,7 +592,7 @@ function TabManualRegistration({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                    Pincode (पिनकोड) *
+                    Pincode (6 digits) *
                   </label>
                   <input
                     type="text"
@@ -629,7 +629,7 @@ function TabManualRegistration({
                     </>
                   ) : (
                     <>
-                      <Check className="w-4 h-4" /> Save Registration & Confirm Entry (डेटाबेस में जोड़ें)
+                      <Check className="w-4 h-4" /> Save Registration & Confirm Entry
                     </>
                   )}
                 </button>
@@ -643,7 +643,7 @@ function TabManualRegistration({
 }
 
 /* =====================================================================
-   TAB 2: 📜 E-CERTIFICATE EDITOR (सर्टिफिकेट सुधार)
+   TAB 2: 📜 E-CERTIFICATE EDITOR
 ===================================================================== */
 function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }) {
   const [search, setSearch] = useState("");
@@ -772,10 +772,10 @@ function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }
           </div>
           <div>
             <h2 className="text-lg font-bold text-[var(--foreground)]">
-              e-Certificate Editor (सर्टिफिकेट नाम, दूरी व टाइमिंग सुधार)
+              e-Certificate Editor
             </h2>
             <p className="text-xs text-[var(--muted)]">
-              यदि किसी धावक का नाम, रनिंग डिस्टेंस या टाइम गलत हो गया है, तो यहाँ सर्च करके तुरंत सही करें और नया सर्टिफिकेट जारी करें।
+              Quickly search any runner to fix typographical errors in their name, distance category, or finish timing (HH:MM:SS), regenerate certificate, and resend confirmation.
             </p>
           </div>
         </div>
@@ -948,7 +948,7 @@ function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }
 }
 
 /* =====================================================================
-   TAB 3: 🚚 TRACKING ID EMAIL DISPATCH (ट्रैकिंग ईमेल)
+   TAB 3: 🚚 TRACKING ID EMAIL DISPATCH
 ===================================================================== */
 function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any }) {
   const [dispatchMode, setDispatchMode] = useState<"single" | "bulk">("single");
@@ -1057,10 +1057,10 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
           </div>
           <div>
             <h2 className="text-lg font-bold text-[var(--foreground)]">
-              Send Tracking ID Emails (ट्रैकिंग ईमेल भेजें)
+              Send Tracking ID Emails
             </h2>
             <p className="text-xs text-[var(--muted)]">
-              एक-एक करके या पूरी लिस्ट एक साथ पेस्ट करके सभी धावकों को उनके मेडल का कुरियर ट्रैकिंग नंबर व ईमेल भेजें।
+              Send courier dispatch details and live tracking links to runners individually or in bulk via batch paste.
             </p>
           </div>
         </div>
@@ -1076,7 +1076,7 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
                 : "bg-[var(--background)] border border-[var(--line)] text-[var(--muted)] hover:text-white"
             }`}
           >
-            Single Runner Dispatch (एक धावक)
+            Single Runner Dispatch
           </button>
           <button
             type="button"
@@ -1087,7 +1087,7 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
                 : "bg-[var(--background)] border border-[var(--line)] text-[var(--muted)] hover:text-white"
             }`}
           >
-            Bulk Batch Dispatch (सभी को एक साथ भेजें)
+            Bulk Batch Dispatch
           </button>
         </div>
 
@@ -1096,7 +1096,7 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
           <form onSubmit={handleSingleDispatch} className="max-w-xl space-y-4">
             <div>
               <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                Runner BIB Number (उदा: NUD2-867357 या GJVR-620288) *
+                Runner BIB Number (e.g. NUD2-867357 or GJVR-620288) *
               </label>
               <input
                 type="text"
@@ -1110,7 +1110,7 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
 
             <div>
               <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                Courier Partner (कूरियर कंपनी) *
+                Courier Partner *
               </label>
               <input
                 type="text"
@@ -1135,7 +1135,7 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
 
             <div>
               <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                Tracking / AWB Number (ट्रैकिंग नंबर) *
+                Tracking / AWB Number *
               </label>
               <input
                 type="text"
@@ -1149,7 +1149,7 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
 
             <div>
               <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                Tracking URL (Optional - खाली छोड़ने पर ऑटो लिंक बन जाएगा)
+                Tracking URL (Optional - leave blank for auto-generated tracking link)
               </label>
               <input
                 type="url"
@@ -1171,7 +1171,7 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
                 </>
               ) : (
                 <>
-                  <Send className="w-4 h-4" /> Save Tracking & Send Email (ट्रैकिंग ईमेल भेजें)
+                  <Send className="w-4 h-4" /> Save Tracking & Send Email
                 </>
               )}
             </button>
@@ -1194,7 +1194,7 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
                 className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-purple-500 outline-none font-mono resize-y"
               />
               <p className="text-[11px] text-[var(--muted)] mt-1">
-                Tip: Excel शीट से 3 कॉलम (BIB, Courier, Tracking) कॉपी करके सीधे यहाँ पेस्ट कर सकते हैं।
+                Tip: Copy 3 columns (BIB, Courier, Tracking) from Excel or Google Sheets and paste directly here.
               </p>
             </div>
 
@@ -1209,7 +1209,7 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
                 </>
               ) : (
                 <>
-                  <Send className="w-4 h-4" /> Send Tracking Emails to All (सभी को एक साथ भेजें)
+                  <Send className="w-4 h-4" /> Send Tracking Emails to All
                 </>
               )}
             </button>
@@ -1239,7 +1239,7 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
 }
 
 /* =====================================================================
-   TAB 4: 📊 COURIER DELIVERY MASTER EXCEL (डिलीवरी शीट)
+   TAB 4: 📊 COURIER DELIVERY MASTER EXCEL
 ===================================================================== */
 function TabCourierExcel({
   events,
@@ -1311,10 +1311,10 @@ function TabCourierExcel({
             </div>
             <div>
               <h2 className="text-lg font-bold text-[var(--foreground)]">
-                Courier Delivery Excel Exporter (डिलीवरी वाले के लिए एक्सेल)
+                Courier Delivery Excel Exporter
               </h2>
               <p className="text-xs text-[var(--muted)]">
-                DTDC, Delhivery या डिलीवरी पार्टनर को भेजने के लिए सभी धावकों के नाम, फोन, और पूरा पता एक्सेल (.csv) में डाउनलोड करें।
+                Export a formatted delivery manifest (.csv) with runner names, contact numbers, full addresses, and medal dispatch status ready for courier partners.
               </p>
             </div>
           </div>
@@ -1337,7 +1337,7 @@ function TabCourierExcel({
               onChange={(e) => setSelectedEventId(e.target.value)}
               className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-cyan-500 outline-none"
             >
-              <option value="ALL">All Events (सभी इवेंट्स)</option>
+              <option value="ALL">All Events</option>
               {events.map((e) => (
                 <option key={e.id} value={e.id}>
                   {e.title}
@@ -1423,7 +1423,7 @@ function TabCourierExcel({
 }
 
 /* =====================================================================
-   TAB 5: 🏆 EVENT MANAGEMENT (नया Event और सेटिंग्स)
+   TAB 5: 🏆 EVENT MANAGEMENT
 ===================================================================== */
 function TabEventManagement({
   events,
@@ -1539,10 +1539,10 @@ function TabEventManagement({
             </div>
             <div>
               <h2 className="text-lg font-bold text-[var(--foreground)]">
-                Event Management (नया Event जोड़ें या पोस्टर, फीस व तारीख बदलें)
+                Event Management
               </h2>
               <p className="text-xs text-[var(--muted)]">
-                वेबसाइट पर दिखने वाले सभी रनिंग इवेंट्स की सेटिंग्स, स्टेटस और पोस्टर्स यहाँ से नियंत्रित करें।
+                Configure virtual running events, change registration fees, update posters, edit distances, and manage registration availability.
               </p>
             </div>
           </div>
@@ -1552,7 +1552,7 @@ function TabEventManagement({
             onClick={openCreate}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm transition shadow-lg shadow-amber-900/30 cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Create New Event (नया इवेंट जोड़ें)
+            <Plus className="w-4 h-4" /> Create New Event
           </button>
         </div>
 
@@ -1666,8 +1666,8 @@ function TabEventManagement({
                     onChange={(e) => setStatus(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)]"
                   >
-                    <option value="OPEN">OPEN (लाइव रजिस्ट्रेशन)</option>
-                    <option value="CLOSED">CLOSED (रजिस्ट्रेशन बंद)</option>
+                    <option value="OPEN">OPEN (Live Registration)</option>
+                    <option value="CLOSED">CLOSED (Registration Closed)</option>
                     <option value="DRAFT">DRAFT</option>
                     <option value="COMPLETED">COMPLETED</option>
                   </select>
@@ -1760,7 +1760,7 @@ function TabEventManagement({
 }
 
 /* =====================================================================
-   TAB 6: 🥇 LEADERBOARD CONTROLLER (रैंकिंग व टाइमिंग)
+   TAB 6: 🥇 LEADERBOARD CONTROLLER
 ===================================================================== */
 function TabLeaderboardManager({
   events,
@@ -1885,10 +1885,10 @@ function TabLeaderboardManager({
             </div>
             <div>
               <h2 className="text-lg font-bold text-[var(--foreground)]">
-                Leaderboard Controller (रैंकिंग व टाइमिंग फिक्स करें)
+                Leaderboard Controller
               </h2>
               <p className="text-xs text-[var(--muted)]">
-                किसको ऊपर रखना है और किसको नीचे, यहाँ से सीधे टाइम बदलें या Up/Down बटन से रैंक एडजस्ट करें।
+                Adjust runner placements on the public leaderboard. Edit finish timings in seconds or use Move Up / Move Down to reposition podium contenders.
               </p>
             </div>
           </div>
@@ -2047,7 +2047,7 @@ function TabLeaderboardManager({
 }
 
 /* =====================================================================
-   TAB 7: 🖼️ GALLERY PHOTO MANAGER (फोटो गैलरी कंट्रोल)
+   TAB 7: 🖼️ GALLERY PHOTO MANAGER
 ===================================================================== */
 function TabGalleryManager({ toast, getToken }: { toast: any; getToken: any }) {
   const [photos, setPhotos] = useState<any[]>([]);
@@ -2131,10 +2131,10 @@ function TabGalleryManager({ toast, getToken }: { toast: any; getToken: any }) {
           </div>
           <div>
             <h2 className="text-lg font-bold text-[var(--foreground)]">
-              Gallery Photo Manager (गैलरी में फोटो जोड़ें या डिलीट करें)
+              Gallery Photo Manager
             </h2>
             <p className="text-xs text-[var(--muted)]">
-              वेबसाइट की फोटो गैलरी में धावकों की रनिंग फोटो, मेडल फोटो जोड़ें या पुरानी फोटो हटाएं।
+              Manage the community photo showcase. Upload runner memories, medal photos, or remove outdated entries from the website gallery.
             </p>
           </div>
         </div>
@@ -2142,7 +2142,7 @@ function TabGalleryManager({ toast, getToken }: { toast: any; getToken: any }) {
         {/* Add photo bar */}
         <form onSubmit={handleAddPhoto} className="p-4 rounded-xl border border-[var(--line)] bg-[var(--background)] mb-6 space-y-3">
           <div className="font-bold text-xs uppercase tracking-wider text-pink-400">
-            Add New Photo to Gallery (नई फोटो जोड़ें)
+            Add New Photo to Gallery
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-2">
@@ -2210,7 +2210,7 @@ function TabGalleryManager({ toast, getToken }: { toast: any; getToken: any }) {
 }
 
 /* =====================================================================
-   TAB 8: 📸 WHATSAPP PROOF UPLOAD (मैन्युअल प्रूफ सबमिशन)
+   TAB 8: 📸 WHATSAPP PROOF UPLOAD
 ===================================================================== */
 function TabManualProof({ toast, getToken }: { toast: any; getToken: any }) {
   const [bibInput, setBibInput] = useState("");
@@ -2293,10 +2293,10 @@ function TabManualProof({ toast, getToken }: { toast: any; getToken: any }) {
           </div>
           <div>
             <h2 className="text-lg font-bold text-[var(--foreground)]">
-              WhatsApp Proof Upload (मैन्युअल प्रूफ जोड़ें व सर्टिफिकेट जारी करें)
+              WhatsApp Proof Upload
             </h2>
             <p className="text-xs text-[var(--muted)]">
-              जो धावक वेबसाइट पर प्रूफ सबमिट नहीं कर पाते और WhatsApp पर स्क्रीनशॉट भेजते हैं, उनका टाइमिंग डालकर यहाँ से तुरंत अप्रूव करें।
+              For runners who share activity screenshots via WhatsApp instead of the website: enter their finish time to approve their proof and issue certificates instantly.
             </p>
           </div>
         </div>
@@ -2333,7 +2333,7 @@ function TabManualProof({ toast, getToken }: { toast: any; getToken: any }) {
 
             <div>
               <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                Finish Time (स्क्रीनशॉट का कुल समय HH:MM:SS) *
+                Finish Time (Total time in HH:MM:SS) *
               </label>
               <input
                 type="text"
@@ -2393,7 +2393,7 @@ function TabManualProof({ toast, getToken }: { toast: any; getToken: any }) {
                 </>
               ) : (
                 <>
-                  <Check className="w-4 h-4" /> Approve Proof & Issue Certificate (सर्टिफिकेट जारी करें)
+                  <Check className="w-4 h-4" /> Approve Proof & Issue Certificate
                 </>
               )}
             </button>
@@ -2405,7 +2405,7 @@ function TabManualProof({ toast, getToken }: { toast: any; getToken: any }) {
 }
 
 /* =====================================================================
-   TAB 9: 👕 T-SHIRT SIZE MANAGER (विनर टी-शर्ट साइज)
+   TAB 9: 👕 T-SHIRT SIZE MANAGER
 ===================================================================== */
 function TabTshirtManager({
   events,
@@ -2519,10 +2519,10 @@ function TabTshirtManager({
             </div>
             <div>
               <h2 className="text-lg font-bold text-[var(--foreground)]">
-                Winner T-Shirt Size Manager (लीडरबोर्ड विनर्स टी-शर्ट साइज)
+                Winner T-Shirt Size Manager
               </h2>
               <p className="text-xs text-[var(--muted)]">
-                लीडरबोर्ड में आए टॉप 3 विजेताओं के टी-शर्ट साइज यहाँ देखें, रिमाइंडर ईमेल भेजें या वॉट्सऐप लिंक कॉपी करें।
+                Track jersey sizes for Top 3 podium finishers across all categories. Copy WhatsApp claim links, send reminder emails, and export sizes for merchandise printing.
               </p>
             </div>
           </div>
