@@ -161,7 +161,7 @@ export default function AdminHubPage() {
               Admin Command Center • 9 Controls
             </h1>
             <p className="text-sm text-[var(--muted)] mt-1 max-w-2xl">
-              All 9 essential organizer tools in one unified dashboard: manual registrations, certificate corrections, tracking emails, courier manifests, event setup, leaderboard ranks, gallery, WhatsApp proof verification, and winner jersey sizes.
+              Unified operational control center for manual registrations, certificate corrections, courier tracking, delivery sheets, events, leaderboards, gallery, WhatsApp proofs, and winner jerseys.
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -367,7 +367,7 @@ function TabManualRegistration({
               Manual Runner Registration
             </h2>
             <p className="text-xs text-[var(--muted)]">
-              Register runners who paid offline via UPI or WhatsApp. Unique BIB is assigned, registration is confirmed in database, and a confirmation email is dispatched immediately.
+              Add offline/UPI runners to database, auto-assign unique BIBs, and send confirmation emails.
             </p>
           </div>
         </div>
@@ -416,7 +416,7 @@ function TabManualRegistration({
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Madaveri Akshay"
+                  placeholder="Runner full name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-emerald-500 outline-none"
@@ -431,7 +431,7 @@ function TabManualRegistration({
                   <input
                     type="email"
                     required
-                    placeholder="runner@gmail.com"
+                    placeholder="runner@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-emerald-500 outline-none"
@@ -444,7 +444,7 @@ function TabManualRegistration({
                   <input
                     type="tel"
                     required
-                    placeholder="+91 9912063980"
+                    placeholder="10-digit mobile number"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-emerald-500 outline-none"
@@ -538,12 +538,12 @@ function TabManualRegistration({
 
               <div>
                 <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                  Address Line 1 (House No, Street, Landmark) *
+                  Delivery Address *
                 </label>
                 <textarea
                   rows={2}
                   required
-                  placeholder="e.g. House No. 6-126/3, Near Temple"
+                  placeholder="House / Flat / Street address, Landmark"
                   value={shippingLine1}
                   onChange={(e) => setShippingLine1(e.target.value)}
                   className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-emerald-500 outline-none resize-none"
@@ -552,11 +552,11 @@ function TabManualRegistration({
 
               <div>
                 <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                  Address Line 2 (Optional Area / Locality)
+                  Apartment / Area (Optional)
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Dichpalli"
+                  placeholder="Area / Locality (optional)"
                   value={shippingLine2}
                   onChange={(e) => setShippingLine2(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-emerald-500 outline-none"
@@ -571,7 +571,7 @@ function TabManualRegistration({
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Nizamabad"
+                    placeholder="City"
                     value={shippingCity}
                     onChange={(e) => setShippingCity(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-emerald-500 outline-none"
@@ -584,7 +584,7 @@ function TabManualRegistration({
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Telangana"
+                    placeholder="State"
                     value={shippingState}
                     onChange={(e) => setShippingState(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-emerald-500 outline-none"
@@ -592,12 +592,12 @@ function TabManualRegistration({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                    Pincode (6 digits) *
+                    PIN Code *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="503175"
+                    placeholder="6-digit PIN code"
                     value={shippingPincode}
                     onChange={(e) => setShippingPincode(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-emerald-500 outline-none font-mono"
@@ -775,7 +775,7 @@ function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }
               e-Certificate Editor
             </h2>
             <p className="text-xs text-[var(--muted)]">
-              Quickly search any runner to fix typographical errors in their name, distance category, or finish timing (HH:MM:SS), regenerate certificate, and resend confirmation.
+              Search runners to correct typos in names, distance categories, or finish times and regenerate certificates.
             </p>
           </div>
         </div>
@@ -786,7 +786,7 @@ function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }
             <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[var(--muted)]" />
             <input
               type="text"
-              placeholder="Search by BIB (e.g. NUD2-867357), Name, or Email..."
+              placeholder="Search by BIB number, runner name, or email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none font-mono"
@@ -879,17 +879,17 @@ function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }
                   type="text"
                   value={distance}
                   onChange={(e) => setDistance(e.target.value)}
-                  placeholder="e.g. 10 km"
+                  placeholder="e.g. 5 km, 10 km"
                   className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none font-semibold"
                 />
               </div>
               <div>
                 <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                  Finish Time (HH:MM:SS or MM:SS) *
+                  Finish Time (HH:MM:SS) *
                 </label>
                 <input
                   type="text"
-                  placeholder="00:24:45"
+                  placeholder="HH:MM:SS"
                   value={finishTimeInput}
                   onChange={(e) => setFinishTimeInput(e.target.value)}
                   className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none font-mono font-bold"
@@ -1060,7 +1060,7 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
               Send Tracking ID Emails
             </h2>
             <p className="text-xs text-[var(--muted)]">
-              Send courier dispatch details and live tracking links to runners individually or in bulk via batch paste.
+              Dispatch courier tracking numbers and live tracking links to runners individually or in bulk.
             </p>
           </div>
         </div>
@@ -1096,12 +1096,12 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
           <form onSubmit={handleSingleDispatch} className="max-w-xl space-y-4">
             <div>
               <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                Runner BIB Number (e.g. NUD2-867357 or GJVR-620288) *
+                Runner BIB Number *
               </label>
               <input
                 type="text"
                 required
-                placeholder="NUD2-867357"
+                placeholder="BIB number"
                 value={singleBib}
                 onChange={(e) => setSingleBib(e.target.value.toUpperCase())}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-purple-500 outline-none font-mono font-bold"
@@ -1135,12 +1135,12 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
 
             <div>
               <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                Tracking / AWB Number *
+                Tracking Number (AWB) *
               </label>
               <input
                 type="text"
                 required
-                placeholder="e.g. 7D136259434"
+                placeholder="Tracking / AWB number"
                 value={singleTracking}
                 onChange={(e) => setSingleTracking(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-purple-500 outline-none font-mono"
@@ -1149,11 +1149,11 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
 
             <div>
               <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                Tracking URL (Optional - leave blank for auto-generated tracking link)
+                Tracking Link (Optional)
               </label>
               <input
                 type="url"
-                placeholder="https://www.dtdc.com/track-your-shipment/"
+                placeholder="Tracking link (optional)"
                 value={singleUrl}
                 onChange={(e) => setSingleUrl(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-purple-500 outline-none font-mono text-xs"
@@ -1183,7 +1183,7 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
           <form onSubmit={handleBulkDispatch} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                Paste Multiple Rows (Format: BIB, Courier, TrackingNumber) *
+                Batch Paste (BIB, Courier, TrackingNumber) *
               </label>
               <textarea
                 rows={6}
@@ -1314,7 +1314,7 @@ function TabCourierExcel({
                 Courier Delivery Excel Exporter
               </h2>
               <p className="text-xs text-[var(--muted)]">
-                Export a formatted delivery manifest (.csv) with runner names, contact numbers, full addresses, and medal dispatch status ready for courier partners.
+                Download a formatted courier dispatch spreadsheet (.csv) with recipient names, phones, and verified delivery addresses.
               </p>
             </div>
           </div>
@@ -1542,7 +1542,7 @@ function TabEventManagement({
                 Event Management
               </h2>
               <p className="text-xs text-[var(--muted)]">
-                Configure virtual running events, change registration fees, update posters, edit distances, and manage registration availability.
+                Create new virtual run events or update registration fees, posters, medal graphics, and race distances.
               </p>
             </div>
           </div>
@@ -1888,7 +1888,7 @@ function TabLeaderboardManager({
                 Leaderboard Controller
               </h2>
               <p className="text-xs text-[var(--muted)]">
-                Adjust runner placements on the public leaderboard. Edit finish timings in seconds or use Move Up / Move Down to reposition podium contenders.
+                Adjust finish timings and reposition podium contenders directly on the live public leaderboard.
               </p>
             </div>
           </div>
@@ -2134,7 +2134,7 @@ function TabGalleryManager({ toast, getToken }: { toast: any; getToken: any }) {
               Gallery Photo Manager
             </h2>
             <p className="text-xs text-[var(--muted)]">
-              Manage the community photo showcase. Upload runner memories, medal photos, or remove outdated entries from the website gallery.
+              Upload finisher memories and manage photos featured on the public community gallery.
             </p>
           </div>
         </div>
@@ -2162,7 +2162,7 @@ function TabGalleryManager({ toast, getToken }: { toast: any; getToken: any }) {
                 type="text"
                 value={tag}
                 onChange={(e) => setTag(e.target.value)}
-                placeholder="National Unity Day 2026"
+                placeholder="Event tag or category"
                 className="w-full px-3 py-2 rounded-lg border border-[var(--line)] bg-[var(--panel)] text-xs text-[var(--foreground)] outline-none"
               />
             </div>
@@ -2170,7 +2170,7 @@ function TabGalleryManager({ toast, getToken }: { toast: any; getToken: any }) {
           <div className="flex items-center justify-between gap-3">
             <input
               type="text"
-              placeholder="Caption (e.g. Rahul finishing his 10 km run in Delhi)"
+              placeholder="Photo caption (optional)"
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               className="flex-1 px-3 py-2 rounded-lg border border-[var(--line)] bg-[var(--panel)] text-xs text-[var(--foreground)] outline-none"
@@ -2296,7 +2296,7 @@ function TabManualProof({ toast, getToken }: { toast: any; getToken: any }) {
               WhatsApp Proof Upload
             </h2>
             <p className="text-xs text-[var(--muted)]">
-              For runners who share activity screenshots via WhatsApp instead of the website: enter their finish time to approve their proof and issue certificates instantly.
+              Approve activity screenshots received on WhatsApp, record finish times, and issue certificates immediately.
             </p>
           </div>
         </div>
@@ -2306,7 +2306,7 @@ function TabManualProof({ toast, getToken }: { toast: any; getToken: any }) {
           <input
             type="text"
             required
-            placeholder="Enter BIB Number (e.g. NUD2-867357) or Phone Number..."
+            placeholder="Search by BIB number, email, or phone..."
             value={bibInput}
             onChange={(e) => setBibInput(e.target.value.toUpperCase())}
             className="flex-1 px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] font-mono outline-none"
@@ -2333,12 +2333,12 @@ function TabManualProof({ toast, getToken }: { toast: any; getToken: any }) {
 
             <div>
               <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                Finish Time (Total time in HH:MM:SS) *
+                Finish Time (HH:MM:SS) *
               </label>
               <input
                 type="text"
                 required
-                placeholder="00:26:45"
+                placeholder="HH:MM:SS"
                 value={finishTime}
                 onChange={(e) => setFinishTime(e.target.value)}
                 className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm font-mono font-bold text-[var(--foreground)]"
@@ -2364,7 +2364,7 @@ function TabManualProof({ toast, getToken }: { toast: any; getToken: any }) {
                 <label className="block text-xs font-medium text-[var(--muted)] mb-1">Screenshot Link (Optional)</label>
                 <input
                   type="url"
-                  placeholder="https://..."
+                  placeholder="Screenshot URL or note (optional)"
                   value={proofUrl}
                   onChange={(e) => setProofUrl(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-xs text-[var(--foreground)]"
@@ -2522,7 +2522,7 @@ function TabTshirtManager({
                 Winner T-Shirt Size Manager
               </h2>
               <p className="text-xs text-[var(--muted)]">
-                Track jersey sizes for Top 3 podium finishers across all categories. Copy WhatsApp claim links, send reminder emails, and export sizes for merchandise printing.
+                Manage jersey sizes for Top 3 podium winners, copy WhatsApp claim links, send reminder emails, and export sizes.
               </p>
             </div>
           </div>
