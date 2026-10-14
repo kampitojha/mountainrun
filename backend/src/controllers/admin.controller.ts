@@ -2643,19 +2643,55 @@ export async function adminSubmitManualProof(request: AuthenticatedRequest, resp
 export async function adminGetLeaderboardManager(request: AuthenticatedRequest, response: Response) {
   const eventId = q(request, "eventId");
   const distance = q(request, "distance");
+  const visibility = q(request, "visibility") || "ALL";
+  const search = q(request, "search")?.trim().toLowerCase();
 
   if (!eventId) {
     throw new ApiError(400, "eventId is required");
   }
 
+  const whereClause: any = {
+    eventId,
+    status: { in: ["CONFIRMED", "PENDING_PAYMENT"] },
+  };
+
+  if (distance && distance !== "ALL") {
+    whereClause.distance = distance;
+  }
+
+  if (visibility === "LIVE") {
+    whereClause.proofStatus = "APPROVED";
+    whereClause.hideFromLeaderboard = false;
+    whereClause.finishTimeSeconds = { not: null };
+  } else if (visibility === "HIDDEN") {
+    whereClause.OR = [
+      { hideFromLeaderboard: true },
+      { proofStatus: { not: "APPROVED" } },
+      { finishTimeSeconds: null },
+    ];
+  }
+
+  if (search) {
+    whereClause.AND = [
+      ...(whereClause.AND || []),
+      {
+        OR: [
+          { bibNumber: { contains: search, mode: "insensitive" } },
+          { shippingName: { contains: search, mode: "insensitive" } },
+          { user: { name: { contains: search, mode: "insensitive" } } },
+          { user: { email: { contains: search, mode: "insensitive" } } },
+        ],
+      },
+    ];
+  }
+
   const registrations = await prisma.registration.findMany({
-    where: {
-      eventId,
-      ...(distance && distance !== "ALL" ? { distance } : {}),
-      proofStatus: "APPROVED",
-      finishTimeSeconds: { not: null },
-    },
-    orderBy: { finishTimeSeconds: "asc" },
+    where: whereClause,
+    orderBy: [
+      { hideFromLeaderboard: "asc" },
+      { finishTimeSeconds: "asc" },
+      { registeredAt: "asc" },
+    ],
     include: {
       user: { select: { id: true, name: true, email: true, phone: true } },
       certificate: { select: { id: true, certificateNumber: true, status: true, pdfUrl: true } },
@@ -2663,19 +2699,27 @@ export async function adminGetLeaderboardManager(request: AuthenticatedRequest, 
     take: 500,
   });
 
-  const ranked = registrations.map((r, index) => ({
-    rank: index + 1,
-    id: r.id,
-    bibNumber: r.bibNumber,
-    runnerName: r.shippingName || r.user.name,
-    email: r.user.email,
-    phone: r.shippingPhone || r.user.phone,
-    distance: r.distance,
-    finishTimeSeconds: r.finishTimeSeconds,
-    finishTimeFormatted: formatDurationSeconds(r.finishTimeSeconds),
-    proofStatus: r.proofStatus,
-    certificate: r.certificate,
-  }));
+  let liveRankCounter = 1;
+  const ranked = registrations.map((r) => {
+    const isLive = r.proofStatus === "APPROVED" && !r.hideFromLeaderboard && r.finishTimeSeconds !== null;
+    const rank = isLive ? liveRankCounter++ : null;
+
+    return {
+      rank,
+      id: r.id,
+      bibNumber: r.bibNumber,
+      runnerName: r.shippingName || r.user.name,
+      email: r.user.email,
+      phone: r.shippingPhone || r.user.phone,
+      distance: r.distance,
+      finishTimeSeconds: r.finishTimeSeconds,
+      finishTimeFormatted: r.finishTimeSeconds ? formatDurationSeconds(r.finishTimeSeconds) : "--:--:--",
+      proofStatus: r.proofStatus,
+      hideFromLeaderboard: r.hideFromLeaderboard,
+      isLiveOnLeaderboard: isLive,
+      certificate: r.certificate,
+    };
+  });
 
   response.json({ data: ranked });
 }
@@ -2686,6 +2730,7 @@ export async function adminUpdateLeaderboardEntry(request: AuthenticatedRequest,
     finishTimeSeconds: z.number().int().positive().optional(),
     proofStatus: z.enum(["NOT_SUBMITTED", "SUBMITTED", "APPROVED", "REJECTED"]).optional(),
     distance: z.string().optional(),
+    hideFromLeaderboard: z.boolean().optional(),
   });
   const payload = validateBody(schema, request);
 
@@ -2695,15 +2740,16 @@ export async function adminUpdateLeaderboardEntry(request: AuthenticatedRequest,
       ...(payload.finishTimeSeconds !== undefined ? { finishTimeSeconds: payload.finishTimeSeconds } : {}),
       ...(payload.proofStatus ? { proofStatus: payload.proofStatus } : {}),
       ...(payload.distance ? { distance: payload.distance } : {}),
+      ...(payload.hideFromLeaderboard !== undefined ? { hideFromLeaderboard: payload.hideFromLeaderboard } : {}),
     },
     include: { user: true, event: true },
   });
 
   await writeAdminAudit(request, {
-    action: "leaderboard.update_timing",
+    action: "leaderboard.update_visibility",
     entityType: "Registration",
     entityId: id,
-    summary: `Leaderboard timing updated for ${reg.bibNumber} -> ${payload.finishTimeSeconds}s`,
+    summary: `Leaderboard updated for ${reg.bibNumber} -> hide=${payload.hideFromLeaderboard ?? reg.hideFromLeaderboard}, time=${payload.finishTimeSeconds ?? reg.finishTimeSeconds}s, proofStatus=${payload.proofStatus ?? reg.proofStatus}`,
   });
 
   response.json({ message: "Leaderboard entry updated", data: reg });

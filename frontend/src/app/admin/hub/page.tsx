@@ -31,6 +31,8 @@ import {
   Sparkles,
   ChevronRight,
   ShieldAlert,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 /* ── Toast notification system ───────────────────────────── */
@@ -1773,10 +1775,13 @@ function TabLeaderboardManager({
 }) {
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [selectedDistance, setSelectedDistance] = useState<string>("5 km");
+  const [visibilityFilter, setVisibilityFilter] = useState<"LIVE" | "HIDDEN" | "ALL">("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
   const [rankedAthletes, setRankedAthletes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTimeInput, setEditTimeInput] = useState("");
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const activeEvent = events.find((e) => e.id === selectedEventId) || events[0];
 
@@ -1792,17 +1797,21 @@ function TabLeaderboardManager({
     setLoading(true);
     try {
       const token = await getToken();
-      const res: any = await adminFetch(
-        `/api/admin/leaderboard-manager?eventId=${selectedEventId}&distance=${encodeURIComponent(selectedDistance)}`,
-        token
-      );
+      const params = new URLSearchParams({
+        eventId: selectedEventId,
+        distance: selectedDistance,
+        visibility: visibilityFilter,
+        ...(searchQuery.trim() ? { search: searchQuery.trim() } : {}),
+      });
+
+      const res: any = await adminFetch(`/api/admin/leaderboard-manager?${params.toString()}`, token);
       setRankedAthletes(res.data || []);
     } catch (err: any) {
       toast("error", err.message);
     } finally {
       setLoading(false);
     }
-  }, [selectedEventId, selectedDistance, getToken, toast]);
+  }, [selectedEventId, selectedDistance, visibilityFilter, searchQuery, getToken, toast]);
 
   useEffect(() => {
     loadLeaderboard();
@@ -1810,7 +1819,7 @@ function TabLeaderboardManager({
 
   function startEdit(ath: any) {
     setEditingId(ath.id);
-    setEditTimeInput(ath.finishTimeFormatted || "00:25:00");
+    setEditTimeInput(ath.finishTimeFormatted !== "--:--:--" ? ath.finishTimeFormatted : "00:25:00");
   }
 
   async function handleSaveTime(athleteId: string) {
@@ -1829,9 +1838,9 @@ function TabLeaderboardManager({
       await adminFetch(`/api/admin/leaderboard-manager/${athleteId}`, token, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ finishTimeSeconds: seconds }),
+        body: JSON.stringify({ finishTimeSeconds: seconds, proofStatus: "APPROVED", hideFromLeaderboard: false }),
       });
-      toast("success", "Timing updated! Rank recalculated.");
+      toast("success", "Timing updated! Runner is live on leaderboard.");
       setEditingId(null);
       loadLeaderboard();
     } catch (err: any) {
@@ -1839,25 +1848,58 @@ function TabLeaderboardManager({
     }
   }
 
+  async function handleToggleVisibility(ath: any, hide: boolean) {
+    setTogglingId(ath.id);
+    try {
+      const token = await getToken();
+      const payload: any = { hideFromLeaderboard: hide };
+
+      // If making visible and doesn't have finish time, give default finish time
+      if (!hide) {
+        payload.proofStatus = "APPROVED";
+        if (!ath.finishTimeSeconds) {
+          payload.finishTimeSeconds = 1500; // 00:25:00 default
+        }
+      }
+
+      await adminFetch(`/api/admin/leaderboard-manager/${ath.id}`, token, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      toast(
+        "success",
+        hide
+          ? `${ath.runnerName} (${ath.bibNumber}) is now HIDDEN from the public leaderboard!`
+          : `${ath.runnerName} (${ath.bibNumber}) is now LIVE on the public leaderboard!`
+      );
+      loadLeaderboard();
+    } catch (err: any) {
+      toast("error", err.message);
+    } finally {
+      setTogglingId(null);
+    }
+  }
+
   async function handleBump(athleteIndex: number, direction: "up" | "down") {
     const current = rankedAthletes[athleteIndex];
-    if (!current) return;
+    if (!current || !current.finishTimeSeconds) return;
 
     let newSeconds = current.finishTimeSeconds;
     if (direction === "up") {
       if (athleteIndex === 0) {
-        // Already #1, shave off 2 seconds
         newSeconds = Math.max(10, current.finishTimeSeconds - 2);
       } else {
         const above = rankedAthletes[athleteIndex - 1];
-        newSeconds = Math.max(10, above.finishTimeSeconds - 1);
+        newSeconds = Math.max(10, (above.finishTimeSeconds || current.finishTimeSeconds) - 1);
       }
     } else {
       if (athleteIndex >= rankedAthletes.length - 1) {
         newSeconds = current.finishTimeSeconds + 5;
       } else {
         const below = rankedAthletes[athleteIndex + 1];
-        newSeconds = below.finishTimeSeconds + 1;
+        newSeconds = (below.finishTimeSeconds || current.finishTimeSeconds) + 1;
       }
     }
 
@@ -1868,12 +1910,15 @@ function TabLeaderboardManager({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ finishTimeSeconds: newSeconds }),
       });
-      toast("success", `Bumped ${direction}! Re-ranked.`);
+      toast("success", `Bumped ${direction}! Ranking recalculated.`);
       loadLeaderboard();
     } catch (err: any) {
       toast("error", err.message);
     }
   }
+
+  const liveCount = rankedAthletes.filter((a) => a.isLiveOnLeaderboard).length;
+  const hiddenCount = rankedAthletes.filter((a) => !a.isLiveOnLeaderboard).length;
 
   return (
     <div className="space-y-6">
@@ -1885,10 +1930,10 @@ function TabLeaderboardManager({
             </div>
             <div>
               <h2 className="text-lg font-bold text-[var(--foreground)]">
-                Leaderboard Controller
+                Leaderboard Controller & Visibility
               </h2>
               <p className="text-xs text-[var(--muted)]">
-                Adjust finish timings and reposition podium contenders directly on the live public leaderboard.
+                Control who appears on the public leaderboard, adjust rankings, fine-tune finish times, or hide participants.
               </p>
             </div>
           </div>
@@ -1896,41 +1941,101 @@ function TabLeaderboardManager({
           <button
             type="button"
             onClick={loadLeaderboard}
-            className="px-3.5 py-2 rounded-xl border border-[var(--line)] text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--line)] inline-flex items-center gap-1.5"
+            className="px-3.5 py-2 rounded-xl border border-[var(--line)] text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--line)] inline-flex items-center gap-1.5 cursor-pointer"
           >
-            <RefreshCw className="w-3.5 h-3.5" /> Reload Leaderboard
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> Reload Board
           </button>
         </div>
 
-        {/* Filter Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4 border-b border-[var(--line)]">
-          <div>
-            <label className="block text-xs font-medium text-[var(--muted)] mb-1">Event</label>
-            <select
-              value={selectedEventId}
-              onChange={(e) => setSelectedEventId(e.target.value)}
-              className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-yellow-500 outline-none"
-            >
-              {events.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.title}
-                </option>
-              ))}
-            </select>
+        {/* Filter Controls */}
+        <div className="space-y-4 pb-4 border-b border-[var(--line)]">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-[var(--muted)] mb-1">Event</label>
+              <select
+                value={selectedEventId}
+                onChange={(e) => setSelectedEventId(e.target.value)}
+                className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-yellow-500 outline-none"
+              >
+                {events.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--muted)] mb-1">Distance Category</label>
+              <select
+                value={selectedDistance}
+                onChange={(e) => setSelectedDistance(e.target.value)}
+                className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-yellow-500 outline-none"
+              >
+                {(activeEvent?.distances || ["1.6 km", "3.2 km", "5 km", "10 km", "21 km"]).map((d: string) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--muted)] mb-1">Search Participant</label>
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-[var(--muted)]" />
+                <input
+                  type="text"
+                  placeholder="BIB number, runner name, or email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-yellow-500 outline-none font-mono"
+                />
+              </div>
+            </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-[var(--muted)] mb-1">Distance Category</label>
-            <select
-              value={selectedDistance}
-              onChange={(e) => setSelectedDistance(e.target.value)}
-              className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-yellow-500 outline-none"
-            >
-              {(activeEvent?.distances || ["1.6 km", "3.2 km", "5 km", "10 km", "21 km"]).map((d: string) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
+
+          {/* Visibility View Toggles */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[var(--background)] border border-[var(--line)] text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setVisibilityFilter("ALL")}
+                className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                  visibilityFilter === "ALL"
+                    ? "bg-yellow-500 text-slate-950 font-bold shadow-xs"
+                    : "text-[var(--muted)] hover:text-white"
+                }`}
+              >
+                All Participants ({rankedAthletes.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setVisibilityFilter("LIVE")}
+                className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+                  visibilityFilter === "LIVE"
+                    ? "bg-emerald-500 text-slate-950 font-bold shadow-xs"
+                    : "text-[var(--muted)] hover:text-white"
+                }`}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                Live on Board ({liveCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setVisibilityFilter("HIDDEN")}
+                className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+                  visibilityFilter === "HIDDEN"
+                    ? "bg-rose-500 text-white font-bold shadow-xs"
+                    : "text-[var(--muted)] hover:text-white"
+                }`}
+              >
+                <EyeOff className="w-3.5 h-3.5" />
+                Hidden / Excluded ({hiddenCount})
+              </button>
+            </div>
+
+            <div className="text-[11px] text-[var(--muted)]">
+              Tip: Use <strong>Hide from Board</strong> to remove any runner without deleting their registration or medal.
+            </div>
           </div>
         </div>
 
@@ -1942,45 +2047,49 @@ function TabLeaderboardManager({
                 <th className="p-3 w-16 text-center">Rank</th>
                 <th className="p-3">Athlete</th>
                 <th className="p-3 font-mono">BIB</th>
-                <th className="p-3">Official Finish Time</th>
-                <th className="p-3">Proof Status</th>
-                <th className="p-3 text-right">Actions (Rank Adjustment)</th>
+                <th className="p-3">Finish Time</th>
+                <th className="p-3">Board Status</th>
+                <th className="p-3 text-right">Visibility & Rank Control</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--line)]">
               {loading ? (
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-[var(--muted)]">
-                    <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" /> Loading ranking...
+                    <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" /> Loading athletes...
                   </td>
                 </tr>
               ) : rankedAthletes.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-[var(--muted)]">
-                    No approved finishers found for this distance category yet.
+                    No athletes found matching the selected filter.
                   </td>
                 </tr>
               ) : (
                 rankedAthletes.map((ath, idx) => (
-                  <tr key={ath.id} className="hover:bg-[var(--line)]/20">
+                  <tr key={ath.id} className={`hover:bg-[var(--line)]/20 ${!ath.isLiveOnLeaderboard ? "opacity-60 bg-rose-950/5" : ""}`}>
                     <td className="p-3 text-center">
-                      <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full font-bold text-xs ${
-                        idx === 0
-                          ? "bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/30"
-                          : idx === 1
-                          ? "bg-slate-300 text-slate-950 font-bold"
-                          : idx === 2
-                          ? "bg-amber-700 text-white font-bold"
-                          : "bg-[var(--line)] text-[var(--muted)]"
-                      }`}>
-                        #{ath.rank}
-                      </span>
+                      {ath.isLiveOnLeaderboard ? (
+                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full font-bold text-xs ${
+                          ath.rank === 1
+                            ? "bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/30"
+                            : ath.rank === 2
+                            ? "bg-slate-300 text-slate-950 font-bold"
+                            : ath.rank === 3
+                            ? "bg-amber-700 text-white font-bold"
+                            : "bg-[var(--line)] text-[var(--muted)]"
+                        }`}>
+                          #{ath.rank}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] font-mono text-[var(--muted)]">--</span>
+                      )}
                     </td>
                     <td className="p-3">
                       <div className="font-bold text-sm text-[var(--foreground)]">{ath.runnerName}</div>
-                      <div className="text-[11px] text-[var(--muted)]">{ath.email}</div>
+                      <div className="text-[11px] text-[var(--muted)] font-mono">{ath.email}</div>
                     </td>
-                    <td className="p-3 font-mono font-bold text-amber-400">{ath.bibNumber}</td>
+                    <td className="p-3 font-mono font-bold text-yellow-400">{ath.bibNumber}</td>
                     <td className="p-3">
                       {editingId === ath.id ? (
                         <div className="flex items-center gap-1.5">
@@ -1992,44 +2101,79 @@ function TabLeaderboardManager({
                           />
                           <button
                             onClick={() => handleSaveTime(ath.id)}
-                            className="px-2 py-1 rounded bg-yellow-500 text-black font-bold text-[11px]"
+                            className="px-2 py-1 rounded bg-yellow-500 text-black font-bold text-[11px] cursor-pointer"
                           >
                             Save
                           </button>
                         </div>
                       ) : (
-                        <span className="font-mono text-base font-bold text-[var(--foreground)]">
+                        <span className="font-mono text-sm font-bold text-[var(--foreground)]">
                           {ath.finishTimeFormatted}
                         </span>
                       )}
                     </td>
                     <td className="p-3">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">
-                        {ath.proofStatus}
-                      </span>
+                      {ath.isLiveOnLeaderboard ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                          <Eye className="w-3 h-3" /> Live on Board
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                          <EyeOff className="w-3 h-3" /> Hidden from Board
+                        </span>
+                      )}
                     </td>
                     <td className="p-3 text-right">
-                      <div className="inline-flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleBump(idx, "up")}
-                          title="Move Rank Up (Faster)"
-                          className="p-1.5 rounded-lg border border-[var(--line)] bg-[var(--background)] hover:bg-emerald-500/20 text-emerald-400 hover:border-emerald-500/40"
-                        >
-                          <ArrowUp className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleBump(idx, "down")}
-                          title="Move Rank Down (Slower)"
-                          className="p-1.5 rounded-lg border border-[var(--line)] bg-[var(--background)] hover:bg-rose-500/20 text-rose-400 hover:border-rose-500/40"
-                        >
-                          <ArrowDown className="w-3.5 h-3.5" />
-                        </button>
+                      <div className="inline-flex items-center gap-1.5">
+                        {/* Toggle Visibility */}
+                        {ath.isLiveOnLeaderboard ? (
+                          <button
+                            type="button"
+                            disabled={togglingId === ath.id}
+                            onClick={() => handleToggleVisibility(ath, true)}
+                            title="Hide this athlete from the public leaderboard"
+                            className="px-2.5 py-1 rounded-lg border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer transition disabled:opacity-50"
+                          >
+                            <EyeOff className="w-3.5 h-3.5" /> Hide
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={togglingId === ath.id}
+                            onClick={() => handleToggleVisibility(ath, false)}
+                            title="Show this athlete on the public leaderboard"
+                            className="px-2.5 py-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer transition disabled:opacity-50"
+                          >
+                            <Eye className="w-3.5 h-3.5" /> Show Live
+                          </button>
+                        )}
+
+                        {/* Rank Bump Controls (only if live with time) */}
+                        {ath.isLiveOnLeaderboard && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleBump(idx, "up")}
+                              title="Move Rank Up (Faster by 1s)"
+                              className="p-1 rounded-lg border border-[var(--line)] bg-[var(--background)] hover:bg-emerald-500/20 text-emerald-400 cursor-pointer"
+                            >
+                              <ArrowUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleBump(idx, "down")}
+                              title="Move Rank Down (Slower by 1s)"
+                              className="p-1 rounded-lg border border-[var(--line)] bg-[var(--background)] hover:bg-rose-500/20 text-rose-400 cursor-pointer"
+                            >
+                              <ArrowDown className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        )}
+
                         <button
                           type="button"
                           onClick={() => startEdit(ath)}
-                          className="px-2.5 py-1 rounded-lg border border-[var(--line)] text-xs text-[var(--muted)] hover:text-white"
+                          className="px-2.5 py-1 rounded-lg border border-[var(--line)] text-xs text-[var(--muted)] hover:text-white cursor-pointer"
                         >
                           Edit Time
                         </button>

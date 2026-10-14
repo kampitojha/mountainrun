@@ -956,6 +956,7 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
     where: {
       eventId: { in: matchingEventIds },
       proofStatus: "APPROVED",
+      hideFromLeaderboard: false,
     },
     orderBy: [{ registeredAt: "asc" }],
     include: { user: true, event: true },
