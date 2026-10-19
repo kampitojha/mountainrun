@@ -15,7 +15,6 @@ Clerk is already integrated. Add API keys from [dashboard.clerk.com](https://das
 
 1. Put `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` + `CLERK_SECRET_KEY` in `frontend/.env`
 2. Put the same `CLERK_SECRET_KEY` in `backend/.env`
-3. Full steps: [CLERK_SETUP.md](./CLERK_SETUP.md)
 
 ## Frontend
 

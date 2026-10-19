@@ -20,7 +20,7 @@ import {
   toCertificateRenderData,
 } from "../services/certificate.service.js";
 import { sendRegistrationConfirmationEmail, sendMedalDispatchEmail } from "../services/email.service.js";
-import { createBibNumber } from "../services/bib.service.js";
+import { createBibNumber, generateUniqueBibNumber } from "../services/bib.service.js";
 import { sendTelegramAlert } from "../services/alert.service.js";
 import { fetchPaymentsForOrder } from "../services/razorpay.service.js";
 import { ensureDefaultEvents } from "../services/event.service.js";
@@ -2325,18 +2325,8 @@ export async function adminCreateManualRegistration(request: AuthenticatedReques
   }
 
   // Generate unique bib
-  let bib = "";
-  for (let i = 0; i < 20; i++) {
-    const candidate = createBibNumber(event.slug);
-    const taken = await prisma.registration.findUnique({ where: { bibNumber: candidate } });
-    if (!taken) {
-      bib = candidate;
-      break;
-    }
-  }
-  if (!bib) {
-    throw new ApiError(500, "Failed to generate unique BIB");
-  }
+  const bib = await generateUniqueBibNumber(event.slug);
+
 
   const amountInPaise = payload.amountInPaise ?? event.priceInPaise;
   const adminNote = payload.adminNote || `Manual payment of ₹${amountInPaise / 100} verified via admin panel on ${new Date().toISOString()}`;

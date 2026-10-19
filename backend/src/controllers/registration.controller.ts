@@ -1,7 +1,7 @@
 import type { Response } from "express";
 import { prisma } from "../lib/prisma.js";
 import type { AuthenticatedRequest } from "../middleware/clerk-auth.js";
-import { createBibNumber } from "../services/bib.service.js";
+import { createBibNumber, generateUniqueBibNumber } from "../services/bib.service.js";
 import {
   createCertificateNumber,
   createCertificateQrPayload,
@@ -134,6 +134,8 @@ export async function createRegistration(request: AuthenticatedRequest, response
   const freeEntry = !event.paymentRequired || event.priceInPaise <= 0;
 
   let registration;
+  const assignedBib = await generateUniqueBibNumber(event.slug, payload.bibNumber);
+
   try {
     registration = await prisma.registration.create({
       data: {
@@ -149,7 +151,7 @@ export async function createRegistration(request: AuthenticatedRequest, response
         shippingCity: payload.shippingCity,
         shippingState: payload.shippingState,
         shippingPincode: payload.shippingPincode,
-        bibNumber: payload.bibNumber || createBibNumber(event.slug),
+        bibNumber: assignedBib,
       },
       include: {
         event: true,
@@ -157,32 +159,73 @@ export async function createRegistration(request: AuthenticatedRequest, response
         payment: true,
       },
     });
-  } catch (error) {
-    // Race / unique collision → re-read and resume if pending
-    const raced = await prisma.registration.findUnique({
-      where: {
-        userId_eventId_distance: {
-          userId: user.id,
-          eventId: event.id,
-          distance: payload.distance,
+  } catch (error: any) {
+    // If bibNumber unique collision happened (concurrent race condition), generate fresh fallback BIB and retry
+    const isBibCollision =
+      error?.code === "P2002" &&
+      (Array.isArray(error?.meta?.target)
+        ? error.meta.target.includes("bibNumber")
+        : String(error?.meta?.target || "").includes("bibNumber") ||
+          String(error?.message || "").includes("bibNumber"));
+
+    if (isBibCollision) {
+      const fallbackBib = await generateUniqueBibNumber(event.slug);
+      try {
+        registration = await prisma.registration.create({
+          data: {
+            userId: user.id,
+            eventId: event.id,
+            distance: payload.distance,
+            activityType: selectedType,
+            status: freeEntry ? "CONFIRMED" : "PENDING_PAYMENT",
+            shippingName: (payload.name || payload.shippingName).trim(),
+            shippingPhone: (payload.phone || payload.shippingPhone).trim(),
+            shippingLine1: payload.shippingLine1,
+            shippingLine2: payload.shippingLine2,
+            shippingCity: payload.shippingCity,
+            shippingState: payload.shippingState,
+            shippingPincode: payload.shippingPincode,
+            bibNumber: fallbackBib,
+          },
+          include: {
+            event: true,
+            user: true,
+            payment: true,
+          },
+        });
+      } catch (retryError) {
+        // Fall through to race check
+        error = retryError;
+      }
+    }
+
+    if (!registration) {
+      // Race / unique collision on user_event_distance → re-read and resume if pending
+      const raced = await prisma.registration.findUnique({
+        where: {
+          userId_eventId_distance: {
+            userId: user.id,
+            eventId: event.id,
+            distance: payload.distance,
+          },
         },
-      },
-      include: { event: true, user: true, payment: true },
-    });
-    if (raced && (raced.status === "PENDING_PAYMENT" || raced.payment?.status === "CREATED")) {
-      response.status(200).json({
-        data: raced,
-        meta: { freeEntry: false, resumed: true },
+        include: { event: true, user: true, payment: true },
       });
-      return;
+      if (raced && (raced.status === "PENDING_PAYMENT" || raced.payment?.status === "CREATED")) {
+        response.status(200).json({
+          data: raced,
+          meta: { freeEntry: false, resumed: true },
+        });
+        return;
+      }
+      if (raced) {
+        throw new ApiError(
+          409,
+          `You are already registered for ${payload.distance} in “${event.title}”.`,
+        );
+      }
+      throw error;
     }
-    if (raced) {
-      throw new ApiError(
-        409,
-        `You are already registered for ${payload.distance} in “${event.title}”.`,
-      );
-    }
-    throw error;
   }
 
   // Apply referral code if provided

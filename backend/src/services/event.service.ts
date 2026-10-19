@@ -45,21 +45,33 @@ export function withEventMeta<T extends Pick<Event, "status" | "startsAt" | "end
   };
 }
 
-/** Seed starter catalog only when the database has no events yet. */
+let defaultEventsChecked = false;
+
+/** Seed starter catalog only when the database has no events yet (cached in-memory after first check). */
 export async function ensureDefaultEvents() {
-  const existingEvents = await prisma.event.count();
-  if (existingEvents > 0) {
+  if (defaultEventsChecked) {
     return;
   }
 
-  for (const event of defaultEvents) {
-    await prisma.event.create({
-      data: {
-        ...event,
-        medalIncluded: event.medalIncluded ?? true,
-        benefits: event.benefits ?? [],
-      },
-    });
+  try {
+    const existingEvents = await prisma.event.count();
+    if (existingEvents > 0) {
+      defaultEventsChecked = true;
+      return;
+    }
+
+    for (const event of defaultEvents) {
+      await prisma.event.create({
+        data: {
+          ...event,
+          medalIncluded: event.medalIncluded ?? true,
+          benefits: event.benefits ?? [],
+        },
+      });
+    }
+    defaultEventsChecked = true;
+  } catch (err) {
+    console.warn("[ensureDefaultEvents] Non-fatal check error:", err);
   }
 }
 

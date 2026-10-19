@@ -444,7 +444,8 @@ function PaymentRegistrationFormInner() {
       .toUpperCase()
       .padEnd(3, "R");
 
-    const str = `${runnerName}-${selectedDistance}-${selectedEvent}`;
+    const userIdentifier = user?.id || user?.primaryEmailAddress?.emailAddress || runnerName;
+    const str = `${userIdentifier}-${selectedDistance}-${selectedEvent}`;
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       hash = (hash << 5) - hash + str.charCodeAt(i);
@@ -453,7 +454,7 @@ function PaymentRegistrationFormInner() {
     const uniqueNum = 100000 + (Math.abs(hash) % 900000);
 
     return `${eventCode}-${uniqueNum}`;
-  }, [selectedDistance, runnerName, selectedEvent, currentPendingReg]);
+  }, [selectedDistance, runnerName, selectedEvent, currentPendingReg, user]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
