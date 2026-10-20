@@ -39,6 +39,8 @@ import {
   adminProofReviewSchema,
   adminRegistrationUpdateSchema,
   adminUserRoleSchema,
+  adminCreateLeaderboardEntrySchema,
+  adminUpdateLeaderboardEntrySchema,
 } from "../validators/admin.validator.js";
 
 function parsePage(request: AuthenticatedRequest, maxLimit = 200) {
@@ -655,7 +657,7 @@ export async function adminListRegistrations(request: AuthenticatedRequest, resp
       take: pageSize,
       include: {
         user: { select: { id: true, name: true, email: true, phone: true, clerkId: true } },
-        event: { select: { id: true, title: true, slug: true, priceInPaise: true } },
+        event: { select: { id: true, title: true, slug: true, priceInPaise: true, distances: true } },
         payment: true,
         proofUpload: true,
         certificate: true,
@@ -695,9 +697,90 @@ export async function adminUpdateRegistration(request: AuthenticatedRequest, res
   const id = routeParam(request, "id");
   const payload = validateBody(adminRegistrationUpdateSchema, request);
 
+  const existing = await prisma.registration.findUnique({
+    where: { id },
+    include: { user: true, event: true, certificate: true },
+  });
+  if (!existing) {
+    throw new ApiError(404, "Registration not found");
+  }
+
+  // 1. If distance changed, ensure no duplicate registration exists for (userId, eventId, distance)
+  if (payload.distance && payload.distance.trim() !== existing.distance) {
+    const newDistance = payload.distance.trim();
+    const dup = await prisma.registration.findFirst({
+      where: {
+        userId: existing.userId,
+        eventId: existing.eventId,
+        distance: newDistance,
+        id: { not: existing.id },
+      },
+    });
+    if (dup) {
+      throw new ApiError(
+        400,
+        `Participant already has an existing registration for ${newDistance} in this event (BIB: ${dup.bibNumber})`,
+      );
+    }
+  }
+
+  // 2. If bibNumber changed, ensure uniqueness
+  if (payload.bibNumber && payload.bibNumber.trim().toUpperCase() !== existing.bibNumber) {
+    const newBib = payload.bibNumber.trim().toUpperCase();
+    const dupBib = await prisma.registration.findUnique({
+      where: { bibNumber: newBib },
+    });
+    if (dupBib) {
+      throw new ApiError(400, `BIB number ${newBib} is already in use by another runner.`);
+    }
+  }
+
+  // 3. Update User profile (name, phone, email) if provided
+  const effectiveName = payload.runnerName?.trim() || payload.name?.trim() || payload.shippingName?.trim();
+  const userUpdateData: any = {};
+  if (effectiveName && effectiveName !== existing.user.name) {
+    userUpdateData.name = effectiveName;
+  }
+  if (payload.phone && payload.phone.trim() !== existing.user.phone) {
+    userUpdateData.phone = payload.phone.trim();
+  }
+  if (payload.email && payload.email.trim().toLowerCase() !== existing.user.email) {
+    const newEmail = payload.email.trim().toLowerCase();
+    const dupEmail = await prisma.user.findFirst({
+      where: { email: newEmail, id: { not: existing.userId } },
+    });
+    if (!dupEmail) {
+      userUpdateData.email = newEmail;
+    }
+  }
+  if (Object.keys(userUpdateData).length > 0) {
+    await prisma.user.update({
+      where: { id: existing.userId },
+      data: userUpdateData,
+    });
+  }
+
+  // 4. Update Registration record
+  const regUpdateData: any = {
+    ...(payload.status ? { status: payload.status } : {}),
+    ...(payload.distance ? { distance: payload.distance.trim() } : {}),
+    ...(payload.finishTimeSeconds !== undefined ? { finishTimeSeconds: payload.finishTimeSeconds } : {}),
+    ...(payload.adminNote !== undefined ? { adminNote: payload.adminNote } : {}),
+    ...(effectiveName ? { shippingName: effectiveName } : {}),
+    ...(payload.bibNumber ? { bibNumber: payload.bibNumber.trim().toUpperCase() } : {}),
+    ...(payload.shippingPhone || payload.phone
+      ? { shippingPhone: (payload.shippingPhone || payload.phone)!.trim() }
+      : {}),
+    ...(payload.shippingLine1 ? { shippingLine1: payload.shippingLine1.trim() } : {}),
+    ...(payload.shippingLine2 !== undefined ? { shippingLine2: payload.shippingLine2 } : {}),
+    ...(payload.shippingCity ? { shippingCity: payload.shippingCity.trim() } : {}),
+    ...(payload.shippingState ? { shippingState: payload.shippingState.trim() } : {}),
+    ...(payload.shippingPincode ? { shippingPincode: payload.shippingPincode.trim() } : {}),
+  };
+
   const registration = await prisma.registration.update({
     where: { id },
-    data: payload,
+    data: regUpdateData,
     include: {
       user: true,
       event: true,
@@ -712,7 +795,7 @@ export async function adminUpdateRegistration(request: AuthenticatedRequest, res
     action: "registration.update",
     entityType: "Registration",
     entityId: id,
-    summary: `Updated registration ${registration.bibNumber}`,
+    summary: `Updated registration ${registration.bibNumber}: name=${registration.shippingName}, distance=${registration.distance}, status=${registration.status}`,
   });
 
   response.json({ data: registration });
@@ -2659,6 +2742,11 @@ export async function adminGetLeaderboardManager(request: AuthenticatedRequest, 
       { proofStatus: { not: "APPROVED" } },
       { finishTimeSeconds: null },
     ];
+  } else if (visibility === "DUMMY") {
+    whereClause.OR = [
+      { adminNote: { contains: "dummy", mode: "insensitive" } },
+      { user: { email: { contains: "dummy", mode: "insensitive" } } },
+    ];
   }
 
   if (search) {
@@ -2668,6 +2756,7 @@ export async function adminGetLeaderboardManager(request: AuthenticatedRequest, 
         OR: [
           { bibNumber: { contains: search, mode: "insensitive" } },
           { shippingName: { contains: search, mode: "insensitive" } },
+          { shippingCity: { contains: search, mode: "insensitive" } },
           { user: { name: { contains: search, mode: "insensitive" } } },
           { user: { email: { contains: search, mode: "insensitive" } } },
         ],
@@ -2693,6 +2782,10 @@ export async function adminGetLeaderboardManager(request: AuthenticatedRequest, 
   const ranked = registrations.map((r) => {
     const isLive = r.proofStatus === "APPROVED" && !r.hideFromLeaderboard && r.finishTimeSeconds !== null;
     const rank = isLive ? liveRankCounter++ : null;
+    const isDummy = Boolean(
+      r.adminNote?.toLowerCase().includes("dummy") ||
+      r.user.email?.toLowerCase().includes("dummy")
+    );
 
     return {
       rank,
@@ -2701,6 +2794,8 @@ export async function adminGetLeaderboardManager(request: AuthenticatedRequest, 
       runnerName: r.shippingName || r.user.name,
       email: r.user.email,
       phone: r.shippingPhone || r.user.phone,
+      city: r.shippingCity,
+      state: r.shippingState,
       distance: r.distance,
       finishTimeSeconds: r.finishTimeSeconds,
       finishTimeFormatted: r.finishTimeSeconds ? formatDurationSeconds(r.finishTimeSeconds) : "--:--:--",
@@ -2708,6 +2803,8 @@ export async function adminGetLeaderboardManager(request: AuthenticatedRequest, 
       hideFromLeaderboard: r.hideFromLeaderboard,
       isLiveOnLeaderboard: isLive,
       certificate: r.certificate,
+      isDummy,
+      adminNote: r.adminNote,
     };
   });
 
@@ -2716,33 +2813,185 @@ export async function adminGetLeaderboardManager(request: AuthenticatedRequest, 
 
 export async function adminUpdateLeaderboardEntry(request: AuthenticatedRequest, response: Response) {
   const id = routeParam(request, "id");
-  const schema = z.object({
-    finishTimeSeconds: z.number().int().positive().optional(),
-    proofStatus: z.enum(["NOT_SUBMITTED", "SUBMITTED", "APPROVED", "REJECTED"]).optional(),
-    distance: z.string().optional(),
-    hideFromLeaderboard: z.boolean().optional(),
+  const payload = validateBody(adminUpdateLeaderboardEntrySchema, request);
+
+  const existing = await prisma.registration.findUnique({
+    where: { id },
+    include: { user: true, event: true },
   });
-  const payload = validateBody(schema, request);
+  if (!existing) {
+    throw new ApiError(404, "Leaderboard entry not found");
+  }
+
+  // Parse finish time if provided as string
+  let finishSeconds = payload.finishTimeSeconds;
+  if (finishSeconds === undefined && payload.finishTime) {
+    const parts = payload.finishTime.split(":").map(Number);
+    if (parts.length === 3) finishSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+    else if (parts.length === 2) finishSeconds = parts[0] * 60 + parts[1];
+    else if (parts.length === 1 && !isNaN(parts[0])) finishSeconds = parts[0];
+  }
+
+  // If distance changed, ensure uniqueness
+  if (payload.distance && payload.distance.trim() !== existing.distance) {
+    const newDistance = payload.distance.trim();
+    const dup = await prisma.registration.findFirst({
+      where: {
+        userId: existing.userId,
+        eventId: existing.eventId,
+        distance: newDistance,
+        id: { not: existing.id },
+      },
+    });
+    if (dup) {
+      throw new ApiError(400, `Runner already has an entry for distance ${newDistance} in this event`);
+    }
+  }
+
+  // If bib changed, ensure uniqueness
+  if (payload.bibNumber && payload.bibNumber.trim().toUpperCase() !== existing.bibNumber) {
+    const newBib = payload.bibNumber.trim().toUpperCase();
+    const dupBib = await prisma.registration.findUnique({
+      where: { bibNumber: newBib },
+    });
+    if (dupBib) {
+      throw new ApiError(400, `BIB number ${newBib} is already in use`);
+    }
+  }
+
+  // Update user name if runnerName provided
+  if (payload.runnerName) {
+    await prisma.user.update({
+      where: { id: existing.userId },
+      data: { name: payload.runnerName.trim() },
+    });
+  }
 
   const reg = await prisma.registration.update({
     where: { id },
     data: {
-      ...(payload.finishTimeSeconds !== undefined ? { finishTimeSeconds: payload.finishTimeSeconds } : {}),
+      ...(finishSeconds !== undefined ? { finishTimeSeconds: finishSeconds } : {}),
       ...(payload.proofStatus ? { proofStatus: payload.proofStatus } : {}),
-      ...(payload.distance ? { distance: payload.distance } : {}),
+      ...(payload.distance ? { distance: payload.distance.trim() } : {}),
       ...(payload.hideFromLeaderboard !== undefined ? { hideFromLeaderboard: payload.hideFromLeaderboard } : {}),
+      ...(payload.runnerName ? { shippingName: payload.runnerName.trim() } : {}),
+      ...(payload.bibNumber ? { bibNumber: payload.bibNumber.trim().toUpperCase() } : {}),
+      ...(payload.city ? { shippingCity: payload.city.trim() } : {}),
+      ...(payload.state ? { shippingState: payload.state.trim() } : {}),
     },
     include: { user: true, event: true },
   });
 
   await writeAdminAudit(request, {
-    action: "leaderboard.update_visibility",
+    action: "leaderboard.update_entry",
     entityType: "Registration",
     entityId: id,
-    summary: `Leaderboard updated for ${reg.bibNumber} -> hide=${payload.hideFromLeaderboard ?? reg.hideFromLeaderboard}, time=${payload.finishTimeSeconds ?? reg.finishTimeSeconds}s, proofStatus=${payload.proofStatus ?? reg.proofStatus}`,
+    summary: `Leaderboard updated for ${reg.bibNumber} (${reg.shippingName}): hide=${reg.hideFromLeaderboard}, time=${reg.finishTimeSeconds}s, dist=${reg.distance}`,
   });
 
   response.json({ message: "Leaderboard entry updated", data: reg });
+}
+
+export async function adminCreateLeaderboardEntry(request: AuthenticatedRequest, response: Response) {
+  const payload = validateBody(adminCreateLeaderboardEntrySchema, request);
+  const event = await prisma.event.findUnique({ where: { id: payload.eventId } });
+  if (!event) throw new ApiError(404, "Event not found");
+
+  // Parse finish time
+  let seconds = payload.finishTimeSeconds;
+  if (!seconds && payload.finishTime) {
+    const parts = payload.finishTime.split(":").map(Number);
+    if (parts.length === 3) seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+    else if (parts.length === 2) seconds = parts[0] * 60 + parts[1];
+    else if (parts.length === 1 && !isNaN(parts[0])) seconds = parts[0];
+  }
+  if (!seconds || seconds <= 0) {
+    seconds = 1500; // default 25 min
+  }
+
+  // Generate unique bib if not provided
+  let bib = payload.bibNumber?.trim().toUpperCase();
+  if (!bib) {
+    bib = await generateUniqueBibNumber(event.slug);
+  } else {
+    const existing = await prisma.registration.findUnique({ where: { bibNumber: bib } });
+    if (existing) {
+      throw new ApiError(409, `BIB number ${bib} is already registered.`);
+    }
+  }
+
+  const dummyEmail = `dummy_${bib.toLowerCase().replace(/[^a-z0-9]/g, "")}_${Date.now()}@mountainrun.in`;
+  const user = await prisma.user.create({
+    data: {
+      name: payload.runnerName.trim(),
+      email: dummyEmail,
+      phone: "9999999999",
+      role: "RUNNER",
+    },
+  });
+
+  const reg = await prisma.registration.create({
+    data: {
+      bibNumber: bib,
+      userId: user.id,
+      eventId: event.id,
+      distance: payload.distance.trim(),
+      activityType: "running",
+      status: "CONFIRMED",
+      proofStatus: "APPROVED",
+      hideFromLeaderboard: !payload.showOnLeaderboard,
+      finishTimeSeconds: seconds,
+      shippingName: payload.runnerName.trim(),
+      shippingCity: payload.city?.trim() || "India",
+      shippingState: payload.state?.trim() || "",
+      shippingLine1: "Manual Leaderboard Entry",
+      shippingPhone: "9999999999",
+      shippingPincode: "110001",
+      adminNote: payload.isDummy ? "Manual dummy leaderboard entry created by admin" : "Manual leaderboard entry created by admin",
+    },
+    include: {
+      user: true,
+      event: true,
+    },
+  });
+
+  await writeAdminAudit(request, {
+    action: "leaderboard.create_entry",
+    entityType: "Registration",
+    entityId: reg.id,
+    summary: `Created dummy/manual leaderboard entry for ${reg.shippingName} (${reg.bibNumber}) with finish time ${seconds}s`,
+  });
+
+  response.status(201).json({ message: "Leaderboard entry created", data: reg });
+}
+
+export async function adminDeleteLeaderboardEntry(request: AuthenticatedRequest, response: Response) {
+  const id = routeParam(request, "id");
+  const reg = await prisma.registration.findUnique({
+    where: { id },
+    include: { user: true, payment: true, certificate: true, proofUpload: true, medalDelivery: true },
+  });
+  if (!reg) throw new ApiError(404, "Entry not found");
+
+  await prisma.$transaction(async (tx) => {
+    if (reg.certificate) await tx.certificate.delete({ where: { registrationId: id } });
+    if (reg.medalDelivery) await tx.medalDelivery.delete({ where: { registrationId: id } });
+    if (reg.proofUpload) await tx.proofUpload.delete({ where: { registrationId: id } });
+    if (reg.payment) await tx.payment.delete({ where: { registrationId: id } });
+    await tx.registration.delete({ where: { id } });
+    if (reg.user.email.includes("dummy_") && reg.user.email.includes("@mountainrun.in")) {
+      await tx.user.delete({ where: { id: reg.userId } }).catch(() => null);
+    }
+  });
+
+  await writeAdminAudit(request, {
+    action: "leaderboard.delete_entry",
+    entityType: "Registration",
+    entityId: id,
+    summary: `Deleted leaderboard entry ${reg.bibNumber} (${reg.shippingName})`,
+  });
+
+  response.json({ message: "Leaderboard entry deleted" });
 }
 
 // ── 9. T-Shirt Size Manager Controllers ───────────────────────

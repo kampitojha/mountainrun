@@ -55,13 +55,43 @@ export const adminRegistrationUpdateSchema = z.object({
   distance: z.string().min(1).optional(),
   finishTimeSeconds: z.number().int().positive().nullable().optional(),
   adminNote: z.string().max(2000).optional().nullable(),
-  shippingName: z.string().min(2).optional(),
-  shippingPhone: z.string().min(8).optional(),
-  shippingLine1: z.string().min(3).optional(),
+  shippingName: z.string().min(1).optional(),
+  runnerName: z.string().min(1).optional(),
+  name: z.string().min(1).optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  bibNumber: z.string().min(1).optional(),
+  shippingPhone: z.string().min(4).optional(),
+  shippingLine1: z.string().min(1).optional(),
   shippingLine2: z.string().optional().nullable(),
-  shippingCity: z.string().min(2).optional(),
-  shippingState: z.string().min(2).optional(),
-  shippingPincode: z.string().min(4).optional(),
+  shippingCity: z.string().min(1).optional(),
+  shippingState: z.string().min(1).optional(),
+  shippingPincode: z.string().min(3).optional(),
+});
+
+export const adminCreateLeaderboardEntrySchema = z.object({
+  eventId: z.string().min(1),
+  runnerName: z.string().min(1),
+  distance: z.string().min(1),
+  finishTimeSeconds: z.number().int().positive().optional(),
+  finishTime: z.string().optional(),
+  bibNumber: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  showOnLeaderboard: z.boolean().optional().default(true),
+  isDummy: z.boolean().optional().default(true),
+});
+
+export const adminUpdateLeaderboardEntrySchema = z.object({
+  finishTimeSeconds: z.number().int().positive().optional(),
+  finishTime: z.string().optional(),
+  proofStatus: z.enum(["NOT_SUBMITTED", "SUBMITTED", "APPROVED", "REJECTED"]).optional(),
+  distance: z.string().optional(),
+  hideFromLeaderboard: z.boolean().optional(),
+  runnerName: z.string().min(1).optional(),
+  bibNumber: z.string().min(1).optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
 });
 
 export const adminMarkPaidSchema = z.object({

@@ -33,6 +33,7 @@ import {
   ShieldAlert,
   Eye,
   EyeOff,
+  Upload,
 } from "lucide-react";
 
 /* ── Toast notification system ───────────────────────────── */
@@ -111,15 +112,15 @@ interface TabMeta {
 }
 
 const TABS: TabMeta[] = [
-  { id: "manual-reg",    label: "1. Manual Reg",     sub: "Offline & UPI Entry",     icon: UserPlus,        color: "#10b981" },
-  { id: "certificate",   label: "2. e-Certificate",  sub: "Edit Details & Resend",   icon: FileCheck2,      color: "#3b82f6" },
-  { id: "tracking",      label: "3. Tracking Email", sub: "Dispatch Notifications",  icon: Truck,           color: "#8b5cf6" },
-  { id: "courier-excel", label: "4. Courier Excel",  sub: "Delivery Manifest (.csv)", icon: FileSpreadsheet, color: "#06b6d4" },
-  { id: "events",        label: "5. Events",         sub: "Posters, Pricing & Setup", icon: Calendar,        color: "#f59e0b" },
-  { id: "leaderboard",   label: "6. Leaderboard",    sub: "Ranks & Finish Times",    icon: Trophy,          color: "#eab308" },
-  { id: "gallery",       label: "7. Gallery",        sub: "Community Showcase",      icon: ImageIcon,       color: "#ec4899" },
-  { id: "proof",         label: "8. WhatsApp Proof", sub: "Manual Verification",     icon: CheckCircle2,    color: "#14b8a6" },
-  { id: "tshirts",       label: "9. T-Shirt Sizes",  sub: "Podium Winner Claims",    icon: Shirt,           color: "#f97316" },
+  { id: "manual-reg",    label: "1. Manual Reg",         sub: "Offline & UPI Entry",     icon: UserPlus,        color: "#10b981" },
+  { id: "certificate",   label: "2. Edit Participant",   sub: "Correct Name & Distance", icon: FileCheck2,      color: "#3b82f6" },
+  { id: "tracking",      label: "3. Bulk Tracking Emails", sub: "Dispatch via CSV / Paste", icon: Truck,       color: "#8b5cf6" },
+  { id: "courier-excel", label: "4. Courier Excel",      sub: "Delivery Manifest (.csv)", icon: FileSpreadsheet, color: "#06b6d4" },
+  { id: "events",        label: "5. Events",             sub: "Posters, Pricing & Setup", icon: Calendar,        color: "#f59e0b" },
+  { id: "leaderboard",   label: "6. Leaderboard Control", sub: "Edit Ranks & Add Dummy",  icon: Trophy,          color: "#eab308" },
+  { id: "gallery",       label: "7. Gallery",            sub: "Community Showcase",      icon: ImageIcon,       color: "#ec4899" },
+  { id: "proof",         label: "8. WhatsApp Proof",     sub: "Manual Verification",     icon: CheckCircle2,    color: "#14b8a6" },
+  { id: "tshirts",       label: "9. T-Shirt Sizes",      sub: "Podium Winner Claims",    icon: Shirt,           color: "#f97316" },
 ];
 
 export default function AdminHubPage() {
@@ -163,7 +164,7 @@ export default function AdminHubPage() {
               Admin Command Center • 9 Controls
             </h1>
             <p className="text-sm text-[var(--muted)] mt-1 max-w-2xl">
-              Unified operational control center for manual registrations, certificate corrections, courier tracking, delivery sheets, events, leaderboards, gallery, WhatsApp proofs, and winner jerseys.
+              Unified operational control center for manual registrations, participant name & distance corrections, courier tracking, delivery sheets, events, leaderboards, gallery, WhatsApp proofs, and winner jerseys.
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -218,7 +219,7 @@ export default function AdminHubPage() {
           <TabManualRegistration events={events} toast={toast} getToken={getToken} />
         )}
         {activeTab === "certificate" && (
-          <TabCertificateEditor toast={toast} getToken={getToken} />
+          <TabCertificateEditor events={events} toast={toast} getToken={getToken} />
         )}
         {activeTab === "tracking" && (
           <TabTrackingDispatch toast={toast} getToken={getToken} />
@@ -647,7 +648,7 @@ function TabManualRegistration({
 /* =====================================================================
    TAB 2: 📜 E-CERTIFICATE EDITOR
 ===================================================================== */
-function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }) {
+function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toast: any; getToken: any }) {
   const [search, setSearch] = useState("");
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<any[]>([]);
@@ -656,6 +657,9 @@ function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }
   // Edit fields
   const [runnerName, setRunnerName] = useState("");
   const [distance, setDistance] = useState("");
+  const [bibNumber, setBibNumber] = useState("");
+  const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("");
   const [finishTimeInput, setFinishTimeInput] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -675,7 +679,7 @@ function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }
     try {
       const token = await getToken();
       const res = await adminFetch<{ data: any[] }>(
-        `/api/admin/registrations?search=${encodeURIComponent(search.trim())}&pageSize=10`,
+        `/api/admin/registrations?search=${encodeURIComponent(search.trim())}&pageSize=15`,
         token
       );
       setResults(res.data || []);
@@ -693,8 +697,23 @@ function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }
     setSelectedReg(reg);
     setRunnerName(reg.shippingName || reg.user?.name || "");
     setDistance(reg.distance || "");
+    setBibNumber(reg.bibNumber || "");
+    setPhone(reg.shippingPhone || reg.user?.phone || "");
+    setCity(reg.shippingCity || "");
     setFinishTimeInput(formatSecs(reg.finishTimeSeconds));
   }
+
+  // Find matching event for distance options
+  const matchedEvent = selectedReg
+    ? events.find((e) => e.id === selectedReg.eventId || e.title === selectedReg.event?.title)
+    : null;
+  const availableDistances = matchedEvent?.distances || selectedReg?.event?.distances || [
+    "1.6 km",
+    "3.2 km",
+    "5 km",
+    "10 km",
+    "21 km",
+  ];
 
   async function handleSaveChanges() {
     if (!selectedReg) return;
@@ -711,31 +730,36 @@ function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }
         else if (parts.length === 1 && !isNaN(parts[0])) finishSeconds = parts[0];
       }
 
-      // Update registration
-      await adminFetch(`/api/admin/registrations/${selectedReg.id}`, token, {
+      // Update registration and participant profile
+      const updateRes: any = await adminFetch(`/api/admin/registrations/${selectedReg.id}`, token, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          runnerName: runnerName.trim(),
           shippingName: runnerName.trim(),
           distance: distance.trim(),
+          bibNumber: bibNumber.trim().toUpperCase(),
+          phone: phone.trim(),
+          shippingCity: city.trim(),
           finishTimeSeconds: finishSeconds,
         }),
       });
 
-      // Ensure / regenerate certificate
+      // Ensure / regenerate certificate with updated name and distance
       const certRes: any = await adminFetch(
         `/api/admin/registrations/${selectedReg.id}/certificate`,
         token,
         { method: "POST" }
       );
 
-      toast("success", "Certificate details updated and re-generated successfully!");
+      toast("success", "✓ Participant name & distance updated, and e-Certificate regenerated!");
 
       // Update local state
       setSelectedReg((prev: any) => ({
         ...prev,
         shippingName: runnerName.trim(),
         distance: distance.trim(),
+        bibNumber: updateRes.data?.bibNumber || bibNumber.trim().toUpperCase(),
         finishTimeSeconds: finishSeconds,
         certificate: certRes?.data?.certificate || prev.certificate,
       }));
@@ -774,10 +798,10 @@ function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }
           </div>
           <div>
             <h2 className="text-lg font-bold text-[var(--foreground)]">
-              e-Certificate Editor
+              Participant Name & Distance Correction
             </h2>
             <p className="text-xs text-[var(--muted)]">
-              Search runners to correct typos in names, distance categories, or finish times and regenerate certificates.
+              Easily change a participant&apos;s distance category upon request, correct misspelled names, update finish times, and regenerate official certificates.
             </p>
           </div>
         </div>
@@ -821,18 +845,18 @@ function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }
                     <span>•</span>
                     <span>{r.event?.title}</span>
                     <span>•</span>
-                    <span className="text-emerald-400">{r.distance}</span>
+                    <span className="text-emerald-400 font-semibold">{r.distance}</span>
                     {r.finishTimeSeconds && (
                       <>
                         <span>•</span>
-                        <span>{formatSecs(r.finishTimeSeconds)}</span>
+                        <span className="font-mono">{formatSecs(r.finishTimeSeconds)}</span>
                       </>
                     )}
                   </div>
                 </div>
                 <button
                   type="button"
-                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600/20 text-blue-300 border border-blue-500/30 hover:bg-blue-600/30"
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600/20 text-blue-300 border border-blue-500/30 hover:bg-blue-600/30 cursor-pointer"
                 >
                   Select & Edit &rarr;
                 </button>
@@ -846,7 +870,9 @@ function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }
           <div className="mt-6 border border-blue-500/30 rounded-2xl p-5 bg-gradient-to-b from-blue-950/20 to-transparent space-y-5">
             <div className="flex items-center justify-between border-b border-[var(--line)] pb-3">
               <div>
-                <span className="text-xs uppercase font-bold text-blue-400 tracking-wider">Editing Runner Certificate</span>
+                <span className="text-xs uppercase font-bold text-blue-400 tracking-wider">
+                  Editing Participant & Certificate
+                </span>
                 <div className="font-mono text-lg font-bold text-[var(--foreground)] flex items-center gap-2">
                   {selectedReg.bibNumber}
                   <span className="text-xs font-normal text-[var(--muted)]">({selectedReg.event?.title})</span>
@@ -864,7 +890,7 @@ function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                  Runner Name on Certificate *
+                  Runner Name (Fix Spelling Typos) *
                 </label>
                 <input
                   type="text"
@@ -873,21 +899,27 @@ function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }
                   className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none font-semibold"
                 />
               </div>
+
               <div>
                 <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                  Distance Category *
+                  Distance Category (Change Distance) *
                 </label>
-                <input
-                  type="text"
+                <select
                   value={distance}
                   onChange={(e) => setDistance(e.target.value)}
-                  placeholder="e.g. 5 km, 10 km"
                   className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none font-semibold"
-                />
+                >
+                  {availableDistances.map((d: string) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
               </div>
+
               <div>
                 <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                  Finish Time (HH:MM:SS) *
+                  Finish Time (HH:MM:SS)
                 </label>
                 <input
                   type="text"
@@ -895,6 +927,38 @@ function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }
                   value={finishTimeInput}
                   onChange={(e) => setFinishTimeInput(e.target.value)}
                   className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none font-mono font-bold"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-[var(--muted)] mb-1">BIB Number</label>
+                <input
+                  type="text"
+                  value={bibNumber}
+                  onChange={(e) => setBibNumber(e.target.value)}
+                  className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm font-mono text-[var(--foreground)] focus:border-blue-500 outline-none font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[var(--muted)] mb-1">Phone Number</label>
+                <input
+                  type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[var(--muted)] mb-1">City</label>
+                <input
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none"
                 />
               </div>
             </div>
@@ -953,7 +1017,7 @@ function TabCertificateEditor({ toast, getToken }: { toast: any; getToken: any }
    TAB 3: 🚚 TRACKING ID EMAIL DISPATCH
 ===================================================================== */
 function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any }) {
-  const [dispatchMode, setDispatchMode] = useState<"single" | "bulk">("single");
+  const [dispatchMode, setDispatchMode] = useState<"single" | "bulk">("bulk");
   const [loading, setLoading] = useState(false);
 
   // Single runner state
@@ -964,9 +1028,121 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
 
   // Bulk state
   const [bulkText, setBulkText] = useState("");
+  const [defaultCourier, setDefaultCourier] = useState("DTDC Express");
   const [bulkResults, setBulkResults] = useState<any>(null);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
 
-  const COURIER_SUGGESTIONS = ["DTDC Express", "Delhivery", "BlueDart", "India Post Speed Post", "Xpressbees"];
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const COURIER_SUGGESTIONS = [
+    "DTDC Express",
+    "Delhivery",
+    "BlueDart",
+    "India Post Speed Post",
+    "Shadowfax",
+    "Xpressbees",
+  ];
+
+  // Parse lines into structured items
+  const parsedItems = bulkText
+    .split("\n")
+    .map((rawLine, index) => {
+      const line = rawLine.trim();
+      if (!line) return null;
+      // Skip common CSV headers
+      const lower = line.toLowerCase();
+      if (
+        index === 0 &&
+        (lower.includes("bib") || lower.includes("courier") || lower.includes("tracking") || lower.includes("awb"))
+      ) {
+        return null;
+      }
+
+      // Support comma, tab (\t), or semicolon
+      let parts = line.split("\t");
+      if (parts.length === 1) parts = line.split(",");
+      if (parts.length === 1) parts = line.split(";");
+      parts = parts.map((p) => p.trim());
+
+      let bibNumber = "";
+      let courier = defaultCourier;
+      let trackingNumber = "";
+      let trackingUrl = "";
+
+      if (parts.length >= 3) {
+        bibNumber = parts[0];
+        courier = parts[1] || defaultCourier;
+        trackingNumber = parts[2];
+        trackingUrl = parts[3] || "";
+      } else if (parts.length === 2) {
+        // BIB, TrackingNumber
+        bibNumber = parts[0];
+        trackingNumber = parts[1];
+      } else if (parts.length === 1) {
+        bibNumber = parts[0];
+      }
+
+      const isValid = Boolean(bibNumber && trackingNumber);
+      return {
+        raw: line,
+        bibNumber: bibNumber.toUpperCase(),
+        courier,
+        trackingNumber,
+        trackingUrl: trackingUrl || null,
+        isValid,
+      };
+    })
+    .filter(Boolean) as Array<{
+    raw: string;
+    bibNumber: string;
+    courier: string;
+    trackingNumber: string;
+    trackingUrl: string | null;
+    isValid: boolean;
+  }>;
+
+  const validItems = parsedItems.filter((i) => i.isValid);
+  const invalidItems = parsedItems.filter((i) => !i.isValid);
+
+  function handleDownloadSampleCsv() {
+    const csvContent =
+      "BIB,Courier,TrackingNumber,TrackingUrl\n" +
+      "MRUN-1001,DTDC Express,7D136259434,https://www.dtdc.in/tracking.asp\n" +
+      "MRUN-1002,Delhivery,14238918239,https://www.delhivery.com\n" +
+      "MRUN-1003,BlueDart,8892182910,\n" +
+      "MRUN-1004,India Post Speed Post,EU918239128IN,\n";
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "mountainrun-tracking-sample.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast("success", "Sample CSV downloaded!");
+  }
+
+  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadedFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (text) {
+        setBulkText(text);
+        setDispatchMode("bulk");
+        toast("info", `Loaded ${file.name}! Check the preview below.`);
+      }
+    };
+    reader.onerror = () => {
+      toast("error", "Failed to read the file");
+    };
+    reader.readAsText(file);
+  }
 
   async function handleSingleDispatch(e: React.FormEvent) {
     e.preventDefault();
@@ -993,13 +1169,13 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
         }),
       });
 
-      if (res.data.sentCount > 0) {
+      if (res.data?.sentCount > 0) {
         toast("success", `Tracking email sent successfully for ${singleBib}!`);
         setSingleBib("");
         setSingleTracking("");
         setSingleUrl("");
       } else {
-        toast("error", `Failed: ${res.data.results?.[0]?.error || "Could not find registration"}`);
+        toast("error", `Failed: ${res.data?.results?.[0]?.error || "Could not find registration"}`);
       }
     } catch (err: any) {
       toast("error", err.message);
@@ -1010,23 +1186,16 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
 
   async function handleBulkDispatch(e: React.FormEvent) {
     e.preventDefault();
-    if (!bulkText.trim()) {
-      toast("error", "Please paste lines in format: BIB, Courier, TrackingNumber");
+    if (validItems.length === 0) {
+      toast("error", "No valid items to dispatch. Format should be: BIB, Courier, TrackingNumber");
       return;
     }
 
-    const lines = bulkText.split("\n").map((l) => l.trim()).filter(Boolean);
-    const items = lines.map((line) => {
-      const parts = line.split(",").map((p) => p.trim());
-      return {
-        bibNumber: parts[0] || "",
-        courier: parts[1] || "DTDC Express",
-        trackingNumber: parts[2] || "",
-      };
-    }).filter((item) => item.bibNumber && item.trackingNumber);
-
-    if (items.length === 0) {
-      toast("error", "No valid items parsed. Format should be: BIB, Courier, TrackingNumber");
+    if (
+      !confirm(
+        `Are you sure you want to send tracking emails to ${validItems.length} runners now? Participants will immediately receive an email with their tracking number.`
+      )
+    ) {
       return;
     }
 
@@ -1038,11 +1207,22 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
       const res: any = await adminFetch("/api/admin/medals/dispatch-email", token, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({
+          items: validItems.map((item) => ({
+            bibNumber: item.bibNumber,
+            courier: item.courier,
+            trackingNumber: item.trackingNumber,
+            trackingUrl: item.trackingUrl,
+          })),
+        }),
       });
 
       setBulkResults(res.data);
-      toast("success", `Dispatched ${res.data.sentCount} tracking emails!`);
+      if (res.data?.sentCount > 0) {
+        toast("success", `Dispatched ${res.data.sentCount} tracking emails!`);
+      } else {
+        toast("error", `Sent 0 emails. Check errors in the summary below.`);
+      }
     } catch (err: any) {
       toast("error", err.message);
     } finally {
@@ -1052,58 +1232,296 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
+      {/* ── Guidance Banner ─────────────────────────────────── */}
+      <div className="rounded-2xl border border-purple-500/20 bg-purple-950/20 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center shrink-0">
             <Truck className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-[var(--foreground)]">
-              Send Tracking ID Emails
-            </h2>
-            <p className="text-xs text-[var(--muted)]">
-              Dispatch courier tracking numbers and live tracking links to runners individually or in bulk.
+            <h3 className="text-sm font-bold text-purple-200">
+              Bulk Tracking ID Dispatch Center
+            </h3>
+            <p className="text-xs text-purple-300/80 mt-0.5 max-w-2xl leading-relaxed">
+              Upload your courier tracking sheet (or copy-paste from Excel). MountainRun automatically matches each runner by BIB number and sends a branded email with their AWB number and live delivery link.
             </p>
           </div>
         </div>
 
+        <button
+          type="button"
+          onClick={handleDownloadSampleCsv}
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-purple-500/40 bg-purple-900/40 hover:bg-purple-900/60 text-purple-200 text-xs font-bold transition shrink-0 cursor-pointer shadow-sm"
+        >
+          <Download className="w-3.5 h-3.5" /> Download Sample CSV
+        </button>
+      </div>
+
+      <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-sm">
         {/* Mode Selector */}
-        <div className="flex gap-2 border-b border-[var(--line)] pb-4 mb-5">
-          <button
-            type="button"
-            onClick={() => setDispatchMode("single")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-              dispatchMode === "single"
-                ? "bg-purple-600 text-white shadow-md shadow-purple-900/30"
-                : "bg-[var(--background)] border border-[var(--line)] text-[var(--muted)] hover:text-white"
-            }`}
-          >
-            Single Runner Dispatch
-          </button>
-          <button
-            type="button"
-            onClick={() => setDispatchMode("bulk")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-              dispatchMode === "bulk"
-                ? "bg-purple-600 text-white shadow-md shadow-purple-900/30"
-                : "bg-[var(--background)] border border-[var(--line)] text-[var(--muted)] hover:text-white"
-            }`}
-          >
-            Bulk Batch Dispatch
-          </button>
+        <div className="flex items-center justify-between border-b border-[var(--line)] pb-4 mb-6">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setDispatchMode("bulk")}
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer inline-flex items-center gap-2 ${
+                dispatchMode === "bulk"
+                  ? "bg-purple-600 text-white shadow-md shadow-purple-900/30"
+                  : "bg-[var(--background)] border border-[var(--line)] text-[var(--muted)] hover:text-white"
+              }`}
+            >
+              <FileSpreadsheet className="w-4 h-4" /> Bulk Batch Dispatch (CSV / Paste)
+            </button>
+            <button
+              type="button"
+              onClick={() => setDispatchMode("single")}
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer inline-flex items-center gap-2 ${
+                dispatchMode === "single"
+                  ? "bg-purple-600 text-white shadow-md shadow-purple-900/30"
+                  : "bg-[var(--background)] border border-[var(--line)] text-[var(--muted)] hover:text-white"
+              }`}
+            >
+              <Send className="w-4 h-4" /> Single Runner Dispatch
+            </button>
+          </div>
+
+          <div className="hidden sm:block text-[11px] text-[var(--muted)] font-mono">
+            Endpoint: /api/admin/medals/dispatch-email
+          </div>
         </div>
 
-        {/* Mode 1: Single */}
+        {/* ── Mode 1: Bulk Batch Dispatch ───────────────────────── */}
+        {dispatchMode === "bulk" && (
+          <form onSubmit={handleBulkDispatch} className="space-y-6">
+            {/* Top Toolbar: Default Courier & Upload CSV */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-xl border border-[var(--line)] bg-[var(--background)]">
+              <div>
+                <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                  Default Courier Partner
+                </label>
+                <p className="text-[11px] text-[var(--muted)] mb-2">
+                  Auto-applied if your CSV/paste only has 2 columns (BIB & Tracking Number).
+                </p>
+                <select
+                  value={defaultCourier}
+                  onChange={(e) => setDefaultCourier(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-sm text-[var(--foreground)] focus:border-purple-500 outline-none"
+                >
+                  {COURIER_SUGGESTIONS.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                  Upload CSV or Excel File
+                </label>
+                <p className="text-[11px] text-[var(--muted)] mb-2">
+                  Select a .csv or .txt file directly from your computer.
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept=".csv,.txt"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 py-2 px-3 rounded-xl border border-dashed border-purple-500/40 bg-purple-500/5 hover:bg-purple-500/10 text-purple-300 text-xs font-semibold inline-flex items-center justify-center gap-2 cursor-pointer transition"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {uploadedFileName ? `Replace: ${uploadedFileName}` : "📁 Choose CSV File"}
+                  </button>
+                  {uploadedFileName && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUploadedFileName(null);
+                        setBulkText("");
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                      className="p-2 rounded-xl border border-[var(--line)] text-[var(--muted)] hover:text-white"
+                      title="Clear file"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Paste Box */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-[var(--foreground)]">
+                  Paste Tracking Data (Comma or Tab separated)
+                </label>
+                <div className="flex items-center gap-2">
+                  {bulkText && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBulkText("");
+                        setUploadedFileName(null);
+                      }}
+                      className="text-[11px] text-rose-400 hover:underline cursor-pointer"
+                    >
+                      Clear All
+                    </button>
+                  )}
+                  <span className="text-[11px] text-[var(--muted)]">
+                    Format: <code className="text-purple-300">BIB, Courier, TrackingNumber</code>
+                  </span>
+                </div>
+              </div>
+
+              <textarea
+                rows={6}
+                placeholder={`Example:\nMRUN-1001, DTDC Express, 7D136259434\nMRUN-1002, Delhivery, 14238918239\nMRUN-1003, BlueDart, 8892182910\n\nOr paste straight from Excel (TAB separated)!`}
+                value={bulkText}
+                onChange={(e) => setBulkText(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-purple-500 outline-none font-mono resize-y"
+              />
+            </div>
+
+            {/* Pre-Flight Preview */}
+            {parsedItems.length > 0 && (
+              <div className="rounded-xl border border-[var(--line)] bg-[var(--background)] p-4 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-[var(--foreground)]">
+                      Pre-Flight Preview:
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      {validItems.length} Valid Runners Ready
+                    </span>
+                    {invalidItems.length > 0 && (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                        {invalidItems.length} Incomplete Rows (Will Be Skipped)
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] text-[var(--muted)]">
+                    Verify BIBs and AWB numbers before dispatching
+                  </span>
+                </div>
+
+                <div className="max-h-56 overflow-y-auto border border-[var(--line)] rounded-lg">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="bg-[var(--panel)] border-b border-[var(--line)] sticky top-0 text-[var(--muted)]">
+                      <tr>
+                        <th className="p-2 w-10 text-center">#</th>
+                        <th className="p-2 font-mono">BIB</th>
+                        <th className="p-2">Courier</th>
+                        <th className="p-2 font-mono">Tracking AWB</th>
+                        <th className="p-2 text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--line)]">
+                      {parsedItems.map((item, idx) => (
+                        <tr
+                          key={idx}
+                          className={item.isValid ? "hover:bg-[var(--panel)]/50" : "bg-rose-950/20 text-rose-300"}
+                        >
+                          <td className="p-2 text-center text-[var(--muted)]">{idx + 1}</td>
+                          <td className="p-2 font-mono font-bold text-yellow-400">
+                            {item.bibNumber || "--"}
+                          </td>
+                          <td className="p-2">{item.courier}</td>
+                          <td className="p-2 font-mono">{item.trackingNumber || "--"}</td>
+                          <td className="p-2 text-right">
+                            {item.isValid ? (
+                              <span className="text-emerald-400 font-semibold">Ready ✅</span>
+                            ) : (
+                              <span className="text-rose-400 font-semibold">Missing AWB ⚠️</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Submit Action */}
+            <div className="flex items-center gap-3">
+              <button
+                type="submit"
+                disabled={loading || validItems.length === 0}
+                className="py-3 px-6 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition shadow-lg shadow-purple-900/30 cursor-pointer flex items-center gap-2 disabled:opacity-50"
+              >
+                {loading ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" /> Sending Bulk Tracking Emails...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" /> Send Tracking Emails ({validItems.length} Runners)
+                  </>
+                )}
+              </button>
+
+              {validItems.length === 0 && bulkText.trim() && (
+                <span className="text-xs text-rose-400">
+                  Please make sure each line contains at least BIB and Tracking Number.
+                </span>
+              )}
+            </div>
+
+            {/* Results Display */}
+            {bulkResults && (
+              <div className="mt-4 p-5 rounded-xl border border-purple-500/30 bg-purple-950/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="font-bold text-sm text-purple-200">
+                    Dispatch Summary: {bulkResults.sentCount} Sent Successfully, {bulkResults.failCount} Failed
+                  </div>
+                  <span className="text-xs font-mono text-purple-300">
+                    {bulkResults.results?.length || 0} Total Processed
+                  </span>
+                </div>
+
+                <div className="max-h-56 overflow-y-auto text-xs space-y-1.5 divide-y divide-[var(--line)] border border-purple-500/20 rounded-lg p-3 bg-black/20">
+                  {bulkResults.results?.map((r: any, idx: number) => (
+                    <div key={idx} className="pt-1.5 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-yellow-400">
+                          {r.bibNumber || r.item?.bibNumber}
+                        </span>
+                        {r.recipientEmail && (
+                          <span className="text-[11px] text-[var(--muted)]">
+                            ({r.recipientEmail})
+                          </span>
+                        )}
+                      </div>
+                      <span className={r.success ? "text-emerald-400 font-semibold" : "text-rose-400 font-semibold"}>
+                        {r.success ? "Sent ✅" : r.error || "Failed ❌"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </form>
+        )}
+
+        {/* ── Mode 2: Single Runner Dispatch ─────────────────────── */}
         {dispatchMode === "single" && (
           <form onSubmit={handleSingleDispatch} className="max-w-xl space-y-4">
             <div>
-              <label className="block text-xs font-medium text-[var(--muted)] mb-1">
+              <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
                 Runner BIB Number *
               </label>
               <input
                 type="text"
                 required
-                placeholder="BIB number"
+                placeholder="e.g. MRUN-1001"
                 value={singleBib}
                 onChange={(e) => setSingleBib(e.target.value.toUpperCase())}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-purple-500 outline-none font-mono font-bold"
@@ -1111,7 +1529,7 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[var(--muted)] mb-1">
+              <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
                 Courier Partner *
               </label>
               <input
@@ -1127,7 +1545,7 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
                     key={c}
                     type="button"
                     onClick={() => setSingleCourier(c)}
-                    className="px-2.5 py-1 rounded-lg border border-[var(--line)] bg-[var(--background)] hover:border-purple-500 text-[11px] text-[var(--muted)] hover:text-white transition"
+                    className="px-2.5 py-1 rounded-lg border border-[var(--line)] bg-[var(--background)] hover:border-purple-500 text-[11px] text-[var(--muted)] hover:text-white transition cursor-pointer"
                   >
                     {c}
                   </button>
@@ -1136,13 +1554,13 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[var(--muted)] mb-1">
+              <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
                 Tracking Number (AWB) *
               </label>
               <input
                 type="text"
                 required
-                placeholder="Tracking / AWB number"
+                placeholder="Tracking / AWB number (e.g. 7D136259434)"
                 value={singleTracking}
                 onChange={(e) => setSingleTracking(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-purple-500 outline-none font-mono"
@@ -1150,12 +1568,12 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[var(--muted)] mb-1">
+              <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
                 Tracking Link (Optional)
               </label>
               <input
                 type="url"
-                placeholder="Tracking link (optional)"
+                placeholder="https://www.dtdc.in/tracking.asp?awb=..."
                 value={singleUrl}
                 onChange={(e) => setSingleUrl(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-purple-500 outline-none font-mono text-xs"
@@ -1173,66 +1591,10 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
                 </>
               ) : (
                 <>
-                  <Send className="w-4 h-4" /> Save Tracking & Send Email
+                  <Send className="w-4 h-4" /> Save Tracking & Send Email Now
                 </>
               )}
             </button>
-          </form>
-        )}
-
-        {/* Mode 2: Bulk */}
-        {dispatchMode === "bulk" && (
-          <form onSubmit={handleBulkDispatch} className="space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                Batch Paste (BIB, Courier, TrackingNumber) *
-              </label>
-              <textarea
-                rows={6}
-                required
-                placeholder={`NUD2-867357, DTDC Express, 7D136259434\nNUD2-787753, DTDC Express, 7D136259435\nGJVR-620288, Delhivery, 14238918239`}
-                value={bulkText}
-                onChange={(e) => setBulkText(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-purple-500 outline-none font-mono resize-y"
-              />
-              <p className="text-[11px] text-[var(--muted)] mt-1">
-                Tip: Copy 3 columns (BIB, Courier, Tracking) from Excel or Google Sheets and paste directly here.
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="py-3 px-6 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition shadow-lg shadow-purple-900/30 cursor-pointer flex items-center gap-2 disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" /> Sending Bulk Emails...
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4" /> Send Tracking Emails to All
-                </>
-              )}
-            </button>
-
-            {bulkResults && (
-              <div className="mt-4 p-4 rounded-xl border border-purple-500/30 bg-purple-950/30 space-y-2">
-                <div className="font-bold text-sm text-purple-300">
-                  Batch Dispatch Summary: {bulkResults.sentCount} Sent, {bulkResults.failCount} Failed
-                </div>
-                <div className="max-h-48 overflow-y-auto text-xs space-y-1 divide-y divide-[var(--line)]">
-                  {bulkResults.results?.map((r: any, idx: number) => (
-                    <div key={idx} className="pt-1 flex items-center justify-between">
-                      <span className="font-mono">{r.bibNumber || r.item?.bibNumber}</span>
-                      <span className={r.success ? "text-emerald-400" : "text-rose-400"}>
-                        {r.success ? "Sent ✅" : r.error || "Failed ❌"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </form>
         )}
       </div>
@@ -1775,13 +2137,37 @@ function TabLeaderboardManager({
 }) {
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [selectedDistance, setSelectedDistance] = useState<string>("5 km");
-  const [visibilityFilter, setVisibilityFilter] = useState<"LIVE" | "HIDDEN" | "ALL">("ALL");
+  const [visibilityFilter, setVisibilityFilter] = useState<"LIVE" | "HIDDEN" | "DUMMY" | "ALL">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [rankedAthletes, setRankedAthletes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editTimeInput, setEditTimeInput] = useState("");
   const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  // Add Dummy Runner Modal State
+  const [showAddDummyModal, setShowAddDummyModal] = useState(false);
+  const [dummySubmitting, setDummySubmitting] = useState(false);
+  const [dummyName, setDummyName] = useState("");
+  const [dummyEventId, setDummyEventId] = useState("");
+  const [dummyDistance, setDummyDistance] = useState("5 km");
+  const [dummyBib, setDummyBib] = useState("");
+  const [dummyTime, setDummyTime] = useState("00:22:30");
+  const [dummyCity, setDummyCity] = useState("Shimla");
+  const [dummyState, setDummyState] = useState("Himachal Pradesh");
+  const [dummyShowLive, setDummyShowLive] = useState(true);
+
+  // Edit Athlete Modal State
+  const [editingAthlete, setEditingAthlete] = useState<any | null>(null);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editRunnerName, setEditRunnerName] = useState("");
+  const [editDistance, setEditDistance] = useState("");
+  const [editBib, setEditBib] = useState("");
+  const [editTime, setEditTime] = useState("");
+  const [editCity, setEditCity] = useState("");
+  const [editState, setEditState] = useState("");
+  const [editShowLive, setEditShowLive] = useState(true);
+
+  // Deleting Athlete State
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const activeEvent = events.find((e) => e.id === selectedEventId) || events[0];
 
@@ -1789,6 +2175,8 @@ function TabLeaderboardManager({
     if (activeEvent && !selectedEventId) {
       setSelectedEventId(activeEvent.id);
       setSelectedDistance(activeEvent.distances?.[0] || "5 km");
+      setDummyEventId(activeEvent.id);
+      setDummyDistance(activeEvent.distances?.[0] || "5 km");
     }
   }, [activeEvent, selectedEventId]);
 
@@ -1817,34 +2205,169 @@ function TabLeaderboardManager({
     loadLeaderboard();
   }, [loadLeaderboard]);
 
-  function startEdit(ath: any) {
-    setEditingId(ath.id);
-    setEditTimeInput(ath.finishTimeFormatted !== "--:--:--" ? ath.finishTimeFormatted : "00:25:00");
+  function getPacePresets(dist: string) {
+    const d = (dist || "").toLowerCase();
+    if (d.includes("21") || d.includes("half")) {
+      return [
+        { label: "🥇 1st Place", time: "01:19:45" },
+        { label: "🥈 2nd Place", time: "01:24:30" },
+        { label: "🥉 3rd Place", time: "01:28:15" },
+        { label: "⏱️ Sub-1:40", time: "01:38:20" },
+        { label: "🏃 Sub-2:00", time: "01:54:10" },
+        { label: "🏔️ Finisher", time: "02:15:30" },
+      ];
+    }
+    if (d.includes("10")) {
+      return [
+        { label: "🥇 1st Place", time: "00:36:20" },
+        { label: "🥈 2nd Place", time: "00:39:45" },
+        { label: "🥉 3rd Place", time: "00:43:10" },
+        { label: "⏱️ Sub-45", time: "00:44:30" },
+        { label: "🏃 Sub-60", time: "00:56:45" },
+        { label: "🏔️ Finisher", time: "01:08:20" },
+      ];
+    }
+    if (d.includes("3.2") || d.includes("3 km")) {
+      return [
+        { label: "🥇 1st Place", time: "00:11:15" },
+        { label: "🥈 2nd Place", time: "00:12:40" },
+        { label: "🥉 3rd Place", time: "00:14:20" },
+        { label: "⏱️ Sub-15", time: "00:14:55" },
+        { label: "🏃 Finisher", time: "00:19:30" },
+      ];
+    }
+    if (d.includes("1.6") || d.includes("1 km")) {
+      return [
+        { label: "🥇 1st Place", time: "00:05:30" },
+        { label: "🥈 2nd Place", time: "00:06:15" },
+        { label: "🥉 3rd Place", time: "00:07:05" },
+        { label: "⏱️ Sub-8", time: "00:07:50" },
+        { label: "🏃 Finisher", time: "00:10:30" },
+      ];
+    }
+    // Default 5K
+    return [
+      { label: "🥇 1st Place", time: "00:17:45" },
+      { label: "🥈 2nd Place", time: "00:19:30" },
+      { label: "🥉 3rd Place", time: "00:22:15" },
+      { label: "⏱️ Sub-25", time: "00:24:40" },
+      { label: "🏃 Sub-30", time: "00:29:15" },
+      { label: "🏔️ Finisher", time: "00:34:50" },
+    ];
   }
 
-  async function handleSaveTime(athleteId: string) {
-    const parts = editTimeInput.split(":").map(Number);
-    let seconds = 0;
-    if (parts.length === 3) seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
-    else if (parts.length === 2) seconds = parts[0] * 60 + parts[1];
+  function openAddDummyModal() {
+    setDummyEventId(selectedEventId || activeEvent?.id || "");
+    setDummyDistance(selectedDistance);
+    const presets = getPacePresets(selectedDistance);
+    setDummyTime(presets[2]?.time || "00:22:30");
+    setDummyBib("");
+    setDummyName("");
+    setDummyShowLive(true);
+    setShowAddDummyModal(true);
+  }
 
-    if (!seconds) {
-      toast("error", "Enter time in format HH:MM:SS");
+  async function handleCreateDummy(e: React.FormEvent) {
+    e.preventDefault();
+    if (!dummyName.trim()) {
+      toast("error", "Runner name is required!");
+      return;
+    }
+    if (!dummyEventId) {
+      toast("error", "Select an event!");
       return;
     }
 
+    setDummySubmitting(true);
     try {
       const token = await getToken();
-      await adminFetch(`/api/admin/leaderboard-manager/${athleteId}`, token, {
-        method: "PATCH",
+      await adminFetch("/api/admin/leaderboard-manager/entry", token, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ finishTimeSeconds: seconds, proofStatus: "APPROVED", hideFromLeaderboard: false }),
+        body: JSON.stringify({
+          runnerName: dummyName.trim(),
+          eventId: dummyEventId,
+          distance: dummyDistance,
+          finishTime: dummyTime.trim() || undefined,
+          bibNumber: dummyBib.trim() || undefined,
+          city: dummyCity.trim() || undefined,
+          state: dummyState.trim() || undefined,
+          showOnLeaderboard: dummyShowLive,
+        }),
       });
-      toast("success", "Timing updated! Runner is live on leaderboard.");
-      setEditingId(null);
+
+      toast("success", `Added dummy runner "${dummyName}" successfully!`);
+      setShowAddDummyModal(false);
+      setDummyName("");
       loadLeaderboard();
     } catch (err: any) {
       toast("error", err.message);
+    } finally {
+      setDummySubmitting(false);
+    }
+  }
+
+  function openEditAthlete(ath: any) {
+    setEditingAthlete(ath);
+    setEditRunnerName(ath.runnerName || "");
+    setEditDistance(ath.distance || selectedDistance);
+    setEditBib(ath.bibNumber || "");
+    setEditTime(ath.finishTimeFormatted !== "--:--:--" ? ath.finishTimeFormatted : "00:24:00");
+    setEditCity(ath.city || "");
+    setEditState(ath.state || "");
+    setEditShowLive(Boolean(ath.isLiveOnLeaderboard));
+  }
+
+  async function handleSaveEditAthlete(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingAthlete) return;
+
+    setEditSubmitting(true);
+    try {
+      const token = await getToken();
+      await adminFetch(`/api/admin/leaderboard-manager/${editingAthlete.id}`, token, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          runnerName: editRunnerName.trim(),
+          distance: editDistance,
+          bibNumber: editBib.trim(),
+          finishTime: editTime.trim(),
+          city: editCity.trim(),
+          state: editState.trim(),
+          hideFromLeaderboard: !editShowLive,
+          proofStatus: editShowLive ? "APPROVED" : undefined,
+        }),
+      });
+
+      toast("success", `Updated ${editRunnerName} successfully!`);
+      setEditingAthlete(null);
+      loadLeaderboard();
+    } catch (err: any) {
+      toast("error", err.message);
+    } finally {
+      setEditSubmitting(false);
+    }
+  }
+
+  async function handleDeleteEntry(ath: any) {
+    if (!confirm(`Are you sure you want to permanently delete "${ath.runnerName}" (${ath.bibNumber})?`)) {
+      return;
+    }
+
+    setDeletingId(ath.id);
+    try {
+      const token = await getToken();
+      await adminFetch(`/api/admin/leaderboard-manager/${ath.id}`, token, {
+        method: "DELETE",
+      });
+
+      toast("success", `Removed "${ath.runnerName}" from leaderboard!`);
+      loadLeaderboard();
+    } catch (err: any) {
+      toast("error", err.message);
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -1854,7 +2377,6 @@ function TabLeaderboardManager({
       const token = await getToken();
       const payload: any = { hideFromLeaderboard: hide };
 
-      // If making visible and doesn't have finish time, give default finish time
       if (!hide) {
         payload.proofStatus = "APPROVED";
         if (!ath.finishTimeSeconds) {
@@ -1910,7 +2432,7 @@ function TabLeaderboardManager({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ finishTimeSeconds: newSeconds }),
       });
-      toast("success", `Bumped ${direction}! Ranking recalculated.`);
+      toast("success", `Rank bumped ${direction}! Recalculated.`);
       loadLeaderboard();
     } catch (err: any) {
       toast("error", err.message);
@@ -1919,39 +2441,101 @@ function TabLeaderboardManager({
 
   const liveCount = rankedAthletes.filter((a) => a.isLiveOnLeaderboard).length;
   const hiddenCount = rankedAthletes.filter((a) => !a.isLiveOnLeaderboard).length;
+  const dummyCount = rankedAthletes.filter((a) => a.isDummy).length;
 
   return (
     <div className="space-y-6">
+      {/* ── 3 Visual Guidance Cards for Easy Client Use ───────── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="p-4 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 flex items-start gap-3">
+          <div className="w-8 h-8 rounded-xl bg-yellow-500/20 text-yellow-400 flex items-center justify-center shrink-0 font-black text-sm">
+            1
+          </div>
+          <div>
+            <h4 className="text-xs font-bold text-yellow-300">Fix Athlete Errors</h4>
+            <p className="text-[11px] text-[var(--muted)] mt-0.5 leading-relaxed">
+              Click <strong className="text-[var(--foreground)]">✏️ Edit Athlete</strong> to fix spelling typos in names, change distance category, or adjust finish time.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 flex items-start gap-3">
+          <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 font-black text-sm">
+            2
+          </div>
+          <div>
+            <h4 className="text-xs font-bold text-emerald-300">Control Visibility & Podium</h4>
+            <p className="text-[11px] text-[var(--muted)] mt-0.5 leading-relaxed">
+              Click <strong className="text-emerald-400">👁️ Show Live</strong> or <strong className="text-rose-400">👁️‍🗨️ Hide</strong> to choose who appears. Use ⬆️ / ⬇️ to swap ranks.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl border border-purple-500/20 bg-purple-500/5 flex items-start gap-3">
+          <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 font-black text-sm">
+            3
+          </div>
+          <div>
+            <h4 className="text-xs font-bold text-purple-300">Add Dummy / Mock Runners</h4>
+            <p className="text-[11px] text-[var(--muted)] mt-0.5 leading-relaxed">
+              Click <strong className="text-purple-300">➕ Add Dummy Runner</strong> to insert custom runners with preset timings for 1st, 2nd, 3rd podium spots!
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        {/* Top Header & Action Buttons */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-yellow-500/10 text-yellow-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-yellow-500/10 text-yellow-400 flex items-center justify-center shrink-0">
               <Trophy className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-[var(--foreground)]">
-                Leaderboard Controller & Visibility
+                Leaderboard Controller & Visibility Hub
               </h2>
               <p className="text-xs text-[var(--muted)]">
-                Control who appears on the public leaderboard, adjust rankings, fine-tune finish times, or hide participants.
+                Full organizer control: edit names, change distances, adjust timings, toggle visibility, and create dummy runners.
               </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={loadLeaderboard}
-            className="px-3.5 py-2 rounded-xl border border-[var(--line)] text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--line)] inline-flex items-center gap-1.5 cursor-pointer"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> Reload Board
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={openAddDummyModal}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-slate-950 font-extrabold text-xs inline-flex items-center gap-2 shadow-md shadow-yellow-500/20 cursor-pointer transition transform hover:scale-[1.02]"
+            >
+              <Plus className="w-4 h-4" /> Add Dummy / Custom Runner
+            </button>
+
+            {activeEvent?.slug && (
+              <a
+                href={`/leaderboard?event=${activeEvent.slug}&distance=${encodeURIComponent(selectedDistance)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] hover:border-yellow-500/50 text-xs font-semibold text-[var(--foreground)] inline-flex items-center gap-1.5 transition"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-yellow-400" /> View Public Board
+              </a>
+            )}
+
+            <button
+              type="button"
+              onClick={loadLeaderboard}
+              className="px-3.5 py-2 rounded-xl border border-[var(--line)] text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--line)] inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> Reload
+            </button>
+          </div>
         </div>
 
         {/* Filter Controls */}
         <div className="space-y-4 pb-4 border-b border-[var(--line)]">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-medium text-[var(--muted)] mb-1">Event</label>
+              <label className="block text-xs font-bold text-[var(--muted)] mb-1">Select Event</label>
               <select
                 value={selectedEventId}
                 onChange={(e) => setSelectedEventId(e.target.value)}
@@ -1965,7 +2549,7 @@ function TabLeaderboardManager({
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--muted)] mb-1">Distance Category</label>
+              <label className="block text-xs font-bold text-[var(--muted)] mb-1">Distance Category</label>
               <select
                 value={selectedDistance}
                 onChange={(e) => setSelectedDistance(e.target.value)}
@@ -1979,12 +2563,12 @@ function TabLeaderboardManager({
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--muted)] mb-1">Search Participant</label>
+              <label className="block text-xs font-bold text-[var(--muted)] mb-1">Search Athlete</label>
               <div className="relative">
                 <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-[var(--muted)]" />
                 <input
                   type="text"
-                  placeholder="BIB number, runner name, or email..."
+                  placeholder="BIB, runner name, or email..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-yellow-500 outline-none font-mono"
@@ -2005,7 +2589,7 @@ function TabLeaderboardManager({
                     : "text-[var(--muted)] hover:text-white"
                 }`}
               >
-                All Participants ({rankedAthletes.length})
+                All Athletes ({rankedAthletes.length})
               </button>
               <button
                 type="button"
@@ -2031,10 +2615,21 @@ function TabLeaderboardManager({
                 <EyeOff className="w-3.5 h-3.5" />
                 Hidden / Excluded ({hiddenCount})
               </button>
+              <button
+                type="button"
+                onClick={() => setVisibilityFilter("DUMMY")}
+                className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+                  visibilityFilter === "DUMMY"
+                    ? "bg-purple-600 text-white font-bold shadow-xs"
+                    : "text-[var(--muted)] hover:text-white"
+                }`}
+              >
+                🎭 Dummy Only ({dummyCount})
+              </button>
             </div>
 
             <div className="text-[11px] text-[var(--muted)]">
-              Tip: Use <strong>Hide from Board</strong> to remove any runner without deleting their registration or medal.
+              Showing rankings for: <strong className="text-yellow-400 font-bold">{selectedDistance}</strong>
             </div>
           </div>
         </div>
@@ -2048,37 +2643,45 @@ function TabLeaderboardManager({
                 <th className="p-3">Athlete</th>
                 <th className="p-3 font-mono">BIB</th>
                 <th className="p-3">Finish Time</th>
+                <th className="p-3">Location</th>
                 <th className="p-3">Board Status</th>
-                <th className="p-3 text-right">Visibility & Rank Control</th>
+                <th className="p-3 text-right">Actions & Controls</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--line)]">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-[var(--muted)]">
+                  <td colSpan={7} className="p-8 text-center text-[var(--muted)]">
                     <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" /> Loading athletes...
                   </td>
                 </tr>
               ) : rankedAthletes.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-[var(--muted)]">
-                    No athletes found matching the selected filter.
+                  <td colSpan={7} className="p-8 text-center text-[var(--muted)]">
+                    No athletes found matching the selected filter. Click <strong>"➕ Add Dummy Runner"</strong> to put an athlete on the board!
                   </td>
                 </tr>
               ) : (
                 rankedAthletes.map((ath, idx) => (
-                  <tr key={ath.id} className={`hover:bg-[var(--line)]/20 ${!ath.isLiveOnLeaderboard ? "opacity-60 bg-rose-950/5" : ""}`}>
+                  <tr
+                    key={ath.id}
+                    className={`hover:bg-[var(--line)]/20 transition ${
+                      !ath.isLiveOnLeaderboard ? "opacity-60 bg-rose-950/5" : ""
+                    }`}
+                  >
                     <td className="p-3 text-center">
                       {ath.isLiveOnLeaderboard ? (
-                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full font-bold text-xs ${
-                          ath.rank === 1
-                            ? "bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/30"
-                            : ath.rank === 2
-                            ? "bg-slate-300 text-slate-950 font-bold"
-                            : ath.rank === 3
-                            ? "bg-amber-700 text-white font-bold"
-                            : "bg-[var(--line)] text-[var(--muted)]"
-                        }`}>
+                        <span
+                          className={`inline-flex items-center justify-center w-7 h-7 rounded-full font-bold text-xs ${
+                            ath.rank === 1
+                              ? "bg-amber-400 text-slate-950 font-black shadow-md shadow-amber-500/40"
+                              : ath.rank === 2
+                              ? "bg-slate-300 text-slate-950 font-bold"
+                              : ath.rank === 3
+                              ? "bg-amber-700 text-white font-bold"
+                              : "bg-[var(--line)] text-[var(--muted)]"
+                          }`}
+                        >
                           #{ath.rank}
                         </span>
                       ) : (
@@ -2086,31 +2689,22 @@ function TabLeaderboardManager({
                       )}
                     </td>
                     <td className="p-3">
-                      <div className="font-bold text-sm text-[var(--foreground)]">{ath.runnerName}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-[var(--foreground)]">{ath.runnerName}</span>
+                        {ath.isDummy && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                            Dummy
+                          </span>
+                        )}
+                      </div>
                       <div className="text-[11px] text-[var(--muted)] font-mono">{ath.email}</div>
                     </td>
                     <td className="p-3 font-mono font-bold text-yellow-400">{ath.bibNumber}</td>
-                    <td className="p-3">
-                      {editingId === ath.id ? (
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            type="text"
-                            value={editTimeInput}
-                            onChange={(e) => setEditTimeInput(e.target.value)}
-                            className="px-2 py-1 rounded border border-yellow-500 bg-[var(--background)] font-mono text-xs w-24"
-                          />
-                          <button
-                            onClick={() => handleSaveTime(ath.id)}
-                            className="px-2 py-1 rounded bg-yellow-500 text-black font-bold text-[11px] cursor-pointer"
-                          >
-                            Save
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="font-mono text-sm font-bold text-[var(--foreground)]">
-                          {ath.finishTimeFormatted}
-                        </span>
-                      )}
+                    <td className="p-3 font-mono text-sm font-bold text-[var(--foreground)]">
+                      {ath.finishTimeFormatted}
+                    </td>
+                    <td className="p-3 text-[11px] text-[var(--muted)]">
+                      {ath.city || ath.state ? `${ath.city || ""}${ath.city && ath.state ? ", " : ""}${ath.state || ""}` : "--"}
                     </td>
                     <td className="p-3">
                       {ath.isLiveOnLeaderboard ? (
@@ -2119,7 +2713,7 @@ function TabLeaderboardManager({
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
-                          <EyeOff className="w-3 h-3" /> Hidden from Board
+                          <EyeOff className="w-3 h-3" /> Hidden
                         </span>
                       )}
                     </td>
@@ -2131,7 +2725,7 @@ function TabLeaderboardManager({
                             type="button"
                             disabled={togglingId === ath.id}
                             onClick={() => handleToggleVisibility(ath, true)}
-                            title="Hide this athlete from the public leaderboard"
+                            title="Hide from public leaderboard"
                             className="px-2.5 py-1 rounded-lg border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer transition disabled:opacity-50"
                           >
                             <EyeOff className="w-3.5 h-3.5" /> Hide
@@ -2141,7 +2735,7 @@ function TabLeaderboardManager({
                             type="button"
                             disabled={togglingId === ath.id}
                             onClick={() => handleToggleVisibility(ath, false)}
-                            title="Show this athlete on the public leaderboard"
+                            title="Show on public leaderboard"
                             className="px-2.5 py-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer transition disabled:opacity-50"
                           >
                             <Eye className="w-3.5 h-3.5" /> Show Live
@@ -2170,13 +2764,27 @@ function TabLeaderboardManager({
                           </>
                         )}
 
+                        {/* Edit Athlete (Name, Distance, BIB, Time) */}
                         <button
                           type="button"
-                          onClick={() => startEdit(ath)}
-                          className="px-2.5 py-1 rounded-lg border border-[var(--line)] text-xs text-[var(--muted)] hover:text-white cursor-pointer"
+                          onClick={() => openEditAthlete(ath)}
+                          className="px-2.5 py-1 rounded-lg border border-[var(--line)] bg-[var(--background)] hover:border-yellow-500/50 text-xs font-semibold text-[var(--foreground)] cursor-pointer transition"
                         >
-                          Edit Time
+                          ✏️ Edit Athlete
                         </button>
+
+                        {/* Delete Dummy Athlete */}
+                        {ath.isDummy && (
+                          <button
+                            type="button"
+                            disabled={deletingId === ath.id}
+                            onClick={() => handleDeleteEntry(ath)}
+                            title="Delete this dummy athlete"
+                            className="p-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 cursor-pointer transition"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -2186,6 +2794,375 @@ function TabLeaderboardManager({
           </table>
         </div>
       </div>
+
+      {/* ── Modal: ➕ Add Dummy / Custom Runner ───────────────── */}
+      {showAddDummyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
+          <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[var(--line)] pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-yellow-500/20 text-yellow-400 flex items-center justify-center">
+                  <Plus className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-[var(--foreground)]">
+                    Add Dummy / Custom Runner
+                  </h3>
+                  <p className="text-[11px] text-[var(--muted)]">
+                    Create a custom podium runner or mock participant with any timing.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddDummyModal(false)}
+                className="text-[var(--muted)] hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateDummy} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                  Runner Full Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Vikramaditya Singh"
+                  value={dummyName}
+                  onChange={(e) => setDummyName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-yellow-500 outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[var(--foreground)] mb-1">Event *</label>
+                  <select
+                    value={dummyEventId}
+                    onChange={(e) => {
+                      setDummyEventId(e.target.value);
+                      const ev = events.find((x) => x.id === e.target.value);
+                      if (ev?.distances?.[0]) {
+                        setDummyDistance(ev.distances[0]);
+                        const p = getPacePresets(ev.distances[0]);
+                        if (p[2]) setDummyTime(p[2].time);
+                      }
+                    }}
+                    className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-xs text-[var(--foreground)] focus:border-yellow-500 outline-none"
+                  >
+                    {events.map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[var(--foreground)] mb-1">Distance Category *</label>
+                  <select
+                    value={dummyDistance}
+                    onChange={(e) => {
+                      setDummyDistance(e.target.value);
+                      const p = getPacePresets(e.target.value);
+                      if (p[2]) setDummyTime(p[2].time);
+                    }}
+                    className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-xs text-[var(--foreground)] focus:border-yellow-500 outline-none"
+                  >
+                    {(events.find((e) => e.id === dummyEventId)?.distances || ["1.6 km", "3.2 km", "5 km", "10 km", "21 km"]).map(
+                      (d: string) => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div>
+              </div>
+
+              {/* Finish Time & Presets */}
+              <div>
+                <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                  Finish Time (HH:MM:SS) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="00:22:30"
+                  value={dummyTime}
+                  onChange={(e) => setDummyTime(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm font-mono text-[var(--foreground)] focus:border-yellow-500 outline-none"
+                />
+
+                {/* 1-Click Pace Presets */}
+                <div className="mt-2 space-y-1">
+                  <div className="text-[10px] text-[var(--muted)] font-semibold uppercase">
+                    1-Click Time Presets for {dummyDistance}:
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {getPacePresets(dummyDistance).map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => setDummyTime(preset.time)}
+                        className={`px-2 py-1 rounded-lg border text-[11px] font-semibold cursor-pointer transition ${
+                          dummyTime === preset.time
+                            ? "bg-yellow-500 text-slate-950 border-yellow-500 shadow-xs"
+                            : "bg-[var(--background)] border-[var(--line)] text-[var(--muted)] hover:text-white hover:border-yellow-500/50"
+                        }`}
+                      >
+                        {preset.label} ({preset.time})
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* BIB Number */}
+              <div>
+                <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                  BIB Number (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Leave empty to auto-generate unique BIB"
+                  value={dummyBib}
+                  onChange={(e) => setDummyBib(e.target.value.toUpperCase())}
+                  className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm font-mono text-[var(--foreground)] focus:border-yellow-500 outline-none"
+                />
+              </div>
+
+              {/* City & State */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[var(--foreground)] mb-1">City</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Shimla"
+                    value={dummyCity}
+                    onChange={(e) => setDummyCity(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-xs text-[var(--foreground)] focus:border-yellow-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[var(--foreground)] mb-1">State</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Himachal Pradesh"
+                    value={dummyState}
+                    onChange={(e) => setDummyState(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-xs text-[var(--foreground)] focus:border-yellow-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Live Switch */}
+              <div className="flex items-center justify-between p-3 rounded-xl border border-[var(--line)] bg-[var(--background)]">
+                <div>
+                  <div className="text-xs font-bold text-[var(--foreground)]">Show on Leaderboard Immediately</div>
+                  <div className="text-[11px] text-[var(--muted)]">Runner will appear publicly upon creation.</div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={dummyShowLive}
+                  onChange={(e) => setDummyShowLive(e.target.checked)}
+                  className="w-4 h-4 accent-yellow-500 cursor-pointer"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2 border-t border-[var(--line)]">
+                <button
+                  type="button"
+                  onClick={() => setShowAddDummyModal(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-[var(--line)] text-xs font-semibold text-[var(--muted)] hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={dummySubmitting}
+                  className="flex-1 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-extrabold text-xs transition shadow-md shadow-yellow-500/20 cursor-pointer disabled:opacity-50"
+                >
+                  {dummySubmitting ? "Creating Runner..." : "➕ Create & Add to Board"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: ✏️ Edit Athlete (Fix Leaderboard Errors) ────── */}
+      {editingAthlete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
+          <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[var(--line)] pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
+                  ✏️
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-[var(--foreground)]">
+                    Edit Leaderboard Athlete
+                  </h3>
+                  <p className="text-[11px] text-[var(--muted)]">
+                    Fix name typos, change distance category, edit BIB, or adjust timing.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingAthlete(null)}
+                className="text-[var(--muted)] hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditAthlete} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                  Athlete Name (Fix Typos) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editRunnerName}
+                  onChange={(e) => setEditRunnerName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-yellow-500 outline-none"
+                />
+                <p className="text-[10px] text-[var(--muted)] mt-1">
+                  Updates name across leaderboard, certificate, and medals.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                    Distance Category *
+                  </label>
+                  <select
+                    value={editDistance}
+                    onChange={(e) => setEditDistance(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-xs text-[var(--foreground)] focus:border-yellow-500 outline-none"
+                  >
+                    {(activeEvent?.distances || ["1.6 km", "3.2 km", "5 km", "10 km", "21 km"]).map((d: string) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                    BIB Number *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editBib}
+                    onChange={(e) => setEditBib(e.target.value.toUpperCase())}
+                    className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-xs font-mono font-bold text-yellow-400 focus:border-yellow-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Finish Time */}
+              <div>
+                <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                  Finish Time (HH:MM:SS) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editTime}
+                  onChange={(e) => setEditTime(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm font-mono text-[var(--foreground)] focus:border-yellow-500 outline-none"
+                />
+
+                {/* 1-Click Pace Presets */}
+                <div className="mt-2 space-y-1">
+                  <div className="text-[10px] text-[var(--muted)] font-semibold uppercase">
+                    Quick Presets for {editDistance}:
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {getPacePresets(editDistance).map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => setEditTime(preset.time)}
+                        className={`px-2 py-1 rounded-lg border text-[11px] font-semibold cursor-pointer transition ${
+                          editTime === preset.time
+                            ? "bg-yellow-500 text-slate-950 border-yellow-500"
+                            : "bg-[var(--background)] border-[var(--line)] text-[var(--muted)] hover:text-white"
+                        }`}
+                      >
+                        {preset.label} ({preset.time})
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Location */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[var(--foreground)] mb-1">City</label>
+                  <input
+                    type="text"
+                    value={editCity}
+                    onChange={(e) => setEditCity(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-xs text-[var(--foreground)] focus:border-yellow-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[var(--foreground)] mb-1">State</label>
+                  <input
+                    type="text"
+                    value={editState}
+                    onChange={(e) => setEditState(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-xs text-[var(--foreground)] focus:border-yellow-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Public Visibility Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-xl border border-[var(--line)] bg-[var(--background)]">
+                <div>
+                  <div className="text-xs font-bold text-[var(--foreground)]">Show on Public Leaderboard</div>
+                  <div className="text-[11px] text-[var(--muted)]">Toggle to hide or display publicly.</div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={editShowLive}
+                  onChange={(e) => setEditShowLive(e.target.checked)}
+                  className="w-4 h-4 accent-yellow-500 cursor-pointer"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2 border-t border-[var(--line)]">
+                <button
+                  type="button"
+                  onClick={() => setEditingAthlete(null)}
+                  className="flex-1 py-2.5 rounded-xl border border-[var(--line)] text-xs font-semibold text-[var(--muted)] hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editSubmitting}
+                  className="flex-1 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-extrabold text-xs transition shadow-md shadow-yellow-500/20 cursor-pointer disabled:opacity-50"
+                >
+                  {editSubmitting ? "Saving Changes..." : "Save Corrections"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

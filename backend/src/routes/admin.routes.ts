@@ -49,6 +49,8 @@ import {
   adminSubmitManualProof,
   adminGetLeaderboardManager,
   adminUpdateLeaderboardEntry,
+  adminCreateLeaderboardEntry,
+  adminDeleteLeaderboardEntry,
   adminGetTshirtManager,
   adminUpdateTshirtSize,
   adminSendTshirtReminderEmail,
@@ -125,7 +127,9 @@ adminRouter.post("/manual-registration", asyncHandler(adminCreateManualRegistrat
 adminRouter.post("/medals/dispatch-email", asyncHandler(adminDispatchMedalEmail));
 adminRouter.post("/manual-proof", asyncHandler(adminSubmitManualProof));
 adminRouter.get("/leaderboard-manager", asyncHandler(adminGetLeaderboardManager));
+adminRouter.post("/leaderboard-manager/entry", asyncHandler(adminCreateLeaderboardEntry));
 adminRouter.patch("/leaderboard-manager/:id", asyncHandler(adminUpdateLeaderboardEntry));
+adminRouter.delete("/leaderboard-manager/:id", asyncHandler(adminDeleteLeaderboardEntry));
 adminRouter.get("/tshirts", asyncHandler(adminGetTshirtManager));
 adminRouter.patch("/tshirts/:id", asyncHandler(adminUpdateTshirtSize));
 adminRouter.post("/tshirts/send-reminder", asyncHandler(adminSendTshirtReminderEmail));

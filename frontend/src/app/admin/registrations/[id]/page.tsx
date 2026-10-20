@@ -53,6 +53,13 @@ export default function AdminRegistrationDetailPage() {
   const params = useParams<{ id: string }>();
   const { getToken } = useAuth();
   const [data, setData] = useState<RegistrationDetail | null>(null);
+  const [runnerName, setRunnerName] = useState("");
+  const [bibNumber, setBibNumber] = useState("");
+  const [phone, setPhone] = useState("");
+  const [shippingLine1, setShippingLine1] = useState("");
+  const [shippingCity, setShippingCity] = useState("");
+  const [shippingState, setShippingState] = useState("");
+  const [shippingPincode, setShippingPincode] = useState("");
   const [note, setNote] = useState("");
   const [status, setStatus] = useState("");
   const [distance, setDistance] = useState("");
@@ -67,6 +74,13 @@ export default function AdminRegistrationDetailPage() {
         token,
       );
       setData(json.data);
+      setRunnerName(json.data.shippingName || json.data.user.name || "");
+      setBibNumber(json.data.bibNumber || "");
+      setPhone(json.data.shippingPhone || json.data.user.phone || "");
+      setShippingLine1(json.data.shippingLine1 || "");
+      setShippingCity(json.data.shippingCity || "");
+      setShippingState(json.data.shippingState || "");
+      setShippingPincode(json.data.shippingPincode || "");
       setNote(json.data.adminNote ?? "");
       setStatus(json.data.status);
       setDistance(json.data.distance ?? "");
@@ -86,9 +100,20 @@ export default function AdminRegistrationDetailPage() {
       const token = await getToken().catch(() => null);
       await adminFetch(`/api/admin/registrations/${data.id}`, token, {
         method: "PATCH",
-        body: JSON.stringify({ status, distance, adminNote: note }),
+        body: JSON.stringify({
+          runnerName: runnerName.trim(),
+          bibNumber: bibNumber.trim().toUpperCase(),
+          status,
+          distance: distance.trim(),
+          phone: phone.trim(),
+          shippingLine1: shippingLine1.trim(),
+          shippingCity: shippingCity.trim(),
+          shippingState: shippingState.trim(),
+          shippingPincode: shippingPincode.trim(),
+          adminNote: note,
+        }),
       });
-      setMessage("Saved.");
+      setMessage("✓ Participant details & distance updated successfully.");
       await load();
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Save failed");
@@ -255,24 +280,28 @@ export default function AdminRegistrationDetailPage() {
           </div>
         </AdminPanel>
 
-        <AdminPanel className="span-2" title="Admin controls">
-          <div className="space-y-3">
+        <AdminPanel className="span-2" title="Participant Details & Distance Correction">
+          <div className="space-y-4">
+            <p className="text-xs text-[var(--muted)]">
+              Easily correct runner name typos, change distance category (e.g. 5K to 10K) upon participant request, or update their delivery address.
+            </p>
+
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block text-sm">
-                <span className="field-label">Status</span>
-                <select className="input" onChange={(e) => setStatus(e.target.value)} value={status}>
-                  {["PENDING_PAYMENT", "CONFIRMED", "CANCELLED", "COMPLETED"].map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+                <span className="field-label">Runner / Participant Name *</span>
+                <input
+                  className="input font-semibold"
+                  onChange={(e) => setRunnerName(e.target.value)}
+                  type="text"
+                  value={runnerName}
+                />
               </label>
+
               <label className="block text-sm">
-                <span className="field-label">Distance</span>
+                <span className="field-label">Distance Category *</span>
                 {data.event.distances && data.event.distances.length > 0 ? (
                   <select
-                    className="input"
+                    className="input font-semibold"
                     onChange={(e) => setDistance(e.target.value)}
                     value={distance}
                   >
@@ -284,7 +313,7 @@ export default function AdminRegistrationDetailPage() {
                   </select>
                 ) : (
                   <input
-                    className="input"
+                    className="input font-semibold"
                     onChange={(e) => setDistance(e.target.value)}
                     type="text"
                     value={distance}
@@ -292,14 +321,84 @@ export default function AdminRegistrationDetailPage() {
                 )}
               </label>
             </div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              <label className="block text-sm">
+                <span className="field-label">BIB Number</span>
+                <input
+                  className="input font-mono font-bold"
+                  onChange={(e) => setBibNumber(e.target.value)}
+                  type="text"
+                  value={bibNumber}
+                />
+              </label>
+
+              <label className="block text-sm">
+                <span className="field-label">Phone Number</span>
+                <input
+                  className="input"
+                  onChange={(e) => setPhone(e.target.value)}
+                  type="text"
+                  value={phone}
+                />
+              </label>
+
+              <label className="block text-sm">
+                <span className="field-label">Registration Status</span>
+                <select className="input" onChange={(e) => setStatus(e.target.value)} value={status}>
+                  {["PENDING_PAYMENT", "CONFIRMED", "CANCELLED", "COMPLETED"].map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="pt-2 border-t border-[var(--line)] space-y-2">
+              <span className="text-xs font-bold uppercase text-[var(--muted)]">Courier Shipping Address</span>
+              <input
+                className="input"
+                onChange={(e) => setShippingLine1(e.target.value)}
+                placeholder="Address Line 1"
+                type="text"
+                value={shippingLine1}
+              />
+              <div className="grid gap-2 sm:grid-cols-3">
+                <input
+                  className="input"
+                  onChange={(e) => setShippingCity(e.target.value)}
+                  placeholder="City"
+                  type="text"
+                  value={shippingCity}
+                />
+                <input
+                  className="input"
+                  onChange={(e) => setShippingState(e.target.value)}
+                  placeholder="State"
+                  type="text"
+                  value={shippingState}
+                />
+                <input
+                  className="input"
+                  onChange={(e) => setShippingPincode(e.target.value)}
+                  placeholder="PIN Code"
+                  type="text"
+                  value={shippingPincode}
+                />
+              </div>
+            </div>
+
             <label className="block text-sm">
-              <span className="field-label">Internal note</span>
+              <span className="field-label">Internal Note</span>
               <textarea
-                className="input min-h-24 py-2"
+                className="input min-h-20 py-2"
                 onChange={(e) => setNote(e.target.value)}
+                placeholder="e.g. Distance changed from 5 km to 10 km on participant request"
                 value={note}
               />
             </label>
+
             <button className="btn btn-primary" onClick={() => void save()} type="button">
               Save changes
             </button>

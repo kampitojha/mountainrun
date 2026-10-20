@@ -1099,11 +1099,10 @@ export async function getLeaderboard(request: AuthenticatedRequest, response: Re
           const hash = reg.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
           const pacePerKm = 290 + (hash % 80);
           validSeconds = Math.round(regKm * pacePerKm);
-        } else if (validSeconds < minPaceSeconds) {
-          if (validSeconds * 60 >= minPaceSeconds && validSeconds * 60 <= regKm * 600) {
+        } else if (validSeconds < 60) {
+          // If someone entered time in minutes mistakenly (e.g. 24 instead of 1440 seconds)
+          if (validSeconds * 60 >= Math.round(regKm * 120)) {
             validSeconds = validSeconds * 60;
-          } else {
-            validSeconds = Math.round(regKm * 310);
           }
         }
 
