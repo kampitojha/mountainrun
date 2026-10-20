@@ -688,11 +688,13 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
     if (e) e.preventDefault();
     if (!search.trim()) return;
 
+    setSelectedReg(null);
     setSearching(true);
     try {
       const token = await getToken();
+      const term = encodeURIComponent(search.trim());
       const res = await adminFetch<{ data: any[] }>(
-        `/api/admin/registrations?search=${encodeURIComponent(search.trim())}&pageSize=15`,
+        `/api/admin/registrations?q=${term}&search=${term}&pageSize=20`,
         token
       );
       setResults(res.data || []);
@@ -948,8 +950,18 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
                       <span>{r.event?.title}</span>
                       <span>•</span>
                       <span className="text-yellow-400 font-semibold">{r.distance}</span>
-                      <span>•</span>
-                      <span>{r.user?.email || r.shippingPhone}</span>
+                      {r.user?.email && (
+                        <>
+                          <span>•</span>
+                          <span className="text-blue-300/90">{r.user.email}</span>
+                        </>
+                      )}
+                      {(r.shippingPhone || r.user?.phone) && (
+                        <>
+                          <span>•</span>
+                          <span className="font-mono text-emerald-300/90">📞 {r.shippingPhone || r.user?.phone}</span>
+                        </>
+                      )}
                       {r.shippingCity && (
                         <>
                           <span>•</span>
@@ -3659,14 +3671,15 @@ function TabManualProof({ toast, getToken }: { toast: any; getToken: any }) {
     setRunner(null);
     try {
       const token = await getToken();
+      const term = encodeURIComponent(bibInput.trim());
       const res = await adminFetch<{ data: any[] }>(
-        `/api/admin/registrations?search=${encodeURIComponent(bibInput.trim())}&pageSize=1`,
+        `/api/admin/registrations?q=${term}&search=${term}&pageSize=5`,
         token
       );
       if (res.data?.[0]) {
         setRunner(res.data[0]);
       } else {
-        toast("error", "No runner found with this BIB / mobile number!");
+        toast("error", "No runner found with this BIB / mobile number / email!");
       }
     } catch (err: any) {
       toast("error", err.message);
@@ -3735,7 +3748,7 @@ function TabManualProof({ toast, getToken }: { toast: any; getToken: any }) {
             required
             placeholder="Search by BIB number, email, or phone..."
             value={bibInput}
-            onChange={(e) => setBibInput(e.target.value.toUpperCase())}
+            onChange={(e) => setBibInput(e.target.value)}
             className="flex-1 px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] font-mono outline-none"
           />
           <button

@@ -42,6 +42,10 @@ import {
   adminCreateLeaderboardEntrySchema,
   adminUpdateLeaderboardEntrySchema,
 } from "../validators/admin.validator.js";
+import {
+  buildRegistrationSearchWhere,
+  rankRegistrations,
+} from "../utils/registration-search.js";
 
 function parsePage(request: AuthenticatedRequest, maxLimit = 200) {
   const page = Math.max(1, Number(request.query.page ?? 1) || 1);
@@ -629,32 +633,28 @@ export async function adminListRegistrations(request: AuthenticatedRequest, resp
   const status = q(request, "status");
   const proofStatus = q(request, "proofStatus");
   const eventId = q(request, "eventId");
-  const search = q(request, "q");
+  const search = (q(request, "q") || q(request, "search") || "").trim();
+
+  const searchWhere = search ? buildRegistrationSearchWhere(search) : null;
 
   const where: Prisma.RegistrationWhereInput = {
     ...(status ? { status: status as never } : {}),
     ...(proofStatus ? { proofStatus: proofStatus as never } : {}),
     ...(eventId ? { eventId } : {}),
-    ...(search
-      ? {
-          OR: [
-            { bibNumber: { contains: search, mode: "insensitive" } },
-            { shippingName: { contains: search, mode: "insensitive" } },
-            { shippingPhone: { contains: search, mode: "insensitive" } },
-            { user: { email: { contains: search, mode: "insensitive" } } },
-            { user: { name: { contains: search, mode: "insensitive" } } },
-          ],
-        }
-      : {}),
+    ...(searchWhere ? searchWhere : {}),
   };
 
-  const [total, items] = await Promise.all([
+  // If search is active, fetch a larger candidate pool to ensure exact matches rank at the top
+  const fetchTake = search ? Math.min(Math.max(pageSize * 3, 60), 200) : pageSize;
+  const fetchSkip = search ? 0 : skip;
+
+  const [total, rawItems] = await Promise.all([
     prisma.registration.count({ where }),
     prisma.registration.findMany({
       where,
       orderBy: { registeredAt: "desc" },
-      skip,
-      take: pageSize,
+      skip: fetchSkip,
+      take: fetchTake,
       include: {
         user: { select: { id: true, name: true, email: true, phone: true, clerkId: true } },
         event: { select: { id: true, title: true, slug: true, priceInPaise: true, distances: true } },
@@ -665,6 +665,9 @@ export async function adminListRegistrations(request: AuthenticatedRequest, resp
       },
     }),
   ]);
+
+  const rankedItems = search ? rankRegistrations(rawItems, search) : rawItems;
+  const items = search ? rankedItems.slice(skip, skip + pageSize) : rankedItems;
 
   response.json({
     data: items,
@@ -1376,7 +1379,8 @@ export async function adminListMedals(request: AuthenticatedRequest, response: R
   const status = q(request, "status"); // PENDING | DISPATCHED | DELIVERED | RETURNED | ALL
   const eventId = q(request, "eventId");
   const proofStatus = q(request, "proofStatus"); // default: APPROVED or all
-  const search = q(request, "search")?.trim();
+  const search = (q(request, "search") || q(request, "q"))?.trim();
+  const searchWhere = search ? buildRegistrationSearchWhere(search) : null;
 
   const where: Prisma.RegistrationWhereInput = {
     status: { in: ["CONFIRMED", "COMPLETED"] },
@@ -1398,29 +1402,20 @@ export async function adminListMedals(request: AuthenticatedRequest, response: R
             medalDelivery: { status: status as never },
           }
       : {}),
-    ...(search
-      ? {
-          OR: [
-            { bibNumber: { contains: search, mode: "insensitive" } },
-            { shippingName: { contains: search, mode: "insensitive" } },
-            { shippingPhone: { contains: search, mode: "insensitive" } },
-            { shippingCity: { contains: search, mode: "insensitive" } },
-            { shippingPincode: { contains: search, mode: "insensitive" } },
-            { user: { name: { contains: search, mode: "insensitive" } } },
-            { user: { email: { contains: search, mode: "insensitive" } } },
-          ],
-        }
-      : {}),
+    ...(searchWhere ? searchWhere : {}),
   };
 
-  const [total, items, readyCount, dispatchedCount, deliveredCount, approvedCount] =
+  const fetchTake = search ? Math.min(Math.max(pageSize * 3, 60), 200) : pageSize;
+  const fetchSkip = search ? 0 : skip;
+
+  const [total, rawItems, readyCount, dispatchedCount, deliveredCount, approvedCount] =
     await Promise.all([
       prisma.registration.count({ where }),
       prisma.registration.findMany({
         where,
         orderBy: [{ proofUpload: { reviewedAt: "desc" } }, { registeredAt: "desc" }],
-        skip,
-        take: pageSize,
+        skip: fetchSkip,
+        take: fetchTake,
         include: {
           user: { select: { id: true, name: true, email: true, phone: true } },
           event: { select: { id: true, title: true, slug: true } },
@@ -1459,6 +1454,9 @@ export async function adminListMedals(request: AuthenticatedRequest, response: R
         },
       }),
     ]);
+
+  const rankedItems = search ? rankRegistrations(rawItems, search) : rawItems;
+  const items = search ? rankedItems.slice(skip, skip + pageSize) : rankedItems;
 
   response.json({
     data: items,
@@ -1737,7 +1735,9 @@ export async function adminBulkUploadTracking(request: AuthenticatedRequest, res
 export async function adminListCertificates(request: AuthenticatedRequest, response: Response) {
   const { page, pageSize, skip } = parsePage(request, 1000);
   const status = q(request, "status");
-  const search = q(request, "search")?.trim();
+  const search = (q(request, "search") || q(request, "q"))?.trim();
+  const cleanBib = search ? search.replace(/^(bib|bib#|#)\s*[:#-]?\s*/i, "").trim() : "";
+  const digitsOnly = search ? search.replace(/\D/g, "") : "";
 
   const where: Prisma.CertificateWhereInput = {
     ...(status ? { status: status as never } : {}),
@@ -1746,8 +1746,17 @@ export async function adminListCertificates(request: AuthenticatedRequest, respo
           OR: [
             { certificateNumber: { contains: search, mode: "insensitive" } },
             { registration: { bibNumber: { contains: search, mode: "insensitive" } } },
+            ...(cleanBib && cleanBib !== search
+              ? [{ registration: { bibNumber: { contains: cleanBib, mode: "insensitive" as const } } }]
+              : []),
+            ...(digitsOnly && digitsOnly.length >= 3
+              ? [{ registration: { bibNumber: { contains: digitsOnly, mode: "insensitive" as const } } }]
+              : []),
+            { registration: { shippingName: { contains: search, mode: "insensitive" } } },
+            { registration: { shippingPhone: { contains: search, mode: "insensitive" } } },
             { registration: { user: { name: { contains: search, mode: "insensitive" } } } },
             { registration: { user: { email: { contains: search, mode: "insensitive" } } } },
+            { registration: { user: { phone: { contains: search, mode: "insensitive" } } } },
             { registration: { event: { title: { contains: search, mode: "insensitive" } } } },
           ],
         }
@@ -2197,7 +2206,7 @@ export async function adminTestAlert(request: AuthenticatedRequest, response: Re
 // ── Omni-Search (Unified Universal Search) ───────────────────
 
 export async function adminOmniSearch(request: AuthenticatedRequest, response: Response) {
-  const query = (q(request, "q") || "").trim();
+  const query = (q(request, "q") || q(request, "search") || "").trim();
   if (!query || query.length < 2) {
     return response.json({
       data: {
@@ -2209,22 +2218,22 @@ export async function adminOmniSearch(request: AuthenticatedRequest, response: R
     });
   }
 
-  const [registrations, users, payments] = await Promise.all([
+  const regWhere = buildRegistrationSearchWhere(query);
+  const digitsOnly = query.replace(/\D/g, "");
+  const userPhoneVariations: string[] = [query];
+  if (digitsOnly.length >= 7) {
+    const last10 = digitsOnly.slice(-10);
+    userPhoneVariations.push(last10, `+91${last10}`, `0${last10}`);
+    if (digitsOnly !== last10) {
+      userPhoneVariations.push(digitsOnly);
+    }
+  }
+
+  const [rawRegistrations, users, payments] = await Promise.all([
     // 1. Search Registrations
     prisma.registration.findMany({
-      where: {
-        OR: [
-          { bibNumber: { contains: query, mode: "insensitive" } },
-          { shippingName: { contains: query, mode: "insensitive" } },
-          { shippingPhone: { contains: query, mode: "insensitive" } },
-          { shippingCity: { contains: query, mode: "insensitive" } },
-          { user: { name: { contains: query, mode: "insensitive" } } },
-          { user: { email: { contains: query, mode: "insensitive" } } },
-          { user: { phone: { contains: query, mode: "insensitive" } } },
-          { event: { title: { contains: query, mode: "insensitive" } } },
-        ],
-      },
-      take: 8,
+      where: regWhere || {},
+      take: 40,
       orderBy: { registeredAt: "desc" },
       include: {
         user: { select: { id: true, name: true, email: true, phone: true, avatarUrl: true } },
@@ -2242,8 +2251,8 @@ export async function adminOmniSearch(request: AuthenticatedRequest, response: R
         OR: [
           { name: { contains: query, mode: "insensitive" } },
           { email: { contains: query, mode: "insensitive" } },
-          { phone: { contains: query, mode: "insensitive" } },
           { username: { contains: query, mode: "insensitive" } },
+          ...userPhoneVariations.map((p) => ({ phone: { contains: p, mode: "insensitive" as const } })),
         ],
       },
       take: 6,
@@ -2281,6 +2290,8 @@ export async function adminOmniSearch(request: AuthenticatedRequest, response: R
       },
     }),
   ]);
+
+  const registrations = rankRegistrations(rawRegistrations, query).slice(0, 8);
 
   response.json({
     data: {
@@ -2717,7 +2728,7 @@ export async function adminGetLeaderboardManager(request: AuthenticatedRequest, 
   const eventId = q(request, "eventId");
   const distance = q(request, "distance");
   const visibility = q(request, "visibility") || "ALL";
-  const search = q(request, "search")?.trim().toLowerCase();
+  const search = (q(request, "search") || q(request, "q"))?.trim();
 
   if (!eventId) {
     throw new ApiError(400, "eventId is required");
@@ -2750,18 +2761,10 @@ export async function adminGetLeaderboardManager(request: AuthenticatedRequest, 
   }
 
   if (search) {
-    whereClause.AND = [
-      ...(whereClause.AND || []),
-      {
-        OR: [
-          { bibNumber: { contains: search, mode: "insensitive" } },
-          { shippingName: { contains: search, mode: "insensitive" } },
-          { shippingCity: { contains: search, mode: "insensitive" } },
-          { user: { name: { contains: search, mode: "insensitive" } } },
-          { user: { email: { contains: search, mode: "insensitive" } } },
-        ],
-      },
-    ];
+    const sWhere = buildRegistrationSearchWhere(search);
+    if (sWhere) {
+      whereClause.AND = [...(whereClause.AND || []), sWhere];
+    }
   }
 
   const registrations = await prisma.registration.findMany({
