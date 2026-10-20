@@ -646,7 +646,7 @@ function TabManualRegistration({
 }
 
 /* =====================================================================
-   TAB 2: 📜 E-CERTIFICATE EDITOR
+   TAB 2: 👤 PARTICIPANT DIRECTORY & INFO CORRECTIONS
 ===================================================================== */
 function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toast: any; getToken: any }) {
   const [search, setSearch] = useState("");
@@ -654,14 +654,27 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
   const [results, setResults] = useState<any[]>([]);
   const [selectedReg, setSelectedReg] = useState<any>(null);
 
-  // Edit fields
+  // Core participant edit fields
   const [runnerName, setRunnerName] = useState("");
   const [distance, setDistance] = useState("");
   const [bibNumber, setBibNumber] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [city, setCity] = useState("");
+  const [status, setStatus] = useState("CONFIRMED");
+  const [adminNote, setAdminNote] = useState("");
+
+  // Shipping address fields
+  const [shippingLine1, setShippingLine1] = useState("");
+  const [shippingLine2, setShippingLine2] = useState("");
+  const [shippingCity, setShippingCity] = useState("");
+  const [shippingState, setShippingState] = useState("");
+  const [shippingPincode, setShippingPincode] = useState("");
+
+  // Post-race / Certificate fields (kept strictly separate)
   const [finishTimeInput, setFinishTimeInput] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [savingDetails, setSavingDetails] = useState(false);
+  const [savingCert, setSavingCert] = useState(false);
+  const [sendingCertEmail, setSendingCertEmail] = useState(false);
 
   function formatSecs(sec: number | null | undefined): string {
     if (!sec) return "";
@@ -684,7 +697,7 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
       );
       setResults(res.data || []);
       if (!res.data?.length) {
-        toast("info", "No registration found with this search term");
+        toast("info", "No participant found with this search term");
       }
     } catch (err: any) {
       toast("error", err.message);
@@ -698,8 +711,19 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
     setRunnerName(reg.shippingName || reg.user?.name || "");
     setDistance(reg.distance || "");
     setBibNumber(reg.bibNumber || "");
+    setEmail(reg.user?.email || "");
     setPhone(reg.shippingPhone || reg.user?.phone || "");
-    setCity(reg.shippingCity || "");
+    setStatus(reg.status || "CONFIRMED");
+    setAdminNote(reg.adminNote || "");
+
+    // Shipping address
+    setShippingLine1(reg.shippingLine1 || "");
+    setShippingLine2(reg.shippingLine2 || "");
+    setShippingCity(reg.shippingCity || "");
+    setShippingState(reg.shippingState || "");
+    setShippingPincode(reg.shippingPincode || "");
+
+    // Race finish time
     setFinishTimeInput(formatSecs(reg.finishTimeSeconds));
   }
 
@@ -715,295 +739,577 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
     "21 km",
   ];
 
-  async function handleSaveChanges() {
+  // 1. PRIMARY ACTION: Save Participant Info (DOES NOT generate or send certificate!)
+  async function handleSaveParticipantDetails(e: React.FormEvent) {
+    e.preventDefault();
     if (!selectedReg) return;
-    setSaving(true);
+
+    if (!runnerName.trim()) {
+      toast("error", "Runner full name cannot be empty!");
+      return;
+    }
+    if (!distance.trim()) {
+      toast("error", "Distance category is required!");
+      return;
+    }
+
+    setSavingDetails(true);
     try {
       const token = await getToken();
 
-      // Parse finish time input to seconds
+      const payload = {
+        runnerName: runnerName.trim(),
+        shippingName: runnerName.trim(),
+        distance: distance.trim(),
+        bibNumber: bibNumber.trim().toUpperCase(),
+        email: email.trim() || undefined,
+        phone: phone.trim() || undefined,
+        shippingPhone: phone.trim() || undefined,
+        status,
+        shippingLine1: shippingLine1.trim() || undefined,
+        shippingLine2: shippingLine2.trim() || null,
+        shippingCity: shippingCity.trim() || undefined,
+        shippingState: shippingState.trim() || undefined,
+        shippingPincode: shippingPincode.trim() || undefined,
+        adminNote: adminNote.trim() || undefined,
+      };
+
+      const updateRes: any = await adminFetch(`/api/admin/registrations/${selectedReg.id}`, token, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      toast("success", "✓ Participant details (Name, Distance, Contact, Address) updated successfully!");
+
+      // Update state without touching certificates
+      setSelectedReg((prev: any) => ({
+        ...prev,
+        ...updateRes.data,
+        shippingName: runnerName.trim(),
+        distance: distance.trim(),
+        bibNumber: updateRes.data?.bibNumber || bibNumber.trim().toUpperCase(),
+        user: {
+          ...prev.user,
+          name: runnerName.trim(),
+          email: email.trim() || prev.user?.email,
+          phone: phone.trim() || prev.user?.phone,
+        },
+      }));
+    } catch (err: any) {
+      toast("error", `Update failed: ${err.message}`);
+    } finally {
+      setSavingDetails(false);
+    }
+  }
+
+  // 2. SEPARATE ACTION: Regenerate / Issue Certificate (Only when explicitly requested post-race)
+  async function handleRegenerateCertificate() {
+    if (!selectedReg) return;
+    setSavingCert(true);
+    try {
+      const token = await getToken();
+
+      // If finish time was typed, save it first
       let finishSeconds: number | null = null;
       if (finishTimeInput.trim()) {
         const parts = finishTimeInput.split(":").map(Number);
         if (parts.length === 3) finishSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
         else if (parts.length === 2) finishSeconds = parts[0] * 60 + parts[1];
         else if (parts.length === 1 && !isNaN(parts[0])) finishSeconds = parts[0];
+
+        await adminFetch(`/api/admin/registrations/${selectedReg.id}`, token, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ finishTimeSeconds: finishSeconds, proofStatus: "APPROVED" }),
+        });
       }
 
-      // Update registration and participant profile
-      const updateRes: any = await adminFetch(`/api/admin/registrations/${selectedReg.id}`, token, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          runnerName: runnerName.trim(),
-          shippingName: runnerName.trim(),
-          distance: distance.trim(),
-          bibNumber: bibNumber.trim().toUpperCase(),
-          phone: phone.trim(),
-          shippingCity: city.trim(),
-          finishTimeSeconds: finishSeconds,
-        }),
-      });
-
-      // Ensure / regenerate certificate with updated name and distance
+      // Generate or re-generate certificate
       const certRes: any = await adminFetch(
         `/api/admin/registrations/${selectedReg.id}/certificate`,
         token,
         { method: "POST" }
       );
 
-      toast("success", "✓ Participant name & distance updated, and e-Certificate regenerated!");
+      toast("success", "✓ Certificate generated / re-issued with updated name and distance!");
 
-      // Update local state
       setSelectedReg((prev: any) => ({
         ...prev,
-        shippingName: runnerName.trim(),
-        distance: distance.trim(),
-        bibNumber: updateRes.data?.bibNumber || bibNumber.trim().toUpperCase(),
-        finishTimeSeconds: finishSeconds,
+        finishTimeSeconds: finishSeconds ?? prev.finishTimeSeconds,
         certificate: certRes?.data?.certificate || prev.certificate,
       }));
     } catch (err: any) {
-      toast("error", `Update failed: ${err.message}`);
+      toast("error", `Certificate generation failed: ${err.message}`);
     } finally {
-      setSaving(false);
+      setSavingCert(false);
     }
   }
 
-  async function handleSendEmail() {
+  // 3. SEPARATE ACTION: Send Certificate Email
+  async function handleSendCertEmail() {
     if (!selectedReg?.certificate?.id) {
-      toast("error", "Please save & generate certificate first before sending email.");
+      toast("error", "No certificate found to email. Generate certificate first.");
       return;
     }
-    setSaving(true);
+    setSendingCertEmail(true);
     try {
       const token = await getToken();
       await adminFetch(`/api/admin/certificates/${selectedReg.certificate.id}/send`, token, {
         method: "POST",
       });
-      toast("success", `Certificate email sent to ${selectedReg.user?.email}!`);
+      toast("success", `Certificate email dispatched to ${selectedReg.user?.email || email}!`);
     } catch (err: any) {
       toast("error", `Email sending failed: ${err.message}`);
     } finally {
-      setSaving(false);
+      setSendingCertEmail(false);
     }
   }
 
+  const isPreRace = !selectedReg?.finishTimeSeconds && selectedReg?.proofUpload?.status !== "APPROVED";
+
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
+      {/* ── Guidance Banner ─────────────────────────────────── */}
+      <div className="rounded-2xl border border-blue-500/20 bg-blue-950/20 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-300 flex items-center justify-center shrink-0">
             <FileCheck2 className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-[var(--foreground)]">
-              Participant Name & Distance Correction
-            </h2>
-            <p className="text-xs text-[var(--muted)]">
-              Easily change a participant&apos;s distance category upon request, correct misspelled names, update finish times, and regenerate official certificates.
+            <h3 className="text-sm font-bold text-blue-200">
+              Participant Info & Registration Corrections
+            </h3>
+            <p className="text-xs text-blue-300/80 mt-0.5 max-w-2xl leading-relaxed">
+              Correct participant name typos, change distance category (e.g. 5 km to 10 km), update phone numbers, and fix courier delivery addresses at any time. Changes save directly without prematurely generating or emailing certificates.
             </p>
           </div>
         </div>
+      </div>
 
+      <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-sm space-y-6">
         {/* Search Bar */}
-        <form onSubmit={handleSearch} className="flex gap-2 max-w-xl">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[var(--muted)]" />
-            <input
-              type="text"
-              placeholder="Search by BIB number, runner name, or email..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none font-mono"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={searching}
-            className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition cursor-pointer flex items-center gap-2 disabled:opacity-50"
-          >
-            {searching ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} Search
-          </button>
-        </form>
+        <div>
+          <label className="block text-xs font-bold text-[var(--foreground)] mb-1.5">
+            Search Participant to Edit
+          </label>
+          <form onSubmit={handleSearch} className="flex gap-2 max-w-2xl">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[var(--muted)]" />
+              <input
+                type="text"
+                placeholder="Search by BIB number, runner name, email, or phone..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none font-mono"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={searching}
+              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition cursor-pointer flex items-center gap-2 disabled:opacity-50"
+            >
+              {searching ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} Search
+            </button>
+          </form>
+        </div>
 
         {/* Search Results list */}
         {results.length > 0 && !selectedReg && (
-          <div className="mt-4 border border-[var(--line)] rounded-xl overflow-hidden divide-y divide-[var(--line)]">
-            {results.map((r) => (
-              <div
-                key={r.id}
-                onClick={() => selectRegistration(r)}
-                className="p-3.5 flex items-center justify-between hover:bg-[var(--line)]/50 cursor-pointer transition"
-              >
-                <div>
-                  <div className="font-bold text-sm text-[var(--foreground)]">
-                    {r.shippingName || r.user?.name}
-                  </div>
-                  <div className="text-xs text-[var(--muted)] flex items-center gap-2 mt-0.5">
-                    <span className="font-mono text-blue-400 font-bold">{r.bibNumber}</span>
-                    <span>•</span>
-                    <span>{r.event?.title}</span>
-                    <span>•</span>
-                    <span className="text-emerald-400 font-semibold">{r.distance}</span>
-                    {r.finishTimeSeconds && (
-                      <>
-                        <span>•</span>
-                        <span className="font-mono">{formatSecs(r.finishTimeSeconds)}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600/20 text-blue-300 border border-blue-500/30 hover:bg-blue-600/30 cursor-pointer"
+          <div className="border border-[var(--line)] rounded-xl overflow-hidden divide-y divide-[var(--line)]">
+            <div className="bg-[var(--background)] px-4 py-2.5 text-xs font-bold text-[var(--muted)] uppercase tracking-wider">
+              Search Results ({results.length} found) — Click to Edit:
+            </div>
+            {results.map((r) => {
+              const hasFinished = Boolean(r.finishTimeSeconds || r.proofUpload?.status === "APPROVED");
+              return (
+                <div
+                  key={r.id}
+                  onClick={() => selectRegistration(r)}
+                  className="p-3.5 flex items-center justify-between hover:bg-[var(--line)]/50 cursor-pointer transition"
                 >
-                  Select & Edit &rarr;
-                </button>
-              </div>
-            ))}
+                  <div>
+                    <div className="font-bold text-sm text-[var(--foreground)] flex items-center gap-2">
+                      {r.shippingName || r.user?.name}
+                      <span className="font-mono text-blue-400 text-xs font-bold px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20">
+                        {r.bibNumber}
+                      </span>
+                      {hasFinished ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          🏁 Finished ({formatSecs(r.finishTimeSeconds)})
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          🏃 Pre-Race / Pending Run
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-[var(--muted)] flex flex-wrap items-center gap-2 mt-1">
+                      <span>{r.event?.title}</span>
+                      <span>•</span>
+                      <span className="text-yellow-400 font-semibold">{r.distance}</span>
+                      <span>•</span>
+                      <span>{r.user?.email || r.shippingPhone}</span>
+                      {r.shippingCity && (
+                        <>
+                          <span>•</span>
+                          <span>{r.shippingCity}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-500 cursor-pointer transition shadow-xs"
+                  >
+                    Edit Details &rarr;
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
 
         {/* Selected Runner Edit Card */}
         {selectedReg && (
-          <div className="mt-6 border border-blue-500/30 rounded-2xl p-5 bg-gradient-to-b from-blue-950/20 to-transparent space-y-5">
-            <div className="flex items-center justify-between border-b border-[var(--line)] pb-3">
-              <div>
-                <span className="text-xs uppercase font-bold text-blue-400 tracking-wider">
-                  Editing Participant & Certificate
-                </span>
-                <div className="font-mono text-lg font-bold text-[var(--foreground)] flex items-center gap-2">
-                  {selectedReg.bibNumber}
-                  <span className="text-xs font-normal text-[var(--muted)]">({selectedReg.event?.title})</span>
+          <div className="space-y-6">
+            {/* Header info */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-blue-500/30 bg-blue-950/20">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-300 flex items-center justify-center font-bold">
+                  👤
                 </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedReg(null)}
-                className="text-xs text-[var(--muted)] hover:text-white underline cursor-pointer"
-              >
-                Change Runner
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                  Runner Name (Fix Spelling Typos) *
-                </label>
-                <input
-                  type="text"
-                  value={runnerName}
-                  onChange={(e) => setRunnerName(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none font-semibold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                  Distance Category (Change Distance) *
-                </label>
-                <select
-                  value={distance}
-                  onChange={(e) => setDistance(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none font-semibold"
-                >
-                  {availableDistances.map((d: string) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[var(--muted)] mb-1">
-                  Finish Time (HH:MM:SS)
-                </label>
-                <input
-                  type="text"
-                  placeholder="HH:MM:SS"
-                  value={finishTimeInput}
-                  onChange={(e) => setFinishTimeInput(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none font-mono font-bold"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-[var(--muted)] mb-1">BIB Number</label>
-                <input
-                  type="text"
-                  value={bibNumber}
-                  onChange={(e) => setBibNumber(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm font-mono text-[var(--foreground)] focus:border-blue-500 outline-none font-bold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[var(--muted)] mb-1">Phone Number</label>
-                <input
-                  type="text"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[var(--muted)] mb-1">City</label>
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-              <div className="text-xs text-[var(--muted)]">
-                Certificate Status:{" "}
-                <span className="font-semibold text-blue-400">
-                  {selectedReg.certificate?.status || "NOT GENERATED YET"}
-                </span>
-                {selectedReg.certificate?.certificateNumber && (
-                  <span className="ml-2 font-mono">({selectedReg.certificate.certificateNumber})</span>
-                )}
+                <div>
+                  <div className="text-xs text-blue-400 uppercase font-bold tracking-wider">
+                    Editing Participant Record
+                  </div>
+                  <div className="font-bold text-base text-[var(--foreground)] flex items-center gap-2">
+                    {selectedReg.shippingName || selectedReg.user?.name}
+                    <span className="font-mono text-yellow-400 text-xs px-2 py-0.5 rounded bg-yellow-500/10 border border-yellow-500/30">
+                      {selectedReg.bibNumber}
+                    </span>
+                    <span className="text-xs font-normal text-[var(--muted)]">
+                      • {selectedReg.event?.title}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={saving}
-                  onClick={handleSaveChanges}
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${saving ? "animate-spin" : ""}`} />
-                  Save & Regenerate Certificate
-                </button>
-
-                <button
-                  type="button"
-                  disabled={saving}
-                  onClick={handleSendEmail}
-                  className="px-4 py-2 rounded-xl border border-blue-500/40 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 font-bold text-xs transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
-                >
-                  <Send className="w-3.5 h-3.5" /> Send Certificate Email
-                </button>
-
-                {selectedReg.certificate?.pdfUrl && (
-                  <a
-                    href={selectedReg.certificate.pdfUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--panel)] hover:bg-[var(--line)] text-xs font-semibold text-[var(--foreground)] inline-flex items-center gap-1"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" /> View Certificate
-                  </a>
+                {isPreRace ? (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                    🏃 Pre-Race (Pending Run)
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                    🏁 Race Completed
+                  </span>
                 )}
+                <button
+                  type="button"
+                  onClick={() => setSelectedReg(null)}
+                  className="px-3 py-1 text-xs font-semibold rounded-lg border border-[var(--line)] text-[var(--muted)] hover:text-white cursor-pointer"
+                >
+                  Change Runner
+                </button>
+              </div>
+            </div>
+
+            {/* ── Form: Profile, Distance, Contact & Address ──────── */}
+            <form onSubmit={handleSaveParticipantDetails} className="space-y-5">
+              {/* Section 1: Identity & Distance Category */}
+              <div className="p-4 rounded-xl border border-[var(--line)] bg-[var(--background)] space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-blue-400">
+                  1. Participant Identity & Category
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                      Full Name (Fix Typos / Spelling) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={runnerName}
+                      onChange={(e) => setRunnerName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none font-bold"
+                    />
+                    <p className="text-[10px] text-[var(--muted)] mt-1">
+                      Syncs to user profile, medal label, and race roster.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                      Distance Category (Change Distance) *
+                    </label>
+                    <select
+                      value={distance}
+                      onChange={(e) => setDistance(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none font-bold"
+                    >
+                      {availableDistances.map((d: string) => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[10px] text-[var(--muted)] mt-1">
+                      Moves participant to the requested distance category.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                      BIB Number *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={bibNumber}
+                      onChange={(e) => setBibNumber(e.target.value.toUpperCase())}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-sm font-mono text-yellow-400 focus:border-blue-500 outline-none font-bold"
+                    />
+                    <p className="text-[10px] text-[var(--muted)] mt-1">
+                      Assigned race BIB number.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-xs text-[var(--foreground)] focus:border-blue-500 outline-none font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                      Phone Number (Calling / WhatsApp)
+                    </label>
+                    <input
+                      type="text"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-xs text-[var(--foreground)] focus:border-blue-500 outline-none font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                      Registration Status
+                    </label>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-xs text-[var(--foreground)] focus:border-blue-500 outline-none font-bold"
+                    >
+                      <option value="CONFIRMED">CONFIRMED ✅</option>
+                      <option value="PENDING_PAYMENT">PENDING_PAYMENT ⏳</option>
+                      <option value="COMPLETED">COMPLETED 🏁</option>
+                      <option value="CANCELLED">CANCELLED ❌</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Courier Shipping Address for Medal Delivery */}
+              <div className="p-4 rounded-xl border border-[var(--line)] bg-[var(--background)] space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                  2. Courier Shipping Address (Medal & Kit Delivery)
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                      Delivery Address (House / Flat / Street / Landmark)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Flat 302, Green Valley Apartments"
+                      value={shippingLine1}
+                      onChange={(e) => setShippingLine1(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-xs text-[var(--foreground)] focus:border-blue-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                      Area / Locality / Landmark (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Near City Mall"
+                      value={shippingLine2}
+                      onChange={(e) => setShippingLine2(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-xs text-[var(--foreground)] focus:border-blue-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                      City
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="City"
+                      value={shippingCity}
+                      onChange={(e) => setShippingCity(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-xs text-[var(--foreground)] focus:border-blue-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                      State
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="State"
+                      value={shippingState}
+                      onChange={(e) => setShippingState(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-xs text-[var(--foreground)] focus:border-blue-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                      PIN Code
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="PIN code"
+                      value={shippingPincode}
+                      onChange={(e) => setShippingPincode(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-xs text-[var(--foreground)] focus:border-blue-500 outline-none font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                    Internal Admin Note (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Changed name per WhatsApp request on 20 Oct"
+                    value={adminNote}
+                    onChange={(e) => setAdminNote(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-xs text-[var(--foreground)] focus:border-blue-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Primary Save Action */}
+              <div className="flex items-center justify-between pt-2">
+                <div className="text-xs text-[var(--muted)]">
+                  💡 Clicking save updates the database, roster, and medal dispatch list. No certificates are sent.
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={savingDetails}
+                  className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition shadow-lg shadow-blue-900/30 cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                >
+                  {savingDetails ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" /> Saving Changes...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" /> Save Participant Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+
+            {/* ── Section 3: Post-Race Timing & E-Certificate (Strictly Separate) ── */}
+            <div className="p-5 rounded-xl border border-purple-500/20 bg-purple-950/15 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-purple-500/20 pb-3">
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-purple-300">
+                    3. Race Completion & E-Certificate (Post-Race / Optional)
+                  </h4>
+                  <p className="text-[11px] text-purple-300/70 mt-0.5">
+                    Certificates are only issued after a runner completes the challenge. Use this section only if the race has concluded or you need to re-issue a corrected certificate.
+                  </p>
+                </div>
+
+                <div>
+                  {selectedReg.certificate ? (
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                      Certificate: {selectedReg.certificate.status} ({selectedReg.certificate.certificateNumber || "Active"})
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-500/15 text-slate-400 border border-slate-500/30">
+                      No Certificate Issued Yet
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                    Verified Finish Time (HH:MM:SS)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 00:24:35"
+                    value={finishTimeInput}
+                    onChange={(e) => setFinishTimeInput(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-sm font-mono text-[var(--foreground)] focus:border-purple-500 outline-none font-bold"
+                  />
+                  <p className="text-[10px] text-[var(--muted)] mt-1">
+                    Enter finish time to calculate pace and print on certificate.
+                  </p>
+                </div>
+
+                <div className="flex flex-col justify-end space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={savingCert}
+                      onClick={handleRegenerateCertificate}
+                      className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50 shadow-xs"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${savingCert ? "animate-spin" : ""}`} />
+                      {selectedReg.certificate ? "Re-issue Certificate (Updated Name/Distance)" : "Generate Certificate"}
+                    </button>
+
+                    {selectedReg.certificate && (
+                      <button
+                        type="button"
+                        disabled={sendingCertEmail}
+                        onClick={handleSendCertEmail}
+                        className="px-3.5 py-2.5 rounded-xl border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-200 font-bold text-xs transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                      >
+                        <Send className="w-3.5 h-3.5" /> Email Certificate
+                      </button>
+                    )}
+
+                    {selectedReg.certificate?.pdfUrl && (
+                      <a
+                        href={selectedReg.certificate.pdfUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--panel)] hover:bg-[var(--line)] text-xs font-semibold text-[var(--foreground)] inline-flex items-center gap-1"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" /> View PDF
+                      </a>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
