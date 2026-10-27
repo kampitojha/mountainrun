@@ -60,8 +60,8 @@ app.use(cors({
   credentials: true,
 }));
 app.use("/api/payments/webhook", express.raw({ type: "application/json" }));
-// 2mb: proof screenshots as data URLs before Cloudinary (prefer Cloudinary in prod)
-app.use(express.json({ limit: "2mb" }));
+// 15mb: allow high-res event posters, medal 3D graphics, and gallery photo uploads
+app.use(express.json({ limit: "15mb" }));
 app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
 
 app.get("/health", (_request, response) => {

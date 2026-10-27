@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import { adminFetch } from "../../../lib/admin-api";
+import DistanceSelector from "../components/DistanceSelector";
+import ImageUploadDropzone from "../components/ImageUploadDropzone";
 import SmartTrackingExcelModal from "../components/SmartTrackingExcelModal";
 import {
   UserPlus,
@@ -2292,7 +2294,7 @@ function TabEventManagement({
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [proofClosesAt, setProofClosesAt] = useState("");
-  const [distances, setDistances] = useState("1.6 km, 3.2 km, 5 km, 10 km, 21 km");
+  const [distances, setDistances] = useState<string[]>(["1.6 km", "3.2 km", "5 km", "10 km", "21 km"]);
   const [priceRupees, setPriceRupees] = useState("449");
   const [status, setStatus] = useState("OPEN");
   const [bannerImageUrl, setBannerImageUrl] = useState("");
@@ -2306,7 +2308,7 @@ function TabEventManagement({
     setStartsAt(new Date().toISOString().slice(0, 16));
     setEndsAt(new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 16));
     setProofClosesAt(new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 16));
-    setDistances("1.6 km, 3.2 km, 5 km, 10 km, 21 km");
+    setDistances(["1.6 km", "3.2 km", "5 km", "10 km", "21 km"]);
     setPriceRupees("449");
     setStatus("OPEN");
     setBannerImageUrl("");
@@ -2322,7 +2324,7 @@ function TabEventManagement({
     setStartsAt(ev.startsAt ? new Date(ev.startsAt).toISOString().slice(0, 16) : "");
     setEndsAt(ev.endsAt ? new Date(ev.endsAt).toISOString().slice(0, 16) : "");
     setProofClosesAt(ev.proofClosesAt ? new Date(ev.proofClosesAt).toISOString().slice(0, 16) : "");
-    setDistances((ev.distances || []).join(", "));
+    setDistances(Array.isArray(ev.distances) && ev.distances.length > 0 ? ev.distances : ["5 km", "10 km"]);
     setPriceRupees(String((ev.priceInPaise || 44900) / 100));
     setStatus(ev.status || "OPEN");
     setBannerImageUrl(ev.bannerImageUrl || "");
@@ -2332,6 +2334,10 @@ function TabEventManagement({
 
   async function handleSaveEvent(e: React.FormEvent) {
     e.preventDefault();
+    if (distances.length === 0) {
+      toast("error", "Please select at least one distance category for this event!");
+      return;
+    }
     setLoading(true);
     try {
       const token = await getToken();
@@ -2342,7 +2348,7 @@ function TabEventManagement({
         startsAt: new Date(startsAt),
         endsAt: new Date(endsAt),
         proofClosesAt: new Date(proofClosesAt),
-        distances: distances.split(",").map((d) => d.trim()).filter(Boolean),
+        distances: distances,
         priceInPaise: Math.round(Number(priceRupees || 0) * 100),
         status,
         bannerImageUrl: bannerImageUrl.trim() || null,
@@ -2537,36 +2543,31 @@ function TabEventManagement({
                 </div>
               </div>
 
-              <div>
-                <label className="block font-medium text-[var(--muted)] mb-1">Distances (comma separated) *</label>
-                <input
-                  type="text"
-                  value={distances}
-                  onChange={(e) => setDistances(e.target.value)}
-                  placeholder="1.6 km, 3.2 km, 5 km, 10 km, 21 km"
-                  className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)]"
-                />
-              </div>
+              <DistanceSelector
+                value={distances}
+                onChange={setDistances}
+                label="Race Categories (Distances) *"
+              />
 
-              <div>
-                <label className="block font-medium text-[var(--muted)] mb-1">Poster / Banner Image URL</label>
-                <input
-                  type="url"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <ImageUploadDropzone
+                  label="Poster / Banner Image"
                   value={bannerImageUrl}
-                  onChange={(e) => setBannerImageUrl(e.target.value)}
-                  placeholder="https://res.cloudinary.com/..."
-                  className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)]"
+                  onChange={setBannerImageUrl}
+                  getToken={getToken}
+                  folder="mountainrun/events/banners"
+                  aspectHint="banner"
+                  helperText="16:9 banner for registration cards & social share."
                 />
-              </div>
 
-              <div>
-                <label className="block font-medium text-[var(--muted)] mb-1">Medal Image URL</label>
-                <input
-                  type="url"
+                <ImageUploadDropzone
+                  label="Finisher Medal Image"
                   value={medalImageUrl}
-                  onChange={(e) => setMedalImageUrl(e.target.value)}
-                  placeholder="https://res.cloudinary.com/..."
-                  className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm text-[var(--foreground)]"
+                  onChange={setMedalImageUrl}
+                  getToken={getToken}
+                  folder="mountainrun/events/medals"
+                  aspectHint="square"
+                  helperText="Finisher medal visual shown on race rewards & details."
                 />
               </div>
 
@@ -3742,47 +3743,63 @@ function TabGalleryManager({ toast, getToken }: { toast: any; getToken: any }) {
         </div>
 
         {/* Add photo bar */}
-        <form onSubmit={handleAddPhoto} className="p-4 rounded-xl border border-[var(--line)] bg-[var(--background)] mb-6 space-y-3">
-          <div className="font-bold text-xs uppercase tracking-wider text-pink-400">
-            Add New Photo to Gallery
+        <form onSubmit={handleAddPhoto} className="p-5 rounded-2xl border border-[var(--line)] bg-[var(--background)] mb-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-xs uppercase tracking-wider text-pink-400">
+              Upload Finisher Photo to Gallery
+            </span>
+            <span className="text-[11px] text-[var(--muted)]">
+              Direct upload to Cloudinary • Featured in Community Showcase
+            </span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="sm:col-span-2">
-              <label className="block text-[11px] text-[var(--muted)] mb-1">Image URL (Cloudinary / Direct Link) *</label>
-              <input
-                type="url"
-                required
-                placeholder="https://res.cloudinary.com/..."
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[var(--line)] bg-[var(--panel)] text-xs text-[var(--foreground)] outline-none"
-              />
-            </div>
+
+          <ImageUploadDropzone
+            label="Gallery Image File"
+            value={imageUrl}
+            onChange={setImageUrl}
+            getToken={getToken}
+            folder="mountainrun/gallery"
+            aspectHint="gallery"
+            helperText="Upload any high-res race memory or finisher medal selfie. Direct upload from your computer or phone."
+            required
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div>
-              <label className="block text-[11px] text-[var(--muted)] mb-1">Event / Tag</label>
+              <label className="block text-[11px] font-bold text-[var(--muted)] mb-1">Event / Tag</label>
               <input
                 type="text"
                 value={tag}
                 onChange={(e) => setTag(e.target.value)}
-                placeholder="Event tag or category"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--line)] bg-[var(--panel)] text-xs text-[var(--foreground)] outline-none"
+                placeholder="e.g. National Unity Day, Gandhi Jayanti Run"
+                className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-xs text-[var(--foreground)] outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-[var(--muted)] mb-1">Photo Caption (Optional)</label>
+              <input
+                type="text"
+                placeholder="e.g. Finisher holding medal with pride"
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-xs text-[var(--foreground)] outline-none"
               />
             </div>
           </div>
-          <div className="flex items-center justify-between gap-3">
-            <input
-              type="text"
-              placeholder="Photo caption (optional)"
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              className="flex-1 px-3 py-2 rounded-lg border border-[var(--line)] bg-[var(--panel)] text-xs text-[var(--foreground)] outline-none"
-            />
+
+          <div className="flex justify-end pt-2 border-t border-[var(--line)]">
             <button
               type="submit"
-              disabled={adding}
-              className="px-5 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs transition cursor-pointer shrink-0 disabled:opacity-50"
+              disabled={adding || !imageUrl}
+              className="px-6 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs transition cursor-pointer shrink-0 disabled:opacity-50 shadow-md shadow-pink-900/30 flex items-center gap-2"
             >
-              {adding ? "Adding..." : "+ Add to Gallery"}
+              {adding ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Adding to Gallery...
+                </>
+              ) : (
+                "+ Publish to Community Gallery"
+              )}
             </button>
           </div>
         </form>

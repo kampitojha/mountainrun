@@ -11,13 +11,13 @@ const uploadImageSchema = z.object({
   folder: z.string().max(80).optional(),
 });
 
-const MAX_DATA_URL_CHARS = 10_000_000; // ~7.5MB payload
+const MAX_DATA_URL_CHARS = 16_000_000; // ~12MB payload
 
 export async function uploadProofImage(request: AuthenticatedRequest, response: Response) {
   const payload = validateBody(uploadImageSchema, request);
 
   if (payload.file.startsWith("data:") && payload.file.length > MAX_DATA_URL_CHARS) {
-    throw new ApiError(413, "Image is too large. Use a screenshot under ~1.2 MB or compress it.");
+    throw new ApiError(413, "Image is too large. Use an image under ~12 MB.");
   }
 
   if (!payload.file.startsWith("data:") && !payload.file.startsWith("https://")) {

@@ -10,6 +10,8 @@ import {
   toDatetimeLocalValue,
 } from "../../../lib/admin-api";
 import { authHeaders, getApiUrl } from "../../../lib/api";
+import DistanceSelector from "../components/DistanceSelector";
+import ImageUploadDropzone from "../components/ImageUploadDropzone";
 import { AdminEmpty, AdminPageHeader } from "../ui";
 import { validateMinLength } from "../../../lib/validation";
 import {
@@ -345,121 +347,29 @@ export default function AdminEventsPage() {
                 value={form.description} />
             </label>
 
-            <div className="space-y-1.5">
-              <span className="field-label text-sm">Banner image</span>
-              <div className="flex items-start gap-3">
-                <input
-                  accept="image/png,image/jpeg,image/webp,image/avif"
-                  className="input cursor-pointer py-2 file:mr-3 file:rounded-full file:border-0 file:bg-(--sage) file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white block w-full"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    if (!file.type.startsWith("image/")) {
-                      toast("error", "Only image files are allowed.");
-                      return;
-                    }
-                    if (file.size > 10 * 1024 * 1024) {
-                      toast("error", "Image must be under 10 MB.");
-                      return;
-                    }
-                    try {
-                      const token = await getToken();
-                      const reader = new FileReader();
-                      reader.onload = async () => {
-                        const base64 = reader.result as string;
-                        const res = await fetch(getApiUrl("/api/uploads/image"), {
-                          method: "POST",
-                          headers: authHeaders(token),
-                          body: JSON.stringify({ file: base64, folder: "mountainrun/admin" }),
-                        });
-                        if (!res.ok) { toast("error", "Upload failed. Try again."); return; }
-                        const json = await res.json();
-                        setForm((f) => ({ ...f, bannerImageUrl: json.data.url }));
-                      };
-                      reader.readAsDataURL(file);
-                    } catch { toast("error", "Upload failed. Check connection."); }
-                  }}
-                  type="file"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ImageUploadDropzone
+                  label="Poster / Banner Image"
+                  value={form.bannerImageUrl}
+                  onChange={(url) => setForm((f) => ({ ...f, bannerImageUrl: url }))}
+                  getToken={getToken}
+                  folder="mountainrun/events/banners"
+                  aspectHint="banner"
+                  helperText="16:9 banner for event card and social preview."
                 />
-                {form.bannerImageUrl && (
-                  <button
-                    className="btn btn-secondary h-9 w-9 shrink-0 flex items-center justify-center p-0 text-sm"
-                    onClick={() => setForm((f) => ({ ...f, bannerImageUrl: "" }))}
-                    title="Remove banner"
-                    type="button"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-              <p className="text-[0.65rem] text-[var(--muted)]">PNG, JPEG, WebP or AVIF · max 10 MB · or paste a URL below.</p>
-              <input className="input" placeholder="https://… or leave blank for default"
-                onChange={(e) => setForm((f) => ({ ...f, bannerImageUrl: e.target.value }))}
-                value={form.bannerImageUrl} />
-              {form.bannerImageUrl && !form.bannerImageUrl.startsWith("/images/") && (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img alt="Banner preview" src={form.bannerImageUrl} className="mt-1 h-12 w-auto max-w-full rounded-lg object-cover" />
-              )}
-            </div>
 
-            <div className="space-y-1.5 mt-4">
-              <span className="field-label text-sm">Medal Image (Preview / Revealed)</span>
-              <div className="flex items-start gap-3">
-                <input
-                  accept="image/png,image/jpeg,image/webp,image/avif"
-                  className="input cursor-pointer py-2 file:mr-3 file:rounded-full file:border-0 file:bg-(--gold-deep) file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white block w-full"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    if (!file.type.startsWith("image/")) {
-                      toast("error", "Only image files are allowed.");
-                      return;
-                    }
-                    if (file.size > 10 * 1024 * 1024) {
-                      toast("error", "Image must be under 10 MB.");
-                      return;
-                    }
-                    try {
-                      const token = await getToken();
-                      const reader = new FileReader();
-                      reader.onload = async () => {
-                        const base64 = reader.result as string;
-                        const res = await fetch(getApiUrl("/api/uploads/image"), {
-                          method: "POST",
-                          headers: authHeaders(token),
-                          body: JSON.stringify({ file: base64, folder: "mountainrun/admin/medals" }),
-                        });
-                        if (!res.ok) { toast("error", "Upload failed. Try again."); return; }
-                        const json = await res.json();
-                        setForm((f) => ({ ...f, medalImageUrl: json.data.url }));
-                      };
-                      reader.readAsDataURL(file);
-                    } catch { toast("error", "Upload failed. Check connection."); }
-                  }}
-                  type="file"
+                <ImageUploadDropzone
+                  label="Finisher Medal Image"
+                  value={form.medalImageUrl}
+                  onChange={(url) => setForm((f) => ({ ...f, medalImageUrl: url }))}
+                  getToken={getToken}
+                  folder="mountainrun/events/medals"
+                  aspectHint="square"
+                  helperText="3D medal visual shown on race rewards & details."
                 />
-                {form.medalImageUrl && (
-                  <button
-                    className="btn btn-secondary h-9 w-9 shrink-0 flex items-center justify-center p-0 text-sm"
-                    onClick={() => setForm((f) => ({ ...f, medalImageUrl: "" }))}
-                    title="Remove medal image"
-                    type="button"
-                  >
-                    ✕
-                  </button>
-                )}
               </div>
-              <p className="text-[0.65rem] text-[var(--muted)]">If left blank, the premium Frosted Glass teaser will be shown.</p>
-              <input className="input" placeholder="https://…"
-                onChange={(e) => setForm((f) => ({ ...f, medalImageUrl: e.target.value }))}
-                value={form.medalImageUrl} />
-              {form.medalImageUrl && !form.medalImageUrl.startsWith("/images/") && (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img alt="Medal preview" src={form.medalImageUrl} className="mt-1 h-12 w-auto max-w-full rounded-lg object-cover" />
-              )}
-            </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 mt-3">
               <label className="block text-sm">
                 <span className="field-label">Starts *</span>
                 <input className="input" type="datetime-local"
@@ -474,12 +384,13 @@ export default function AdminEventsPage() {
               </label>
             </div>
 
-            <label className="block text-sm">
-              <span className="field-label">Distances * (comma-separated)</span>
-              <input className="input"
-                onChange={(e) => setForm((f) => ({ ...f, distances: e.target.value }))}
-                placeholder="5 km, 10 km, 21 km" required value={form.distances} />
-            </label>
+            <div className="mt-3">
+              <DistanceSelector
+                value={form.distances ? form.distances.split(",").map((d: string) => d.trim()).filter(Boolean) : []}
+                onChange={(dists) => setForm((f) => ({ ...f, distances: dists.join(", ") }))}
+                label="Race Categories (Distances) *"
+              />
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
               <label className="block text-sm">
