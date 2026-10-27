@@ -3,7 +3,9 @@
 import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import * as XLSX from "xlsx";
 import { adminFetch } from "../../../lib/admin-api";
+import SmartTrackingExcelModal from "../components/SmartTrackingExcelModal";
 import {
   UserPlus,
   FileCheck2,
@@ -676,6 +678,10 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
   const [savingCert, setSavingCert] = useState(false);
   const [sendingCertEmail, setSendingCertEmail] = useState(false);
 
+  // Delete registration state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingReg, setDeletingReg] = useState(false);
+
   function formatSecs(sec: number | null | undefined): string {
     if (!sec) return "";
     const h = Math.floor(sec / 3600);
@@ -868,6 +874,26 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
     }
   }
 
+  // 4. Delete Registration Action
+  async function handleDeleteRegistration() {
+    if (!selectedReg) return;
+    setDeletingReg(true);
+    try {
+      const token = await getToken();
+      await adminFetch(`/api/admin/registrations/${selectedReg.id}`, token, {
+        method: "DELETE",
+      });
+      toast("success", `✓ Registration for ${selectedReg.bibNumber} (${selectedReg.shippingName || selectedReg.user?.name}) permanently deleted.`);
+      setResults((prev) => prev.filter((r) => r.id !== selectedReg.id));
+      setSelectedReg(null);
+      setShowDeleteModal(false);
+    } catch (err: any) {
+      toast("error", `Delete failed: ${err.message}`);
+    } finally {
+      setDeletingReg(false);
+    }
+  }
+
   const isPreRace = !selectedReg?.finishTimeSeconds && selectedReg?.proofUpload?.status !== "APPROVED";
 
   return (
@@ -1017,6 +1043,13 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
                     🏁 Race Completed
                   </span>
                 )}
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="px-3 py-1 text-xs font-semibold rounded-lg border border-rose-500/40 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 cursor-pointer inline-flex items-center gap-1 transition"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Delete Registration
+                </button>
                 <button
                   type="button"
                   onClick={() => setSelectedReg(null)}
@@ -1326,6 +1359,57 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
             </div>
           </div>
         )}
+
+        {/* Delete Registration Confirmation Modal */}
+        {showDeleteModal && selectedReg && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+            <div className="w-full max-w-md rounded-2xl border border-rose-500/40 bg-[var(--panel)] p-6 shadow-2xl space-y-4">
+              <div className="flex items-center gap-3 text-rose-400">
+                <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center shrink-0">
+                  <AlertCircle className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[var(--foreground)]">Permanently Delete Registration?</h3>
+                  <p className="text-xs text-[var(--muted)]">Database cleanup</p>
+                </div>
+              </div>
+
+              <p className="text-xs text-[var(--muted)] leading-relaxed">
+                You are about to delete registration for <strong className="text-[var(--foreground)]">{selectedReg.shippingName || selectedReg.user?.name}</strong> (BIB: <strong className="font-mono text-[var(--foreground)]">{selectedReg.bibNumber}</strong>) from <strong className="text-[var(--foreground)]">{selectedReg.event?.title}</strong>.
+              </p>
+
+              <div className="text-xs text-rose-300/90 bg-rose-950/40 p-3 rounded-lg border border-rose-500/20 space-y-1">
+                <p className="font-semibold">⚠️ All related records will be permanently removed:</p>
+                <ul className="list-disc pl-4 space-y-0.5 text-[11px] opacity-90">
+                  <li>Payment transaction & audit records</li>
+                  <li>Submitted proof images & reviewer notes</li>
+                  <li>Issued e-certificates</li>
+                  <li>Medal delivery tracking records</li>
+                </ul>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--line)]">
+                <button
+                  type="button"
+                  disabled={deletingReg}
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2 rounded-xl border border-[var(--line)] text-xs font-semibold hover:bg-[var(--line)] transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={deletingReg}
+                  onClick={handleDeleteRegistration}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {deletingReg ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                  Confirm Permanent Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1337,6 +1421,7 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
 function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any }) {
   const [dispatchMode, setDispatchMode] = useState<"single" | "bulk">("bulk");
   const [loading, setLoading] = useState(false);
+  const [showSmartModal, setShowSmartModal] = useState(false);
 
   // Single runner state
   const [singleBib, setSingleBib] = useState("");
@@ -1566,13 +1651,22 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handleDownloadSampleCsv}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-purple-500/40 bg-purple-900/40 hover:bg-purple-900/60 text-purple-200 text-xs font-bold transition shrink-0 cursor-pointer shadow-sm"
-        >
-          <Download className="w-3.5 h-3.5" /> Download Sample CSV
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowSmartModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold transition shrink-0 cursor-pointer shadow-lg shadow-purple-900/30"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" /> ✨ Smart Excel Assistant (8-10 Col to 3-Col & Upload)
+          </button>
+          <button
+            type="button"
+            onClick={handleDownloadSampleCsv}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-purple-500/40 bg-purple-900/40 hover:bg-purple-900/60 text-purple-200 text-xs font-bold transition shrink-0 cursor-pointer shadow-sm"
+          >
+            <Download className="w-3.5 h-3.5" /> Download Sample CSV
+          </button>
+        </div>
       </div>
 
       <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-sm">
@@ -1916,6 +2010,17 @@ function TabTrackingDispatch({ toast, getToken }: { toast: any; getToken: any })
           </form>
         )}
       </div>
+
+      {showSmartModal && (
+        <SmartTrackingExcelModal
+          isOpen={showSmartModal}
+          onClose={() => setShowSmartModal(false)}
+          onSuccess={() => {
+            toast("success", "Tracking updated successfully from Excel Assistant!");
+          }}
+          getToken={getToken}
+        />
+      )}
     </div>
   );
 }
@@ -1983,6 +2088,55 @@ function TabCourierExcel({
     }
   }
 
+  async function handleDownload3ColExcel() {
+    try {
+      const token = await getToken();
+      const params = new URLSearchParams({
+        pageSize: "1000",
+        ...(selectedEventId !== "ALL" ? { eventId: selectedEventId } : {}),
+        ...(statusFilter !== "ALL" ? { status: statusFilter } : {}),
+      });
+
+      const res = await adminFetch<{ data: any[] }>(`/api/admin/medals?${params.toString()}`, token);
+      const rows = res.data || [];
+      if (rows.length === 0) {
+        toast("info", "No records found to export for selected filter.");
+        return;
+      }
+
+      const excelRows = rows.map((r, i) => ({
+        "S.No.": i + 1,
+        "BIB Number": r.bibNumber,
+        "Courier Partner": r.medalDelivery?.courier || "DTDC Express",
+        "Tracking ID (AWB)": r.medalDelivery?.trackingNumber || "",
+        "Recipient Name": r.shippingName || r.user?.name,
+        "Phone": r.shippingPhone || r.user?.phone || "",
+        "City": r.shippingCity || "",
+        "Pincode": r.shippingPincode || "",
+        "Event": r.event?.title || "",
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(excelRows);
+      ws["!cols"] = [
+        { wch: 8 },
+        { wch: 18 },
+        { wch: 22 },
+        { wch: 22 },
+        { wch: 24 },
+        { wch: 16 },
+        { wch: 16 },
+        { wch: 12 },
+        { wch: 25 },
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Tracking Manifest");
+      XLSX.writeFile(wb, `mountainrun-tracking-manifest-${new Date().toISOString().split("T")[0]}.xlsx`);
+      toast("success", `Exported ${excelRows.length} runners to 3-Column Tracking Excel!`);
+    } catch (err: any) {
+      toast("error", `3-Column Excel export failed: ${err.message}`);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-sm">
@@ -1996,18 +2150,27 @@ function TabCourierExcel({
                 Courier Delivery Excel Exporter
               </h2>
               <p className="text-xs text-[var(--muted)]">
-                Download a formatted courier dispatch spreadsheet (.csv) with recipient names, phones, and verified delivery addresses.
+                Download a formatted courier dispatch spreadsheet (.csv) with recipient names, phones, and addresses, or export a 3-column tracking manifest (.xlsx).
               </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleDownloadCsv}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-sm transition shadow-lg shadow-cyan-900/30 cursor-pointer shrink-0"
-          >
-            <Download className="w-4 h-4" /> Download Courier Excel (.csv)
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleDownload3ColExcel}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-cyan-500/40 bg-cyan-950/40 hover:bg-cyan-900/40 text-cyan-200 font-bold text-xs sm:text-sm transition cursor-pointer shrink-0 shadow-sm"
+            >
+              <Download className="w-4 h-4 text-cyan-400" /> Export 3-Column Tracking Sheet (.xlsx)
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadCsv}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs sm:text-sm transition shadow-lg shadow-cyan-900/30 cursor-pointer shrink-0"
+            >
+              <Download className="w-4 h-4" /> Download Courier Full (.csv)
+            </button>
+          </div>
         </div>
 
         {/* Filters */}

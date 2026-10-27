@@ -22,13 +22,16 @@ import {
   Truck,
   User,
   X,
+  FileSpreadsheet,
 } from "lucide-react";
+import * as XLSX from "xlsx";
 import { parseProofImages } from "../../../lib/proof-utils";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { adminFetch } from "../../../lib/admin-api";
 import { getApiUrl } from "../../../lib/api";
 import { AdminEmpty, AdminPageHeader } from "../ui";
+import { SmartTrackingExcelModal } from "../components/SmartTrackingExcelModal";
 
 type DispatchItem = {
   id: string; // registration id
@@ -137,11 +140,8 @@ export default function AdminMedalDispatchPage() {
   const [editTrackingUrl, setEditTrackingUrl] = useState("");
   const [editStatus, setEditStatus] = useState<string>("DISPATCHED");
 
-  // Bulk Tracking Upload State
+  // Bulk Tracking Upload State (Handled by SmartTrackingExcelModal)
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
-  const [bulkCsvText, setBulkCsvText] = useState("");
-  const [bulkUploading, setBulkUploading] = useState(false);
-  const [bulkResult, setBulkResult] = useState<{ updated: number; errors: any[] } | null>(null);
 
   // Load events for dropdown
   useEffect(() => {
@@ -236,44 +236,40 @@ export default function AdminMedalDispatchPage() {
     }
   }
 
-  // Save dispatch updates
-  async function handleBulkUpload() {
-    if (!bulkCsvText.trim()) return;
-    setBulkUploading(true);
-    setBulkResult(null);
-
-    try {
-      const lines = bulkCsvText.trim().split("\n");
-      const items = lines.slice(1).map(line => {
-        // Simple CSV parser: bibNumber/orderId, courier, trackingNumber, trackingUrl
-        const [id, courier, trackingNumber, trackingUrl] = line.split(",").map(s => s.trim());
-        const isBib = id.includes("-"); // SDC-1234
-        return {
-          [isBib ? "bibNumber" : "orderId"]: id,
-          courier,
-          trackingNumber,
-          trackingUrl,
-        };
-      }).filter(item => item.trackingNumber);
-
-      if (items.length === 0) throw new Error("No valid tracking records found. Please ensure you included headers and comma separated values.");
-
-      const token = await getToken().catch(() => null);
-      const res = await adminFetch<{ data: { updated: number, errors: any[] } }>(
-        "/api/admin/medals/bulk-tracking",
-        token,
-        { method: "POST", body: JSON.stringify({ items }) }
-      );
-
-      setBulkResult(res.data);
-      if (res.data.updated > 0) {
-        await loadData();
-      }
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Bulk upload failed");
-    } finally {
-      setBulkUploading(false);
+  // 1-Click Clean 3-Column Tracking Sheet (.xlsx)
+  function handleExport3ColumnExcel() {
+    if (items.length === 0) {
+      alert("No records to export. Try changing your filters.");
+      return;
     }
+    const excelData = items.map((r, i) => ({
+      "S.No.": i + 1,
+      "BIB Number": r.bibNumber,
+      "Courier Partner": r.medalDelivery?.courier || "India Post Speed Post",
+      "Tracking ID / AWB": r.medalDelivery?.trackingNumber || "",
+      "Recipient Name": r.shippingName || r.user.name,
+      "Event": r.event.title,
+      "Distance": r.distance,
+      "Medal Status": r.medalDelivery?.status || "PENDING",
+      "Dispatched Date": r.medalDelivery?.dispatchedAt ? new Date(r.medalDelivery.dispatchedAt).toLocaleDateString() : "",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    worksheet["!cols"] = [
+      { wch: 8 },  // S.No.
+      { wch: 18 }, // BIB Number
+      { wch: 25 }, // Courier Partner
+      { wch: 22 }, // Tracking ID
+      { wch: 22 }, // Recipient Name
+      { wch: 25 }, // Event
+      { wch: 12 }, // Distance
+      { wch: 16 }, // Status
+      { wch: 16 }, // Dispatched Date
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "3-Col Tracking Sheet");
+    XLSX.writeFile(workbook, `MountainRun_3Column_Tracking_${new Date().toISOString().split("T")[0]}.xlsx`);
   }
 
   // Save dispatch updates
@@ -477,31 +473,43 @@ export default function AdminMedalDispatchPage() {
             Refresh
           </button>
 
-          {/* Bulk Tracking Upload Button */}
+          {/* Smart Excel Tracking Assistant Button */}
           <button
             type="button"
             onClick={() => setBulkModalOpen(true)}
-            className="flex items-center gap-2 rounded-xl bg-(--line) px-4 py-2 text-xs font-bold text-(--foreground) transition hover:bg-(--line-strong) sm:text-sm"
+            className="flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-300 transition hover:bg-emerald-500/20 sm:text-sm shadow-xs cursor-pointer"
           >
-            <Truck className="h-4 w-4" />
-            Bulk Tracking Upload
+            <FileSpreadsheet className="h-4 w-4 text-emerald-400" />
+            Excel Tracking Assistant
+          </button>
+
+          {/* Clean 3-Column Tracking Sheet Export Button */}
+          <button
+            type="button"
+            onClick={handleExport3ColumnExcel}
+            disabled={items.length === 0}
+            className="flex items-center gap-2 rounded-xl border border-(--line) bg-(--panel) px-3.5 py-2 text-xs font-bold text-(--foreground) transition hover:bg-(--line) disabled:opacity-50 sm:text-sm cursor-pointer"
+            title="Download clean 3-column tracking sheet (.xlsx) with BIB, Courier, and Tracking ID"
+          >
+            <Download className="h-4 w-4 text-sky-400" />
+            Export 3-Column Sheet
           </button>
 
           {/* Print Labels Button */}
           <button
             type="button"
             onClick={() => window.open("/admin/medals/print", "_blank")}
-            className="flex items-center gap-2 rounded-xl border border-(--sage) bg-(--panel) px-4 py-2 text-xs font-bold text-(--sage) transition hover:bg-(--sage)/10 sm:text-sm"
+            className="flex items-center gap-2 rounded-xl border border-(--sage) bg-(--panel) px-3.5 py-2 text-xs font-bold text-(--sage) transition hover:bg-(--sage)/10 sm:text-sm cursor-pointer"
           >
             Print Labels
           </button>
 
-          {/* 1-Click CSV Export Button */}
+          {/* 1-Click Full Shipping CSV Export Button */}
           <button
             type="button"
             onClick={() => void handleExportCsv()}
             disabled={exporting || items.length === 0}
-            className="flex items-center gap-2 rounded-xl bg-(--sage) px-4 py-2 text-xs font-bold text-(--on-accent) shadow-sm transition hover:opacity-90 disabled:opacity-50 sm:text-sm"
+            className="flex items-center gap-2 rounded-xl bg-(--sage) px-4 py-2 text-xs font-bold text-(--on-accent) shadow-sm transition hover:opacity-90 disabled:opacity-50 sm:text-sm cursor-pointer"
           >
             {exporting ? (
               <>
@@ -511,7 +519,7 @@ export default function AdminMedalDispatchPage() {
             ) : (
               <>
                 <Download className="h-4 w-4" />
-                Export Shipping CSV ({items.length})
+                Export Full Manifest ({items.length})
               </>
             )}
           </button>
@@ -966,51 +974,13 @@ export default function AdminMedalDispatchPage() {
         ) : null}
       </AnimatePresence>
 
-      {/* Bulk Upload Modal */}
-      {bulkModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-xl rounded-2xl border border-(--line) bg-(--panel) p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-(--foreground)">Bulk Tracking Upload</h2>
-              <button onClick={() => setBulkModalOpen(false)} className="text-(--muted) hover:text-(--foreground)">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <p className="text-sm text-(--muted) mb-4">
-              Paste CSV data. Must include headers. Order does not matter. Required columns: <code className="text-xs bg-(--panel-soft) px-1 rounded">bibNumber</code> (or <code className="text-xs bg-(--panel-soft) px-1 rounded">orderId</code>), <code className="text-xs bg-(--panel-soft) px-1 rounded">courier</code>, <code className="text-xs bg-(--panel-soft) px-1 rounded">trackingNumber</code>, <code className="text-xs bg-(--panel-soft) px-1 rounded">trackingUrl</code>.
-            </p>
-            <textarea
-              className="w-full h-48 rounded-xl border border-(--line) bg-(--panel-soft) p-3 text-xs font-mono text-(--foreground) focus:border-(--sage) outline-none"
-              placeholder="bibNumber, courier, trackingNumber, trackingUrl&#10;SDC-1234, Delhivery, 1234567890, https://..."
-              value={bulkCsvText}
-              onChange={(e) => setBulkCsvText(e.target.value)}
-            />
-            {bulkResult && (
-              <div className="mt-4 p-3 rounded-lg bg-(--sage)/10 border border-(--sage)/20">
-                <p className="text-sm font-bold text-(--sage)">Successfully updated: {bulkResult.updated} records</p>
-                {bulkResult.errors.length > 0 && (
-                  <div className="mt-2 text-xs text-red-400 max-h-24 overflow-y-auto">
-                    Failed rows: {bulkResult.errors.length} (Check console for details)
-                  </div>
-                )}
-              </div>
-            )}
-            <div className="mt-6 flex justify-end gap-3">
-              <button onClick={() => setBulkModalOpen(false)} className="px-4 py-2 text-sm font-semibold text-(--muted) hover:text-(--foreground)">
-                Cancel
-              </button>
-              <button
-                onClick={() => void handleBulkUpload()}
-                disabled={bulkUploading || !bulkCsvText.trim()}
-                className="flex items-center gap-2 rounded-xl bg-(--sage) px-5 py-2 text-sm font-bold text-(--on-accent) transition hover:opacity-90 disabled:opacity-50"
-              >
-                {bulkUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                Upload
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Smart Tracking Excel Assistant Modal */}
+      <SmartTrackingExcelModal
+        isOpen={bulkModalOpen}
+        onClose={() => setBulkModalOpen(false)}
+        onSuccess={() => void loadData()}
+        getToken={getToken}
+      />
     </div>
   );
 }

@@ -877,6 +877,46 @@ export async function adminMarkRegistrationPaid(
   response.json({ data: { registration, payment, emailSent: emailResult?.sent ?? false } });
 }
 
+export async function adminDeleteRegistration(
+  request: AuthenticatedRequest,
+  response: Response,
+) {
+  const id = routeParam(request, "id");
+
+  const existing = await prisma.registration.findUnique({
+    where: { id },
+    include: {
+      user: true,
+      event: true,
+    },
+  });
+
+  if (!existing) {
+    throw new ApiError(404, "Registration not found");
+  }
+
+  // Delete all dependent child models first, then registration itself
+  await prisma.$transaction([
+    prisma.certificate.deleteMany({ where: { registrationId: id } }),
+    prisma.medalDelivery.deleteMany({ where: { registrationId: id } }),
+    prisma.proofUpload.deleteMany({ where: { registrationId: id } }),
+    prisma.payment.deleteMany({ where: { registrationId: id } }),
+    prisma.registration.delete({ where: { id } }),
+  ]);
+
+  await writeAdminAudit(request, {
+    action: "registration.delete",
+    entityType: "Registration",
+    entityId: id,
+    summary: `Permanently deleted registration ${existing.bibNumber} (${existing.shippingName || existing.user.name}) for event ${existing.event.title}`,
+  });
+
+  response.json({
+    message: `Registration ${existing.bibNumber} permanently deleted from database`,
+    data: { id, bibNumber: existing.bibNumber },
+  });
+}
+
 export async function adminExportRegistrationsCsv(
   request: AuthenticatedRequest,
   response: Response,
@@ -1661,11 +1701,11 @@ export async function adminUpdateMedal(request: AuthenticatedRequest, response: 
 
 const adminMedalBulkTrackingSchema = z.object({
   items: z.array(z.object({
-    bibNumber: z.string().optional(),
-    orderId: z.string().optional(), // Razorpay order id or payment id
+    bibNumber: z.string().optional().nullable(),
+    orderId: z.string().optional().nullable(), // Razorpay order id or payment id or phone
     trackingNumber: z.string().min(1),
-    courier: z.string().optional(),
-    trackingUrl: z.string().optional(),
+    courier: z.string().optional().nullable(),
+    trackingUrl: z.string().optional().nullable(),
   })),
 });
 
@@ -1673,31 +1713,84 @@ export async function adminBulkUploadTracking(request: AuthenticatedRequest, res
   const payload = validateBody(adminMedalBulkTrackingSchema, request);
   let updatedCount = 0;
   const errors: any[] = [];
+  const updatedBibs: string[] = [];
 
   for (const item of payload.items) {
     try {
       let registrationId: string | undefined;
+      const cleanBib = item.bibNumber?.trim();
+      const cleanOrder = item.orderId?.trim();
+      const cleanTracking = item.trackingNumber?.trim();
 
-      if (item.bibNumber) {
-        const reg = await prisma.registration.findUnique({
-          where: { bibNumber: item.bibNumber }
+      if (!cleanTracking) {
+        errors.push({ item, error: "Tracking number is empty" });
+        continue;
+      }
+
+      if (cleanBib) {
+        // 1. Try exact or case-insensitive BIB match
+        let reg = await prisma.registration.findFirst({
+          where: { bibNumber: { equals: cleanBib, mode: "insensitive" } },
         });
+
+        // 2. If not found, try phone or email
+        if (!reg) {
+          reg = await prisma.registration.findFirst({
+            where: {
+              OR: [
+                { shippingPhone: { contains: cleanBib } },
+                { user: { phone: { contains: cleanBib } } },
+                { user: { email: { equals: cleanBib, mode: "insensitive" } } },
+              ],
+            },
+          });
+        }
         if (reg) registrationId = reg.id;
-      } else if (item.orderId) {
+      } else if (cleanOrder) {
         const payment = await prisma.payment.findFirst({
           where: {
             OR: [
-              { razorpayOrderId: item.orderId },
-              { razorpayPaymentId: item.orderId }
-            ]
-          }
+              { razorpayOrderId: cleanOrder },
+              { razorpayPaymentId: cleanOrder },
+            ],
+          },
         });
-        if (payment) registrationId = payment.registrationId;
+        if (payment) {
+          registrationId = payment.registrationId;
+        } else {
+          // Try matching phone or email
+          const reg = await prisma.registration.findFirst({
+            where: {
+              OR: [
+                { shippingPhone: { contains: cleanOrder } },
+                { user: { phone: { contains: cleanOrder } } },
+                { user: { email: { equals: cleanOrder, mode: "insensitive" } } },
+              ],
+            },
+          });
+          if (reg) registrationId = reg.id;
+        }
       }
 
       if (!registrationId) {
-        errors.push({ item, error: "Registration not found" });
+        errors.push({ item, error: `Runner not found for identifier "${cleanBib || cleanOrder}"` });
         continue;
+      }
+
+      // Auto-construct tracking URL if not explicitly provided
+      let finalTrackingUrl = item.trackingUrl?.trim() || null;
+      const courierName = (item.courier || "").trim();
+      if (!finalTrackingUrl && courierName) {
+        const cLower = courierName.toLowerCase();
+        if (cLower.includes("delhivery")) {
+          finalTrackingUrl = `https://www.delhivery.com/track/package/${cleanTracking}`;
+        } else if (cLower.includes("post") || cLower.includes("speed")) {
+          finalTrackingUrl = `https://www.indiapost.gov.in/`;
+        } else if (cLower.includes("dtdc")) {
+          finalTrackingUrl = `https://www.dtdc.in/`;
+        } else if (cLower.includes("bluedart") || cLower.includes("blue dart")) {
+          finalTrackingUrl = `https://www.bluedart.com/`;
+        }
       }
 
       await prisma.medalDelivery.upsert({
@@ -1705,28 +1798,35 @@ export async function adminBulkUploadTracking(request: AuthenticatedRequest, res
         create: {
           registrationId,
           status: "DISPATCHED",
-          trackingNumber: item.trackingNumber,
-          courier: item.courier || null,
-          trackingUrl: item.trackingUrl || null,
+          trackingNumber: cleanTracking,
+          courier: courierName || null,
+          trackingUrl: finalTrackingUrl,
           dispatchedAt: new Date(),
         },
         update: {
           status: "DISPATCHED",
-          trackingNumber: item.trackingNumber,
-          courier: item.courier || undefined,
-          trackingUrl: item.trackingUrl || undefined,
+          trackingNumber: cleanTracking,
+          courier: courierName || undefined,
+          trackingUrl: finalTrackingUrl || undefined,
           dispatchedAt: new Date(),
-        }
+        },
       });
       updatedCount++;
+      if (cleanBib) updatedBibs.push(cleanBib);
     } catch (err: any) {
       errors.push({ item, error: err.message });
     }
   }
 
+  await writeAdminAudit(request, {
+    action: "medals.bulk_tracking",
+    entityType: "MedalDelivery",
+    summary: `Bulk updated tracking for ${updatedCount} packages. Errors: ${errors.length}`,
+  });
+
   response.json({
     message: `Successfully updated ${updatedCount} tracking numbers`,
-    data: { updated: updatedCount, errors }
+    data: { updated: updatedCount, errors, updatedBibs },
   });
 }
 

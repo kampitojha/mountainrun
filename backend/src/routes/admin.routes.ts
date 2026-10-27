@@ -6,6 +6,7 @@ import {
   adminCreateEvent,
   adminDeleteCoupon,
   adminDeleteEvent,
+  adminDeleteRegistration,
   adminExportRegistrationsCsv,
   adminGetEvent,
   adminGetRegistration,
@@ -78,6 +79,7 @@ adminRouter.get("/registrations", asyncHandler(adminListRegistrations));
 adminRouter.get("/registrations/export.csv", asyncHandler(adminExportRegistrationsCsv));
 adminRouter.get("/registrations/:id", asyncHandler(adminGetRegistration));
 adminRouter.patch("/registrations/:id", asyncHandler(adminUpdateRegistration));
+adminRouter.delete("/registrations/:id", asyncHandler(adminDeleteRegistration));
 adminRouter.post("/registrations/:id/mark-paid", asyncHandler(adminMarkRegistrationPaid));
 adminRouter.post("/registrations/:id/resend-email", asyncHandler(adminResendRegistrationEmail));
 

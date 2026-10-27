@@ -2,8 +2,9 @@
 
 import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { Trash2, AlertCircle, RefreshCw } from "lucide-react";
 import { adminFetch, formatDateTime, formatInrFromPaise } from "../../../../lib/admin-api";
 import { parseProofImages } from "../../../../lib/proof-utils";
 import { AdminBackLink, AdminPageHeader, AdminPanel } from "../../ui";
@@ -51,6 +52,7 @@ type RegistrationDetail = {
 
 export default function AdminRegistrationDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const { getToken } = useAuth();
   const [data, setData] = useState<RegistrationDetail | null>(null);
   const [runnerName, setRunnerName] = useState("");
@@ -65,6 +67,9 @@ export default function AdminRegistrationDetailPage() {
   const [distance, setDistance] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -135,6 +140,23 @@ export default function AdminRegistrationDetailPage() {
     }
   }
 
+  async function handleDelete() {
+    if (!data) return;
+    setDeleteLoading(true);
+    try {
+      const token = await getToken().catch(() => null);
+      await adminFetch(`/api/admin/registrations/${data.id}`, token, {
+        method: "DELETE",
+      });
+      setShowDeleteModal(false);
+      router.push("/admin/registrations");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete registration");
+      setDeleteLoading(false);
+      setShowDeleteModal(false);
+    }
+  }
+
   if (error) {
     return <p className="text-sm text-[var(--danger)]">{error}</p>;
   }
@@ -161,6 +183,13 @@ export default function AdminRegistrationDetailPage() {
             <Link className="btn btn-secondary" href={`/admin/users/${data.user.id}`}>
               View user
             </Link>
+            <button
+              className="btn btn-secondary inline-flex items-center gap-1.5 border-rose-500/40 text-rose-500 hover:bg-rose-500/10 cursor-pointer"
+              onClick={() => setShowDeleteModal(true)}
+              type="button"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> Delete
+            </button>
           </>
         }
       />
@@ -404,7 +433,80 @@ export default function AdminRegistrationDetailPage() {
             </button>
           </div>
         </AdminPanel>
+
+        <AdminPanel className="span-2" title="Danger Zone">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-rose-500/30 bg-rose-950/20">
+            <div>
+              <h4 className="text-sm font-bold text-rose-300">Permanently Delete Registration</h4>
+              <p className="text-xs text-rose-300/80 mt-1">
+                Erase this registration permanently from the database. All related records (payments, proofs, certificates, medal deliveries) will be deleted.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowDeleteModal(true)}
+              className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition inline-flex items-center gap-2 cursor-pointer shrink-0 shadow-sm"
+            >
+              <Trash2 className="w-4 h-4" /> Delete Registration
+            </button>
+          </div>
+        </AdminPanel>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="w-full max-w-md rounded-2xl border border-rose-500/40 bg-[var(--panel)] p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-[var(--foreground)]">Permanently Delete Registration?</h3>
+                <p className="text-xs text-[var(--muted)]">This operation cannot be reversed.</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-[var(--muted)] leading-relaxed">
+              You are about to delete registration <strong className="font-mono text-[var(--foreground)]">{data.bibNumber}</strong> for runner <strong className="text-[var(--foreground)]">{data.shippingName || data.user.name}</strong> ({data.user.email}) from event <strong className="text-[var(--foreground)]">{data.event.title}</strong>.
+            </p>
+
+            <div className="text-xs text-rose-300/90 bg-rose-950/40 p-3 rounded-lg border border-rose-500/20 space-y-1">
+              <p className="font-semibold">⚠️ The following associated records will be permanently removed:</p>
+              <ul className="list-disc pl-4 space-y-0.5 text-[11px] opacity-90">
+                <li>Payment transaction history & receipt links</li>
+                <li>Activity proof images and verification notes</li>
+                <li>Digital certificate generation records</li>
+                <li>Medal dispatch tracking and courier status</li>
+              </ul>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--line)]">
+              <button
+                type="button"
+                disabled={deleteLoading}
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 rounded-xl border border-[var(--line)] text-xs font-semibold hover:bg-[var(--line)] transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleteLoading}
+                onClick={() => void handleDelete()}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {deleteLoading ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5" />
+                )}
+                Confirm Permanent Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

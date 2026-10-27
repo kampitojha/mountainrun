@@ -15,6 +15,7 @@ import {
   Search,
   RefreshCw,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 
 type Row = {
@@ -80,6 +81,30 @@ export default function AdminRegistrationsPage() {
   const [editNote, setEditNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
+
+  // Delete Registration State
+  const [deletingRow, setDeletingRow] = useState<Row | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  async function handleConfirmDelete() {
+    if (!deletingRow) return;
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      const token = await getToken().catch(() => null);
+      await adminFetch(`/api/admin/registrations/${deletingRow.id}`, token, {
+        method: "DELETE",
+      });
+      setSuccessToast(`Registration ${deletingRow.bibNumber} (${deletingRow.shippingName || deletingRow.user.name}) deleted successfully from database.`);
+      setDeletingRow(null);
+      await load();
+    } catch (err: any) {
+      setDeleteError(err.message || "Failed to delete registration");
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
 
   const load = useCallback(async () => {
     try {
@@ -344,6 +369,14 @@ export default function AdminRegistrationsPage() {
                       >
                         <ExternalLink className="w-3 h-3" /> Open
                       </Link>
+                      <button
+                        type="button"
+                        onClick={() => setDeletingRow(row)}
+                        className="px-2 py-1 text-xs text-rose-400 hover:text-white rounded border border-rose-500/30 bg-rose-500/10 hover:bg-rose-600 transition inline-flex items-center gap-1 cursor-pointer shadow-xs"
+                        title="Delete registration from database"
+                      >
+                        <Trash2 className="w-3 h-3" /> Delete
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -547,13 +580,26 @@ export default function AdminRegistrationsPage() {
               </div>
 
               <div className="flex items-center justify-between pt-3 border-t border-[var(--line)]">
-                <Link
-                  href={`/admin/registrations/${editingRow.id}`}
-                  target="_blank"
-                  className="text-xs text-[var(--muted)] hover:text-white inline-flex items-center gap-1"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" /> Open Full Runner Dossier
-                </Link>
+                <div className="flex items-center gap-3">
+                  <Link
+                    href={`/admin/registrations/${editingRow.id}`}
+                    target="_blank"
+                    className="text-xs text-[var(--muted)] hover:text-white inline-flex items-center gap-1"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" /> Open Full Dossier
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const rowToDelete = editingRow;
+                      closeEditModal();
+                      setDeletingRow(rowToDelete);
+                    }}
+                    className="text-xs text-rose-400 hover:text-rose-300 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Delete Registration
+                  </button>
+                </div>
 
                 <div className="flex gap-2">
                   <button
@@ -579,6 +625,87 @@ export default function AdminRegistrationsPage() {
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Confirmation Modal ─────────────────────────── */}
+      {deletingRow && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="w-full max-w-md rounded-2xl border border-rose-500/30 bg-[var(--panel)] p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="p-3 rounded-2xl bg-rose-500/15 border border-rose-500/30">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-[var(--foreground)]">
+                  Delete Registration?
+                </h3>
+                <p className="text-xs text-[var(--muted)]">Permanently remove from database</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-[var(--line)] bg-[var(--background)] p-4 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-[var(--muted)]">BIB Number:</span>
+                <span className="font-mono font-bold text-amber-400">{deletingRow.bibNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--muted)]">Runner Name:</span>
+                <span className="font-bold text-[var(--foreground)]">
+                  {deletingRow.shippingName || deletingRow.user.name}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--muted)]">Event:</span>
+                <span className="text-[var(--foreground)]">{deletingRow.event.title} ({deletingRow.distance})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--muted)]">Status:</span>
+                <span className="badge">{deletingRow.status}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-rose-300 bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl leading-relaxed">
+              ⚠️ <strong>Warning:</strong> यह रजिस्ट्रेशन डेटाबेस से हमेशा के लिए डिलीट हो जाएगा। इससे जुड़े Payment, Proof, Certificate और Medal Delivery के सारे रिकॉर्ड्स भी हमेशा के लिए हट जाएंगे।
+            </p>
+
+            {deleteError && (
+              <div className="p-3 rounded-xl border border-rose-500/30 bg-rose-950/80 text-rose-200 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                disabled={deleteLoading}
+                onClick={() => {
+                  setDeletingRow(null);
+                  setDeleteError(null);
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--line)] transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleteLoading}
+                onClick={() => void handleConfirmDelete()}
+                className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition shadow-lg shadow-rose-950/50 cursor-pointer disabled:opacity-50"
+              >
+                {deleteLoading ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" /> Yes, Delete Permanently
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
