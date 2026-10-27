@@ -53,6 +53,7 @@ export const adminEventUpdateSchema = adminEventSchema.partial();
 export const adminRegistrationUpdateSchema = z.object({
   status: registrationStatusEnum.optional(),
   distance: z.string().min(1).optional(),
+  activityType: z.enum(["running", "cycling", "walking"]).or(z.string()).optional(),
   finishTimeSeconds: z.number().int().positive().nullable().optional(),
   adminNote: z.string().max(2000).optional().nullable(),
   shippingName: z.string().min(1).optional(),

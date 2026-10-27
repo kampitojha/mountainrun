@@ -22,6 +22,7 @@ type Row = {
   id: string;
   bibNumber: string;
   distance: string;
+  activityType?: string;
   status: string;
   proofStatus: string;
   finishTimeSeconds?: number | null;
@@ -69,6 +70,7 @@ export default function AdminRegistrationsPage() {
   const [editingRow, setEditingRow] = useState<Row | null>(null);
   const [editName, setEditName] = useState("");
   const [editDistance, setEditDistance] = useState("");
+  const [editActivityType, setEditActivityType] = useState("running");
   const [editBib, setEditBib] = useState("");
   const [editStatus, setEditStatus] = useState("");
   const [editPhone, setEditPhone] = useState("");
@@ -132,6 +134,7 @@ export default function AdminRegistrationsPage() {
     setEditingRow(row);
     setEditName(row.shippingName || row.user.name || "");
     setEditDistance(row.distance || "");
+    setEditActivityType(row.activityType || "running");
     setEditBib(row.bibNumber || "");
     setEditStatus(row.status || "CONFIRMED");
     setEditPhone(row.shippingPhone || row.user.phone || "");
@@ -164,6 +167,7 @@ export default function AdminRegistrationsPage() {
       const payload: any = {
         runnerName: editName.trim(),
         distance: editDistance.trim(),
+        activityType: editActivityType.trim().toLowerCase(),
         bibNumber: editBib.trim().toUpperCase(),
         status: editStatus,
         phone: editPhone.trim(),
@@ -193,6 +197,7 @@ export default function AdminRegistrationsPage() {
                 ...item,
                 bibNumber: res.data.bibNumber,
                 distance: res.data.distance,
+                activityType: res.data.activityType || editActivityType,
                 status: res.data.status,
                 shippingName: res.data.shippingName,
                 user: {
@@ -313,7 +318,7 @@ export default function AdminRegistrationsPage() {
               <th className="w-24">BIB</th>
               <th>Runner</th>
               <th>Event</th>
-              <th>Distance</th>
+              <th>Distance & Activity</th>
               <th>Status</th>
               <th>Proof</th>
               <th>Pay</th>
@@ -338,9 +343,24 @@ export default function AdminRegistrationsPage() {
                   </td>
                   <td className="text-xs">{row.event.title}</td>
                   <td>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                      {row.distance}
-                    </span>
+                    <div className="flex flex-col gap-1 items-start">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        {row.distance}
+                      </span>
+                      {row.activityType === "cycling" ? (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                          🚴 Cycling
+                        </span>
+                      ) : row.activityType === "walking" ? (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                          🚶 Walking
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-violet-500/15 text-violet-300 border border-violet-500/30">
+                          🏃 Running
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td>
                     <span className="badge">{row.status}</span>
@@ -417,7 +437,7 @@ export default function AdminRegistrationsPage() {
             )}
 
             <form onSubmit={handleSaveEdit} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Runner Name */}
                 <div>
                   <label className="block font-bold text-[var(--foreground)] mb-1">
@@ -431,7 +451,7 @@ export default function AdminRegistrationsPage() {
                     placeholder="Full name of participant"
                     className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm font-semibold text-[var(--foreground)] focus:border-emerald-500 outline-none"
                   />
-                  <span className="text-[10px] text-[var(--muted)]">Corrects misspelling on certificates and medal courier</span>
+                  <span className="text-[10px] text-[var(--muted)]">Corrects misspelling</span>
                 </div>
 
                 {/* Distance Category */}
@@ -461,7 +481,24 @@ export default function AdminRegistrationsPage() {
                       className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm font-semibold text-[var(--foreground)] focus:border-emerald-500 outline-none"
                     />
                   )}
-                  <span className="text-[10px] text-[var(--muted)]">Change distance upon runner request</span>
+                  <span className="text-[10px] text-[var(--muted)]">Change distance upon request</span>
+                </div>
+
+                {/* Activity Type */}
+                <div>
+                  <label className="block font-bold text-[var(--foreground)] mb-1">
+                    Activity Type *
+                  </label>
+                  <select
+                    value={editActivityType}
+                    onChange={(e) => setEditActivityType(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--background)] text-sm font-semibold text-[var(--foreground)] focus:border-emerald-500 outline-none capitalize"
+                  >
+                    <option value="running">🏃 Running</option>
+                    <option value="cycling">🚴 Cycling</option>
+                    <option value="walking">🚶 Walking</option>
+                  </select>
+                  <span className="text-[10px] text-[var(--muted)]">Run, Cycle or Walk</span>
                 </div>
               </div>
 

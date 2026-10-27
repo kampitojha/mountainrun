@@ -661,6 +661,7 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
   // Core participant edit fields
   const [runnerName, setRunnerName] = useState("");
   const [distance, setDistance] = useState("");
+  const [activityType, setActivityType] = useState("running");
   const [bibNumber, setBibNumber] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -720,6 +721,7 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
     setSelectedReg(reg);
     setRunnerName(reg.shippingName || reg.user?.name || "");
     setDistance(reg.distance || "");
+    setActivityType(reg.activityType || "running");
     setBibNumber(reg.bibNumber || "");
     setEmail(reg.user?.email || "");
     setPhone(reg.shippingPhone || reg.user?.phone || "");
@@ -771,6 +773,7 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
         runnerName: runnerName.trim(),
         shippingName: runnerName.trim(),
         distance: distance.trim(),
+        activityType: activityType.trim().toLowerCase(),
         bibNumber: bibNumber.trim().toUpperCase(),
         email: email.trim() || undefined,
         phone: phone.trim() || undefined,
@@ -798,6 +801,7 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
         ...updateRes.data,
         shippingName: runnerName.trim(),
         distance: distance.trim(),
+        activityType: activityType.trim().toLowerCase(),
         bibNumber: updateRes.data?.bibNumber || bibNumber.trim().toUpperCase(),
         user: {
           ...prev.user,
@@ -959,18 +963,31 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
                   className="p-3.5 flex items-center justify-between hover:bg-[var(--line)]/50 cursor-pointer transition"
                 >
                   <div>
-                    <div className="font-bold text-sm text-[var(--foreground)] flex items-center gap-2">
+                    <div className="font-bold text-sm text-[var(--foreground)] flex items-center gap-2 flex-wrap">
                       {r.shippingName || r.user?.name}
                       <span className="font-mono text-blue-400 text-xs font-bold px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20">
                         {r.bibNumber}
                       </span>
+                      {r.activityType === "cycling" ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                          🚴 Cycling
+                        </span>
+                      ) : r.activityType === "walking" ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
+                          🚶 Walking
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/30 flex items-center gap-1">
+                          🏃 Running
+                        </span>
+                      )}
                       {hasFinished ? (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                           🏁 Finished ({formatSecs(r.finishTimeSeconds)})
                         </span>
                       ) : (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                          🏃 Pre-Race / Pending Run
+                          ⏳ Pre-Race / Pending Run
                         </span>
                       )}
                     </div>
@@ -1035,10 +1052,23 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {selectedReg.activityType === "cycling" ? (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                    🚴 Cycling
+                  </span>
+                ) : selectedReg.activityType === "walking" ? (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
+                    🚶 Walking
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30 flex items-center gap-1">
+                    🏃 Running
+                  </span>
+                )}
                 {isPreRace ? (
                   <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                    🏃 Pre-Race (Pending Run)
+                    ⏳ Pre-Race (Pending Run)
                   </span>
                 ) : (
                   <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
@@ -1070,7 +1100,7 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
                   1. Participant Identity & Category
                 </h4>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
                       Full Name (Fix Typos / Spelling) *
@@ -1104,6 +1134,24 @@ function TabCertificateEditor({ events, toast, getToken }: { events: any[]; toas
                     </select>
                     <p className="text-[10px] text-[var(--muted)] mt-1">
                       Moves participant to the requested distance category.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                      Activity Type (Run / Cycle / Walk) *
+                    </label>
+                    <select
+                      value={activityType}
+                      onChange={(e) => setActivityType(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-sm text-[var(--foreground)] focus:border-blue-500 outline-none font-bold capitalize"
+                    >
+                      <option value="running">🏃 Running</option>
+                      <option value="cycling">🚴 Cycling</option>
+                      <option value="walking">🚶 Walking</option>
+                    </select>
+                    <p className="text-[10px] text-[var(--muted)] mt-1">
+                      Discipline for participant: Run, Cycle, or Walk.
                     </p>
                   </div>
 

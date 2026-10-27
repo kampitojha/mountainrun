@@ -657,7 +657,7 @@ export async function adminListRegistrations(request: AuthenticatedRequest, resp
       take: fetchTake,
       include: {
         user: { select: { id: true, name: true, email: true, phone: true, clerkId: true } },
-        event: { select: { id: true, title: true, slug: true, priceInPaise: true, distances: true } },
+        event: { select: { id: true, title: true, slug: true, priceInPaise: true, distances: true, activityTypes: true } },
         payment: true,
         proofUpload: true,
         certificate: true,
@@ -767,6 +767,7 @@ export async function adminUpdateRegistration(request: AuthenticatedRequest, res
   const regUpdateData: any = {
     ...(payload.status ? { status: payload.status } : {}),
     ...(payload.distance ? { distance: payload.distance.trim() } : {}),
+    ...(payload.activityType ? { activityType: payload.activityType.trim().toLowerCase() } : {}),
     ...(payload.finishTimeSeconds !== undefined ? { finishTimeSeconds: payload.finishTimeSeconds } : {}),
     ...(payload.adminNote !== undefined ? { adminNote: payload.adminNote } : {}),
     ...(effectiveName ? { shippingName: effectiveName } : {}),
@@ -798,7 +799,7 @@ export async function adminUpdateRegistration(request: AuthenticatedRequest, res
     action: "registration.update",
     entityType: "Registration",
     entityId: id,
-    summary: `Updated registration ${registration.bibNumber}: name=${registration.shippingName}, distance=${registration.distance}, status=${registration.status}`,
+    summary: `Updated registration ${registration.bibNumber}: name=${registration.shippingName}, distance=${registration.distance}, activity=${registration.activityType}, status=${registration.status}`,
   });
 
   response.json({ data: registration });
@@ -940,6 +941,7 @@ export async function adminExportRegistrationsCsv(
     "phone",
     "event",
     "distance",
+    "activityType",
     "status",
     "proofStatus",
     "paymentStatus",
@@ -967,6 +969,7 @@ export async function adminExportRegistrationsCsv(
         r.user.phone ?? r.shippingPhone,
         r.event.title,
         r.distance,
+        r.activityType || "running",
         r.status,
         r.proofStatus,
         r.payment?.status ?? "",
@@ -1584,6 +1587,7 @@ export async function adminExportMedalsCsv(
     "Pincode",
     "Event Name",
     "Distance",
+    "Activity Type",
     "Finish Time (HH:MM:SS)",
     "Proof Status",
     "Medal Status",
@@ -1624,6 +1628,7 @@ export async function adminExportMedalsCsv(
         escapeCsv(r.shippingPincode),
         escapeCsv(r.event.title),
         escapeCsv(r.distance),
+        escapeCsv(r.activityType || "running"),
         escapeCsv(formatSeconds(r.finishTimeSeconds)),
         escapeCsv(r.proofStatus),
         escapeCsv(r.medalDelivery?.status || "PENDING"),

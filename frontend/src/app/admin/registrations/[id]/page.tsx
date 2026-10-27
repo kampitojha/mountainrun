@@ -13,6 +13,7 @@ type RegistrationDetail = {
   id: string;
   bibNumber: string;
   distance: string;
+  activityType?: string;
   status: string;
   proofStatus: string;
   finishTimeSeconds: number | null;
@@ -65,6 +66,7 @@ export default function AdminRegistrationDetailPage() {
   const [note, setNote] = useState("");
   const [status, setStatus] = useState("");
   const [distance, setDistance] = useState("");
+  const [activityType, setActivityType] = useState("running");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,6 +91,7 @@ export default function AdminRegistrationDetailPage() {
       setNote(json.data.adminNote ?? "");
       setStatus(json.data.status);
       setDistance(json.data.distance ?? "");
+      setActivityType(json.data.activityType || "running");
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load");
@@ -110,6 +113,7 @@ export default function AdminRegistrationDetailPage() {
           bibNumber: bibNumber.trim().toUpperCase(),
           status,
           distance: distance.trim(),
+          activityType: activityType.trim().toLowerCase(),
           phone: phone.trim(),
           shippingLine1: shippingLine1.trim(),
           shippingCity: shippingCity.trim(),
@@ -172,7 +176,13 @@ export default function AdminRegistrationDetailPage() {
       <AdminPageHeader
         kicker="Registration"
         title={data.bibNumber}
-        description={`${data.user.name} · ${data.event.title} · ${data.distance}`}
+        description={`${data.user.name} · ${data.event.title} · ${data.distance} · ${
+          (data.activityType || activityType) === "cycling"
+            ? "🚴 Cycling"
+            : (data.activityType || activityType) === "walking"
+            ? "🚶 Walking"
+            : "🏃 Running"
+        }`}
         actions={
           <>
             {data.status === "PENDING_PAYMENT" ? (
@@ -315,7 +325,7 @@ export default function AdminRegistrationDetailPage() {
               Easily correct runner name typos, change distance category (e.g. 5K to 10K) upon participant request, or update their delivery address.
             </p>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-3">
               <label className="block text-sm">
                 <span className="field-label">Runner / Participant Name *</span>
                 <input
@@ -348,6 +358,19 @@ export default function AdminRegistrationDetailPage() {
                     value={distance}
                   />
                 )}
+              </label>
+
+              <label className="block text-sm">
+                <span className="field-label">Activity Type *</span>
+                <select
+                  className="input font-semibold capitalize"
+                  onChange={(e) => setActivityType(e.target.value)}
+                  value={activityType}
+                >
+                  <option value="running">🏃 Running</option>
+                  <option value="cycling">🚴 Cycling</option>
+                  <option value="walking">🚶 Walking</option>
+                </select>
               </label>
             </div>
 
