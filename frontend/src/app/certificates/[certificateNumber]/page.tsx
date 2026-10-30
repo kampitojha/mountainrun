@@ -186,6 +186,371 @@ function CelebrationConfetti() {
   );
 }
 
+function UnityDayCertificateCanvas({
+  data,
+  viewMode = "landscape",
+  certRef,
+  onDownload,
+  isDownloading,
+  onShare,
+  copied,
+}: {
+  data: CertificateData;
+  viewMode?: "landscape" | "portrait";
+  certRef: React.RefObject<HTMLElement | null>;
+  onDownload: () => void;
+  isDownloading: boolean;
+  onShare?: () => void;
+  copied?: boolean;
+}) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [renderedImageUrl, setRenderedImageUrl] = useState<string | null>(null);
+
+  const initialImgSrc =
+    data.pdfUrl &&
+    !data.pdfUrl.includes("cloudinary.com") &&
+    (data.pdfUrl.endsWith(".png") || data.pdfUrl.endsWith(".jpg") || data.pdfUrl.endsWith(".webp"))
+      ? data.pdfUrl
+      : "/images/certificates/unity-master-template.png";
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function generateCustomCertificate() {
+      try {
+        const canvas = document.createElement("canvas");
+        // Ultra-sharp 2x 300DPI print-ready resolution
+        canvas.width = 2048;
+        canvas.height = 1366;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        // 1. Draw Master Template
+        const templateImg = new Image();
+        templateImg.crossOrigin = "anonymous";
+        templateImg.src = "/images/certificates/unity-master-template.png";
+
+        await new Promise<void>((resolve, reject) => {
+          templateImg.onload = () => resolve();
+          templateImg.onerror = () => reject(new Error("Unity template load failed"));
+        });
+
+        if (isCancelled) return;
+        ctx.drawImage(templateImg, 0, 0, 2048, 1366);
+
+        // 2. Load Fonts
+        if (typeof document !== "undefined" && document.fonts) {
+          try {
+            await Promise.all([
+              document.fonts.load("bold 124px 'Alex Brush'"),
+              document.fonts.load("bold 26px 'Montserrat'"),
+              document.fonts.load("bold 20px 'Montserrat'"),
+            ]);
+            await document.fonts.ready;
+          } catch {
+            // Font loading fallback
+          }
+        }
+
+        // 3. Draw Runner Name in Cursive Calligraphy (Scaled 2x: center x=1030, y=520)
+        ctx.textAlign = "center";
+        ctx.textBaseline = "alphabetic";
+        ctx.font = "bold 124px 'Alex Brush', 'Great Vibes', cursive";
+
+        // Subtle soft drop shadow for depth
+        ctx.fillStyle = "#d5d0c8";
+        ctx.fillText(data.runnerName, 1032, 522);
+
+        // Deep royal navy ink
+        ctx.fillStyle = "#182b48";
+        ctx.fillText(data.runnerName, 1030, 520);
+
+        // 4. Stats: Distance, Time, Activity, Event Dates (Scaled 2x: y=940)
+        ctx.font = "bold 26px 'Montserrat', -apple-system, sans-serif";
+        ctx.fillStyle = "#353e54";
+
+        // Distance: centered under column 1 (x=534)
+        const rawDist = (data.distance || "5 KM").toUpperCase().trim();
+        const formattedDist = rawDist.endsWith("KM") || rawDist.endsWith("MILES") ? rawDist : `${rawDist} KM`;
+        ctx.fillText(`[${formattedDist}]`, 534, 940);
+
+        // Time: centered under column 2 (x=824)
+        const timeStr = formatFinishTime(data.finishTimeSeconds);
+        const finalTime = timeStr !== "—" ? timeStr : "00:45:32";
+        ctx.fillText(`[${finalTime}]`, 824, 940);
+
+        // Activity: centered under column 3 (x=1116)
+        ctx.fillText("[RUN / WALK / CYCLING]", 1116, 940);
+
+        // Event dates: centered under column 4 (x=1450)
+        ctx.fillText("[31 Oct - 5 Nov 2026]", 1450, 940);
+
+        // 5. Draw QR Code in white box (x=72, y=1116, size 96x96)
+        const verifyUrl =
+          typeof window !== "undefined"
+            ? window.location.href
+            : `https://mountainrun.in/certificates/${data.certificateNumber}`;
+        const qrImg = new Image();
+        qrImg.crossOrigin = "anonymous";
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&color=000000&bgcolor=ffffff&data=${encodeURIComponent(verifyUrl)}`;
+
+        await new Promise<void>((resolve) => {
+          qrImg.onload = () => resolve();
+          qrImg.onerror = () => resolve();
+        });
+
+        if (!isCancelled) {
+          ctx.drawImage(qrImg, 72, 1116, 96, 96);
+
+          // 6. Draw Certificate ID text in soft ice blue (x=68, y=1242)
+          ctx.textAlign = "left";
+          ctx.font = "bold 20px 'Montserrat', -apple-system, sans-serif";
+          ctx.fillStyle = "#becde7";
+          ctx.fillText(`Certificate ID: [${data.certificateNumber}]`, 68, 1242);
+
+          const finalUrl = canvas.toDataURL("image/png", 0.98);
+          setRenderedImageUrl(finalUrl);
+        }
+      } catch (err) {
+        console.warn("Client Unity certificate canvas synthesis notice:", err);
+      }
+    }
+
+    void generateCustomCertificate();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [data]);
+
+  const displayImage = renderedImageUrl || initialImgSrc;
+
+  const handleUnityDownload = async () => {
+    try {
+      const filename = `MountainRun-NationalUnityDay-Certificate-${data.bibNumber || data.certificateNumber || "Finisher"}.png`;
+      if (displayImage.startsWith("data:")) {
+        const link = document.createElement("a");
+        link.download = filename;
+        link.href = displayImage;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      }
+      const res = await fetch(displayImage);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.download = filename;
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.warn("Direct download fallback:", err);
+      onDownload();
+    }
+  };
+
+  const handleWhatsAppShare = () => {
+    if (typeof window !== "undefined") {
+      const shareUrl = window.location.href;
+      const shareText = `🇮🇳 Proud to share my official Certificate of Participation for the National Unity Day 2026 (${data.distance || "5 KM"}) with Mountain Run!\n\n“Unity is the foundation of a strong nation” — Sardar Vallabhbhai Patel\n\nVerify certificate here: ${shareUrl}`;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, "_blank");
+    }
+  };
+
+  return (
+    <div className={`w-full mx-auto space-y-6 sm:space-y-8 transition-all duration-300 relative ${viewMode === "portrait" ? "max-w-xl" : "max-w-4xl"}`}>
+      <CelebrationConfetti />
+
+      {/* ── Ambient Radial Tricolor Halo / Celebratory Stage Lighting ── */}
+      <div className="absolute -inset-4 sm:-inset-10 rounded-[2.5rem] bg-gradient-to-tr from-[#ff9933]/20 via-[#ffffff]/10 to-[#138808]/20 blur-3xl opacity-80 pointer-events-none -z-10 animate-pulse duration-1000" />
+
+      {/* ── Direct Hero Certificate (Ultra-sharp centerpiece) ── */}
+      <div
+        ref={certRef as React.RefObject<HTMLDivElement>}
+        id="certificate-print"
+        className="relative group rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 hover:shadow-[0_30px_90px_rgba(0,34,72,0.85)] cursor-pointer bg-white border-2 sm:border-3 border-[#c9a227]/80"
+        onClick={() => setIsModalOpen(true)}
+        style={{
+          boxShadow: "0 25px 65px -10px rgba(0,34,72,0.85), 0 0 45px rgba(201,162,39,0.3)",
+        }}
+      >
+        {/* Floating Top-Right Verified Badge */}
+        <div className="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-10 pointer-events-none">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#002248]/85 backdrop-blur-md border border-[#c9a227]/70 text-[#e5b83b] text-[0.6rem] sm:text-xs font-bold tracking-wide shadow-xl">
+            <span className="w-2 h-2 rounded-full bg-[#34d399] animate-pulse" />
+            <span>🇮🇳 RASHTRIYA EKTA DIWAS 2026 &bull; VERIFIED</span>
+          </span>
+        </div>
+
+        {/* Certificate Image */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={displayImage}
+          alt={`Official National Unity Day Certificate — ${data.runnerName}`}
+          className="w-full h-auto block select-none"
+        />
+
+        {/* Hover zoom hint */}
+        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+          <span className="px-5 py-2.5 rounded-full bg-[#002248]/90 text-[#e5b83b] text-xs sm:text-sm font-bold shadow-2xl backdrop-blur-xs flex items-center gap-2 border border-[#c9a227]/60">
+            🔍 Click to View Fullscreen / Zoom
+          </span>
+        </div>
+      </div>
+
+      {/* ── Unified Action Dock Directly Below Certificate ── */}
+      <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3.5 pt-1 print:hidden">
+        {/* Primary Download PNG Button */}
+        <button
+          type="button"
+          onClick={handleUnityDownload}
+          disabled={isDownloading}
+          className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-[#002248] via-[#0c3866] to-[#002248] border-2 border-[#c9a227] text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-75 hover:shadow-[0_0_25px_rgba(201,162,39,0.4)]"
+        >
+          {isDownloading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Preparing High-Res PNG...</span>
+            </>
+          ) : (
+            <>
+              <span>🏆</span>
+              <span>DOWNLOAD HIGH-RES (PNG)</span>
+            </>
+          )}
+        </button>
+
+        {/* PDF / Print Button */}
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold text-xs sm:text-sm transition-all cursor-pointer active:scale-95"
+        >
+          <span>🖨️</span>
+          <span>PRINT / SAVE AS PDF</span>
+        </button>
+
+        {/* WhatsApp Share Button */}
+        <button
+          type="button"
+          onClick={handleWhatsAppShare}
+          className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs sm:text-sm transition-all shadow-lg hover:shadow-[0_0_20px_rgba(37,211,102,0.4)] cursor-pointer active:scale-95"
+        >
+          <span>💬</span>
+          <span>SHARE ON WHATSAPP</span>
+        </button>
+
+        {/* Copy Share Link Button */}
+        <button
+          type="button"
+          onClick={onShare}
+          className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold text-xs sm:text-sm transition-all cursor-pointer active:scale-95"
+        >
+          <span>{copied ? "✓" : "📋"}</span>
+          <span>{copied ? "COPIED TO CLIPBOARD!" : "COPY VERIFY LINK"}</span>
+        </button>
+      </div>
+
+      {/* ── 3D Sardar Patel Finisher Medal Showcase Card ── */}
+      <div className="p-5 sm:p-7 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#002248] via-[#081a33] to-[#030d1c] border-2 border-[#c9a227]/60 shadow-2xl print:hidden">
+        <div className="flex flex-col md:flex-row items-center gap-5 sm:gap-7">
+          {/* Medal Icon / Image Badge */}
+          <div className="shrink-0 relative">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-[#c9a227]/30 to-[#e5b83b]/20 border-2 border-[#c9a227] flex items-center justify-center text-4xl shadow-2xl">
+              🏅
+            </div>
+            <div className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full bg-[#FF9933] text-[0.6rem] font-black uppercase text-white shadow-md">
+              3D BRONZE
+            </div>
+          </div>
+
+          <div className="flex-1 text-center md:text-left space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#c9a227]/20 border border-[#c9a227]/40 text-[#e5b83b] text-[0.65rem] sm:text-xs font-black tracking-widest uppercase">
+              <span>🇮🇳</span>
+              <span>SARDAR PATEL STATUE OF UNITY 3D FINISHER MEDAL</span>
+            </div>
+            <h3 className="text-base sm:text-xl font-black text-white">
+              Limited Edition Heavyweight Antique Bronze Finisher Medal
+            </h3>
+            <p className="text-xs sm:text-sm text-white/80 leading-relaxed">
+              Your physical collectible medal features an intricate high-relief 3D portrait of Iron Man Sardar Vallabhbhai Patel and the monumental Statue of Unity, complete with custom woven tricolor neck ribbon and free pan-India courier delivery!
+            </p>
+
+            {/* Tracking progress preview */}
+            <div className="pt-2">
+              <div className="flex items-center justify-between text-[0.65rem] sm:text-xs text-white/70 font-semibold mb-1.5">
+                <span>Registration Verified</span>
+                <span>Proof Submitted</span>
+                <span className="text-[#34d399] font-bold">Certificate Issued ✓</span>
+                <span className="text-[#e5b83b] font-bold">Medal Packaging</span>
+              </div>
+              <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-[#FF9933] via-[#ffffff] to-[#138808] w-[75%] rounded-full shadow-md" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Sardar Patel Quote & Rashtriya Ekta Diwas Tribute ── */}
+      <div className="p-5 rounded-2xl bg-[#001733]/60 border border-[#c9a227]/30 text-center print:hidden">
+        <p className="text-xs sm:text-sm italic text-[#e5b83b] font-medium leading-relaxed">
+          &ldquo;Unity is the foundation of a strong nation. By mutual cooperation and trust, we can overcome all difficulties and build a great India.&rdquo;
+        </p>
+        <p className="text-[0.7rem] sm:text-xs font-black tracking-wider uppercase text-white/70 mt-1">
+          &mdash; Sardar Vallabhbhai Patel &bull; Architect of Modern India
+        </p>
+      </div>
+
+      {/* ── Fullscreen High-Resolution Lightbox Modal ── */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 cursor-pointer"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            className="relative max-w-5xl w-full max-h-[92vh] flex flex-col items-center justify-center cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              className="absolute -top-12 right-0 sm:right-2 text-white/90 hover:text-white bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 border border-white/20"
+            >
+              <span>✕</span>
+              <span>CLOSE</span>
+            </button>
+
+            {/* Modal Image */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={displayImage}
+              alt="National Unity Day Certificate Fullscreen"
+              className="max-h-[80vh] w-auto max-w-full rounded-xl sm:rounded-2xl shadow-2xl border-2 border-[#c9a227] object-contain"
+            />
+
+            {/* Modal Bottom Action */}
+            <div className="mt-4 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleUnityDownload}
+                className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#002248] to-[#0c3866] border border-[#c9a227] text-[#e5b83b] font-bold text-xs uppercase tracking-wider hover:scale-105 active:scale-95 transition-all shadow-xl"
+              >
+                🏆 DOWNLOAD HIGH-RES PNG
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function GandhiCertificateCanvas({
   data,
   viewMode = "landscape",
@@ -652,6 +1017,11 @@ export default function CertificateVerifyPage() {
 
   async function handleDownloadImage() {
     let directImgUrl: string | null = null;
+    const isUnity = Boolean(
+      data?.event?.toLowerCase().includes("unity") ||
+        data?.event?.toLowerCase().includes("ekta") ||
+        data?.event?.toLowerCase().includes("sardar"),
+    );
     const isGandhi = Boolean(data?.event?.toLowerCase().includes("gandhi"));
     const isKampit = Boolean(
       data?.certificateNumber === "MR-2026-GJVR-109452" ||
@@ -659,7 +1029,15 @@ export default function CertificateVerifyPage() {
         (data?.runnerName && data.runnerName.toLowerCase().includes("kampit")),
     );
 
-    if (isGandhi) {
+    if (isUnity) {
+      if (
+        data?.pdfUrl &&
+        !data.pdfUrl.includes("cloudinary.com") &&
+        (data.pdfUrl.endsWith(".png") || data.pdfUrl.endsWith(".jpg") || data.pdfUrl.endsWith(".webp"))
+      ) {
+        directImgUrl = data.pdfUrl;
+      }
+    } else if (isGandhi) {
       if (isKampit) {
         directImgUrl = "/images/certificates/gandhi-kampit-cert.png";
       } else if (
@@ -736,14 +1114,18 @@ export default function CertificateVerifyPage() {
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-[#FF9933]/15 via-white/5 to-[#138808]/15 border border-[#c9a227]/40 mb-2">
                 <span className="text-xs">🇮🇳</span>
                 <span className="text-[0.65rem] sm:text-xs font-black tracking-widest uppercase text-[#e5b83b]">
-                  NATIONAL FINISHER CREDENTIAL • GANDHI JAYANTI 2026
+                  {data?.event?.toLowerCase().includes("unity") || data?.event?.toLowerCase().includes("ekta") || data?.event?.toLowerCase().includes("sardar")
+                    ? "NATIONAL FINISHER CREDENTIAL • RASHTRIYA EKTA DIWAS 2026"
+                    : data?.event?.toLowerCase().includes("gandhi")
+                    ? "NATIONAL FINISHER CREDENTIAL • GANDHI JAYANTI 2026"
+                    : "OFFICIAL VERIFIED FINISHER CREDENTIAL • MOUNTAIN RUN"}
                 </span>
               </div>
               <h1 className="heading text-2xl sm:text-3xl font-black text-white tracking-tight">
                 Certificate of Participation
               </h1>
               <p className="text-xs sm:text-sm text-white/70 mt-1">
-                Awarded to <strong className="text-[#e5b83b] font-bold">{data?.runnerName || "Finisher"}</strong> for successfully completing <strong className="text-white">{data?.distance || "10.00 KM"}</strong>.
+                Awarded to <strong className="text-[#e5b83b] font-bold">{data?.runnerName || "Finisher"}</strong> for successfully completing <strong className="text-white">{data?.distance || "5.00 KM"}</strong> in {data?.event || "National Unity Day 2026"}.
               </p>
             </div>
 
@@ -841,7 +1223,17 @@ export default function CertificateVerifyPage() {
 
               {/* Responsive Scroll / Frame Wrapper */}
               <div className={viewMode === "landscape" ? "overflow-x-auto pb-4 pt-1" : ""}>
-                {data.event.toLowerCase().includes("gandhi") ? (
+                {data.event.toLowerCase().includes("unity") || data.event.toLowerCase().includes("ekta") || data.event.toLowerCase().includes("sardar") ? (
+                  <UnityDayCertificateCanvas
+                    data={data}
+                    viewMode={viewMode}
+                    certRef={certRef}
+                    onDownload={handleDownloadImage}
+                    isDownloading={isDownloading}
+                    onShare={handleCopyShare}
+                    copied={copied}
+                  />
+                ) : data.event.toLowerCase().includes("gandhi") ? (
                   <GandhiCertificateCanvas
                     data={data}
                     viewMode={viewMode}

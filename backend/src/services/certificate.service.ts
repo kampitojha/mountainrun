@@ -77,6 +77,13 @@ export function toCertificateRenderData(input: {
 
 /** HTML email body for certificate delivery — matching reference certificate design with full responsiveness. */
 export function buildCertificateEmailHtml(data: CertificateRenderData) {
+  if (
+    data.eventTitle.toLowerCase().includes("unity") ||
+    data.eventTitle.toLowerCase().includes("ekta") ||
+    data.eventTitle.toLowerCase().includes("sardar")
+  ) {
+    return buildUnityDayCertificateEmailHtml(data);
+  }
   if (data.eventTitle.toLowerCase().includes("gandhi")) {
     return buildGandhiJayantiCertificateEmailHtml(data);
   }
@@ -632,6 +639,250 @@ export function buildGandhiJayantiCertificateEmailHtml(data: CertificateRenderDa
                   <td width="33.3%" height="4" style="background:#FF9933;"></td>
                   <td width="33.4%" height="4" style="background:#ffffff;"></td>
                   <td width="33.3%" height="4" style="background:#138808;"></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+/** Dedicated, premium National Unity Day (Rashtriya Ekta Diwas) 2026 Certificate email template */
+export function buildUnityDayCertificateEmailHtml(data: CertificateRenderData) {
+  const SAFFRON = "#FF9933";
+  const INDIAN_GREEN = "#138808";
+  const NAVY = "#002248";
+  const DARK_NAVY = "#0a192f";
+  const GOLD = "#c9a227";
+  const BRIGHT_GOLD = "#e5b83b";
+  const CREAM = "#fcfbf7";
+
+  // High-res master certificate image hosted on Cloudinary CDN
+  const certificateImgUrl = "https://res.cloudinary.com/yppcqzt6/image/upload/v1793370280/mountainrun/certificates/unity_cert_master_template_1793370265.png";
+
+  return `<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Official Finisher Certificate — National Unity Day 2026</title>
+  <style type="text/css">
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=Cinzel:wght@700;900&family=Alex+Brush&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; background-color: #e8ecf2; font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+    @media only screen and (max-width: 640px) {
+      .email-container { width: 100% !important; max-width: 100% !important; border-radius: 12px !important; }
+      .hero-title { font-size: 24px !important; line-height: 1.2 !important; }
+      .stat-cell { display: block !important; width: 100% !important; border-right: none !important; border-bottom: 1px solid #dbe2ea !important; padding: 12px 8px !important; }
+      .stat-cell-last { border-bottom: none !important; }
+      .action-btn { display: block !important; width: 100% !important; margin-bottom: 10px !important; text-align: center !important; }
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#e8ecf2;">
+
+  <!-- Preheader text -->
+  <div style="display:none;font-size:1px;color:#e8ecf2;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
+    Official Certificate of Participation for ${escapeHtml(data.runnerName)} — National Unity Day 2026 (${escapeHtml(data.distance)}). Verified Finisher Credential.
+  </div>
+
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#e8ecf2;padding:20px 8px;">
+    <tr>
+      <td align="center">
+        <!-- Main Card Container -->
+        <table class="email-container" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;width:100%;background-color:${CREAM};border-radius:18px;overflow:hidden;box-shadow:0 18px 45px rgba(0,34,72,0.18);border:2px solid ${GOLD};">
+
+          <!-- ══════ TOP TRICOLOR RIBBON HEADER ══════ -->
+          <tr>
+            <td style="padding:0;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td width="33.3%" height="5" style="background:${SAFFRON};"></td>
+                  <td width="33.4%" height="5" style="background:#ffffff;"></td>
+                  <td width="33.3%" height="5" style="background:${INDIAN_GREEN};"></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ══════ BRAND HEADER & SARDAR PATEL TRIBUTE BADGE ══════ -->
+          <tr>
+            <td style="padding:22px 24px 16px;background:linear-gradient(180deg, #ffffff 0%, #f4f7fb 100%);border-bottom:1px solid #e1e8f0;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td width="35%" align="left" valign="middle">
+                    <p style="margin:0;font-size:9.5px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:${SAFFRON};line-height:1.2;">RASHTRIYA EKTA DIWAS</p>
+                    <p style="margin:2px 0 0;font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:${INDIAN_GREEN};line-height:1.2;">NATIONAL UNITY DAY 2026</p>
+                  </td>
+                  <td width="30%" align="center" valign="middle">
+                    <div style="text-align:center;">
+                      <p style="margin:0;font-size:17px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:${NAVY};font-family:'Cinzel', Georgia, serif;line-height:1.1;">
+                        MOUNTAIN <span style="color:#d97706;">RUN</span>
+                      </p>
+                      <p style="margin:2px 0 0;font-size:7.5px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#5a6878;">
+                        RUN &bull; RIDE &bull; WALK &bull; EXPLORE
+                      </p>
+                    </div>
+                  </td>
+                  <td width="35%" align="right" valign="middle">
+                    <span style="display:inline-block;padding:5px 10px;border-radius:20px;background:#eef6ee;border:1px solid #c3e2c3;font-size:9.5px;font-weight:800;color:${INDIAN_GREEN};letter-spacing:0.04em;">
+                      &#10003; OFFICIALLY VERIFIED
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ══════ CONGRATULATORY HERO BANNER ══════ -->
+          <tr>
+            <td style="padding:24px 24px 18px;text-align:center;background:linear-gradient(180deg, #f4f7fb 0%, #ffffff 100%);">
+              <div style="display:inline-block;padding:5px 14px;border-radius:20px;background:#e8f0fe;border:1px solid #bfdbfe;font-size:11px;font-weight:800;letter-spacing:0.08em;color:${NAVY};margin-bottom:10px;">
+                &#127470;&#127475; RUN FOR UNITY &bull; RUN FOR A STRONGER INDIA
+              </div>
+              <h1 class="hero-title" style="margin:0;font-size:27px;font-weight:900;color:${DARK_NAVY};letter-spacing:-0.02em;line-height:1.25;">
+                Congratulations, ${escapeHtml(data.runnerName)}!
+              </h1>
+              <p style="margin:8px auto 0;font-size:13.5px;color:#3e4c59;line-height:1.6;max-width:540px;">
+                Your official Certificate of Participation for <strong>National Unity Day 2026</strong> has been authenticated and generated.
+              </p>
+              <div style="margin:12px auto 0;max-width:480px;padding:8px 16px;background:#fff8ee;border-left:3px solid ${SAFFRON};border-radius:6px;font-size:11.5px;font-style:italic;color:#6b522e;text-align:center;">
+                &ldquo;Unity is the foundation of a strong nation.&rdquo; &mdash; Sardar Vallabhbhai Patel
+              </div>
+            </td>
+          </tr>
+
+          <!-- ══════ OFFICIAL MASTER GRAPHIC CERTIFICATE SHOWCASE ══════ -->
+          <tr>
+            <td style="padding:4px 20px 22px;background:#ffffff;">
+              <div style="border-radius:14px;overflow:hidden;border:2px solid ${GOLD};box-shadow:0 12px 30px rgba(0,34,72,0.22);background:#0a192f;position:relative;">
+                <a href="${escapeHtml(data.verifyUrl)}" target="_blank" style="text-decoration:none;display:block;">
+                  <img src="${certificateImgUrl}"
+                       alt="Official National Unity Day Certificate — ${escapeHtml(data.runnerName)}"
+                       width="600"
+                       style="display:block;width:100%;height:auto;border:0;" />
+                </a>
+              </div>
+
+              <!-- Certificate Sub-info Ribbon -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px;background:#f0f5fa;border-radius:10px;border:1px solid #d3e0ec;padding:10px 14px;">
+                <tr>
+                  <td align="left" valign="middle">
+                    <p style="margin:0;font-size:11px;font-weight:700;color:${NAVY};">
+                      Credential ID: <span style="font-family:monospace;font-weight:800;color:#003c80;">${escapeHtml(data.certificateNumber)}</span>
+                    </p>
+                    <p style="margin:2px 0 0;font-size:10px;color:#617282;">
+                      Issued: ${escapeHtml(data.issuedAtLabel)} &bull; Bib: ${escapeHtml(data.bibNumber)}
+                    </p>
+                  </td>
+                  <td align="right" valign="middle">
+                    <a href="${escapeHtml(data.verifyUrl)}" target="_blank" style="display:inline-block;padding:6px 14px;border-radius:8px;background:${NAVY};color:#ffffff;font-size:11px;font-weight:800;text-decoration:none;">
+                      View Live &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ══════ 4-COLUMN STATS BAR ══════ -->
+          <tr>
+            <td style="padding:0 20px 20px;background:#ffffff;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e1e8f0;border-radius:12px;overflow:hidden;">
+                <tr>
+                  <td class="stat-cell" width="25%" align="center" style="padding:14px 8px;border-right:1px solid #e1e8f0;">
+                    <p style="margin:0;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#e65100;">DISTANCE</p>
+                    <p style="margin:4px 0 0;font-size:14px;font-weight:900;color:${NAVY};">${escapeHtml(data.distance)}</p>
+                  </td>
+                  <td class="stat-cell" width="25%" align="center" style="padding:14px 8px;border-right:1px solid #e1e8f0;">
+                    <p style="margin:0;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#0284c7;">TIME</p>
+                    <p style="margin:4px 0 0;font-size:14px;font-weight:900;color:${NAVY};">${escapeHtml(data.finishTimeLabel)}</p>
+                  </td>
+                  <td class="stat-cell" width="25%" align="center" style="padding:14px 8px;border-right:1px solid #e1e8f0;">
+                    <p style="margin:0;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:${INDIAN_GREEN};">ACTIVITY</p>
+                    <p style="margin:4px 0 0;font-size:12px;font-weight:900;color:${NAVY};">RUN / WALK / RIDE</p>
+                  </td>
+                  <td class="stat-cell stat-cell-last" width="25%" align="center" style="padding:14px 8px;">
+                    <p style="margin:0;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#7c3aed;">EVENT DATES</p>
+                    <p style="margin:4px 0 0;font-size:11px;font-weight:900;color:${NAVY};">31 Oct - 5 Nov</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ══════ ACTION DOCK ══════ -->
+          <tr>
+            <td style="padding:0 20px 24px;text-align:center;background:#ffffff;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center">
+                    <a class="action-btn" href="${escapeHtml(data.verifyUrl)}" target="_blank" style="display:inline-block;padding:12px 24px;border-radius:10px;background:linear-gradient(135deg, ${NAVY} 0%, #0c3866 100%);color:#ffffff;font-size:12px;font-weight:900;letter-spacing:0.06em;text-decoration:none;border:1.5px solid ${BRIGHT_GOLD};margin:0 4px;box-shadow:0 4px 12px rgba(0,34,72,0.25);">
+                      &#127942; DOWNLOAD HIGH-RES CERTIFICATE
+                    </a>
+                    <a class="action-btn" href="https://api.whatsapp.com/send?text=${encodeURIComponent(`🏅 Proud to share my official Mountain Run National Unity Day 2026 Certificate of Participation!\n\nVerify certificate here: ${data.verifyUrl}`)}" target="_blank" style="display:inline-block;padding:12px 20px;border-radius:10px;background:#25D366;color:#ffffff;font-size:12px;font-weight:900;letter-spacing:0.04em;text-decoration:none;margin:0 4px;box-shadow:0 4px 12px rgba(37,211,102,0.3);">
+                      &#128172; SHARE ON WHATSAPP
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ══════ HEAVYWEIGHT 3D SARDAR PATEL FINISHER MEDAL DISPATCH ══════ -->
+          <tr>
+            <td style="padding:0 20px 22px;background:#f8fafc;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg, ${NAVY} 0%, #06172d 100%);border:2px solid ${GOLD};border-radius:12px;overflow:hidden;box-shadow:0 6px 18px rgba(0,34,72,0.25);">
+                <tr>
+                  <td style="padding:16px 20px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td width="48" valign="middle" align="center" style="padding-right:14px;">
+                          <div style="width:44px;height:44px;border-radius:50%;background:rgba(201,162,39,0.2);border:2px solid ${BRIGHT_GOLD};text-align:center;line-height:44px;font-size:22px;">
+                            &#127941;
+                          </div>
+                        </td>
+                        <td valign="middle" align="left">
+                          <p style="margin:0;font-size:11.5px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;color:${BRIGHT_GOLD};line-height:1.2;">
+                            ANTIQUE BRONZE SARDAR PATEL 3D MEDAL &bull; FREE DOORSTEP DELIVERY
+                          </p>
+                          <p style="margin:4px 0 0;font-size:11px;color:#f0f5fa;line-height:1.45;">
+                            Your exclusive 3D antique bronze Sardar Patel &amp; Statue of Unity Finisher Medal with custom woven tricolor neck ribbon is being packed for dispatch! Tracking details will be emailed upon shipping.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ══════ FOOTER COPYRIGHT & TRICOLOR STRIP ══════ -->
+          <tr>
+            <td style="background:${NAVY};padding:18px 20px;text-align:center;">
+              <p style="margin:0 0 4px;font-size:9.5px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.85);">
+                OFFICIAL VERIFIED DIGITAL CREDENTIAL &bull; MOUNTAIN RUN INDIA
+              </p>
+              <p style="margin:0;font-size:9px;color:rgba(255,255,255,0.5);line-height:1.5;">
+                &copy; 2026 Mountain Run. All rights reserved. &bull; <a href="${escapeHtml(data.verifyUrl)}" style="color:${BRIGHT_GOLD};text-decoration:none;">mountainrun.in</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td width="33.3%" height="5" style="background:${SAFFRON};"></td>
+                  <td width="33.4%" height="5" style="background:#ffffff;"></td>
+                  <td width="33.3%" height="5" style="background:${INDIAN_GREEN};"></td>
                 </tr>
               </table>
             </td>
