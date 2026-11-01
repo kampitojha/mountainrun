@@ -13,6 +13,7 @@ type CertificateData = {
   runnerName: string;
   event: string;
   distance: string;
+  activityType?: string | null;
   bibNumber: string;
   finishTimeSeconds?: number | null;
   issuedAt: string | null;
@@ -288,7 +289,27 @@ function UnityDayCertificateCanvas({
       ctx.fillText(finalTime, 829, statsY);
 
       // Column 3: ACTIVITY (center x=1125)
-      const activityLabel = (data.distance?.toLowerCase().includes("21") ? "RUNNING" : "RUNNING").replace(/[[\]]/g, "");
+      const rawActivity = (data.activityType || "").toLowerCase().trim();
+      let activityLabel = "RUNNING";
+      if (
+        rawActivity.includes("cycl") ||
+        rawActivity.includes("bike") ||
+        rawActivity.includes("ride")
+      ) {
+        activityLabel = "CYCLING";
+      } else if (rawActivity.includes("walk")) {
+        activityLabel = "WALKING";
+      } else if (rawActivity.includes("run")) {
+        activityLabel = "RUNNING";
+      } else if (
+        data.distance?.toLowerCase().includes("cycl") ||
+        data.distance?.toLowerCase().includes("ride") ||
+        data.distance?.toLowerCase().includes("bike")
+      ) {
+        activityLabel = "CYCLING";
+      } else if (data.distance?.toLowerCase().includes("walk")) {
+        activityLabel = "WALKING";
+      }
       ctx.fillText(activityLabel, 1125, statsY);
 
       // Column 4: EVENT DATES (center x=1457)

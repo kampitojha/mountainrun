@@ -5,6 +5,7 @@ export type CertificateRenderData = {
   runnerName: string;
   eventTitle: string;
   distance: string;
+  activityType?: string;
   bibNumber: string;
   finishTimeLabel: string;
   issuedAtLabel: string;
@@ -54,6 +55,7 @@ export function toCertificateRenderData(input: {
   runnerName: string;
   eventTitle: string;
   distance: string;
+  activityType?: string;
   bibNumber: string;
   finishTimeSeconds?: number | null;
   issuedAt?: Date | null;
@@ -64,6 +66,7 @@ export function toCertificateRenderData(input: {
     runnerName: input.runnerName,
     eventTitle: input.eventTitle,
     distance: input.distance,
+    activityType: input.activityType || "running",
     bibNumber: input.bibNumber,
     finishTimeLabel: formatFinishTime(input.finishTimeSeconds),
     issuedAtLabel: issued.toLocaleDateString("en-IN", {
@@ -807,7 +810,15 @@ export function buildUnityDayCertificateEmailHtml(data: CertificateRenderData) {
                   </td>
                   <td class="stat-cell" width="25%" align="center" style="padding:14px 8px;border-right:1px solid #e1e8f0;">
                     <p style="margin:0;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:${INDIAN_GREEN};">ACTIVITY</p>
-                    <p style="margin:4px 0 0;font-size:12px;font-weight:900;color:${NAVY};">RUN / WALK / RIDE</p>
+                    <p style="margin:4px 0 0;font-size:12px;font-weight:900;color:${NAVY};">${escapeHtml(
+                      (data.activityType || "").toLowerCase().includes("cycl") ||
+                      (data.activityType || "").toLowerCase().includes("bike") ||
+                      (data.activityType || "").toLowerCase().includes("ride")
+                        ? "CYCLING"
+                        : (data.activityType || "").toLowerCase().includes("walk")
+                        ? "WALKING"
+                        : "RUNNING"
+                    )}</p>
                   </td>
                   <td class="stat-cell stat-cell-last" width="25%" align="center" style="padding:14px 8px;">
                     <p style="margin:0;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#7c3aed;">EVENT DATES</p>

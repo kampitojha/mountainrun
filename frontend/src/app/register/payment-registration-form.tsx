@@ -755,6 +755,35 @@ function PaymentRegistrationFormInner() {
               </select>
               <FieldError message={errors.distance} />
             </Field>
+
+            {activityOptions.length > 1 && (
+              <Field label="Activity Type (Sport)" required>
+                <div className="grid grid-cols-3 gap-2 pt-1">
+                  {activityOptions.map((type) => {
+                    const isSelected = selectedActivity === type;
+                    const icon =
+                      type === "cycling" ? "🚴" : type === "walking" ? "🚶" : "🏃";
+                    const label =
+                      type.charAt(0).toUpperCase() + type.slice(1);
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setSelectedActivity(type)}
+                        className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-emerald-500/15 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-sm"
+                            : "bg-(--panel-soft) border-(--line) text-(--muted) hover:text-foreground hover:border-(--muted)"
+                        }`}
+                      >
+                        <span>{icon}</span>
+                        <span>{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </Field>
+            )}
           </div>
 
           {/* Shipping Address with Instant Pincode Lookup */}

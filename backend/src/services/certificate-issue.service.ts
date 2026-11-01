@@ -88,6 +88,7 @@ export async function emailCertificate(certificateId: string) {
     runnerName: certificate.registration.shippingName || certificate.registration.user.name,
     eventTitle: certificate.registration.event.title,
     distance: certificate.registration.distance,
+    activityType: certificate.registration.activityType || "running",
     bibNumber: certificate.registration.bibNumber,
     finishTimeSeconds: certificate.registration.finishTimeSeconds,
     issuedAt: certificate.issuedAt,

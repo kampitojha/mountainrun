@@ -43,6 +43,7 @@ type Registration = {
   id: string;
   bibNumber: string;
   distance: string;
+  activityType?: string;
   status: string;
   proofStatus: string;
   finishTimeSeconds?: number | null;
@@ -418,6 +419,7 @@ export function DashboardClient() {
   }, []);
 
   const [sourceApp, setSourceApp] = useState("Strava");
+  const [proofActivityType, setProofActivityType] = useState<string>("running");
   const [finishDays, setFinishDays] = useState("");
   const [finishHours, setFinishHours] = useState("");
   const [finishMinutes, setFinishMinutes] = useState("");
@@ -769,6 +771,7 @@ export function DashboardClient() {
           activityImageUrl: payloadImageUrl,
           activityImageUrls: uploadedUrls,
           sourceApp: sourceApp.trim() || "Strava",
+          activityType: proofActivityType,
           finishTimeSeconds: secs,
         }),
       });
@@ -1413,6 +1416,7 @@ export function DashboardClient() {
                               className="btn btn-primary h-9 px-4 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-md shadow-(--sage)/20"
                               onClick={() => {
                                 setProofRegId(reg.id);
+                                setProofActivityType(reg.activityType || "running");
                                 setProofPhotos([]);
                                 setProofError(null);
                                 setProofMessage(null);
@@ -1629,6 +1633,37 @@ export function DashboardClient() {
                               </div>
                             </div>
                           )}
+
+                          {/* Activity / Sport Type Selector */}
+                          <div className="pt-1">
+                            <span className="block text-xs font-bold uppercase tracking-wider text-(--muted) mb-1.5">
+                              Activity (Sport)
+                            </span>
+                            <div className="grid grid-cols-3 gap-2">
+                              {[
+                                { id: "running", label: "Running", icon: "🏃" },
+                                { id: "cycling", label: "Cycling", icon: "🚴" },
+                                { id: "walking", label: "Walking", icon: "🚶" },
+                              ].map((sport) => {
+                                const isSelected = proofActivityType === sport.id;
+                                return (
+                                  <button
+                                    key={sport.id}
+                                    type="button"
+                                    onClick={() => setProofActivityType(sport.id)}
+                                    className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                                      isSelected
+                                        ? "bg-emerald-500/15 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-sm"
+                                        : "bg-(--panel-soft) border-(--line) text-(--muted) hover:text-foreground"
+                                    }`}
+                                  >
+                                    <span>{sport.icon}</span>
+                                    <span>{sport.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
 
                           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 pt-1">
                             <label className="block">

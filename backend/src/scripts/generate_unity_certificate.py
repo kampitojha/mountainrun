@@ -72,7 +72,13 @@ def generate_unity_certificate(
     draw.text((int(829 - (bbox[2] - bbox[0]) / 2), int(stats_y - (bbox[3] - bbox[1]) / 2)), clean_time, fill=stats_color, font=stats_font)
 
     # Clean Activity (center x=1125)
-    clean_act = activity.replace("[", "").replace("]", "").strip().upper() if activity else "RUNNING"
+    raw_act = (activity or "").replace("[", "").replace("]", "").strip().lower()
+    if "cycl" in raw_act or "bike" in raw_act or "ride" in raw_act:
+        clean_act = "CYCLING"
+    elif "walk" in raw_act:
+        clean_act = "WALKING"
+    else:
+        clean_act = "RUNNING"
     bbox = draw.textbbox((0, 0), clean_act, font=stats_font)
     draw.text((int(1125 - (bbox[2] - bbox[0]) / 2), int(stats_y - (bbox[3] - bbox[1]) / 2)), clean_act, fill=stats_color, font=stats_font)
 

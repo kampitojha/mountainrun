@@ -317,6 +317,7 @@ export async function submitProof(request: AuthenticatedRequest, response: Respo
     data: {
       proofStatus: "SUBMITTED",
       finishTimeSeconds: payload.finishTimeSeconds ?? existing.finishTimeSeconds,
+      ...(payload.activityType ? { activityType: payload.activityType } : {}),
       proofUpload: {
         upsert: {
           create: {
