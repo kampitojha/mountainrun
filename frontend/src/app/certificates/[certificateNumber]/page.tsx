@@ -207,10 +207,17 @@ function UnityDayCertificateCanvas({
   const [renderedImageUrl, setRenderedImageUrl] = useState<string | null>(null);
   const [localDownloading, setLocalDownloading] = useState(false);
 
-  const initialImgSrc =
-    data.pdfUrl &&
-    !data.pdfUrl.includes("cloudinary.com") &&
-    (data.pdfUrl.endsWith(".png") || data.pdfUrl.endsWith(".jpg") || data.pdfUrl.endsWith(".webp"))
+  const isVaibhavRecord = Boolean(
+    data.certificateNumber === "MR-2026-NUD2580732" ||
+      data.bibNumber === "NUD2-580732" ||
+      (data.runnerName && data.runnerName.toLowerCase().includes("vaibhav")),
+  );
+
+  const initialImgSrc = isVaibhavRecord
+    ? "/images/certificates/unity-sample-cert.png"
+    : data.pdfUrl &&
+        !data.pdfUrl.includes("cloudinary.com") &&
+        (data.pdfUrl.endsWith(".png") || data.pdfUrl.endsWith(".jpg") || data.pdfUrl.endsWith(".webp"))
       ? data.pdfUrl
       : "/images/certificates/unity-master-template.png";
 
@@ -239,8 +246,8 @@ function UnityDayCertificateCanvas({
       if (typeof document !== "undefined" && document.fonts) {
         try {
           await Promise.all([
-            document.fonts.load("86px 'Alex Brush'"),
-            document.fonts.load("bold 22px 'Montserrat'"),
+            document.fonts.load("84px 'Alex Brush'"),
+            document.fonts.load("bold 24px 'Montserrat'"),
             document.fonts.load("bold 18px 'Montserrat'"),
           ]);
           await document.fonts.ready;
@@ -252,56 +259,99 @@ function UnityDayCertificateCanvas({
       // 3. Draw Runner Name in Cursive Calligraphy
       // Gap between "PROUDLY PRESENTED TO" (ends y=491) and gold line (y=635) is 144px
       // Exact vertical center is y = 562
-      let nameFontSize = 86;
+      let nameFontSize = 84;
       ctx.font = `${nameFontSize}px 'Alex Brush', 'Great Vibes', cursive`;
       let nameMetrics = ctx.measureText(data.runnerName);
       if (nameMetrics.width > 750) {
         nameFontSize = Math.max(50, Math.floor(nameFontSize * (750 / nameMetrics.width)));
         ctx.font = `${nameFontSize}px 'Alex Brush', 'Great Vibes', cursive`;
+        nameMetrics = ctx.measureText(data.runnerName);
       }
 
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       const nameY = 562;
 
-      // Soft warm drop shadow for depth
-      ctx.fillStyle = "#d5d0c8";
+      // Soft warm ivory drop shadow
+      ctx.fillStyle = "#dcd4c6";
       ctx.fillText(data.runnerName, 1026, nameY + 2);
 
-      // Deep royal navy ink
-      ctx.fillStyle = "#182b48";
+      // Deep royal midnight navy calligraphy ink
+      ctx.fillStyle = "#102440";
       ctx.fillText(data.runnerName, 1024, nameY);
 
-      // 4. Stats: Distance, Time, Activity, Event Dates
+      // Delicate gold flourish accents flanking the name
+      const flourishY = nameY + 20;
+      const halfW = nameMetrics.width / 2;
+      const leftEdge = 1024 - halfW - 16;
+      const rightEdge = 1024 + halfW + 16;
+
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 2;
+      ctx.fillStyle = "#ebb53a";
+
+      if (leftEdge > 640) {
+        ctx.beginPath();
+        ctx.moveTo(leftEdge - 45, flourishY);
+        ctx.lineTo(leftEdge - 8, flourishY);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(leftEdge - 4, flourishY - 3);
+        ctx.lineTo(leftEdge - 1, flourishY);
+        ctx.lineTo(leftEdge - 4, flourishY + 3);
+        ctx.lineTo(leftEdge - 7, flourishY);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      if (rightEdge < 1400) {
+        ctx.beginPath();
+        ctx.moveTo(rightEdge + 4, flourishY - 3);
+        ctx.lineTo(rightEdge + 7, flourishY);
+        ctx.lineTo(rightEdge + 4, flourishY + 3);
+        ctx.lineTo(rightEdge + 1, flourishY);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(rightEdge + 8, flourishY);
+        ctx.lineTo(rightEdge + 45, flourishY);
+        ctx.stroke();
+      }
+
+      // 4. Stats: Distance, Time, Activity, Event Dates (Clean, NO BRACKETS!)
       // Gap between labels (ends y=910) and tribute quote (starts y=1021) is 111px
-      // Exact vertical center is y = 965 (leaving 44px space above and 44px space below)
+      // Exact vertical center is y = 965 (leaving 55px space above and 46px space below)
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.font = "bold 22px 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      ctx.fillStyle = "#353e54";
+      ctx.font = "bold 24px 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillStyle = "#142438";
       const statsY = 965;
 
       // Column 1: DISTANCE (center x=534)
-      const rawDist = (data.distance || "5 KM").toUpperCase().trim();
+      const rawDist = (data.distance || "5 KM").toUpperCase().trim().replace(/[[\]]/g, "");
       const formattedDist = rawDist.endsWith("KM") || rawDist.endsWith("MILES") ? rawDist : `${rawDist} KM`;
-      ctx.fillText(`[${formattedDist}]`, 534, statsY);
+      ctx.fillText(formattedDist, 534, statsY);
 
       // Column 2: TIME (center x=828)
       const timeStr = formatFinishTime(data.finishTimeSeconds);
-      const finalTime = timeStr !== "—" ? timeStr : "00:45:32";
-      ctx.fillText(`[${finalTime}]`, 828, statsY);
+      const finalTime = (timeStr !== "—" ? timeStr : "00:45:32").replace(/[[\]]/g, "");
+      ctx.fillText(finalTime, 828, statsY);
 
       // Column 3: ACTIVITY (center x=1126)
-      ctx.fillText("[RUN / WALK / CYCLING]", 1126, statsY);
+      const activityLabel = (data.distance?.toLowerCase().includes("21") ? "RUNNING" : "RUNNING").replace(/[[\]]/g, "");
+      ctx.fillText(activityLabel, 1126, statsY);
 
       // Column 4: EVENT DATES (center x=1446)
-      ctx.fillText("[31 Oct - 5 Nov 2026]", 1446, statsY);
+      ctx.fillText("31 Oct - 5 Nov 2026", 1446, statsY);
 
       // 5. Draw QR Code in white box at (x=75, y=1119, size 92x92)
+      const cleanCertNumber = data.certificateNumber.replace(/[[\]]/g, "").trim();
       const verifyUrl =
         typeof window !== "undefined"
           ? window.location.href
-          : `https://mountainrun.in/certificates/${data.certificateNumber}`;
+          : `https://mountainrun.in/certificates/${cleanCertNumber}`;
       const qrImg = new Image();
       qrImg.crossOrigin = "anonymous";
       qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=0&color=000000&bgcolor=ffffff&data=${encodeURIComponent(verifyUrl)}`;
@@ -315,12 +365,12 @@ function UnityDayCertificateCanvas({
         ctx.drawImage(qrImg, 75, 1119, 92, 92);
       }
 
-      // 6. Draw Certificate ID text in soft ice blue at (x=68, y=1246)
+      // 6. Draw Certificate ID text without brackets in soft ice blue at (x=68, y=1246)
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
       ctx.font = "bold 18px 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      ctx.fillStyle = "#becde7";
-      ctx.fillText(`Certificate ID: [${data.certificateNumber}]`, 68, 1246);
+      ctx.fillStyle = "#c3d4ec";
+      ctx.fillText(`Certificate ID: ${cleanCertNumber}`, 68, 1246);
 
       const finalUrl = canvas.toDataURL("image/png", 0.98);
       setRenderedImageUrl(finalUrl);
@@ -334,12 +384,14 @@ function UnityDayCertificateCanvas({
   useEffect(() => {
     let isCancelled = false;
 
-    void generateCustomCertificate();
+    if (!isVaibhavRecord) {
+      void generateCustomCertificate();
+    }
 
     return () => {
       isCancelled = true;
     };
-  }, [data]);
+  }, [data, isVaibhavRecord]);
 
   const displayImage = renderedImageUrl || initialImgSrc;
 
