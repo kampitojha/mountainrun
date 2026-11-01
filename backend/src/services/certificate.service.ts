@@ -662,8 +662,8 @@ export function buildUnityDayCertificateEmailHtml(data: CertificateRenderData) {
   const BRIGHT_GOLD = "#e5b83b";
   const CREAM = "#fcfbf7";
 
-  // High-res master certificate image hosted on Cloudinary CDN
-  const certificateImgUrl = "https://res.cloudinary.com/yppcqzt6/image/upload/v1793370280/mountainrun/certificates/unity_cert_master_template_1793370265.png";
+  // High-res pristine master certificate image hosted on Cloudinary CDN
+  const certificateImgUrl = "https://res.cloudinary.com/yppcqzt6/image/upload/v1793500830/mountainrun/certificates/unity_cert_master_template_1793500811.png";
 
   return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">

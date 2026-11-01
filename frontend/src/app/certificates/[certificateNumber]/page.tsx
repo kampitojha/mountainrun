@@ -205,6 +205,7 @@ function UnityDayCertificateCanvas({
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [renderedImageUrl, setRenderedImageUrl] = useState<string | null>(null);
+  const [localDownloading, setLocalDownloading] = useState(false);
 
   const initialImgSrc =
     data.pdfUrl &&
@@ -213,108 +214,125 @@ function UnityDayCertificateCanvas({
       ? data.pdfUrl
       : "/images/certificates/unity-master-template.png";
 
+  const generateCustomCertificate = async () => {
+    try {
+      const canvas = document.createElement("canvas");
+      // Ultra-sharp 2x 300DPI print-ready resolution (2048 x 1366)
+      canvas.width = 2048;
+      canvas.height = 1366;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+
+      // 1. Draw Master Template
+      const templateImg = new Image();
+      templateImg.crossOrigin = "anonymous";
+      templateImg.src = "/images/certificates/unity-master-template.png";
+
+      await new Promise<void>((resolve, reject) => {
+        templateImg.onload = () => resolve();
+        templateImg.onerror = () => reject(new Error("Unity template load failed"));
+      });
+
+      ctx.drawImage(templateImg, 0, 0, 2048, 1366);
+
+      // 2. Load Fonts: Alex Brush (normal 400), Montserrat Bold
+      if (typeof document !== "undefined" && document.fonts) {
+        try {
+          await Promise.all([
+            document.fonts.load("86px 'Alex Brush'"),
+            document.fonts.load("bold 22px 'Montserrat'"),
+            document.fonts.load("bold 18px 'Montserrat'"),
+          ]);
+          await document.fonts.ready;
+        } catch {
+          // Font loading fallback
+        }
+      }
+
+      // 3. Draw Runner Name in Cursive Calligraphy
+      // Gap between "PROUDLY PRESENTED TO" (ends y=491) and gold line (y=635) is 144px
+      // Exact vertical center is y = 562
+      let nameFontSize = 86;
+      ctx.font = `${nameFontSize}px 'Alex Brush', 'Great Vibes', cursive`;
+      let nameMetrics = ctx.measureText(data.runnerName);
+      if (nameMetrics.width > 750) {
+        nameFontSize = Math.max(50, Math.floor(nameFontSize * (750 / nameMetrics.width)));
+        ctx.font = `${nameFontSize}px 'Alex Brush', 'Great Vibes', cursive`;
+      }
+
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const nameY = 562;
+
+      // Soft warm drop shadow for depth
+      ctx.fillStyle = "#d5d0c8";
+      ctx.fillText(data.runnerName, 1026, nameY + 2);
+
+      // Deep royal navy ink
+      ctx.fillStyle = "#182b48";
+      ctx.fillText(data.runnerName, 1024, nameY);
+
+      // 4. Stats: Distance, Time, Activity, Event Dates
+      // Gap between labels (ends y=910) and tribute quote (starts y=1021) is 111px
+      // Exact vertical center is y = 965 (leaving 44px space above and 44px space below)
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 22px 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillStyle = "#353e54";
+      const statsY = 965;
+
+      // Column 1: DISTANCE (center x=534)
+      const rawDist = (data.distance || "5 KM").toUpperCase().trim();
+      const formattedDist = rawDist.endsWith("KM") || rawDist.endsWith("MILES") ? rawDist : `${rawDist} KM`;
+      ctx.fillText(`[${formattedDist}]`, 534, statsY);
+
+      // Column 2: TIME (center x=828)
+      const timeStr = formatFinishTime(data.finishTimeSeconds);
+      const finalTime = timeStr !== "—" ? timeStr : "00:45:32";
+      ctx.fillText(`[${finalTime}]`, 828, statsY);
+
+      // Column 3: ACTIVITY (center x=1126)
+      ctx.fillText("[RUN / WALK / CYCLING]", 1126, statsY);
+
+      // Column 4: EVENT DATES (center x=1446)
+      ctx.fillText("[31 Oct - 5 Nov 2026]", 1446, statsY);
+
+      // 5. Draw QR Code in white box at (x=75, y=1119, size 92x92)
+      const verifyUrl =
+        typeof window !== "undefined"
+          ? window.location.href
+          : `https://mountainrun.in/certificates/${data.certificateNumber}`;
+      const qrImg = new Image();
+      qrImg.crossOrigin = "anonymous";
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=0&color=000000&bgcolor=ffffff&data=${encodeURIComponent(verifyUrl)}`;
+
+      await new Promise<void>((resolve) => {
+        qrImg.onload = () => resolve();
+        qrImg.onerror = () => resolve();
+      });
+
+      if (qrImg.complete && qrImg.naturalWidth > 0) {
+        ctx.drawImage(qrImg, 75, 1119, 92, 92);
+      }
+
+      // 6. Draw Certificate ID text in soft ice blue at (x=68, y=1246)
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 18px 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillStyle = "#becde7";
+      ctx.fillText(`Certificate ID: [${data.certificateNumber}]`, 68, 1246);
+
+      const finalUrl = canvas.toDataURL("image/png", 0.98);
+      setRenderedImageUrl(finalUrl);
+      return finalUrl;
+    } catch (err) {
+      console.warn("Client Unity certificate canvas synthesis notice:", err);
+      return null;
+    }
+  };
+
   useEffect(() => {
     let isCancelled = false;
-
-    async function generateCustomCertificate() {
-      try {
-        const canvas = document.createElement("canvas");
-        // Ultra-sharp 2x 300DPI print-ready resolution
-        canvas.width = 2048;
-        canvas.height = 1366;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-
-        // 1. Draw Master Template
-        const templateImg = new Image();
-        templateImg.crossOrigin = "anonymous";
-        templateImg.src = "/images/certificates/unity-master-template.png";
-
-        await new Promise<void>((resolve, reject) => {
-          templateImg.onload = () => resolve();
-          templateImg.onerror = () => reject(new Error("Unity template load failed"));
-        });
-
-        if (isCancelled) return;
-        ctx.drawImage(templateImg, 0, 0, 2048, 1366);
-
-        // 2. Load Fonts
-        if (typeof document !== "undefined" && document.fonts) {
-          try {
-            await Promise.all([
-              document.fonts.load("bold 124px 'Alex Brush'"),
-              document.fonts.load("bold 26px 'Montserrat'"),
-              document.fonts.load("bold 20px 'Montserrat'"),
-            ]);
-            await document.fonts.ready;
-          } catch {
-            // Font loading fallback
-          }
-        }
-
-        // 3. Draw Runner Name in Cursive Calligraphy (Scaled 2x: center x=1030, y=520)
-        ctx.textAlign = "center";
-        ctx.textBaseline = "alphabetic";
-        ctx.font = "bold 124px 'Alex Brush', 'Great Vibes', cursive";
-
-        // Subtle soft drop shadow for depth
-        ctx.fillStyle = "#d5d0c8";
-        ctx.fillText(data.runnerName, 1032, 522);
-
-        // Deep royal navy ink
-        ctx.fillStyle = "#182b48";
-        ctx.fillText(data.runnerName, 1030, 520);
-
-        // 4. Stats: Distance, Time, Activity, Event Dates (Scaled 2x: y=940)
-        ctx.font = "bold 26px 'Montserrat', -apple-system, sans-serif";
-        ctx.fillStyle = "#353e54";
-
-        // Distance: centered under column 1 (x=534)
-        const rawDist = (data.distance || "5 KM").toUpperCase().trim();
-        const formattedDist = rawDist.endsWith("KM") || rawDist.endsWith("MILES") ? rawDist : `${rawDist} KM`;
-        ctx.fillText(`[${formattedDist}]`, 534, 940);
-
-        // Time: centered under column 2 (x=824)
-        const timeStr = formatFinishTime(data.finishTimeSeconds);
-        const finalTime = timeStr !== "—" ? timeStr : "00:45:32";
-        ctx.fillText(`[${finalTime}]`, 824, 940);
-
-        // Activity: centered under column 3 (x=1116)
-        ctx.fillText("[RUN / WALK / CYCLING]", 1116, 940);
-
-        // Event dates: centered under column 4 (x=1450)
-        ctx.fillText("[31 Oct - 5 Nov 2026]", 1450, 940);
-
-        // 5. Draw QR Code in white box (x=72, y=1116, size 96x96)
-        const verifyUrl =
-          typeof window !== "undefined"
-            ? window.location.href
-            : `https://mountainrun.in/certificates/${data.certificateNumber}`;
-        const qrImg = new Image();
-        qrImg.crossOrigin = "anonymous";
-        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&color=000000&bgcolor=ffffff&data=${encodeURIComponent(verifyUrl)}`;
-
-        await new Promise<void>((resolve) => {
-          qrImg.onload = () => resolve();
-          qrImg.onerror = () => resolve();
-        });
-
-        if (!isCancelled) {
-          ctx.drawImage(qrImg, 72, 1116, 96, 96);
-
-          // 6. Draw Certificate ID text in soft ice blue (x=68, y=1242)
-          ctx.textAlign = "left";
-          ctx.font = "bold 20px 'Montserrat', -apple-system, sans-serif";
-          ctx.fillStyle = "#becde7";
-          ctx.fillText(`Certificate ID: [${data.certificateNumber}]`, 68, 1242);
-
-          const finalUrl = canvas.toDataURL("image/png", 0.98);
-          setRenderedImageUrl(finalUrl);
-        }
-      } catch (err) {
-        console.warn("Client Unity certificate canvas synthesis notice:", err);
-      }
-    }
 
     void generateCustomCertificate();
 
@@ -327,17 +345,26 @@ function UnityDayCertificateCanvas({
 
   const handleUnityDownload = async () => {
     try {
+      setLocalDownloading(true);
       const filename = `MountainRun-NationalUnityDay-Certificate-${data.bibNumber || data.certificateNumber || "Finisher"}.png`;
-      if (displayImage.startsWith("data:")) {
+
+      let targetUrl = renderedImageUrl;
+      if (!targetUrl || !targetUrl.startsWith("data:")) {
+        targetUrl = await generateCustomCertificate();
+      }
+
+      if (targetUrl && targetUrl.startsWith("data:")) {
         const link = document.createElement("a");
         link.download = filename;
-        link.href = displayImage;
+        link.href = targetUrl;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         return;
       }
-      const res = await fetch(displayImage);
+
+      // Fallback: direct template fetch
+      const res = await fetch("/images/certificates/unity-master-template.png");
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -348,8 +375,9 @@ function UnityDayCertificateCanvas({
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.warn("Direct download fallback:", err);
-      onDownload();
+      console.warn("Direct download notice:", err);
+    } finally {
+      setLocalDownloading(false);
     }
   };
 
@@ -361,8 +389,10 @@ function UnityDayCertificateCanvas({
     }
   };
 
+  const isDownloadingAny = isDownloading || localDownloading;
+
   return (
-    <div className={`w-full mx-auto space-y-6 sm:space-y-8 transition-all duration-300 relative ${viewMode === "portrait" ? "max-w-xl" : "max-w-4xl"}`}>
+    <div className={`w-full mx-auto space-y-6 sm:space-y-8 transition-all duration-300 relative ${viewMode === "portrait" ? "max-w-2xl" : "max-w-4xl"}`}>
       <CelebrationConfetti />
 
       {/* ── Ambient Radial Tricolor Halo / Celebratory Stage Lighting ── */}
@@ -372,7 +402,7 @@ function UnityDayCertificateCanvas({
       <div
         ref={certRef as React.RefObject<HTMLDivElement>}
         id="certificate-print"
-        className="relative group rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 hover:shadow-[0_30px_90px_rgba(0,34,72,0.85)] cursor-pointer bg-white border-2 sm:border-3 border-[#c9a227]/80"
+        className="relative group rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 hover:shadow-[0_30px_90px_rgba(0,34,72,0.85)] cursor-pointer bg-white border-2 sm:border-3 border-[#c9a227]/80 w-full"
         onClick={() => setIsModalOpen(true)}
         style={{
           boxShadow: "0 25px 65px -10px rgba(0,34,72,0.85), 0 0 45px rgba(201,162,39,0.3)",
@@ -386,12 +416,13 @@ function UnityDayCertificateCanvas({
           </span>
         </div>
 
-        {/* Certificate Image */}
+        {/* Certificate Image - 100% Fluid Responsive */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={displayImage}
           alt={`Official National Unity Day Certificate — ${data.runnerName}`}
-          className="w-full h-auto block select-none"
+          className="w-full h-auto block select-none pointer-events-none"
+          style={{ display: "block", width: "100%", height: "auto" }}
         />
 
         {/* Hover zoom hint */}
@@ -408,10 +439,10 @@ function UnityDayCertificateCanvas({
         <button
           type="button"
           onClick={handleUnityDownload}
-          disabled={isDownloading}
+          disabled={isDownloadingAny}
           className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-[#002248] via-[#0c3866] to-[#002248] border-2 border-[#c9a227] text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-75 hover:shadow-[0_0_25px_rgba(201,162,39,0.4)]"
         >
-          {isDownloading ? (
+          {isDownloadingAny ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               <span>Preparing High-Res PNG...</span>
@@ -539,7 +570,8 @@ function UnityDayCertificateCanvas({
               <button
                 type="button"
                 onClick={handleUnityDownload}
-                className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#002248] to-[#0c3866] border border-[#c9a227] text-[#e5b83b] font-bold text-xs uppercase tracking-wider hover:scale-105 active:scale-95 transition-all shadow-xl"
+                disabled={isDownloadingAny}
+                className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#002248] to-[#0c3866] border border-[#c9a227] text-[#e5b83b] font-bold text-xs uppercase tracking-wider hover:scale-105 active:scale-95 transition-all shadow-xl cursor-pointer"
               >
                 🏆 DOWNLOAD HIGH-RES PNG
               </button>
@@ -1030,6 +1062,16 @@ export default function CertificateVerifyPage() {
     );
 
     if (isUnity) {
+      const canvasImg = document.querySelector("#certificate-print img") as HTMLImageElement | null;
+      if (canvasImg && canvasImg.src.startsWith("data:")) {
+        const link = document.createElement("a");
+        link.download = `MountainRun-NationalUnityDay-Certificate-${data?.bibNumber || "Finisher"}.png`;
+        link.href = canvasImg.src;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      }
       if (
         data?.pdfUrl &&
         !data.pdfUrl.includes("cloudinary.com") &&
