@@ -207,21 +207,9 @@ function UnityDayCertificateCanvas({
   const [renderedImageUrl, setRenderedImageUrl] = useState<string | null>(null);
   const [localDownloading, setLocalDownloading] = useState(false);
 
-  const isVaibhavRecord = Boolean(
-    data.certificateNumber === "MR-2026-NUD2580732" ||
-      data.bibNumber === "NUD2-580732" ||
-      (data.runnerName && data.runnerName.toLowerCase().includes("vaibhav")),
-  );
+  const initialImgSrc = "/images/certificates/unity-sample-cert.png";
 
-  const initialImgSrc = isVaibhavRecord
-    ? "/images/certificates/unity-sample-cert.png"
-    : data.pdfUrl &&
-        !data.pdfUrl.includes("cloudinary.com") &&
-        (data.pdfUrl.endsWith(".png") || data.pdfUrl.endsWith(".jpg") || data.pdfUrl.endsWith(".webp"))
-      ? data.pdfUrl
-      : "/images/certificates/unity-master-template.png";
-
-  const generateCustomCertificate = async () => {
+  const generateCustomCertificate = async (): Promise<string | null> => {
     try {
       const canvas = document.createElement("canvas");
       // Ultra-sharp 2x 300DPI print-ready resolution (2048 x 1366)
@@ -242,11 +230,12 @@ function UnityDayCertificateCanvas({
 
       ctx.drawImage(templateImg, 0, 0, 2048, 1366);
 
-      // 2. Load Fonts: Alex Brush (normal 400), Montserrat Bold
+      // 2. Load Fonts: Great Vibes, Alex Brush, Montserrat Bold
       if (typeof document !== "undefined" && document.fonts) {
         try {
           await Promise.all([
-            document.fonts.load("84px 'Alex Brush'"),
+            document.fonts.load("94px 'Great Vibes'"),
+            document.fonts.load("88px 'Alex Brush'"),
             document.fonts.load("bold 24px 'Montserrat'"),
             document.fonts.load("bold 18px 'Montserrat'"),
           ]);
@@ -256,97 +245,56 @@ function UnityDayCertificateCanvas({
         }
       }
 
-      // 3. Draw Runner Name in Cursive Calligraphy
-      // Gap between "PROUDLY PRESENTED TO" (ends y=491) and gold line (y=635) is 144px
-      // Exact vertical center is y = 562
-      let nameFontSize = 84;
-      ctx.font = `${nameFontSize}px 'Alex Brush', 'Great Vibes', cursive`;
+      // 3. Draw Runner Name in Calligraphy
+      // Gap between "PROUDLY PRESENTED TO" (ends y=492) and separator line (y=666)
+      // Exact vertical center is y = 575
+      let nameFontSize = 94;
+      ctx.font = `${nameFontSize}px 'Great Vibes', 'Alex Brush', cursive`;
       let nameMetrics = ctx.measureText(data.runnerName);
       if (nameMetrics.width > 750) {
         nameFontSize = Math.max(50, Math.floor(nameFontSize * (750 / nameMetrics.width)));
-        ctx.font = `${nameFontSize}px 'Alex Brush', 'Great Vibes', cursive`;
+        ctx.font = `${nameFontSize}px 'Great Vibes', 'Alex Brush', cursive`;
         nameMetrics = ctx.measureText(data.runnerName);
       }
 
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      const nameY = 562;
+      const nameY = 575;
 
-      // Soft warm ivory drop shadow
-      ctx.fillStyle = "#dcd4c6";
-      ctx.fillText(data.runnerName, 1026, nameY + 2);
+      // Soft warm ivory drop shadow for authentic ink depth
+      ctx.fillStyle = "#dad2c6";
+      ctx.fillText(data.runnerName, 1025, nameY + 1);
 
       // Deep royal midnight navy calligraphy ink
-      ctx.fillStyle = "#102440";
+      ctx.fillStyle = "#122646";
       ctx.fillText(data.runnerName, 1024, nameY);
 
-      // Delicate gold flourish accents flanking the name
-      const flourishY = nameY + 20;
-      const halfW = nameMetrics.width / 2;
-      const leftEdge = 1024 - halfW - 16;
-      const rightEdge = 1024 + halfW + 16;
-
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 2;
-      ctx.fillStyle = "#ebb53a";
-
-      if (leftEdge > 640) {
-        ctx.beginPath();
-        ctx.moveTo(leftEdge - 45, flourishY);
-        ctx.lineTo(leftEdge - 8, flourishY);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(leftEdge - 4, flourishY - 3);
-        ctx.lineTo(leftEdge - 1, flourishY);
-        ctx.lineTo(leftEdge - 4, flourishY + 3);
-        ctx.lineTo(leftEdge - 7, flourishY);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      if (rightEdge < 1400) {
-        ctx.beginPath();
-        ctx.moveTo(rightEdge + 4, flourishY - 3);
-        ctx.lineTo(rightEdge + 7, flourishY);
-        ctx.lineTo(rightEdge + 4, flourishY + 3);
-        ctx.lineTo(rightEdge + 1, flourishY);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(rightEdge + 8, flourishY);
-        ctx.lineTo(rightEdge + 45, flourishY);
-        ctx.stroke();
-      }
-
       // 4. Stats: Distance, Time, Activity, Event Dates (Clean, NO BRACKETS!)
-      // Gap between labels (ends y=910) and tribute quote (starts y=1021) is 111px
-      // Exact vertical center is y = 965 (leaving 55px space above and 46px space below)
+      // Exact center coordinates matching original proforma
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = "bold 24px 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      ctx.fillStyle = "#142438";
-      const statsY = 965;
+      ctx.fillStyle = "#14243a";
+      const statsY = 960;
 
-      // Column 1: DISTANCE (center x=534)
+      // Column 1: DISTANCE (center x=546)
       const rawDist = (data.distance || "5 KM").toUpperCase().trim().replace(/[[\]]/g, "");
       const formattedDist = rawDist.endsWith("KM") || rawDist.endsWith("MILES") ? rawDist : `${rawDist} KM`;
-      ctx.fillText(formattedDist, 534, statsY);
+      ctx.fillText(formattedDist, 546, statsY);
 
-      // Column 2: TIME (center x=828)
+      // Column 2: TIME (center x=829)
       const timeStr = formatFinishTime(data.finishTimeSeconds);
       const finalTime = (timeStr !== "—" ? timeStr : "00:45:32").replace(/[[\]]/g, "");
-      ctx.fillText(finalTime, 828, statsY);
+      ctx.fillText(finalTime, 829, statsY);
 
-      // Column 3: ACTIVITY (center x=1126)
+      // Column 3: ACTIVITY (center x=1125)
       const activityLabel = (data.distance?.toLowerCase().includes("21") ? "RUNNING" : "RUNNING").replace(/[[\]]/g, "");
-      ctx.fillText(activityLabel, 1126, statsY);
+      ctx.fillText(activityLabel, 1125, statsY);
 
-      // Column 4: EVENT DATES (center x=1446)
-      ctx.fillText("31 Oct - 5 Nov 2026", 1446, statsY);
+      // Column 4: EVENT DATES (center x=1457)
+      ctx.fillText("31 Oct - 5 Nov 2026", 1457, statsY);
 
-      // 5. Draw QR Code in white box at (x=75, y=1119, size 92x92)
+      // 5. Draw QR Code in white box at (x=72, y=1114, size 96x96)
       const cleanCertNumber = data.certificateNumber.replace(/[[\]]/g, "").trim();
       const verifyUrl =
         typeof window !== "undefined"
@@ -362,15 +310,15 @@ function UnityDayCertificateCanvas({
       });
 
       if (qrImg.complete && qrImg.naturalWidth > 0) {
-        ctx.drawImage(qrImg, 75, 1119, 92, 92);
+        ctx.drawImage(qrImg, 72, 1114, 96, 96);
       }
 
-      // 6. Draw Certificate ID text without brackets in soft ice blue at (x=68, y=1246)
+      // 6. Draw Certificate ID text without brackets in soft ice blue at (x=68, y=1244)
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
       ctx.font = "bold 18px 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
       ctx.fillStyle = "#c3d4ec";
-      ctx.fillText(`Certificate ID: ${cleanCertNumber}`, 68, 1246);
+      ctx.fillText(`Certificate ID: ${cleanCertNumber}`, 68, 1244);
 
       const finalUrl = canvas.toDataURL("image/png", 0.98);
       setRenderedImageUrl(finalUrl);
@@ -384,14 +332,12 @@ function UnityDayCertificateCanvas({
   useEffect(() => {
     let isCancelled = false;
 
-    if (!isVaibhavRecord) {
-      void generateCustomCertificate();
-    }
+    void generateCustomCertificate();
 
     return () => {
       isCancelled = true;
     };
-  }, [data, isVaibhavRecord]);
+  }, [data]);
 
   const displayImage = renderedImageUrl || initialImgSrc;
 
@@ -450,24 +396,27 @@ function UnityDayCertificateCanvas({
       {/* ── Ambient Radial Tricolor Halo / Celebratory Stage Lighting ── */}
       <div className="absolute -inset-4 sm:-inset-10 rounded-[2.5rem] bg-gradient-to-tr from-[#ff9933]/20 via-[#ffffff]/10 to-[#138808]/20 blur-3xl opacity-80 pointer-events-none -z-10 animate-pulse duration-1000" />
 
+      {/* ── Top Status Bar (Cleanly placed ABOVE certificate, never pasted on artwork) ── */}
+      <div className="flex items-center justify-between px-2 print:hidden">
+        <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#002248]/90 backdrop-blur-md border border-[#c9a227]/70 text-[#e5b83b] text-xs font-bold tracking-wide shadow-xl">
+          <span className="w-2 h-2 rounded-full bg-[#34d399] animate-pulse" />
+          <span>🇮🇳 RASHTRIYA EKTA DIWAS 2026 &bull; VERIFIED FINISHER</span>
+        </span>
+        <span className="text-xs text-white/60 hidden sm:inline-flex items-center gap-1.5 font-medium">
+          <span>Official Commemorative Certificate</span>
+        </span>
+      </div>
+
       {/* ── Direct Hero Certificate (Ultra-sharp centerpiece) ── */}
       <div
         ref={certRef as React.RefObject<HTMLDivElement>}
         id="certificate-print"
-        className="relative group rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 hover:shadow-[0_30px_90px_rgba(0,34,72,0.85)] cursor-pointer bg-white border-2 sm:border-3 border-[#c9a227]/80 w-full"
+        className="relative group rounded-md sm:rounded-lg overflow-hidden shadow-2xl transition-all duration-300 hover:shadow-[0_25px_70px_rgba(0,34,72,0.85)] cursor-pointer bg-white w-full"
         onClick={() => setIsModalOpen(true)}
         style={{
-          boxShadow: "0 25px 65px -10px rgba(0,34,72,0.85), 0 0 45px rgba(201,162,39,0.3)",
+          boxShadow: "0 20px 60px -10px rgba(0,34,72,0.85), 0 0 35px rgba(201,162,39,0.25)",
         }}
       >
-        {/* Floating Top-Right Verified Badge */}
-        <div className="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-10 pointer-events-none">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#002248]/85 backdrop-blur-md border border-[#c9a227]/70 text-[#e5b83b] text-[0.6rem] sm:text-xs font-bold tracking-wide shadow-xl">
-            <span className="w-2 h-2 rounded-full bg-[#34d399] animate-pulse" />
-            <span>🇮🇳 RASHTRIYA EKTA DIWAS 2026 &bull; VERIFIED</span>
-          </span>
-        </div>
-
         {/* Certificate Image - 100% Fluid Responsive */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -476,13 +425,6 @@ function UnityDayCertificateCanvas({
           className="w-full h-auto block select-none pointer-events-none"
           style={{ display: "block", width: "100%", height: "auto" }}
         />
-
-        {/* Hover zoom hint */}
-        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-          <span className="px-5 py-2.5 rounded-full bg-[#002248]/90 text-[#e5b83b] text-xs sm:text-sm font-bold shadow-2xl backdrop-blur-xs flex items-center gap-2 border border-[#c9a227]/60">
-            🔍 Click to View Fullscreen / Zoom
-          </span>
-        </div>
       </div>
 
       {/* ── Unified Action Dock Directly Below Certificate ── */}
