@@ -18,10 +18,10 @@ export const defaultEvents: DefaultEvent[] = [
     title: "National Unity Day Virtual Run 2026",
     slug: "national-unity-day-2026",
     description:
-      "Celebrate National Unity Day (Rashtriya Ekta Diwas) with India's premier virtual fitness challenge — the National Unity Day Virtual Run 2026! Walk, run, or cycle anywhere across India between 31st October to 5th November. Honor the indomitable legacy of Iron Man Sardar Vallabhbhai Patel under the inspiring motto 'Different Paths • Same Nation • Stronger Together'. Choose your distance, record your GPS activity, and earn the exclusive heavyweight 3D antique bronze Sardar Patel & Statue of Unity Finisher Medal, official Mountain Run ribbon, verified digital certificate, and special event Dri-Fit T-Shirt for Top 3 in each category delivered straight to your doorstep with free pan-India shipping!",
+      "Celebrate National Unity Day (Rashtriya Ekta Diwas) with India's premier virtual fitness challenge — the National Unity Day Virtual Run 2026! Walk, run, or cycle anywhere across India between 31st October to 9th November. Honor the indomitable legacy of Iron Man Sardar Vallabhbhai Patel under the inspiring motto 'Different Paths • Same Nation • Stronger Together'. Choose your distance, record your GPS activity, and earn the exclusive heavyweight 3D antique bronze Sardar Patel & Statue of Unity Finisher Medal, official Mountain Run ribbon, verified digital certificate, and special event Dri-Fit T-Shirt for Top 3 in each category delivered straight to your doorstep with free pan-India shipping!",
     startsAt: new Date("2026-10-31T00:00:00+05:30"),
-    endsAt: new Date("2026-11-05T23:59:59+05:30"),
-    proofClosesAt: new Date("2026-11-08T23:59:59+05:30"),
+    endsAt: new Date("2026-11-09T23:59:59+05:30"),
+    proofClosesAt: new Date("2026-11-10T23:59:59+05:30"),
     distances: ["1.6 km", "3.2 km", "5 km", "10 km", "21 km"],
     priceInPaise: 44900,
     status: "OPEN",

@@ -822,7 +822,7 @@ export function buildUnityDayCertificateEmailHtml(data: CertificateRenderData) {
                   </td>
                   <td class="stat-cell stat-cell-last" width="25%" align="center" style="padding:14px 8px;">
                     <p style="margin:0;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#7c3aed;">EVENT DATES</p>
-                    <p style="margin:4px 0 0;font-size:11px;font-weight:900;color:${NAVY};">31 Oct - 5 Nov</p>
+                    <p style="margin:4px 0 0;font-size:11px;font-weight:900;color:${NAVY};">31 Oct - 9 Nov</p>
                   </td>
                 </tr>
               </table>

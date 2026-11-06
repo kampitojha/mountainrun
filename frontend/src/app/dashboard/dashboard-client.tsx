@@ -1174,13 +1174,16 @@ export function DashboardClient() {
                 let submissionOpensAtStr = "";
 
                 const startStr = eventData?.startsAt || reg.event.startsAt;
-                const endStr = eventData?.endsAt || reg.event.endsAt;
+                const deadlineStr =
+                  (reg.event as { proofClosesAt?: string | null })?.proofClosesAt ||
+                  eventData?.endsAt ||
+                  reg.event.endsAt;
 
-                if (startStr && endStr) {
+                if (startStr && deadlineStr) {
                   const startsAt = new Date(startStr);
-                  const endsAt = new Date(endStr);
+                  const deadline = new Date(deadlineStr);
                   isBeforeSubmission = now < startsAt;
-                  isAfterSubmission = now > endsAt;
+                  isAfterSubmission = now > deadline;
                   isSubmissionWindowOpen = !isBeforeSubmission && !isAfterSubmission;
                   submissionOpensAtStr = startsAt.toLocaleDateString("en-IN", {
                     day: "numeric",

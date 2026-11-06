@@ -7,7 +7,7 @@ def generate_unity_certificate(
     distance: str = "10 KM",
     finish_time: str = "01:15:50",
     activity: str = "RUNNING",
-    event_dates: str = "31 Oct - 5 Nov 2026",
+    event_dates: str = "31 Oct - 9 Nov 2026",
     certificate_number: str = "MR-2026-NUD2580732",
     output_path: str = r"backend\assets\sample_nud_vaibhav.png",
     font_choice: str = "greatvibes"

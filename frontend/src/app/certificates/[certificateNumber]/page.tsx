@@ -313,7 +313,7 @@ function UnityDayCertificateCanvas({
       ctx.fillText(activityLabel, 1125, statsY);
 
       // Column 4: EVENT DATES (center x=1457)
-      ctx.fillText("31 Oct - 5 Nov 2026", 1457, statsY);
+      ctx.fillText("31 Oct - 9 Nov 2026", 1457, statsY);
 
       // 5. Draw QR Code in white box at (x=72, y=1114, size 96x96)
       const cleanCertNumber = data.certificateNumber.replace(/[[\]]/g, "").trim();
