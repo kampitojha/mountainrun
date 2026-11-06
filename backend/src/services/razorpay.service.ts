@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { env } from "../config/env.js";
 import { ApiError } from "../utils/api-error.js";
+import { sendTelegramAlert } from "./alert.service.js";
 
 type RazorpayOrder = {
   id: string;
@@ -29,6 +30,8 @@ export async function createRazorpayOrder(input: {
     headers: {
       Authorization: `Basic ${auth}`,
       "Content-Type": "application/json",
+      Accept: "application/json",
+      "User-Agent": "MountainRun-Backend/1.0",
     },
     body: JSON.stringify({
       amount: input.amountInPaise,
@@ -42,8 +45,31 @@ export async function createRazorpayOrder(input: {
   });
 
   if (!response.ok) {
-    const body = await response.text();
-    throw new ApiError(response.status, `Razorpay order creation failed: ${body}`);
+    const rawBody = await response.text();
+    console.error(`[Razorpay Order Error] HTTP ${response.status}:`, rawBody);
+    let errorDetail = rawBody;
+    try {
+      const json = JSON.parse(rawBody);
+      errorDetail = json.error?.description || json.error?.message || json.message || rawBody;
+    } catch {}
+
+    void sendTelegramAlert({
+      title: "Razorpay Order Creation Failed",
+      level: "ERROR",
+      service: "Razorpay Gateway",
+      message: `HTTP ${response.status}: ${errorDetail || response.statusText || "Not Acceptable / Gateway rejected"}`,
+      details: {
+        registrationId: input.registrationId,
+        receipt: input.receipt,
+        amountInPaise: input.amountInPaise,
+        status: response.status,
+      },
+    });
+
+    throw new ApiError(
+      response.status,
+      `Razorpay order creation failed: ${errorDetail || response.statusText || "Gateway returned " + response.status}`
+    );
   }
 
   return (await response.json()) as RazorpayOrder;
@@ -72,7 +98,11 @@ export async function fetchPaymentsForOrder(orderId: string) {
 
   const auth = Buffer.from(`${env.razorpayKeyId}:${env.razorpayKeySecret}`).toString("base64");
   const response = await fetch(`https://api.razorpay.com/v1/orders/${orderId}/payments`, {
-    headers: { Authorization: `Basic ${auth}` },
+    headers: {
+      Authorization: `Basic ${auth}`,
+      Accept: "application/json",
+      "User-Agent": "MountainRun-Backend/1.0",
+    },
   });
 
   if (!response.ok) {

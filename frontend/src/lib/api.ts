@@ -11,6 +11,7 @@ export function getApiUrl(path = "") {
 export function authHeaders(token: string | null | undefined, init: HeadersInit = {}): HeadersInit {
   return {
     "Content-Type": "application/json",
+    Accept: "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...init,
   };
