@@ -5,6 +5,9 @@ import { Breadcrumb } from "../components/breadcrumb";
 import { fetchGroupedEvents } from "../../lib/events-api";
 import { EventsCatalog } from "./events-catalog";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mountainrun.in";
 
 export const metadata: Metadata = {

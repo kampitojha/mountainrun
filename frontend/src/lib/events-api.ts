@@ -135,7 +135,7 @@ export function mapApiEventToPublic(
 export async function fetchEventBySlug(slug: string): Promise<PublicEvent | null> {
   try {
     const response = await fetch(getApiUrl(`/api/events/${encodeURIComponent(slug)}`), {
-      next: { revalidate: 300 },
+      cache: "no-store",
     });
     if (response.ok) {
       const json = (await response.json()) as { data: ApiEvent };
@@ -158,7 +158,7 @@ export async function fetchOpenEvents(options?: {
   const limit = options?.limit;
   try {
     const response = await fetch(getApiUrl("/api/events?scope=open"), {
-      next: { revalidate: 300 },
+      cache: "no-store",
     });
     if (response.ok) {
       const json = (await response.json()) as { data: ApiEvent[] };
@@ -188,7 +188,7 @@ export async function fetchGroupedEvents(): Promise<{
 }> {
   try {
     const response = await fetch(getApiUrl("/api/events?group=true"), {
-      next: { revalidate: 300 },
+      cache: "no-store",
     });
     if (response.ok) {
       const json = (await response.json()) as {

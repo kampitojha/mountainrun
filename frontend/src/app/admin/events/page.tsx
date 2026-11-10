@@ -295,9 +295,9 @@ export default function AdminEventsPage() {
     }
   }
 
-  // Split into active (DRAFT/OPEN/CLOSED) and past (COMPLETED/CANCELLED)
-  const activeEvents = items.filter((e) => !["COMPLETED", "CANCELLED"].includes(e.status));
-  const pastEvents = items.filter((e) => ["COMPLETED", "CANCELLED"].includes(e.status));
+  // Split into active (DRAFT/OPEN) and past (CLOSED/COMPLETED/CANCELLED)
+  const activeEvents = items.filter((e) => !["CLOSED", "COMPLETED", "CANCELLED"].includes(e.status));
+  const pastEvents = items.filter((e) => ["CLOSED", "COMPLETED", "CANCELLED"].includes(e.status));
 
   return (
     <>

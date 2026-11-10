@@ -46,6 +46,9 @@ function EventCard({ event, variant = "upcoming" }: { event: PublicEvent; varian
               alt={`${event.name} banner`}
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               src={event.bannerImageUrl}
+              onError={(e) => {
+                (e.target as HTMLElement).style.display = "none";
+              }}
             />
           ) : null}
           {hasBannerImage ? <div aria-hidden className="absolute inset-0 bg-linear-to-t from-[#141419] via-black/40 to-black/20" /> : null}
@@ -174,30 +177,28 @@ export function EventsCatalog({
   );
 
   useEffect(() => {
-    // If we already have server-rendered upcoming events, no need to flash or re-fetch immediately on client
-    if (initialUpcoming && initialUpcoming.length > 0) {
-      return;
-    }
     let cancelled = false;
     async function load() {
       try {
-        const response = await fetch(getApiUrl("/api/events?group=true"));
+        const response = await fetch(getApiUrl("/api/events?group=true"), {
+          cache: "no-store",
+        });
         if (!response.ok) return;
         const json = await response.json();
         const upcomingApi = (json.data?.upcoming ?? []) as ApiEvent[];
         const pastApi = (json.data?.past ?? []) as ApiEvent[];
-        if (cancelled || (upcomingApi.length === 0 && pastApi.length === 0)) return;
+        if (cancelled) return;
         setUpcoming(upcomingApi.map((event) => mapApiEventToPublic(event, "upcoming")));
         setPast(pastApi.map((event) => mapApiEventToPublic(event, "past")));
       } catch {
-        // keep static catalog
+        // keep current catalog
       }
     }
     void load();
     return () => {
       cancelled = true;
     };
-  }, [initialUpcoming]);
+  }, []);
 
   return (
     <div className="min-w-0">
