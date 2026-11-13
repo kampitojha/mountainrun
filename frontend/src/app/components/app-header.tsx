@@ -343,6 +343,12 @@ export function AppHeader() {
           <div className="flex items-center gap-2">
             <Show when="signed-out">
               <Link
+                className="inline-flex items-center rounded-xl px-3 py-1.5 text-xs font-semibold text-(--muted) hover:text-(--foreground) hover:bg-(--panel-soft) transition"
+                href="/sign-in"
+              >
+                Sign in
+              </Link>
+              <Link
                 className="btn btn-primary h-8 px-3.5 text-xs font-semibold sm:h-9 sm:px-4 sm:text-sm shadow-sm"
                 href="/events"
               >
